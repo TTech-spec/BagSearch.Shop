@@ -1,9 +1,9 @@
-import React, { useEffect, useContext, useState } from "react";
-import { AuthContext } from "./context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
 
-// Inject Tailwind CDN, runtime config, and Google Fonts to match the provided HTML
-const injectHeadAssets = () => {
+// Render the provided Tailwind HTML as React JSX with identical styling.
+// This component injects Tailwind CDN runtime config and Google fonts to match your snippet.
+
+const injectAssets = () => {
   // Tailwind CDN
   if (!document.querySelector('script[src^="https://cdn.tailwindcss.com"]')) {
     const script = document.createElement("script");
@@ -11,7 +11,7 @@ const injectHeadAssets = () => {
     document.head.appendChild(script);
   }
 
-  // Tailwind runtime config: includes whatsapp color from the new design
+  // Tailwind runtime config
   if (!document.getElementById("tailwind-config")) {
     const cfg = document.createElement("script");
     cfg.id = "tailwind-config";
@@ -24,7 +24,6 @@ const injectHeadAssets = () => {
               primary: '#135bec',
               'background-light': '#f6f6f8',
               'background-dark': '#101622',
-              whatsapp: '#25D366',
             },
             fontFamily: {
               display: ['Manrope', 'sans-serif'],
@@ -47,11 +46,11 @@ const injectHeadAssets = () => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href =
-      "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap";
+      "https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap";
     document.head.appendChild(link);
   }
 
-  // Google Material Symbols Outlined (ensure single include)
+  // Google Material Symbols Outlined
   if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Material+Symbols+Outlined" ]')) {
     const link2 = document.createElement("link");
     link2.rel = "stylesheet";
@@ -60,7 +59,7 @@ const injectHeadAssets = () => {
     document.head.appendChild(link2);
   }
 
-  // Inline base styles
+  // Inline base styles and utilities used in the HTML
   if (!document.getElementById("luxe-inline-styles")) {
     const style = document.createElement("style");
     style.id = "luxe-inline-styles";
@@ -69,385 +68,372 @@ const injectHeadAssets = () => {
       .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     `;
     document.head.appendChild(style);
   }
 };
 
 export default function Home() {
-  const { user, login, logout, loading } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [showVisualSearch, setShowVisualSearch] = useState(false);
-
   useEffect(() => {
-    injectHeadAssets();
-    // Mirror original html attributes
+    injectAssets();
+    // Mirror original html root attributes
     const html = document.documentElement;
     html.lang = 'en';
-    if (!html.classList.contains('light') && !html.classList.contains('dark')) {
-      html.classList.add('light');
-    }
+    if (!html.classList.contains('light') && !html.classList.contains('dark')) html.classList.add('light');
   }, []);
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-[#111318] dark:text-white transition-colors duration-200">
-      <div className="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden font-display">
-        {/* Top Navigation Bar */}
-        <header className="sticky top-0 z-50 w-full border-b border-[#f0f2f4] dark:border-[#2a2d35] bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 md:px-10 lg:px-40 py-3">
-          <div className="flex items-center justify-between gap-8">
-            {/* Logo */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="size-8 text-primary">
-                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    clipRule="evenodd"
-                    fillRule="evenodd"
-                    d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z"
-                    fill="currentColor"
-                  />
-                </svg>
+    <div className="bg-white dark:bg-background-dark font-display text-[#111318] dark:text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg border-b border-[#dbdfe6] dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-2">
+              <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                <span className="material-symbols-outlined">shopping_bag</span>
               </div>
-              <h2 className="text-xl font-bold leading-tight tracking-tight">LUXE BAGS</h2>
+              <span className="text-xl font-black tracking-tight">LUXEBAG</span>
             </div>
 
-            {/* Desktop Nav Links */}
-            <nav className="hidden xl:flex items-center gap-6">
-              <a href="#" className="text-sm font-semibold hover:text-primary transition-colors">New In</a>
-              <a href="#" className="text-sm font-semibold hover:text-primary transition-colors">Handbags</a>
-              <a href="#" className="text-sm font-semibold hover:text-primary transition-colors">Travel</a>
-              <a href="#" className="text-sm font-semibold hover:text-primary transition-colors">Limited Edition</a>
-            </nav>
-
-            {/* Search & Actions */}
-            <div className="flex flex-1 justify-end items-center gap-4">
-              <label className="hidden md:flex flex-col min-w-[280px] lg:min-w-[400px] h-11">
-                <div className="flex w-full flex-1 items-stretch rounded-lg h-full relative">
-                  <div className="text-[#616f89] absolute left-4 top-1/2 -translate-y-1/2">
-                    <span className="material-symbols-outlined text-xl">search</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="form-input w-full rounded-lg text-[#111318] dark:text-white border-none bg-[#f0f2f4] dark:bg-[#1c212b] h-full placeholder:text-[#616f89] pl-11 pr-12 text-sm font-medium"
-                    placeholder="Search by name or visual search..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowVisualSearch(true)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-8 bg-primary/10 text-primary rounded-md hover:bg-primary hover:text-white transition-all"
-                    title="Visual Search"
-                  >
-                    <span className="material-symbols-outlined text-lg">photo_camera</span>
-                  </button>
+            <div className="flex-1 max-w-2xl mx-8">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <span className="material-symbols-outlined text-[#616f89] group-focus-within:text-primary transition-colors">search</span>
                 </div>
-              </label>
-
-              <div className="flex gap-2">
-                <button className="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-[#f0f2f4] dark:bg-[#1c212b] text-[#111318] dark:text-white hover:bg-primary/10 transition-colors" title="Bag">
-                  <span className="material-symbols-outlined">shopping_bag</span>
-                </button>
-
-                {user ? (
-                  <div className="flex items-center gap-2">
-                    <button className="flex size-10 cursor-pointer items-center justify-center rounded-lg overflow-hidden border border-[#f0f2f4] dark:border-[#2a2d35]">
-                      <img
-                        src={user?.user_metadata?.avatar_url || user?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}
-                        alt="User"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                    <button
-                      onClick={logout}
-                      className="hidden md:inline px-3 py-2 rounded-lg bg-[#f0f2f4] dark:bg-[#1c212b] text-xs font-bold hover:bg-primary/10 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-[#f0f2f4] dark:bg-[#1c212b] text-[#111318] dark:text-white hover:bg-primary/10 transition-colors"
-                    title="Account"
-                  >
-                    {loading ? (
-                      <span className="text-[10px] font-bold">...</span>
-                    ) : (
-                      <span className="material-symbols-outlined">account_circle</span>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 px-6 md:px-10 lg:px-40 py-8">
-          {/* Hero Section */}
-          <section className="mb-12">
-            <div className="relative overflow-hidden rounded-xl bg-[#1c212b] min-h-[400px] flex flex-col justify-center p-8 md:p-16">
-              {/* Background Placeholder (Gradient/Abstract for context) */}
-              <div
-                className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
-                data-alt="Abstract minimalist luxury leather texture background"
-                style={{ backgroundImage: 'linear-gradient(135deg, #135bec 0%, #000 100%)' }}
-              />
-
-              <div className="relative z-10 max-w-xl">
-                <span className="inline-block px-3 py-1 mb-4 text-xs font-bold tracking-widest text-white uppercase bg-primary rounded">
-                  New Collection
-                </span>
-                <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight">
-                  Elegance in Every <span className="text-primary">Stitch</span>.
-                </h1>
-                <p className="text-lg text-gray-300 mb-8 max-w-md">
-                  Discover handcrafted leather goods designed for the modern lifestyle. Shop the seasonal drop.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <button className="flex items-center justify-center rounded-lg h-12 px-8 bg-primary text-white text-base font-bold hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                    Browse All Bags
-                  </button>
-                  <button
-                    onClick={() => setShowVisualSearch(true)}
-                    className="flex items-center justify-center rounded-lg h-12 px-6 bg-white/10 backdrop-blur-md text-white border border-white/20 text-base font-bold hover:bg-white/20 transition-all"
-                  >
-                    <span className="material-symbols-outlined mr-2">photo_camera</span>
+                <input
+                  type="text"
+                  placeholder="Search by name or upload a photo..."
+                  className="block w-full pl-11 pr-24 py-3 bg-background-light dark:bg-gray-800 border-transparent rounded-full text-sm focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-700 transition-all"
+                />
+                <div className="absolute inset-y-0 right-2 flex items-center">
+                  <button className="flex items-center gap-1 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold hover:bg-primary/20 transition-all">
+                    <span className="material-symbols-outlined text-base">image_search</span>
                     Visual Search
                   </button>
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* Section Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">Trending Now</h2>
-              <p className="text-[#616f89] text-sm mt-1 font-medium">Curated pieces for your everyday journey</p>
-            </div>
-            <button className="text-primary font-bold text-sm flex items-center hover:underline">
-              View All <span className="material-symbols-outlined ml-1">chevron_right</span>
-            </button>
-          </div>
-
-          {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Product Card 1 */}
-            <div className="group flex flex-col bg-white dark:bg-[#1c212b] rounded-xl overflow-hidden border border-[#f0f2f4] dark:border-[#2a2d35] transition-all hover:shadow-xl hover:shadow-black/5">
-              <div className="relative aspect-square w-full overflow-hidden bg-[#f6f6f8] dark:bg-[#252a36]">
-                <div
-                  className="absolute inset-0 bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-110"
-                  data-alt="Luxury black leather executive tote bag close-up"
-                  style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBduHU4KRVhe-L3pVdYpiJUXXmVJpXv9PT9ILlzp-MJR35H1EzUQ0966LDurxZlQSltd_sYifIiCrMjskIYH0aQF4ONdoVyM89bDK8R9eS69rMx_K79ejTV4bbpzKqIxeP2iSRgb9pNGzJZI9R5Z-6vJSyF27d-JB0lnUWxvQYqIw_uzlE_EenjEcbEiJnj1rr-29XPq7S6SU9pE283zJmah-Tv0Psc1kdqGqgQ902C80I70XCfxpkdEUoO5BoIUfhLYpNmE8dnatQ")' }}
+            <div className="flex items-center gap-5">
+              <button className="text-[#616f89] hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-2xl">favorite</span>
+              </button>
+              <button className="relative text-[#616f89] hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-2xl">shopping_cart</span>
+                <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+              </button>
+              <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <img
+                  alt="User"
+                  className="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"
                 />
-                <div className="absolute top-3 right-3">
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter shadow-sm">Only 3 Left</span>
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                <div>
-                  <p className="text-sm text-[#616f89] font-semibold uppercase tracking-wider mb-1">Handbags</p>
-                  <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">Executive Leather Tote</h3>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="size-4 rounded-full bg-black border border-gray-200 cursor-pointer ring-offset-2 ring-1 ring-black" title="Obsidian" />
-                    <div className="size-4 rounded-full bg-[#8B4513] border border-gray-200 cursor-pointer" title="Tan" />
-                    <div className="size-4 rounded-full bg-[#E5E4E2] border border-gray-200 cursor-pointer" title="Platinum" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-black">$285.00</span>
-                </div>
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold h-11 rounded-lg hover:brightness-110 transition-all shadow-md">
-                  <span className="material-symbols-outlined text-lg">chat</span>
-                  Contact Seller
-                </button>
-              </div>
-            </div>
-
-            {/* Product Card 2 */}
-            <div className="group flex flex-col bg-white dark:bg-[#1c212b] rounded-xl overflow-hidden border border-[#f0f2f4] dark:border-[#2a2d35] transition-all hover:shadow-xl hover:shadow-black/5">
-              <div className="relative aspect-square w-full overflow-hidden bg-[#f6f6f8] dark:bg-[#252a36]">
-                <div
-                  className="absolute inset-0 bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-110"
-                  data-alt="Modern olive green commuter backpack"
-                  style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAw1pO2QSZLTRqg338s__Oxr02t7wjHNrM6woZj8gSE39M2H4Fa4B1JHzP_ZGjowHwknVYI2ZS7K-bNfeeT4mbetW6-7NxZvTUeN5LgCVNJViwvsihexo-fo4yp9daO5OGjtUVm-4AA9NcYM3sFsMaJIH3_zkba7TDmMIitRBM8bakvfnfsFYtYKAfqoAYAeV3RmzhY4cl2U6qr5WaESRrBJOLvz__UHb3_wca-vKkJEo2v1BoEvKpsws0XtQiJAe-1aC8rmCwM1jE")' }}
-                />
-                <div className="absolute top-3 right-3">
-                  <span className="bg-background-light dark:bg-[#2a2d35] text-[#111318] dark:text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter shadow-sm border border-[#f0f2f4] dark:border-none">In Stock</span>
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                <div>
-                  <p className="text-sm text-[#616f89] font-semibold uppercase tracking-wider mb-1">Travel</p>
-                  <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">Urban Commuter Pack</h3>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="size-4 rounded-full bg-[#556B2F] border border-gray-200 cursor-pointer ring-offset-2 ring-1 ring-[#556B2F]" title="Olive" />
-                    <div className="size-4 rounded-full bg-[#1c1c1c] border border-gray-200 cursor-pointer" title="Midnight" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-black">$145.00</span>
-                </div>
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold h-11 rounded-lg hover:brightness-110 transition-all shadow-md">
-                  <span className="material-symbols-outlined text-lg">chat</span>
-                  Contact Seller
-                </button>
-              </div>
-            </div>
-
-            {/* Product Card 3 */}
-            <div className="group flex flex-col bg-white dark:bg-[#1c212b] rounded-xl overflow-hidden border border-[#f0f2f4] dark:border-[#2a2d35] transition-all hover:shadow-xl hover:shadow-black/5">
-              <div className="relative aspect-square w-full overflow-hidden bg-[#f6f6f8] dark:bg-[#252a36]">
-                <div
-                  className="absolute inset-0 bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-110"
-                  data-alt="Premium emerald silk evening clutch"
-                  style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAaoJyV0-7VaPnl9ObRXezTnA4bMV8JN47-M4GwCx1s-aaPVKY55waEUz_kR1gVcDQ1ifRNIG0xImopt3F4HaSzuM6hh_FPrBEVxgA2rGD6v6dCf4Vas31dpmUxgtanQwjZQJqVhtPsQeEKXelin1VuWGgG0uDJ2sujqwalR0lr3_tFHL2Xt067Q-dnMU28T6U5MAy9IjE523h3y-yTmI6931yqgWayeR2jSfRaJFo1mWeGJHna32ENBc0OJmoYVDEmyV5Qk3IB0J0")' }}
-                />
-                <div className="absolute top-3 right-3">
-                  <span className="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter shadow-sm">Limited Edition</span>
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                <div>
-                  <p className="text-sm text-[#616f89] font-semibold uppercase tracking-wider mb-1">Evening</p>
-                  <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">Silk Gala Clutch</h3>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="size-4 rounded-full bg-[#004d40] border border-gray-200 cursor-pointer ring-offset-2 ring-1 ring-[#004d40]" title="Emerald" />
-                    <div className="size-4 rounded-full bg-[#fdd835] border border-gray-200 cursor-pointer" title="Gold" />
-                    <div className="size-4 rounded-full bg-[#d81b60] border border-gray-200 cursor-pointer" title="Magenta" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-black">$95.00</span>
-                </div>
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold h-11 rounded-lg hover:brightness-110 transition-all shadow-md">
-                  <span className="material-symbols-outlined text-lg">chat</span>
-                  Contact Seller
-                </button>
-              </div>
-            </div>
-
-            {/* Product Card 4 */}
-            <div className="group flex flex-col bg-white dark:bg-[#1c212b] rounded-xl overflow-hidden border border-[#f0f2f4] dark:border-[#2a2d35] transition-all hover:shadow-xl hover:shadow-black/5">
-              <div className="relative aspect-square w-full overflow-hidden bg-[#f6f6f8] dark:bg-[#252a36]">
-                <div
-                  className="absolute inset-0 bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-110"
-                  data-alt="Minimalist beige leather crossbody bag"
-                  style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCpMKnjO72xADYFOzAAgfhRCZvBiY2i72IIkHSx3VsqcfIY0uM8iqsnQpG_aueRGJL8DUDCMg9zVLioNfoab13LM29iIXcq72tISWxiWSAAfdYdgJ_4pPWxKxYXYuKyNm6VdBCtWp3CwNuS365kWcZNMPk-XmwwcIRGTgFNHUu1UG1irT7YgDP3ECePvPtvcNKiUU5O7sM5u5fAcCtlTKcX5G0dqwrghWEoIYIhvmOPFx3wFrMyPhQyNVS2Tq_1hZfb60mHVL0Q2MM")' }}
-                />
-                <div className="absolute top-3 right-3">
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter shadow-sm">Only 5 Left</span>
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                <div>
-                  <p className="text-sm text-[#616f89] font-semibold uppercase tracking-wider mb-1">Crossbody</p>
-                  <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">Classic City Crossbody</h3>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="size-4 rounded-full bg-[#F5F5DC] border border-gray-200 cursor-pointer ring-offset-2 ring-1 ring-[#F5F5DC]" title="Beige" />
-                    <div className="size-4 rounded-full bg-black border border-gray-200 cursor-pointer" title="Obsidian" />
-                    <div className="size-4 rounded-full bg-[#800000] border border-gray-200 cursor-pointer" title="Burgundy" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-black">$120.00</span>
-                </div>
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold h-11 rounded-lg hover:brightness-110 transition-all shadow-md">
-                  <span className="material-symbols-outlined text-lg">chat</span>
-                  Contact Seller
-                </button>
-              </div>
+              </button>
             </div>
           </div>
-        </main>
-
-        {/* WhatsApp Floating CTA (Mobile/Secondary) */}
-        <div className="fixed bottom-6 right-6 z-50">
-          <button
-            className="flex items-center justify-center size-14 bg-whatsapp text-white rounded-full shadow-2xl hover:scale-110 transition-transform shadow-whatsapp/30"
-            title="Contact via WhatsApp"
-          >
-            <svg className="size-8" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-            </svg>
-          </button>
         </div>
+      </header>
 
-        {/* Simple Footer */}
-        <footer className="mt-20 border-t border-[#f0f2f4] dark:border-[#2a2d35] bg-white dark:bg-background-dark px-6 md:px-10 lg:px-40 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div className="col-span-1 md:col-span-1">
-              <h2 className="text-xl font-bold mb-4 tracking-tight">LUXE BAGS</h2>
-              <p className="text-[#616f89] text-sm leading-relaxed">
-                Curating the world's finest leather bags. Quality and craftsmanship guaranteed.
-              </p>
+      <main>
+        {/* Hero */}
+        <section className="relative h-[600px] w-full overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              alt="Hero"
+              className="w-full h-full object-cover"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+          </div>
+
+          <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-start">
+            <span className="text-primary font-bold tracking-[0.2em] uppercase mb-4">Limited Edition</span>
+            <h1 className="text-5xl md:text-7xl font-black text-white max-w-2xl leading-[1.1] mb-6">
+              Find Your Perfect Match <br />
+              With <span className="text-primary">AI Vision</span>
+            </h1>
+            <p className="text-gray-200 text-lg max-w-lg mb-8">
+              See a bag you love? Take a photo and our AI will find it or suggest similar styles from our luxury collection.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button className="px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-full hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 flex items-center gap-2 transform hover:-translate-y-0.5">
+                <span className="material-symbols-outlined text-xl">camera_enhance</span>
+                Try Visual Search
+              </button>
+              <button className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold rounded-full hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-0.5">
+                Browse Catalog
+              </button>
             </div>
+          </div>
+        </section>
 
-            <div>
-              <h4 className="font-bold mb-4">Shop</h4>
-              <ul className="text-sm text-[#616f89] space-y-2">
-                <li><a className="hover:text-primary transition-colors" href="#">New Arrivals</a></li>
-                <li><a className="hover:text-primary transition-colors" href="#">Bestsellers</a></li>
-                <li><a className="hover:text-primary transition-colors" href="#">Sale</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4">Support</h4>
-              <ul className="text-sm text-[#616f89] space-y-2">
-                <li><a className="hover:text-primary transition-colors" href="#">Contact Us</a></li>
-                <li><a className="hover:text-primary transition-colors" href="#">Shipping Policy</a></li>
-                <li><a className="hover:text-primary transition-colors" href="#">Returns</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4">Connect</h4>
-              <div className="flex gap-4">
-                <button className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-sm">alternate_email</span>
+        {/* New Arrivals */}
+        <section className="py-16 bg-white dark:bg-background-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-black tracking-tight">New Arrivals</h2>
+                <p className="text-[#616f89] mt-2">Fresh arrivals from the world's most iconic designers.</p>
+              </div>
+              <div className="flex gap-2">
+                <button className="size-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+                  <span className="material-symbols-outlined">chevron_left</span>
                 </button>
-                <button className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-sm">public</span>
+                <button className="size-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+                  <span className="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto no-scrollbar pb-8">
+              {/* Card 1 */}
+              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
+                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
+                  <img
+                    alt="Classic Leather Tote"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">New In</span>
+                  </div>
+                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
+                    <span className="material-symbols-outlined">add_shopping_cart</span>
+                  </button>
+                </div>
+                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Monogram Leather Tote</h3>
+                <p className="text-[#616f89] text-sm">Classic Collection</p>
+                <p className="text-xl font-black mt-2">$2,450.00</p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
+                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
+                  <img
+                    alt="Suede Crossbody"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9TsB1OZKW1UX2EF8YrcsHRB7QvWhHeVYXdDnyZbtG4RGsbyBnIhSX0DeNHq4vtIpwZYlm0RAXqDR6uVRCZdla9Yuw3IlnxkzqFGDJSM8HNtiF1MlH2bAZyj0RMGTHFUCYuMCyTcbDTkUNxI7RW84cgcw36Y91iTzEC6CDGInerpFD7lmrhPKnvvuX4sjYsbMCxJ2ijCmO-M3G5fya4FGV6cTI0r0oUlqBxB-dYe0N-HEINpbeJFZlMKd8T6SdjBeunheBtOHU5KU"
+                  />
+                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
+                    <span className="material-symbols-outlined">add_shopping_cart</span>
+                  </button>
+                </div>
+                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Velvet Suede Crossbody</h3>
+                <p className="text-[#616f89] text-sm">Limited Edition</p>
+                <p className="text-xl font-black mt-2">$1,890.00</p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
+                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
+                  <img
+                    alt="Evening Clutch"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
+                  />
+                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
+                    <span className="material-symbols-outlined">add_shopping_cart</span>
+                  </button>
+                </div>
+                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Gilded Evening Clutch</h3>
+                <p className="text-[#616f89] text-sm">Evening Wear</p>
+                <p className="text-xl font-black mt-2">$3,200.00</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Two-up category banners */}
+        <section className="py-16 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Left */}
+          <div className="relative h-[450px] rounded-[2rem] overflow-hidden group">
+            <img
+              alt="Luxury Totes"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
+            />
+            <div className="absolute inset-0 bg-black/30"></div>
+            <div className="absolute inset-0 p-12 flex flex-col justify-end">
+              <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Luxury Totes</h3>
+              <p className="text-gray-200 mb-8 max-w-xs">Elevate your daily carry with our premium selection of oversized leather totes.</p>
+              <button className="w-fit px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-primary hover:text-white transition-all">
+                Shop Collection
+              </button>
+            </div>
+          </div>
+
+          {/* Right */}
+          <div className="relative h-[450px] rounded-[2rem] overflow-hidden group">
+            <img
+              alt="Minimalist Clutches"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
+            />
+            <div className="absolute inset-0 bg-black/30"></div>
+            <div className="absolute inset-0 p-12 flex flex-col justify-end">
+              <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Minimalist Clutches</h3>
+              <p className="text-gray-200 mb-8 max-w-xs">Sophisticated simplicity for your most important evening occasions.</p>
+              <button className="w-fit px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-primary hover:text-white transition-all">
+                Shop Collection
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Trending + Top Sellers */}
+        <section className="py-16 bg-background-light dark:bg-gray-900/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/* Trending */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-black tracking-tight">Trending Now</h2>
+                  <a href="#" className="text-sm font-bold text-primary flex items-center gap-1">
+                    View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Trend item */}
+                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
+                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img
+                        alt="Trend"
+                        className="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="font-bold">Python Effect Tote</h4>
+                      <p className="text-[#616f89] text-xs">Exotic Skins</p>
+                      <p className="text-primary font-black mt-1">$4,200</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
+                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img
+                        alt="Trend"
+                        className="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9TsB1OZKW1UX2EF8YrcsHRB7QvWhHeVYXdDnyZbtG4RGsbyBnIhSX0DeNHq4vtIpwZYlm0RAXqDR6uVRCZdla9Yuw3IlnxkzqFGDJSM8HNtiF1MlH2bAZyj0RMGTHFUCYuMCyTcbDTkUNxI7RW84cgcw36Y91iTzEC6CDGInerpFD7lmrhPKnvvuX4sjYsbMCxJ2ijCmO-M3G5fya4FGV6cTI0r0oUlqBxB-dYe0N-HEINpbeJFZlMKd8T6SdjBeunheBtOHU5KU"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="font-bold">Retro Crossbody</h4>
+                      <p className="text-[#616f89] text-xs">Vintage Series</p>
+                      <p className="text-primary font-black mt-1">$1,550</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
+                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img
+                        alt="Trend"
+                        className="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="font-bold">Crystal Mini Bag</h4>
+                      <p className="text-[#616f89] text-xs">Party Edit</p>
+                      <p className="text-primary font-black mt-1">$2,100</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
+                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <img
+                        alt="Trend"
+                        className="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="font-bold">Weekend Duffel</h4>
+                      <p className="text-[#616f89] text-xs">Travel Luxe</p>
+                      <p className="text-primary font-black mt-1">$2,800</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Sellers */}
+              <div>
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-black tracking-tight">Top Sellers</h2>
+                </div>
+                <div className="space-y-6">
+                  {[
+                    { n: '01', title: 'Classic Shopper XL', sold: 'Sold 1,204 times' },
+                    { n: '02', title: 'Mini Bucket Bag', sold: 'Sold 982 times' },
+                    { n: '03', title: 'Silk Scarf Handle Bag', sold: 'Sold 845 times' },
+                  ].map((i, idx) => (
+                    <div key={idx} className="flex items-center gap-4 group cursor-pointer">
+                      <span className="text-2xl font-black text-gray-200 group-hover:text-primary transition-colors">{i.n}</span>
+                      <div className="size-16 rounded-xl overflow-hidden">
+                        <img
+                          alt="Top"
+                          className="w-full h-full object-cover"
+                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
+                        />
+                      </div>
+                      <div className="flex-1 border-b border-gray-200 dark:border-gray-800 pb-4">
+                        <h4 className="font-bold text-sm">{i.title}</h4>
+                        <p className="text-[#616f89] text-xs">{i.sold}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="w-full mt-8 py-3 border-2 border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all">
+                  View Leaderboard
                 </button>
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="mt-12 pt-8 border-t border-[#f0f2f4] dark:border-[#2a2d35] flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-[#616f89]">© 2024 Luxe Bags E-commerce. All rights reserved.</p>
-            <div className="flex gap-6 text-xs text-[#616f89]">
-              <a className="hover:text-primary" href="#">Privacy Policy</a>
-              <a className="hover:text-primary" href="#">Terms of Service</a>
+        {/* WhatsApp CTA banner */}
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-primary/5 border border-primary/10 rounded-[3rem] p-12 flex flex-col md:flex-row items-center justify-between gap-12">
+              <div className="max-w-xl text-center md:text-left">
+                <div className="size-16 bg-white rounded-2xl flex items-center justify-center text-green-500 shadow-xl shadow-green-500/10 mb-6 mx-auto md:mx-0">
+                  <svg className="size-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"></path>
+                  </svg>
+                </div>
+                <h2 className="text-4xl font-black mb-4">Concierge on WhatsApp</h2>
+                <p className="text-[#616f89] text-lg">Chat directly with our styling experts. Send us a picture of your outfit and we'll recommend the perfect accessory instantly.</p>
+              </div>
+              <button className="px-12 py-5 bg-green-500 text-white font-black rounded-full flex items-center gap-3 hover:bg-green-600 transition-all shadow-xl shadow-green-500/20 whitespace-nowrap">
+                <span className="material-symbols-outlined">forum</span>
+                Start Styling Session
+              </button>
             </div>
           </div>
-        </footer>
+        </section>
+      </main>
 
-        {/* Visual Search Modal */}
-        {showVisualSearch && (
-          <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
-            <div className="bg-white dark:bg-[#1c212b] rounded-2xl w-full max-w-lg p-8 shadow-2xl">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">Visual Search</h3>
-                <button
-                  className="text-gray-400 hover:text-black dark:hover:text-white"
-                  onClick={() => setShowVisualSearch(false)}
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-
-              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-12 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50">
-                <span className="material-symbols-outlined text-4xl text-primary mb-4">cloud_upload</span>
-                <p className="text-sm font-bold mb-1">Drag and drop an image</p>
-                <p className="text-xs text-gray-500 mb-6">JPEG, PNG up to 5MB</p>
-                <button className="bg-primary text-white px-6 py-2 rounded-lg text-sm font-bold">Select File</button>
-              </div>
-
-              <div className="mt-6">
-                <p className="text-xs text-center text-gray-400">Our AI will find matching bags from our collection</p>
-              </div>
+      {/* Footer */}
+      <footer className="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+              <span className="material-symbols-outlined text-sm">shopping_bag</span>
             </div>
+            <span className="text-lg font-black tracking-tight">LUXEBAG</span>
           </div>
-        )}
+          <p className="text-[#616f89] text-sm">© 2024 LuxeBag International. All rights reserved.</p>
+        </div>
+      </footer>
+
+      {/* Floating Visual Search (mobile) */}
+      <div className="fixed bottom-8 right-8 z-40 md:hidden">
+        <button className="size-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl">
+          <span className="material-symbols-outlined text-3xl">image_search</span>
+        </button>
       </div>
     </div>
   );

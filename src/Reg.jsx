@@ -6,7 +6,7 @@ import { supabase, ensureSupabaseReady } from './services/api';
 
 const Reg = () => {
   const navigate = useNavigate();
-  const { login, setLoading, loading } = useContext(AuthContext);
+  const { setLoading, loading } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -93,7 +93,6 @@ const Reg = () => {
       }
 
       // 4. Success state
-      login(data.user);
       setShowSuccess(true);
 
       // Redirect to login after successful registration
@@ -377,7 +376,7 @@ const Reg = () => {
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">Welcome!</h3>
-              <p className="text-slate-500">Redirecting you home...</p>
+              <p className="text-slate-500">Redirecting you to login...</p>
             </div>
           </div>
         </div>
