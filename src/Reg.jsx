@@ -98,10 +98,9 @@ const Reg = () => {
       // 4. Success state
       login(data.user);
       setShowSuccess(true);
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+
+      // Redirect to login after successful registration
+      navigate('/login');
 
     } catch (error) {
       console.error('Registration Flow Error:', error);
@@ -272,7 +271,7 @@ const Reg = () => {
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">Welcome!</h3>
-              <p className="text-slate-500">Redirecting you to login...</p>
+              <p className="text-slate-500">Redirecting you home...</p>
             </div>
           </div>
         </div>

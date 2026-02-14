@@ -7,7 +7,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // 2. validation helper
-const isKeyValid = (key) => key && key.length > 20 && key.split('.').length === 3;
+const isKeyValid = (key) => key && key.length > 20;
 
 if (!supabaseUrl || !isKeyValid(supabaseKey)) {
   console.error(

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 
@@ -189,9 +189,9 @@ const Login = () => {
               {/* Sign Up Link */}
               <p className="text-center text-sm text-[#636f88] dark:text-gray-400 pt-4">
                 Don't have an account?{' '}
-                <a className="text-primary font-bold hover:underline" href="#">
+                <Link className="text-primary font-bold hover:underline" to="/register">
                   Create an account
-                </a>
+                </Link>
               </p>
             </div>
 
