@@ -7,7 +7,7 @@ import { supabase, ensureSupabaseReady } from './services/api';
 const Reg = () => {
   const navigate = useNavigate();
   const { login, setLoading, loading } = useContext(AuthContext);
-  
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -16,9 +16,10 @@ const Reg = () => {
     role: 'buyer',
     terms: false,
   });
-  
+
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -40,7 +41,7 @@ const Reg = () => {
     if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (formData.role === 'seller' && !formData.phone) newErrors.phone = 'Phone is required for sellers';
     if (!formData.terms) newErrors.terms = 'You must agree to the terms';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -51,7 +52,7 @@ const Reg = () => {
 
     try {
       setLoading(true);
-      
+
       // 1. Check if configuration is loaded
       ensureSupabaseReady();
 
@@ -63,9 +64,9 @@ const Reg = () => {
           data: {
             full_name: formData.fullName,
             role: formData.role,
-            phone: formData.phone
-          }
-        }
+            phone: formData.phone,
+          },
+        },
       });
 
       if (signUpError) throw signUpError;
@@ -74,24 +75,20 @@ const Reg = () => {
         throw new Error('Registration successful, but no user data returned. Check your email for confirmation.');
       }
 
-      // 3. Insert into 'users' table 
+      // 3. Insert into 'users' table
       // Note: Ensure your Supabase RLS policies allow authenticated users to insert their own row
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert([
-          {
-            user_id: data.user.id,
-            full_name: formData.fullName,
-            email: formData.email,
-            phone: formData.phone,
-            role: formData.role,
-          },
-        ]);
+      const { error: insertError } = await supabase.from('users').insert([
+        {
+          user_id: data.user.id,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+        },
+      ]);
 
       if (insertError) {
-        // If the DB insert fails, we might want to log it but not block the user entirely
         console.error('Database profile creation failed:', insertError);
-        // Depending on your app logic, you might want to throw here or just warn
         throw new Error(`Profile creation failed: ${insertError.message}`);
       }
 
@@ -101,7 +98,6 @@ const Reg = () => {
 
       // Redirect to login after successful registration
       navigate('/login');
-
     } catch (error) {
       console.error('Registration Flow Error:', error);
       alert(error.message || 'An unexpected error occurred during registration.');
@@ -117,14 +113,40 @@ const Reg = () => {
         <div className="flex items-center gap-4 text-[#111318] dark:text-white">
           <div className="size-6 text-primary">
             <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path clipRule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="currentColor" fillRule="evenodd"></path>
+              <g clipPath="url(#clip0_6_535)">
+                <path
+                  clipRule="evenodd"
+                  d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z"
+                  fill="currentColor"
+                  fillRule="evenodd"
+                ></path>
+              </g>
+              <defs>
+                <clipPath id="clip0_6_535">
+                  <rect fill="white" height="48" width="48"></rect>
+                </clipPath>
+              </defs>
             </svg>
           </div>
-          <h2 className="text-[#111318] dark:text-white text-lg font-bold leading-tight">BagStore</h2>
+          <h2 className="text-[#111318] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BagStore</h2>
         </div>
         <div className="flex flex-1 justify-end gap-8">
-            <button onClick={() => navigate('/login')} className="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all">
-            Login
+          <div className="hidden md:flex items-center gap-9">
+            <a className="text-[#111318] dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">
+              Shop
+            </a>
+            <a className="text-[#111318] dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">
+              Visual Search
+            </a>
+            <a className="text-[#111318] dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">
+              Help
+            </a>
+          </div>
+          <button
+            onClick={() => navigate('/login')}
+            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-all"
+          >
+            <span className="truncate">Login</span>
           </button>
         </div>
       </header>
@@ -133,50 +155,99 @@ const Reg = () => {
       <main className="flex-1 flex overflow-hidden">
         {/* Left Side - Hero Image */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-primary items-center justify-center overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-40 bg-cover bg-center"
+            data-alt="Luxury leather bag in a minimalist studio setting"
+            style={{
+              backgroundImage:
+                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNwd6TRoB6JE1M09Iil_24jkG6PbaxKrxtC3U7owNjTialNvnDM11cueRpDlYpHjKvFvcJhly0H4c9KCe2g7g3FA-9knZHgiEgeBS0xhkPD-kxQ6egqIKYD9s0N2w4yk0S3-zdqLOJBGzkuH74SF6JW4W0NsQT2wS3OP7BZNeL16G6K8IJPy4uiliIMP0i6AM_VX9WtikZO5z_umCc7cmz4S7sa57qedZCh_w7vGONtQNfFOAFbqJI9e3fOVEIt2e99XxyeYirIbo')",
+            }}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
           <div className="relative z-10 px-12 text-white max-w-xl">
-            <h1 className="text-5xl font-black leading-tight mb-6">Step into the future of luxury.</h1>
-            <p className="text-lg font-medium text-white/90 mb-8">Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.</p>
+            <h1 className="text-5xl font-black leading-tight tracking-[-0.033em] mb-6">Step into the future of luxury.</h1>
+            <p className="text-lg font-medium text-white/90 mb-8 leading-relaxed">
+              Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
+            </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">photo_camera</span>
+                <span className="font-medium">Search by uploading a photo</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">chat_bubble</span>
+                <span className="font-medium">Real-time WhatsApp tracking</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">verified</span>
+                <span className="font-medium">Early access to limited drops</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Right Side - Form */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white dark:bg-background-dark overflow-y-auto">
           <div className="max-w-[480px] w-full flex flex-col gap-6 py-8">
-            
             <div className="flex flex-col gap-2">
-              <h2 className="text-[#111318] dark:text-white text-4xl font-black">Create your account</h2>
-              <p className="text-[#616f89] dark:text-slate-400">Ready to explore or start selling with BagStore?</p>
+              <h2 className="text-[#111318] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+                Create your account
+              </h2>
+              <p className="text-[#616f89] dark:text-slate-400 text-base font-normal leading-normal">
+                Ready to explore or start selling with BagStore?
+              </p>
             </div>
 
             {/* Role Selection */}
             <div className="flex flex-col gap-3">
-              <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold">How do you want to join?</p>
+              <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold leading-normal">How do you want to join?</p>
               <div className="grid grid-cols-2 gap-4">
                 <label className="cursor-pointer group">
-                  <input checked={formData.role === 'buyer'} onChange={() => handleRoleChange('buyer')} className="hidden peer" type="radio" name="role" value="buyer"/>
-                  <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-slate-200">
-                    <span className="material-symbols-outlined text-slate-400 mb-2 peer-checked:text-primary">shopping_bag</span>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 peer-checked:text-primary">Join as Buyer</span>
+                  <input
+                    checked={formData.role === 'buyer'}
+                    onChange={() => handleRoleChange('buyer')}
+                    className="hidden peer"
+                    type="radio"
+                    name="role"
+                    value="buyer"
+                  />
+                  <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-slate-200 dark:hover:border-slate-700">
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors mb-2 peer-checked:text-primary">
+                      shopping_bag
+                    </span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 peer-checked:text-primary">
+                      Join as Buyer
+                    </span>
                   </div>
                 </label>
                 <label className="cursor-pointer group">
-                  <input checked={formData.role === 'seller'} onChange={() => handleRoleChange('seller')} className="hidden peer" type="radio" name="role" value="seller"/>
-                  <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-slate-200">
-                    <span className="material-symbols-outlined text-slate-400 mb-2 peer-checked:text-primary">storefront</span>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 peer-checked:text-primary">Join as Seller</span>
+                  <input
+                    checked={formData.role === 'seller'}
+                    onChange={() => handleRoleChange('seller')}
+                    className="hidden peer"
+                    type="radio"
+                    name="role"
+                    value="seller"
+                  />
+                  <div className="flex flex-col items-center justify-center p-4 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-slate-200 dark:hover:border-slate-700">
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors mb-2 peer-checked:text-primary">
+                      storefront
+                    </span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 peer-checked:text-primary">
+                      Join as Seller
+                    </span>
                   </div>
                 </label>
               </div>
             </div>
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              
               {/* Full Name */}
               <label className="flex flex-col w-full">
-                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold pb-2">Full Name</p>
+                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Full Name</p>
                 <input
-                  className="form-input flex w-full rounded-lg border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 h-14 p-[15px] text-base focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#616f89] p-[15px] text-base font-normal transition-all"
                   placeholder="Enter your full name"
                   name="fullName"
                   value={formData.fullName}
@@ -187,9 +258,9 @@ const Reg = () => {
 
               {/* Email */}
               <label className="flex flex-col w-full">
-                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold pb-2">Email Address</p>
+                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Email Address</p>
                 <input
-                  className="form-input flex w-full rounded-lg border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 h-14 p-[15px] text-base focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#616f89] p-[15px] text-base font-normal transition-all"
                   placeholder="name@example.com"
                   type="email"
                   name="email"
@@ -201,29 +272,54 @@ const Reg = () => {
 
               {/* Phone */}
               <label className="flex flex-col w-full">
-                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold pb-2">Phone Number</p>
-                <input
-                  className="form-input flex w-full rounded-lg border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 h-14 p-[15px] text-base focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                  placeholder="+1 (555) 000-0000"
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
+                <div className="flex items-center gap-2 pb-2">
+                  <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold leading-normal" id="phone-label">
+                    Phone Number
+                  </p>
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-green-700 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-[12px]">chat</span>
+                    WhatsApp Sync
+                  </div>
+                </div>
+                <div className="relative">
+                  <input
+                    className={
+                      `form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border bg-white dark:bg-slate-800 h-14 placeholder:text-[#616f89] p-[15px] text-base font-normal transition-all ` +
+                      (formData.role === 'seller' ? 'border-primary bg-primary/5 dark:border-primary' : 'border-[#dbdfe6] dark:border-slate-700')
+                    }
+                    id="phone-field"
+                    placeholder="+1 (555) 000-0000"
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">We'll send order updates and inventory notifications via WhatsApp.</p>
                 {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </label>
 
               {/* Password */}
               <label className="flex flex-col w-full">
-                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold pb-2">Password</p>
-                <input
-                  className="form-input flex w-full rounded-lg border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 h-14 p-[15px] text-base focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                  placeholder="Create a strong password"
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+                <p className="text-[#111318] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Password</p>
+                <div className="relative group">
+                  <input
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbdfe6] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#616f89] p-[15px] text-base font-normal transition-all"
+                    placeholder="Create a strong password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <button
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                  </button>
+                </div>
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </label>
 
@@ -237,25 +333,35 @@ const Reg = () => {
                   checked={formData.terms}
                   onChange={handleChange}
                 />
-                <label className="text-sm text-slate-600 dark:text-slate-400" htmlFor="terms">
-                  I agree to the Terms of Service and Privacy Policy.
+                <label className="text-sm text-slate-600 dark:text-slate-400 leading-tight" htmlFor="terms">
+                  I agree to the <a className="text-primary font-semibold hover:underline" href="#">Terms of Service</a> and
+                  <a className="text-primary font-semibold hover:underline" href="#"> Privacy Policy</a>.
                 </label>
               </div>
               {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
 
               {/* Submit Button */}
-              <button 
+              <button
                 disabled={loading}
-                className={`mt-2 flex w-full cursor-pointer items-center justify-center rounded-lg h-14 bg-primary text-white text-base font-bold hover:bg-primary/90 transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`} 
+                className={`mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 hover:shadow-lg transition-all active:scale-[0.98] ${
+                  loading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
                 type="submit"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
 
+            {/* Sign In Link */}
             <div className="text-center pt-2">
               <p className="text-[#616f89] dark:text-slate-400 text-sm font-medium">
-                Already have an account? <span onClick={() => navigate('/login')} className="text-primary font-bold hover:underline cursor-pointer">Login</span>
+                Already have an account?
+                <span
+                  onClick={() => navigate('/login')}
+                  className="text-primary font-bold hover:underline cursor-pointer ml-1"
+                >
+                  Login
+                </span>
               </p>
             </div>
           </div>
@@ -276,6 +382,11 @@ const Reg = () => {
           </div>
         </div>
       )}
+
+      {/* Footer (mobile) */}
+      <footer className="lg:hidden p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-center">
+        <p className="text-slate-400 text-xs">© 2024 BagStore. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
