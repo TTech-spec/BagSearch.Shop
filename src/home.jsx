@@ -125,7 +125,7 @@ export default function Home() {
               <span className="text-xl font-black tracking-tight">LUXEBAG</span>
             </div>
 
-            <div className="flex-1 max-w-2xl mx-8 hidden md:block">
+            <div className="flex-1 max-w-2xl mx-8">
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <span className="material-symbols-outlined text-[#616f89] group-focus-within:text-primary transition-colors">search</span>
@@ -144,7 +144,37 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-5 md:hidden">
+              <button className="text-[#616f89] hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-2xl">favorite</span>
+              </button>
+              <button className="relative text-[#616f89] hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-2xl">shopping_cart</span>
+                <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+              </button>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <img
+                      src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                  <span className="hidden md:inline text-sm">{user.name || 'User'}</span>
+                  <button onClick={logout} className="px-3 py-1 text-xs font-bold rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleFakeLogin} className="px-4 py-2 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
+                  {loading ? 'Loading…' : 'Login'}
+                </button>
+              )}
+            </div>
+
+            {/* Desktop-only icons and user section */}
+            <div className="hidden md:flex items-center gap-5">
               <button className="text-[#616f89] hover:text-primary transition-colors">
                 <span className="material-symbols-outlined text-2xl">favorite</span>
               </button>
@@ -486,26 +516,57 @@ export default function Home() {
         
         {/* Sidebar Content */}
         <nav className="relative w-80 h-full bg-white dark:bg-background-dark p-6 shadow-2xl flex flex-col">
-          {/* User Info Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="size-12 rounded-full border-2 border-primary overflow-hidden">
-                <img 
-                  alt="User" 
-                  className="w-full h-full object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"
-                />
-              </div>
-              <div>
-                <p className="font-black text-sm leading-tight">Alex Rivers</p>
-                <p className="text-xs text-[#616f89]">Premium Member</p>
-              </div>
-            </div>
+          {/* Close Button */}
+          <div className="flex items-center justify-end mb-4">
             <button 
-              className="text-gray-400 hover:text-primary" 
+              className="text-gray-400 hover:text-primary p-2" 
               onClick={() => setSidebarOpen(false)}
             >
               <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {/* Logo in Sidebar */}
+          <div className="flex items-center gap-2 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
+            <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
+              <span className="material-symbols-outlined">shopping_bag</span>
+            </div>
+            <span className="text-xl font-black tracking-tight">LUXEBAG</span>
+          </div>
+
+          {/* User Section */}
+          {user ? (
+            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+              <button className="size-12 rounded-full border-2 border-primary overflow-hidden">
+                <img
+                  src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
+                  alt="User"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+              <div>
+                <p className="font-black text-sm">{user.name || 'User'}</p>
+                <p className="text-xs text-[#616f89]">Premium Member</p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+              <button onClick={handleFakeLogin} className="w-full px-4 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
+                {loading ? 'Loading…' : 'Login'}
+              </button>
+            </div>
+          )}
+
+          {/* Icons Row */}
+          <div className="flex items-center justify-around mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+            <button className="flex flex-col items-center gap-1 text-[#616f89] hover:text-primary transition-colors">
+              <span className="material-symbols-outlined text-2xl">favorite</span>
+              <span className="text-xs">Wishlist</span>
+            </button>
+            <button className="relative flex flex-col items-center gap-1 text-[#616f89] hover:text-primary transition-colors">
+              <span className="material-symbols-outlined text-2xl">shopping_cart</span>
+              <span className="text-xs">Cart</span>
+              <span className="absolute -top-2 -right-2 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
             </button>
           </div>
 
