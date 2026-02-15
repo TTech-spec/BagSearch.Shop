@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext, useState } from "react";
+import { AuthContext } from "./context/AuthContext";
 
-// Render the provided Tailwind HTML as React JSX with identical styling.
-// This component injects Tailwind CDN runtime config and Google fonts to match your snippet.
+// This component renders the LuxeBag landing page converted from static HTML to React JSX.
+// Tailwind via CDN and Google Fonts are injected into the document head on mount to mirror the original page behavior.
 
-const injectAssets = () => {
-  // Tailwind CDN
+const injectHeadAssets = () => {
+  // Tailwind CDN (with plugins)
   if (!document.querySelector('script[src^="https://cdn.tailwindcss.com"]')) {
     const script = document.createElement("script");
     script.src = "https://cdn.tailwindcss.com?plugins=forms,container-queries";
@@ -59,7 +60,7 @@ const injectAssets = () => {
     document.head.appendChild(link2);
   }
 
-  // Inline base styles and utilities used in the HTML
+  // Inline styles used by the original page
   if (!document.getElementById("luxe-inline-styles")) {
     const style = document.createElement("style");
     style.id = "luxe-inline-styles";
@@ -76,13 +77,32 @@ const injectAssets = () => {
 };
 
 export default function Home() {
+  const { user, login, logout, loading } = useContext(AuthContext);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   useEffect(() => {
-    injectAssets();
-    // Mirror original html root attributes
+    injectHeadAssets();
+    // Ensure the html element has the correct lang and class attributes similar to original
     const html = document.documentElement;
     html.lang = 'en';
-    if (!html.classList.contains('light') && !html.classList.contains('dark')) html.classList.add('light');
+    if (!html.classList.contains('light') && !html.classList.contains('dark')) {
+      html.classList.add('light');
+    }
   }, []);
+
+  const handleFakeLogin = () => {
+    if (!user) {
+      login({ name: 'Guest User', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs' });
+    }
+  };
+
+  const navItems = [
+    { icon: 'home', label: 'Home' },
+    { icon: 'grid_view', label: 'Collections' },
+    { icon: 'new_releases', label: 'New Arrivals' },
+    { icon: 'trending_up', label: 'Trending Now' },
+    { icon: 'info', label: 'About Us' },
+  ];
 
   return (
     <div className="bg-white dark:bg-background-dark font-display text-[#111318] dark:text-white">
@@ -90,6 +110,14 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg border-b border-[#dbdfe6] dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
+            {/* Mobile Menu Button */}
+            <button 
+              className="p-2 text-[#616f89] hover:text-primary transition-colors md:hidden"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <span className="material-symbols-outlined text-2xl">menu</span>
+            </button>
+
             <div className="flex items-center gap-2">
               <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
                 <span className="material-symbols-outlined">shopping_bag</span>
@@ -97,7 +125,7 @@ export default function Home() {
               <span className="text-xl font-black tracking-tight">LUXEBAG</span>
             </div>
 
-            <div className="flex-1 max-w-2xl mx-8">
+            <div className="flex-1 max-w-2xl mx-8 hidden md:block">
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <span className="material-symbols-outlined text-[#616f89] group-focus-within:text-primary transition-colors">search</span>
@@ -124,52 +152,62 @@ export default function Home() {
                 <span className="material-symbols-outlined text-2xl">shopping_cart</span>
                 <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
               </button>
-              <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <img
-                  alt="User"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"
-                />
-              </button>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <img
+                      src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                  <span className="hidden md:inline text-sm">{user.name || 'User'}</span>
+                  <button onClick={logout} className="px-3 py-1 text-xs font-bold rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleFakeLogin} className="px-4 py-2 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
+                  {loading ? 'Loading…' : 'Login'}
+                </button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       <main>
-        {/* Hero */}
+        {/* Hero Section */}
         <section className="relative h-[600px] w-full overflow-hidden">
           <div className="absolute inset-0">
-            <img
-              alt="Hero"
-              className="w-full h-full object-cover"
+            <img 
+              alt="Hero" 
+              className="w-full h-full object-cover" 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
           </div>
-
           <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-start">
             <span className="text-primary font-bold tracking-[0.2em] uppercase mb-4">Limited Edition</span>
             <h1 className="text-5xl md:text-7xl font-black text-white max-w-2xl leading-[1.1] mb-6">
-              Find Your Perfect Match <br />
-              With <span className="text-primary">AI Vision</span>
+              Find Your Perfect Match <br/>With <span className="text-primary">AI Vision</span>
             </h1>
             <p className="text-gray-200 text-lg max-w-lg mb-8">
               See a bag you love? Take a photo and our AI will find it or suggest similar styles from our luxury collection.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <button className="px-8 py-4 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-full hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 flex items-center gap-2 transform hover:-translate-y-0.5">
-                <span className="material-symbols-outlined text-xl">camera_enhance</span>
+            <div className="flex gap-4">
+              <button className="px-8 py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
+                <span className="material-symbols-outlined">camera_enhance</span>
                 Try Visual Search
               </button>
-              <button className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold rounded-full hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-0.5">
+              <button className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-100 transition-all">
                 Browse Catalog
               </button>
             </div>
           </div>
         </section>
 
-        {/* New Arrivals */}
+        {/* New Arrivals Section */}
         <section className="py-16 bg-white dark:bg-background-dark">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-10">
@@ -434,6 +472,73 @@ export default function Home() {
         <button className="size-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl">
           <span className="material-symbols-outlined text-3xl">image_search</span>
         </button>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div 
+        className={`fixed inset-0 z-[100] transform transition-transform duration-300 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+        
+        {/* Sidebar Content */}
+        <nav className="relative w-80 h-full bg-white dark:bg-background-dark p-6 shadow-2xl flex flex-col">
+          {/* User Info Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-full border-2 border-primary overflow-hidden">
+                <img 
+                  alt="User" 
+                  className="w-full h-full object-cover" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"
+                />
+              </div>
+              <div>
+                <p className="font-black text-sm leading-tight">Alex Rivers</p>
+                <p className="text-xs text-[#616f89]">Premium Member</p>
+              </div>
+            </div>
+            <button 
+              className="text-gray-400 hover:text-primary" 
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {/* Navigation Items */}
+          <div className="flex flex-col gap-2">
+            {navItems.map((item, index) => (
+              <a 
+                key={index}
+                href="#" 
+                className="flex items-center gap-3 px-4 py-3 text-lg font-bold hover:bg-primary/5 hover:text-primary rounded-xl transition-all"
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                {item.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Logout Button */}
+          <div className="mt-auto pt-8 border-t border-gray-100 dark:border-gray-800">
+            <button 
+              className="w-full py-4 bg-red-50 text-red-600 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+              onClick={() => {
+                if (user) {
+                  logout();
+                }
+                setSidebarOpen(false);
+              }}
+            >
+              <span className="material-symbols-outlined">logout</span>
+              {user ? 'Logout' : 'Login'}
+            </button>
+          </div>
+        </nav>
       </div>
     </div>
   );
