@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from './services/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -15,15 +16,18 @@ const ForgotPassword = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call for sending SMS reset link
-      // In a real app, you would call your backend API here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: phone,
+      });
+
+      if (error) throw error;
       
       // Navigate to reset password page after successful submission
-      navigate('/reset-password');
+      // We pass the phone number in the state so we can use it on the reset page
+      navigate('/reset-password', { state: { phone } });
     } catch (error) {
       console.error('Error sending reset link:', error);
-      alert('Failed to send reset link. Please try again.');
+      alert('Failed to send reset link: ' + error.message);
     } finally {
       setIsLoading(false);
     }

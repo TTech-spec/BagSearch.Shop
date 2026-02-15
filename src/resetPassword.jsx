@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { supabase } from './services/api';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
   const [formData, setFormData] = useState({
     verificationCode: '',
     newPassword: '',
@@ -46,6 +49,11 @@ const ResetPassword = () => {
     e.preventDefault();
     setError('');
 
+    if (!phone) {
+      setError('Phone number is missing. Please go back to the forgot password page.');
+      return;
+    }
+
     // Validate verification code
     if (formData.verificationCode.length !== 6) {
       setError('Please enter the 6-digit verification code');
@@ -67,15 +75,28 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call for resetting password
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 1. Verify OTP
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        phone: phone,
+        token: formData.verificationCode,
+        type: 'sms',
+      });
+
+      if (verifyError) throw verifyError;
+
+      // 2. Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: formData.newPassword,
+      });
+
+      if (updateError) throw updateError;
       
       // Show success message and redirect to login
       alert('Password reset successfully! Please login with your new password.');
       navigate('/login');
     } catch (error) {
       console.error('Error resetting password:', error);
-      setError('Failed to reset password. Please try again.');
+      setError('Failed to reset password: ' + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +170,23 @@ const ResetPassword = () => {
               </div>
               <p className="text-xs text-[#636f88] dark:text-[#94a3b8] mt-1">
                 Enter the 6-digit code sent to your mobile phone.
-                <button className="text-primary hover:underline font-medium ml-1" type="button">Resend Code</button>
+                <button 
+                  className="text-primary hover:underline font-medium ml-1 disabled:opacity-50" 
+                  type="button"
+                  onClick={async () => {
+                    if (!phone) return;
+                    try {
+                      const { error } = await supabase.auth.signInWithOtp({ phone });
+                      if (error) throw error;
+                      alert('Code resent successfully!');
+                    } catch (err) {
+                      alert('Failed to resend code: ' + err.message);
+                    }
+                  }}
+                  disabled={!phone || isLoading}
+                >
+                  Resend Code
+                </button>
               </p>
             </div>
 
