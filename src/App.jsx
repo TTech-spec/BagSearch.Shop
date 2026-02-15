@@ -4,6 +4,8 @@ import { AuthContext } from './context/AuthContext.jsx';
 import Reg from './Reg.jsx';
 import Login from './login.jsx';
 import Home from './home.jsx';
+import ForgotPassword from './forgotPassword.jsx';
+import ResetPassword from './resetPassword.jsx';
 
 function PrivateRoute({ children }) {
   const { user } = useContext(AuthContext);
@@ -26,6 +28,12 @@ function App() {
         {/* Login route: only accessible after registration if you want to enforce a flow.
             If you store a flag after registration, you can gate this route similarly. */}
         <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
+
+        {/* Forgot Password route */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Reset Password route */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Home protected behind login */}
         <Route

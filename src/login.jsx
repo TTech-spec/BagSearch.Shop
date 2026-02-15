@@ -130,9 +130,9 @@ const Login = () => {
                     <label className="block text-[#111318] dark:text-gray-200 text-sm font-semibold leading-normal mb-2">
                       Password
                     </label>
-                    <a className="text-primary text-xs font-bold hover:underline mb-2" href="#">
+                    <Link className="text-primary text-xs font-bold hover:underline mb-2" to="/forgot-password">
                       Forgot Password?
-                    </a>
+                    </Link>
                   </div>
                   <input
                     className="form-input flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-[#111318] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#dcdfe5] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary h-14 placeholder:text-[#636f88] p-[15px] text-base font-normal transition-all"
