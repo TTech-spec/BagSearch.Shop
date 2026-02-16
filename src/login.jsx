@@ -27,9 +27,32 @@ const Login = () => {
 
       if (error) throw error;
 
-      login(data.user);
+      // Fetch user's last name from your Supabase public profile table
+      // Adjust table/column names as needed (e.g., profiles with column last_name)
+      let lastName = undefined;
+      try {
+        const userId = data.user?.id;
+        if (userId) {
+          const { data: profileRow, error: profileError } = await supabase
+            .from('profiles')
+            .select('last_name')
+            .eq('id', userId)
+            .single();
+          if (profileError) {
+            console.warn('Profile fetch warning:', profileError.message);
+          } else {
+            lastName = profileRow?.last_name || undefined;
+          }
+        }
+      } catch (e2) {
+        console.warn('Could not fetch profile last name:', e2?.message || e2);
+      }
+
+      // Store enriched user in context so UI (navbar) can show last name
+      const enrichedUser = { ...data.user, last_name: lastName };
+      login(enrichedUser);
       alert('Login successful!');
-      navigate('/');
+      navigate('/home');
     } catch (error) {
       console.error('Login error:', error);
       let errorMsg = error.message;
@@ -56,7 +79,7 @@ const Login = () => {
               <path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"></path>
             </svg>
           </div>
-          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">Luxury Bags</h2>
+          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">AninriLuxe</h2>
         </div>
         <div className="flex items-center gap-8">
           <div className="hidden md:flex items-center gap-9">
@@ -130,7 +153,7 @@ const Login = () => {
                     <label className="block text-[#111318] dark:text-gray-200 text-sm font-semibold leading-normal mb-2">
                       Password
                     </label>
-                    <Link className="text-primary text-xs font-bold hover:underline mb-2" to="/forgot-password">
+                    <Link className="text-[#111318] dark:text-gray-200 text-xs font-bold hover:underline mb-2" to="/forgot-password">
                       Forgot Password?
                     </Link>
                   </div>

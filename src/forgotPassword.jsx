@@ -4,30 +4,42 @@ import { supabase } from './services/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState('');
+  const [method, setMethod] = useState('phone'); // 'phone' or 'email'
+  const [identifier, setIdentifier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
-    setPhone(e.target.value);
+    setIdentifier(e.target.value);
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phone,
-      });
-
-      if (error) throw error;
-      
-      // Navigate to reset password page after successful submission
-      // We pass the phone number in the state so we can use it on the reset page
-      navigate('/reset-password', { state: { phone } });
+      if (method === 'phone') {
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          phone: identifier,
+        });
+        if (otpError) throw otpError;
+        navigate('/reset-password', { state: { phone: identifier, method: 'phone' } });
+      } else {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(identifier, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (resetError) throw resetError;
+        alert('Password reset link sent to your email!');
+      }
     } catch (error) {
       console.error('Error sending reset link:', error);
-      alert('Failed to send reset link: ' + error.message);
+      let msg = error.message;
+      if (msg.includes('unverified') && msg.includes('Twilio')) {
+        msg = 'Twilio Trial Error: The phone number must be verified in the Twilio console before it can receive SMS. Alternatively, try using your Email Address.';
+      }
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -92,26 +104,51 @@ const ForgotPassword = () => {
                   Forgot Password
                 </h2>
                 <p className="text-base font-normal leading-relaxed text-[#636f88] dark:text-gray-400">
-                  Enter your phone number and we'll send you a link via SMS to reset your password.
+                  {method === 'phone' 
+                    ? "Enter your phone number and we'll send you a link via SMS to reset your password."
+                    : "Enter your email address and we'll send you a link to reset your password."}
                 </p>
+              </div>
+
+              {/* Method Toggle */}
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => { setMethod('phone'); setIdentifier(''); setError(''); }}
+                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${method === 'phone' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Phone Number
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMethod('email'); setIdentifier(''); setError(''); }}
+                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${method === 'email' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Email Address
+                </button>
               </div>
 
               {/* Form */}
               <form className="space-y-6" onSubmit={handleSubmit}>
+                {error && (
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label 
                     className="text-sm font-semibold tracking-wide uppercase text-[#111318] dark:text-gray-200" 
-                    htmlFor="phone"
+                    htmlFor="identifier"
                   >
-                    Phone Number
+                    {method === 'phone' ? 'Phone Number' : 'Email Address'}
                   </label>
                   <input
                     className="block w-full rounded-lg border border-[#dcdfe5] bg-white px-4 py-4 text-base text-[#111318] transition-all placeholder:text-[#636f88] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-[#1c222d] dark:text-white dark:placeholder:text-gray-500"
-                    id="phone"
-                    name="phone"
-                    placeholder="+1 (555) 000-0000"
-                    type="tel"
-                    value={phone}
+                    id="identifier"
+                    name="identifier"
+                    placeholder={method === 'phone' ? '+1 (555) 000-0000' : 'name@example.com'}
+                    type={method === 'phone' ? 'tel' : 'email'}
+                    value={identifier}
                     onChange={handleChange}
                     required
                   />

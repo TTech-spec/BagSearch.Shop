@@ -6,6 +6,8 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const phone = location.state?.phone;
+  const method = location.state?.method || 'phone';
+  
   const [formData, setFormData] = useState({
     verificationCode: '',
     newPassword: '',
@@ -15,6 +17,19 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isEmailReset, setIsEmailReset] = useState(false);
+
+  // Check if we arrived here via an email reset link
+  React.useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // If there's a session, it might be from a recovery link
+        setIsEmailReset(true);
+      }
+    };
+    checkSession();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,15 +64,18 @@ const ResetPassword = () => {
     e.preventDefault();
     setError('');
 
-    if (!phone) {
-      setError('Phone number is missing. Please go back to the forgot password page.');
-      return;
-    }
+    // If not email reset, validate phone and code
+    if (!isEmailReset) {
+      if (!phone) {
+        setError('Phone number is missing. Please go back to the forgot password page.');
+        return;
+      }
 
-    // Validate verification code
-    if (formData.verificationCode.length !== 6) {
-      setError('Please enter the 6-digit verification code');
-      return;
+      // Validate verification code
+      if (formData.verificationCode.length !== 6) {
+        setError('Please enter the 6-digit verification code');
+        return;
+      }
     }
 
     // Validate passwords match
@@ -75,14 +93,16 @@ const ResetPassword = () => {
     setIsLoading(true);
     
     try {
-      // 1. Verify OTP
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        phone: phone,
-        token: formData.verificationCode,
-        type: 'sms',
-      });
+      // 1. Verify OTP only if it's a phone reset
+      if (!isEmailReset) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          phone: phone,
+          token: formData.verificationCode,
+          type: 'sms',
+        });
 
-      if (verifyError) throw verifyError;
+        if (verifyError) throw verifyError;
+      }
 
       // 2. Update password
       const { error: updateError } = await supabase.auth.updateUser({
@@ -91,6 +111,11 @@ const ResetPassword = () => {
 
       if (updateError) throw updateError;
       
+      // If email reset, sign out after password update to ensure clean state
+      if (isEmailReset) {
+        await supabase.auth.signOut();
+      }
+
       // Show success message and redirect to login
       alert('Password reset successfully! Please login with your new password.');
       navigate('/login');
@@ -142,7 +167,11 @@ const ResetPassword = () => {
           
           <div className="mb-10">
             <h2 className="text-[#111318] dark:text-white text-3xl font-bold leading-tight mb-2">Reset Password</h2>
-            <p className="text-[#636f88] dark:text-[#94a3b8] text-base font-normal leading-normal">Enter the verification code and your new password below to secure your account.</p>
+            <p className="text-[#636f88] dark:text-[#94a3b8] text-base font-normal leading-normal">
+              {isEmailReset 
+                ? "Please enter your new password below to secure your account."
+                : "Enter the verification code and your new password below to secure your account."}
+            </p>
           </div>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -153,42 +182,44 @@ const ResetPassword = () => {
               </div>
             )}
 
-            {/* Verification Code Field */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[#111318] dark:text-white text-sm font-semibold leading-normal">Verification Code</label>
-              <div className="relative flex items-stretch">
-                <input 
-                  className="form-input flex w-full rounded-lg border-[#dcdfe5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#111318] dark:text-white h-14 px-4 text-base font-normal tracking-[0.5em] transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-                  maxLength={6}
-                  placeholder="000000"
-                  type="text"
-                  name="verificationCode"
-                  value={formData.verificationCode}
-                  onChange={handleChange}
-                  required
-                />
+            {/* Verification Code Field (Only for Phone) */}
+            {!isEmailReset && (
+              <div className="flex flex-col gap-2">
+                <label className="text-[#111318] dark:text-white text-sm font-semibold leading-normal">Verification Code</label>
+                <div className="relative flex items-stretch">
+                  <input 
+                    className="form-input flex w-full rounded-lg border-[#dcdfe5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#111318] dark:text-white h-14 px-4 text-base font-normal tracking-[0.5em] transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                    maxLength={6}
+                    placeholder="000000"
+                    type="text"
+                    name="verificationCode"
+                    value={formData.verificationCode}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <p className="text-xs text-[#636f88] dark:text-[#94a3b8] mt-1">
+                  Enter the 6-digit code sent to your mobile phone.
+                  <button 
+                    className="text-primary hover:underline font-medium ml-1 disabled:opacity-50" 
+                    type="button"
+                    onClick={async () => {
+                      if (!phone) return;
+                      try {
+                        const { error } = await supabase.auth.signInWithOtp({ phone });
+                        if (error) throw error;
+                        alert('Code resent successfully!');
+                      } catch (err) {
+                        alert('Failed to resend code: ' + err.message);
+                      }
+                    }}
+                    disabled={!phone || isLoading}
+                  >
+                    Resend Code
+                  </button>
+                </p>
               </div>
-              <p className="text-xs text-[#636f88] dark:text-[#94a3b8] mt-1">
-                Enter the 6-digit code sent to your mobile phone.
-                <button 
-                  className="text-primary hover:underline font-medium ml-1 disabled:opacity-50" 
-                  type="button"
-                  onClick={async () => {
-                    if (!phone) return;
-                    try {
-                      const { error } = await supabase.auth.signInWithOtp({ phone });
-                      if (error) throw error;
-                      alert('Code resent successfully!');
-                    } catch (err) {
-                      alert('Failed to resend code: ' + err.message);
-                    }
-                  }}
-                  disabled={!phone || isLoading}
-                >
-                  Resend Code
-                </button>
-              </p>
-            </div>
+            )}
 
             {/* New Password Field */}
             <div className="flex flex-col gap-2">

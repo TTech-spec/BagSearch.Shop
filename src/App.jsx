@@ -1,11 +1,29 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useContext, useEffect } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
+import { supabase } from './services/api';
 import Reg from './Reg.jsx';
 import Login from './login.jsx';
 import Home from './home.jsx';
+import UserProfile from './userProfile.jsx';
 import ForgotPassword from './forgotPassword.jsx';
 import ResetPassword from './resetPassword.jsx';
+
+function AuthListener() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  return null;
+}
 
 function PrivateRoute({ children }) {
   const { user } = useContext(AuthContext);
@@ -18,6 +36,7 @@ function App() {
 
   return (
     <Router>
+      <AuthListener />
       <Routes>
         {/* Default route -> Registration first */}
         <Route path="/" element={<Navigate to="/register" replace />} />
@@ -41,6 +60,16 @@ function App() {
           element={
             <PrivateRoute>
               <Home />
+            </PrivateRoute>
+          }
+        />
+
+        {/* User Profile protected behind login */}
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <UserProfile />
             </PrivateRoute>
           }
         />
