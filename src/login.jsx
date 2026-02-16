@@ -60,7 +60,7 @@ const Login = () => {
         errorMsg = 'Could not connect to Supabase. Please check your internet connection and Supabase URL in .env.';
       } else if (errorMsg.includes('Invalid login credentials') || errorMsg.includes('invalid_credentials')) {
         errorMsg = 'Incorrect email or password. Please try again.';
-      } else if (import.meta.env.VITE_SUPABASE_ANON_KEY.startsWith('sb_publishable_')) {
+      } else if (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.startsWith('sb_publishable_')) {
         errorMsg = 'CRITICAL: Your Supabase API Key is invalid (looks like a Stripe key). Please update your .env file.';
       }
       alert(`Login failed: ${errorMsg}`);
