@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
@@ -13,6 +13,11 @@ function AuthListener() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for recovery hash on initial load
+    if (window.location.hash && window.location.hash.includes('type=recovery')) {
+      navigate('/reset-password', { replace: true });
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         navigate('/reset-password', { replace: true });
@@ -26,9 +31,25 @@ function AuthListener() {
 }
 
 function PrivateRoute({ children }) {
-  const { user } = useContext(AuthContext);
-  // Only allow access if logged in
+  const { user, loading } = useContext(AuthContext);
+  // Only allow access if logged in and not loading
+  if (loading) {
+    return null; // Or a loading spinner
+  }
   return user ? children : <Navigate to="/login" replace />;
+}
+
+function LoginRoute() {
+  const { user } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
+  const force = searchParams.get('force') === 'true';
+  
+  // If user is logged in and force parameter is not set, redirect to home
+  if (user && !force) {
+    return <Navigate to="/home" replace />;
+  }
+  
+  return <Login />;
 }
 
 function App() {
@@ -46,7 +67,7 @@ function App() {
 
         {/* Login route: only accessible after registration if you want to enforce a flow.
             If you store a flag after registration, you can gate this route similarly. */}
-        <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
+        <Route path="/login" element={<LoginRoute />} />
 
         {/* Forgot Password route */}
         <Route path="/forgot-password" element={<ForgotPassword />} />

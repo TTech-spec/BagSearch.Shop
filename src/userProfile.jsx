@@ -1,400 +1,398 @@
-import React, { useEffect, useContext, useState } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, Calendar, History, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Card } from './components/ui/card';
+import { Badge } from './components/ui/badge';
+import { supabase } from './services/api';
 
-// This component renders the Luxury Bag Dashboard (User Profile) converted from static HTML to React JSX.
-// Tailwind via CDN and Google Fonts are injected into the document head on mount to mirror the original page behavior.
+// ─── Icon Component ──────────────────────────────────────────────────────────
+const Icon = ({ name, size = 22 }) => (
+  <span style={{
+    fontFamily: "'Material Symbols Outlined'",
+    fontWeight: "normal",
+    fontStyle: "normal",
+    fontSize: size,
+    lineHeight: 1,
+    display: "inline-block",
+    textTransform: "none",
+    letterSpacing: "normal",
+    wordWrap: "normal",
+    whiteSpace: "nowrap",
+    direction: "ltr",
+  }}>{name}</span>
+);
 
-const injectHeadAssets = () => {
-  // Tailwind CDN (with plugins)
-  if (!document.querySelector('script[src^="https://cdn.tailwindcss.com"]')) {
-    const script = document.createElement("script");
-    script.src = "https://cdn.tailwindcss.com?plugins=forms,container-queries";
-    document.head.appendChild(script);
-  }
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
 
-  // Tailwind runtime config
-  if (!document.getElementById("tailwind-config")) {
-    const cfg = document.createElement("script");
-    cfg.id = "tailwind-config";
-    cfg.innerHTML = `
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: '#135bec',
-              'background-light': '#f6f6f8',
-              'background-dark': '#101622',
-            },
-            fontFamily: {
-              display: ['Manrope', 'sans-serif'],
-            },
-            borderRadius: {
-              DEFAULT: '0.25rem',
-              lg: '0.5rem',
-              xl: '0.75rem',
-              full: '9999px',
-            },
-          },
-        },
-      }
-    `;
-    document.head.appendChild(cfg);
-  }
+function fmtShort(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString();
+}
 
-  // Google Fonts: Manrope
-  if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Manrope" ]')) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap";
-    document.head.appendChild(link);
-  }
+// ─── Skeleton placeholder ────────────────────────────────────────────────────
+function Skeleton({ className = '' }) {
+  return (
+    <div
+      className={`animate-pulse bg-gray-200 rounded ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
 
-  // Google Material Symbols Outlined
-  if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Material+Symbols+Outlined" ]')) {
-    const link2 = document.createElement("link");
-    link2.rel = "stylesheet";
-    link2.href =
-      "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
-    document.head.appendChild(link2);
-  }
-
-  // Inline styles used by the original page
-  if (!document.getElementById("luxe-inline-styles")) {
-    const style = document.createElement("style");
-    style.id = "luxe-inline-styles";
-    style.innerHTML = `
-      body { font-family: 'Manrope', sans-serif; }
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    `;
-    document.head.appendChild(style);
-  }
-};
-
-// Mock data for the dashboard
-const recentOrdersData = [
-  {
-    id: "ORD-7721",
-    name: "Hermès Birkin 30",
-    date: "Oct 24, 2023",
-    status: "Shipped",
-    price: "$12,500.00",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBECQ8HfkIxyxxchE3z0hxSz5fkbR5tPLUbOcZ-xhbs8v0UujtRaDmiMQimAaBzU5iKlHc7HpbInd7VK0Rcq1-Au1YTQYREK0YUQZGFEDvnC_mtC99IDuTItIavpoY11u89DBknbJkqz31rlyiVENX9Ekq4yPYTaujxC_uBl9tekiqkSlnRr72lBRihmpzEmM3azOcebAe5wMu_yWmn3XIYkvbaFj8bpCdE3gPZy8Gl40E047G1yNp1nLLWK_XvvK6-xQA-YSB1y8U"
-  },
-  {
-    id: "ORD-7604",
-    name: "Chanel Classic Flap",
-    date: "Sept 12, 2023",
-    status: "Processing",
-    price: "$8,900.00",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAZ3vAV4MfhCEFb8kljDnXO3D0j9CRgkUEuxCPVLoEblru9igM9MBU7VRUVRmhP-ci90g1twDatNY32jCl4A2zNZKlE4F68qKdskaY8bLogjB5GUeQhhVcYunxqrqay-_Iyi3Qtfx8kiKOd1xRoG39dynHQnpVj2wsMbLN_1MomC3hBqCugcIGKTAlyTqUdhafzcrgSG_TMtykwHjrYMG_f6hdmcp299vZ0aDOtbXW34sDgoqdDS7HVPczN6_nbq266UmwCr5KWPgM"
-  }
-];
-
-const visualSearchesData = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuA1mZVBNcM4XSzxbPif2JLlCldM1gDzifv5KO3K4_jouYOg--ADzGQkoZd25VWklR3C5aRoG2AWZZBNwIhbWGMKWICGNRoGxr28j0UiUuzrD7zMkFVaYsupbOCWcGRAyRtXFswBIupnVpDnMIMll2uLH59Oplta4rdPSB_-O049cGfJ4GDP05_sOTr3VXbanYZq5WRqMgkgHigdFxx3H_iOHxBKsD-pVswn7t9U9nbq0Eqc7G0o7Lm3SZKNpDunJxB7jEtcjjaOn9w",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuA215YNytnFxwPG4G1xOyVMzVS7veJIP97_yXcql41stagGsLFumVqK192-4l7NoqCiFs9UqusSCy5rtp7pANFLd1H5eeEHVv7EI35szDrw141Wov-7ElO87zT3xHRXM4RqxV4ukgMbe4HoR1JLp3k9HuotOVwydIJqF6KDN_jTuonBjJmuUIz1KZj4QiB1DUMBqB-xn7MVeIY1be510_BluuQgc9srr8D3dgxrXPpiqEyQajEndmWK2GA9PR5Su9Y_96UIvmkoXSw",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuC3mv1LLjxT_I7BChX7BaNo08af-h1wVIZlvC2o-gO_BnSHcD0_xQ-chKsZsnYsEt7NUvFM8mXusmbBXThzMji0DnkWt0nngub8bMwrBSXFlC-kKu0G8Vwwkr-_XUj--KuHDB-yUNlSRfZSbwHduA2_nlK7izZZ3bKiLAdh7zQwtURkR0pRX2euclAzd5y2kN4jpDjAoWujcgQpGeShD532UtaxVg-XLGSkIcwGcm3GkCYu_F_vR0AtBgJQMQPMXfFRIGt91Ik7VUI"
-];
-
-const favoritesData = [
-  {
-    name: "Prada Cleo",
-    description: "White Brushed Leather",
-    price: "$2,950",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBeBmQGUYwI_FMq7kgJLBsheP3dTRJUmWJWMVEKrWlHcgUuPn5ysW1oXsHla3387p91f3g4KwOxcWePxb7wglOzt_sm6nrjQjAe2gJ2-jm5tVupkmz9i99MfnkrVTWubX6hvKe2Nt_KGCV6zZbbJUM8u7IPbu6AndG8viCrQ-eOlfcwc6LNidBoUDhgrO-pOYzgBgRTz5R-RdcmBTLuQqB4h8vi0Hae4xCyz4USsvzISQkhI3AgdDWGJxDs5ijbw75siaMYVLGMqAU"
-  },
-  {
-    name: "LV Pochette",
-    description: "Monogram Canvas",
-    price: "$1,620",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDGbeOhhrxxut0VSEOiqzo3qvHHQJplzbmlXz5xjIlwlMRXSBPd7Kdz4_WkA3ih-f6tem4t8Oma6lCNDkLm-XoolSnMZcrZ_CXc0_AtleODvnc4Gyg409t6GQhTWPOnEOg2ep38GA-7h95OYpNJ3OhFRDELp-eV8yERevJKFTlEV9kP4NV96PFvaY7vNbpVyPavAyWk_bSKoi7HW32n-H5orgaN8yu9ctQj4ZfDYpiCfmtlzROVC-pD3gB_HfosR5re9vsIsA5-bJc"
-  },
-  {
-    name: "Gucci Marmont",
-    description: "Matelassé Leather",
-    price: "$2,550",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBBQRJgBgkwOV5f44ZLePbkqCjbTlF5pOvaifeh_ePLSW_G8UkV_YJxNPs1ZmX8KGSWJR2mCCU0V214PIJsNshHHjY2vpTpZboJl1SBj_F4thZnzpeO6Xd9Q7qM4oz3FLqsTZHFbMu-E0q-Ii0s-Ezgo_5N89beikyHbYW8LZDqHFqlC8ALei_YnHuKRo33SwN75ppoZHujC_KylKshislebcTI8CsoseKRdnVO0kL-Mp3MutH07nzQ2DEWveSfcYWC6aNWXFLxSys"
-  }
-];
-
-export default function UserProfile() {
-  const { user, logout } = useContext(AuthContext);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+// ─── Main component ──────────────────────────────────────────────────────────
+function UserProfile() {
+  const navigate = useNavigate();
+  const [profile,       setProfile]       = useState(null);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [stats,         setStats]         = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState(null);
 
   useEffect(() => {
-    injectHeadAssets();
-    const html = document.documentElement;
-    html.lang = 'en';
-    if (!html.classList.contains('light') && !html.classList.contains('dark')) {
-      html.classList.add('light');
+    async function loadAll() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const { data: { user }, error: authErr } = await supabase.auth.getUser();
+        if (authErr) throw authErr;
+        if (!user)   throw new Error('Not authenticated. Please sign in.');
+
+        const userId = user.id;
+
+        const { data: profileData, error: profileErr } = await supabase
+          .from('users')
+          .select('id, full_name, email, phone, role, created_at')
+          .eq('id', userId)
+          .maybeSingle();
+
+        const profile = profileData || {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || 'User',
+          email: user.email,
+          phone: user.user_metadata?.phone || '',
+          role: user.user_metadata?.role || 'buyer',
+          created_at: user.created_at,
+        };
+
+        setProfile(profile);
+
+        const { data: historyData, error: historyErr } = await supabase
+          .from('search_history')
+          .select('query, created_at, type')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (historyErr) {
+          console.warn('Search history not available:', historyErr.message);
+          setSearchHistory([]);
+        } else {
+          setSearchHistory(historyData ?? []);
+        }
+
+        const total  = historyData?.length ?? 0;
+        const images = historyData?.filter(h => h.type === 'image').length ?? 0;
+
+        const [ordersResult, savedResult] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId),
+          supabase
+            .from('saved_items')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId),
+        ]);
+
+        const orders = ordersResult.error ? 0 : (ordersResult.count ?? 0);
+        const saved  = savedResult.error  ? 0 : (savedResult.count  ?? 0);
+
+        setStats({
+          totalSearches: total,
+          imageSearches: images,
+          orders,
+          savedItems: saved,
+        });
+
+      } catch (err) {
+        console.error('Profile load error:', err);
+        setError(err.message ?? 'Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
     }
+
+    loadAll();
   }, []);
 
-  const navItems = [
-    { icon: 'dashboard', label: 'Account Overview', active: true },
-    { icon: 'shopping_bag', label: 'My Orders', active: false },
-    { icon: 'history', label: 'Search History', active: false },
-    { icon: 'favorite', label: 'Wishlist', active: false },
-    { icon: 'settings', label: 'Settings', active: false },
-  ];
+  // ── Error state ──────────────────────────────────────────────────────────
+  if (!loading && error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Unable to load profile</h2>
+          <p className="text-gray-500 text-sm mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  // Use user data if available, otherwise use mock data
-  const userName = user?.name || "Alex Rivera";
-  const userAvatar = user?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCFpRoLl054kkpGTCXs0m4MaYYaSm-KTGcUA-1LTa0PCef4qhskMGh-RN6ppgx1Z6arOam1C1K6ZKF9-X38IoWQdt8tqF4Qn5onevV0kUN1re2iW1u4bnFcJsHWz73wgtB1RR50lFO4Kla5yTvJwRZ1tStgtmJPfS3CvRvyjYmSei8Vk0EZ24W4_Qy8R8q3qlHPOeHq6sZUQEfZVbTNLPcF1k7IMYi-c2pK4Fcxte6eIlNMzL1N-WOORBl_iOP0rdxIpwqFPavtXj0";
-
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white">
-      <div className="flex min-h-screen">
-        {/* Sidebar Navigation */}
-        <aside className={`w-64 border-r border-[#dbdfe6] bg-white dark:bg-background-dark fixed h-full z-10 hidden lg:block`}>
-          <div className="flex flex-col h-full p-6 justify-between">
-            <div className="space-y-8">
-              {/* User Profile Summary */}
-              <div className="flex items-center gap-3">
-                <div 
-                  className="h-12 w-12 rounded-full bg-cover bg-center border border-[#dbdfe6]"
-                  style={{ backgroundImage: `url('${userAvatar}')` }}
-                />
-                <div className="flex flex-col">
-                  <h2 className="text-sm font-bold text-[#111318] dark:text-white">{userName}</h2>
-                  <span className="text-xs text-[#616f89]">Gold Member</span>
-                </div>
+    <div className="min-h-screen bg-gray-50">
+
+      {/* ── Navbar with Back Arrow ── */}
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          background: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          borderBottom: "1px solid #e2e8f0",
+          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            height: 68,
+          }}
+        >
+          {/* ── Back Button ── */}
+          <button
+            onClick={() => navigate('/home')}
+            aria-label="Go back to home"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 14px",
+              borderRadius: 10,
+              border: "1px solid #e2e8f0",
+              background: "#fff",
+              cursor: "pointer",
+              color: "#374151",
+              fontSize: 14,
+              fontWeight: 600,
+              transition: "all 0.18s ease",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "#f1f5f9";
+              e.currentTarget.style.borderColor = "#cbd5e1";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.10)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#fff";
+              e.currentTarget.style.borderColor = "#e2e8f0";
+              e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+            }}
+          >
+            <ArrowLeft size={18} strokeWidth={2.2} />
+            <span>Back</span>
+          </button>
+
+          {/* ── Page Title ── */}
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#111827", letterSpacing: "-0.3px" }}>
+            My Profile
+          </span>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+
+        {/* ── Profile Header ── */}
+        <Card className="p-8 mb-6">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+
+            {/* Avatar */}
+            {loading ? (
+              <Skeleton className="w-24 h-24 rounded-full" />
+            ) : (
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-12 h-12 text-white" />
               </div>
+            )}
 
-              {/* Navigation Links */}
-              <nav className="space-y-2">
-                {navItems.map((item, index) => (
-                  <a 
-                    key={index}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                      item.active 
-                        ? 'bg-primary/10 text-primary font-semibold' 
-                        : 'text-[#616f89] hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`} 
-                    href="#"
-                  >
-                    <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
-                    <span className="text-sm">{item.label}</span>
-                  </a>
-                ))}
-                
-                <div className="pt-4 mt-4 border-t border-[#dbdfe6]">
-                  <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#616f89] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" href="#">
-                    <span className="material-symbols-outlined text-[22px]">settings</span>
-                    <span className="text-sm">Settings</span>
-                  </a>
-                  <button 
-                    onClick={logout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors mt-2"
-                  >
-                    <span className="material-symbols-outlined text-[22px]">logout</span>
-                    <span className="text-sm">Sign Out</span>
-                  </button>
-                </div>
-              </nav>
-            </div>
-
-            {/* Concierge Section */}
-            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
-              <p className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">Concierge</p>
-              <p className="text-[11px] text-[#616f89] leading-relaxed mb-3">Need help finding a specific vintage piece?</p>
-              <button className="w-full py-2 bg-primary text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-all">Chat with Expert</button>
+            {/* Name & badges */}
+            <div className="flex-1 text-center md:text-left">
+              {loading ? (
+                <>
+                  <Skeleton className="h-7 w-48 mb-2" />
+                  <Skeleton className="h-4 w-36 mb-3" />
+                  <div className="flex gap-2 justify-center md:justify-start">
+                    <Skeleton className="h-6 w-28 rounded-full" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                    {profile?.full_name ?? '—'}
+                  </h1>
+                  <p className="text-gray-600 mb-3">
+                    Member since {fmt(profile?.created_at)}
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {profile?.role && (
+                      <Badge variant="secondary" className="capitalize">
+                        {profile.role}
+                      </Badge>
+                    )}
+                    <Badge variant="outline">{stats?.totalSearches ?? 0}+ Searches</Badge>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        </aside>
+        </Card>
 
-        {/* Main Content Area */}
-        <main className="flex-1 lg:ml-64 p-4 lg:p-10 space-y-10">
-          {/* Header Section */}
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-black text-[#111318] dark:text-white tracking-tight">Welcome back, {userName.split(' ')[0]}</h1>
-              <p className="text-[#616f89] text-base mt-2">Manage your luxury collection and view curated insights.</p>
-            </div>
-            <div className="flex gap-3">
-              <button className="px-5 py-2.5 border border-[#dbdfe6] rounded-lg text-sm font-bold bg-white hover:bg-gray-50 transition-colors flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">edit</span>
-                Edit Profile
-              </button>
-              <button className="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                New Visual Search
-              </button>
-            </div>
-          </header>
+        <div className="grid md:grid-cols-2 gap-6">
 
-          {/* Summary Cards */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-background-dark p-6 rounded-xl border border-[#dbdfe6] shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-[#616f89] text-xs font-bold uppercase tracking-widest mb-1">Total Orders</p>
-                <p className="text-2xl font-black text-[#111318] dark:text-white">12</p>
-              </div>
-              <div className="p-3 bg-blue-50 text-primary rounded-full">
-                <span className="material-symbols-outlined text-2xl">local_mall</span>
-              </div>
+          {/* ── Contact Information ── */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h2>
+            <div className="space-y-4">
+              <ContactRow
+                icon={<Mail className="w-5 h-5 text-blue-600" />}
+                bg="bg-blue-100" label="Email"
+                loading={loading} value={profile?.email}
+              />
+              <ContactRow
+                icon={<Phone className="w-5 h-5 text-green-600" />}
+                bg="bg-green-100" label="Phone"
+                loading={loading} value={profile?.phone}
+              />
+              <ContactRow
+                icon={<Calendar className="w-5 h-5 text-orange-600" />}
+                bg="bg-orange-100" label="Member Since"
+                loading={loading} value={fmt(profile?.created_at)}
+              />
             </div>
-            <div className="bg-white dark:bg-background-dark p-6 rounded-xl border border-[#dbdfe6] shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-[#616f89] text-xs font-bold uppercase tracking-widest mb-1">Loyalty Points</p>
-                <p className="text-2xl font-black text-[#111318] dark:text-white">2,450</p>
-              </div>
-              <div className="p-3 bg-amber-50 text-amber-500 rounded-full">
-                <span className="material-symbols-outlined text-2xl">workspace_premium</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-background-dark p-6 rounded-xl border border-[#dbdfe6] shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-[#616f89] text-xs font-bold uppercase tracking-widest mb-1">Bags in Closet</p>
-                <p className="text-2xl font-black text-[#111318] dark:text-white">08</p>
-              </div>
-              <div className="p-3 bg-emerald-50 text-emerald-500 rounded-full">
-                <span className="material-symbols-outlined text-2xl">checkroom</span>
-              </div>
-            </div>
-          </section>
+          </Card>
 
-          {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-            {/* Left Column: Recent Orders */}
-            <div className="xl:col-span-2 space-y-6">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-xl font-bold text-[#111318] dark:text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">receipt_long</span>
-                  Recent Orders
-                </h2>
-                <a className="text-sm font-bold text-primary hover:underline" href="#">View All</a>
-              </div>
-
-              <div className="bg-white dark:bg-background-dark border border-[#dbdfe6] rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50/50 dark:bg-gray-800/30 border-b border-[#dbdfe6]">
-                      <th className="px-6 py-4 text-xs font-bold text-[#616f89] uppercase tracking-wider">Order Detail</th>
-                      <th className="px-6 py-4 text-xs font-bold text-[#616f89] uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-xs font-bold text-[#616f89] uppercase tracking-wider">Total</th>
-                      <th className="px-6 py-4 text-xs font-bold text-[#616f89] uppercase tracking-wider text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#dbdfe6]">
-                    {recentOrdersData.map((order, index) => (
-                      <tr key={index} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-4">
-                            <div 
-                              className="h-14 w-14 rounded-lg bg-gray-100 flex-shrink-0 bg-cover bg-center border border-[#dbdfe6]"
-                              style={{ backgroundImage: `url('${order.image}')` }}
-                            />
-                            <div>
-                              <p className="text-sm font-bold text-[#111318] dark:text-white">{order.name}</p>
-                              <p className="text-xs text-[#616f89] mt-1">#{order.id} • {order.date}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
-                            order.status === 'Shipped' 
-                              ? 'bg-blue-50 text-primary border border-primary/10'
-                              : 'bg-amber-50 text-amber-600 border border-amber-100'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <p className="text-sm font-bold text-[#111318] dark:text-white">{order.price}</p>
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                          <button className="material-symbols-outlined text-[#616f89] hover:text-primary transition-colors">chevron_right</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Recent Visual Searches Section */}
-              <div className="space-y-4 pt-4">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-xl font-bold text-[#111318] dark:text-white flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">image_search</span>
-                    Recent Visual Searches
-                  </h2>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {visualSearchesData.map((image, index) => (
-                    <div 
-                      key={index}
-                      className="group relative aspect-square rounded-xl overflow-hidden border border-[#dbdfe6] hover:ring-2 hover:ring-primary transition-all cursor-pointer"
-                    >
-                      <div 
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url('${image}')` }}
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white text-3xl">pageview</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="group relative aspect-square rounded-xl overflow-hidden border border-dashed border-[#dbdfe6] flex flex-col items-center justify-center bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                    <span className="material-symbols-outlined text-[#616f89] mb-2">add_a_photo</span>
-                    <p className="text-[10px] font-bold text-[#616f89] uppercase tracking-widest text-center px-2">New Upload</p>
-                  </div>
-                </div>
-              </div>
+          {/* ── Search History ── */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <History className="w-5 h-5 text-gray-700" />
+              <h2 className="text-xl font-bold text-gray-900">Recent Searches</h2>
             </div>
 
-            {/* Right Column: Wishlist & Favorites */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-xl font-bold text-[#111318] dark:text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-red-500">favorite</span>
-                  Favorites
-                </h2>
-                <a className="text-sm font-bold text-primary hover:underline" href="#">See All</a>
+            {loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-14 rounded-lg" />
+                ))}
               </div>
-
-              <div className="space-y-4">
-                {favoritesData.map((item, index) => (
-                  <div 
+            ) : searchHistory.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">No search history yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {searchHistory.map((item, index) => (
+                  <div
                     key={index}
-                    className="bg-white dark:bg-background-dark p-4 rounded-xl border border-[#dbdfe6] shadow-sm flex gap-4 group cursor-pointer hover:shadow-md transition-shadow"
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div 
-                      className="h-20 w-20 rounded-lg bg-cover bg-center border border-[#dbdfe6]"
-                      style={{ backgroundImage: `url('${item.image}')` }}
-                    />
-                    <div className="flex flex-col justify-between py-1 flex-1">
-                      <div>
-                        <h3 className="text-sm font-bold text-[#111318] dark:text-white">{item.name}</h3>
-                        <p className="text-xs text-[#616f89]">{item.description}</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-black text-primary">{item.price}</span>
-                        <button className="text-red-500 material-symbols-outlined text-sm">favorite_fill</button>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        item.type === 'image' ? 'bg-purple-500' : 'bg-blue-500'
+                      }`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{item.query}</p>
+                        <p className="text-xs text-gray-500">{fmtShort(item.created_at)}</p>
                       </div>
                     </div>
+                    <Badge variant="outline" className="text-xs ml-2 flex-shrink-0">
+                      {item.type}
+                    </Badge>
                   </div>
                 ))}
               </div>
+            )}
+          </Card>
+        </div>
 
-              {/* Membership Banner */}
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-blue-800 p-6 text-white shadow-xl">
-                <div className="relative z-10">
-                  <h4 className="text-lg font-black mb-2">Exclusive Offer</h4>
-                  <p className="text-xs text-blue-100 leading-relaxed mb-4">You're only 500 points away from the Platinum tier. Enjoy free global shipping on all orders.</p>
-                  <button className="bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">Learn More</button>
-                </div>
-                <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-[120px] opacity-10 rotate-12">diamond</span>
-              </div>
+        {/* ── Activity Stats ── */}
+        <Card className="p-6 mt-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Activity Stats</h2>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-lg" />
+              ))}
             </div>
-          </div>
-        </main>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatBox value={stats?.totalSearches} label="Total Searches" color="blue"   />
+              <StatBox value={stats?.orders}        label="Orders Placed"  color="green"  />
+              <StatBox value={stats?.imageSearches} label="Image Searches" color="purple" />
+              <StatBox value={stats?.savedItems}    label="Saved Items"    color="orange" />
+            </div>
+          )}
+        </Card>
+
       </div>
     </div>
   );
 }
+
+// ─── Contact row sub-component ───────────────────────────────────────────────
+function ContactRow({ icon, bg, label, loading, value }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 ${bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-gray-500">{label}</p>
+        {loading
+          ? <Skeleton className="h-4 w-36 mt-1" />
+          : <p className="text-sm font-medium text-gray-900 truncate">{value ?? '—'}</p>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ─── Stat box sub-component ──────────────────────────────────────────────────
+const COLOR_MAP = {
+  blue:   { bg: 'bg-blue-50',   text: 'text-blue-600'   },
+  green:  { bg: 'bg-green-50',  text: 'text-green-600'  },
+  purple: { bg: 'bg-purple-50', text: 'text-purple-600' },
+  orange: { bg: 'bg-orange-50', text: 'text-orange-600' },
+};
+
+function StatBox({ value, label, color }) {
+  const { bg, text } = COLOR_MAP[color] ?? COLOR_MAP.blue;
+  return (
+    <div className={`text-center p-4 ${bg} rounded-lg`}>
+      <p className={`text-3xl font-bold ${text}`}>{value ?? 0}</p>
+      <p className="text-sm text-gray-600">{label}</p>
+    </div>
+  );
+}
+
+export default UserProfile;

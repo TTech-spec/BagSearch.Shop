@@ -1,606 +1,388 @@
-import React, { useEffect, useContext, useState } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-// This component renders the LuxeBag landing page converted from static HTML to React JSX.
-// Tailwind via CDN and Google Fonts are injected into the document head on mount to mirror the original page behavior.
+const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search"];
 
-const injectHeadAssets = () => {
-  // Tailwind CDN (with plugins)
-  if (!document.querySelector('script[src^="https://cdn.tailwindcss.com"]')) {
-    const script = document.createElement("script");
-    script.src = "https://cdn.tailwindcss.com?plugins=forms,container-queries";
-    document.head.appendChild(script);
-  }
+const NEW_ARRIVALS = [
+  { name: "The Midnight Satchel", sub: "Italian Leather • Midnight Blue", price: "$2,450", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8" },
+  { name: "Ivory Essential Tote", sub: "Sustainable Vegan Leather • Ivory", price: "$1,800", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo" },
+  { name: "Azure Mini Crossbody", sub: "Napa Leather • Azure Blue", price: "$1,250", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk" },
+  { name: "Onyx Evening Clutch", sub: "Polished Suede • Onyx Black", price: "$3,100", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E" },
+];
 
-  // Tailwind runtime config
-  if (!document.getElementById("tailwind-config")) {
-    const cfg = document.createElement("script");
-    cfg.id = "tailwind-config";
-    cfg.innerHTML = `
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: '#135bec',
-              'background-light': '#f6f6f8',
-              'background-dark': '#101622',
-            },
-            fontFamily: {
-              display: ['Manrope', 'sans-serif'],
-            },
-            borderRadius: {
-              DEFAULT: '0.25rem',
-              lg: '0.5rem',
-              xl: '0.75rem',
-              full: '9999px',
-            },
-          },
-        },
-      }
-    `;
-    document.head.appendChild(cfg);
-  }
+const CATEGORIES = [
+  { name: "Totes", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAB_04xZTrV_Axg5yh0aNoGtHkizuTQo3SF-rYUV5xHrdz2QAfuc_E3QpohCkJx72_wJmx5kKMARTx7yZj9T7XbopFKU2jb3nT3E_R8V82Qpjy5F1P7K2BNrsFZn3NUfOgqiv4ZvNpZZZBugimt03IllFL_K3-44e7EOI8D1uHvxCvrF5H9KS0PrnpfRu-4vlaZCcQoUs039FLRLoqMQx7oLUHbcJE8ZI4XGodOfLN38iAbfbL08bY4b88JCWrknI_h37H8Ub7GL9M" },
+  { name: "Clutches", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDRKbAqBYrOUO3jIvjP1j08WGuBx56oYQaLKAutycdNOyAtQnkNixGe5TfDJNsstxy2JXEi5uB0tPnzgN8BA7rNsSMUzu96BO_K7Mph6mrR-nU01QTgb6J0N_oFLuFM8H2quw9WHwR_ecgfA26VFn7jyb9mFtVB7UpAnSrLXvVRnwNLo9Kz8wrRlZYfaXrtGA-jVPJhFvFvnbG6ME8qCcDyRZgf5Tt75mXh6Wsh4YEzYnu1-c3qNjGgFFKmq9iHdB51CwJyxzPlqFE" },
+  { name: "Backpacks", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTJ4J6N-ArK8lzcROZ_oL1YMMjkKvimYUMaZqKi-Rgdsh7h58Hi1kp8kq1vbsAqt4IhQ_Hq2u6SI6pHK2y6150BqxGMgw0CEXtITU8TTc5A9mMeSoirH7eSIsrHF0g07ScCFcwit_kundXpdrKnZR7aF3WPbeXMUtXz-MJfilgYtDnITqsgadWQtq9CFhIVkmkg3I_ispNHccqZo1jfjTrLrvlmgl_z0XwtM90T2yECR1G_6F07j7O4pZ5ELaWo3EP0uYxCwVzjwg" },
+];
 
-  // Google Fonts: Manrope
-  if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Manrope" ]')) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap";
-    document.head.appendChild(link);
-  }
+const TRENDING = [
+  { name: "Crimson Structured Bag", label: "Popular Choice", price: "$3,200", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8" },
+  { name: "Minimalist Sand Tote", label: "Editor's Pick", price: "$1,950", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_sKNiKX7NJOoRuxirNhqYW2CVrSgjx_0rJlgl3Xgtd91hKF7Al_wJ5OcwAsQIoSjiNyJH4zyPL7xJu9ggym4aGrZJU-PpyBDYb8bURs1qfYfAJy2fK4zkBJDV24R6XOCHKVAq9BLsgcTb-NRNTTgiNb5lp0QftxV3I0Ra86dQ1lfhnbt-4bsxZFh1_0DOBjY_hudNpjkjfW6SnC5bbsWRyT1tAjx5pqimCUzaGwdNf7r6dcOKx6rDKjvnabQan2CQfRkkURf7VLY" },
+  { name: "Emerald Suede Clutch", label: "New Trend", price: "$2,100", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks" },
+  { name: "Urban Heritage Pack", label: "Best Seller", price: "$1,600", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhRkGSg7Va0LHjp_dhl_1nOfsT69AcfKsT87IGMf4WFKySlhwVu2YbM24F5LEXYXeQBi910qpL7m28onkj1Ukw53DQt0ks4kIQDe7u2XhHh9t45Cw2n7rfXt7GEO2Ul4cyPv1NtKePCqQpbg_tJvMtGLm4gnLgyDIc5efzDZA4edimRL8upoZdtbsG9nn1R5J0GH70OTXUXJu3iZgne1KYmDSGHSi8use1KRPU6wE0OfE5HnQRIFnufOyMqHZ8ZFsXNLydzWxthDg" },
+];
 
-  // Google Material Symbols Outlined
-  if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Material+Symbols+Outlined" ]')) {
-    const link2 = document.createElement("link");
-    link2.rel = "stylesheet";
-    link2.href =
-      "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
-    document.head.appendChild(link2);
-  }
+const LogoIcon = () => (
+  <svg width="28" height="28" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
+  </svg>
+);
 
-  // Inline styles used by the original page
-  if (!document.getElementById("luxe-inline-styles")) {
-    const style = document.createElement("style");
-    style.id = "luxe-inline-styles";
-    style.innerHTML = `
-      body { font-family: 'Manrope', sans-serif; }
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    `;
-    document.head.appendChild(style);
-  }
-};
+const Icon = ({ name, size = 22 }) => (
+  <span style={{
+    fontFamily: "'Material Symbols Outlined'",
+    fontWeight: "normal",
+    fontStyle: "normal",
+    fontSize: size,
+    lineHeight: 1,
+    display: "inline-block",
+    textTransform: "none",
+    letterSpacing: "normal",
+    wordWrap: "normal",
+    whiteSpace: "nowrap",
+    direction: "ltr",
+  }}>{name}</span>
+);
 
-export default function Home() {
-  const { user, login, logout, loading } = useContext(AuthContext);
+export default function LuxeBag() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    injectHeadAssets();
-    // Ensure the html element has the correct lang and class attributes similar to original
-    const html = document.documentElement;
-    html.lang = 'en';
-    if (!html.classList.contains('light') && !html.classList.contains('dark')) {
-      html.classList.add('light');
-    }
-  }, []);
-
-  const handleFakeLogin = () => {
-    if (!user) {
-      login({ name: 'Guest User', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs' });
-    }
-  };
-
-  const navItems = [
-    { icon: 'home', label: 'Home' },
-    { icon: 'grid_view', label: 'Collections' },
-    { icon: 'new_releases', label: 'New Arrivals' },
-    { icon: 'trending_up', label: 'Trending Now' },
-    { icon: 'info', label: 'About Us' },
-  ];
+  const navigate = useNavigate();
 
   return (
-    <div className="bg-white dark:bg-background-dark font-display text-[#111318] dark:text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-background-dark/90 backdrop-blur-lg border-b border-[#dbdfe6] dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Mobile Menu Button */}
-            <button 
-              className="p-2 text-[#616f89] hover:text-primary transition-colors md:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <span className="material-symbols-outlined text-2xl">menu</span>
+    <div style={{ minHeight: "100vh", background: "#f6f6f8", fontFamily: "'Manrope', sans-serif", color: "#0f172a" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Manrope', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .card-img { transition: transform 0.5s ease; }
+        .product-card:hover .card-img { transform: scale(1.08); }
+        .nav-link:hover { color: #135bec; }
+        .icon-btn:hover { background: #f1f5f9 !important; }
+        .sidebar-link:hover { background: #f8fafc; }
+        .logout-btn:hover { background: #fef2f2 !important; }
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-menu-btn { display: flex !important; }
+          .desktop-icons { display: none !important; }
+          .hero-title { font-size: 2.5rem !important; }
+          .cta-panel { max-width: 100% !important; }
+          .visual-right-img { display: none !important; }
+          .category-grid { grid-template-columns: 1fr !important; }
+          .trending-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .footer-brand { grid-column: span 2 !important; }
+        }
+      `}</style>
+
+      {/* ── HEADER ── */}
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec" }}>
+            <LogoIcon />
+            <span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>LuxeBag</span>
+          </div>
+
+          {/* Desktop Nav */}
+          <nav className="desktop-nav" style={{ display: "flex", gap: 40 }}>
+            {NAV_LINKS.map(link => (
+              <a key={link} href="#" className="nav-link" style={{ fontSize: 14, fontWeight: 600, textDecoration: "none", color: "#0f172a", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s" }}>
+                {link}
+                {link === "Visual Search" && (
+                  <span style={{ fontSize: 10, background: "rgba(19,91,236,0.1)", color: "#135bec", padding: "2px 7px", borderRadius: 9999, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI</span>
+                )}
+              </a>
+            ))}
+          </nav>
+
+          {/* Right icons */}
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            {["search", "shopping_bag", "person"].map(ic => (
+              <button 
+                key={ic} 
+                className="icon-btn desktop-icons" 
+                style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer" }}
+                onClick={() => ic === "person" && navigate("/profile")}
+              >
+                <Icon name={ic} />
+              </button>
+            ))}
+            {/* Mobile hamburger */}
+            <button className="mobile-menu-btn icon-btn" onClick={() => setSidebarOpen(true)}
+              style={{ display: "none", padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", alignItems: "center" }}>
+              <Icon name="menu" />
             </button>
-
-            <div className="flex items-center gap-2">
-              <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
-                <span className="material-symbols-outlined">shopping_bag</span>
-              </div>
-              <span className="text-xl font-black tracking-tight">LUXEBAG</span>
-            </div>
-
-            <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-[#616f89] group-focus-within:text-primary transition-colors">search</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search by name or upload a photo..."
-                  className="block w-full pl-11 pr-24 py-3 bg-background-light dark:bg-gray-800 border-transparent rounded-full text-sm focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-700 transition-all"
-                />
-                <div className="absolute inset-y-0 right-2 flex items-center">
-                  <button className="flex items-center gap-1 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold hover:bg-primary/20 transition-all">
-                    <span className="material-symbols-outlined text-base">image_search</span>
-                    Visual Search
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-5 md:hidden">
-              <button className="text-[#616f89] hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-2xl">favorite</span>
-              </button>
-              <button className="relative text-[#616f89] hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-                <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
-              </button>
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <img
-                      src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
-                      alt="User"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                  <span className="hidden md:inline text-sm">{user.name || 'User'}</span>
-                  <button onClick={logout} className="px-3 py-1 text-xs font-bold rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <button onClick={handleFakeLogin} className="px-4 py-2 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
-                  {loading ? 'Loading…' : 'Login'}
-                </button>
-              )}
-            </div>
-
-            {/* Desktop-only icons and user section */}
-            <div className="hidden md:flex items-center gap-5">
-              <button className="text-[#616f89] hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-2xl">favorite</span>
-              </button>
-              <button className="relative text-[#616f89] hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-                <span className="absolute -top-1 -right-1 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
-              </button>
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <button className="size-10 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <img
-                      src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
-                      alt="User"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                  <span className="hidden md:inline text-sm">{user.name || 'User'}</span>
-                  <button onClick={logout} className="px-3 py-1 text-xs font-bold rounded-full border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <button onClick={handleFakeLogin} className="px-4 py-2 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
-                  {loading ? 'Loading…' : 'Login'}
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </header>
 
       <main>
-        {/* Hero Section */}
-        <section className="relative h-[600px] w-full overflow-hidden">
-          <div className="absolute inset-0">
-            <img 
-              alt="Hero" 
-              className="w-full h-full object-cover" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
-          </div>
-          <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-start">
-            <span className="text-primary font-bold tracking-[0.2em] uppercase mb-4">Limited Edition</span>
-            <h1 className="text-5xl md:text-7xl font-black text-white max-w-2xl leading-[1.1] mb-6">
-              Find Your Perfect Match <br/>With <span className="text-primary">AI Vision</span>
+        {/* ── HERO ── */}
+        <section style={{ position: "relative", height: "85vh", overflow: "hidden" }}>
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuC4I73hqMmV64iEPGtSEJ3mNAbQtvPBqQQ22x1JA6F2E-E4U0-SmUat1vO0Z0c7l1142DjBBzcn-afis9xsHhMBa7rnrhdTWhV7aq8FUXyZDIlxADoYFJcdrsprs-bYJQOcAqih5olePRiw0nJPBPNpLCL32-aAsv9zAtqbGV6bFBMK5ypVAi4i0E2wq4chZKL5jOOJyPh6HoEXvJKPkNeXbHs-Kqqip9Cgq3VAIn0gqtoVtmGQwzvnFhaifm9ecmgYdWkGPqlRExE')`,
+            backgroundSize: "cover", backgroundPosition: "center"
+          }} />
+          <div style={{ position: "relative", height: "100%", maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <span style={{ display: "inline-block", padding: "6px 18px", marginBottom: 28, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)", borderRadius: 9999, border: "1px solid rgba(255,255,255,0.25)", color: "white", width: "fit-content" }}>
+              Premium Craftsmanship
+            </span>
+            <h1 className="hero-title" style={{ fontSize: "clamp(2.5rem,7vw,4.5rem)", fontWeight: 300, color: "white", lineHeight: 1.1, maxWidth: 580, marginBottom: 24 }}>
+              Discover <br /><em style={{ fontWeight: 800, fontStyle: "italic" }}>Timeless Elegance</em>
             </h1>
-            <p className="text-gray-200 text-lg max-w-lg mb-8">
-              See a bag you love? Take a photo and our AI will find it or suggest similar styles from our luxury collection.
+            <p style={{ fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "#cbd5e1", maxWidth: 440, fontWeight: 300, lineHeight: 1.7, marginBottom: 40 }}>
+              Experience the pinnacle of luxury with our curated collection of bags, powered by intuitive visual discovery.
             </p>
-            <div className="flex gap-4">
-              <button className="px-8 py-4 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
-                <span className="material-symbols-outlined">camera_enhance</span>
-                Try Visual Search
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <button style={{ padding: "15px 28px", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: "0 8px 24px rgba(19,91,236,0.3)" }}>
+                <Icon name="camera" size={20} /> Try Visual Search
               </button>
-              <button className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-100 transition-all">
-                Browse Catalog
+              <button style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }}>
+                Browse Collections
               </button>
             </div>
           </div>
         </section>
 
-        {/* New Arrivals Section */}
-        <section className="py-16 bg-white dark:bg-background-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-end justify-between mb-10">
-              <div>
-                <h2 className="text-3xl font-black tracking-tight">New Arrivals</h2>
-                <p className="text-[#616f89] mt-2">Fresh arrivals from the world's most iconic designers.</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="size-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-                  <span className="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button className="size-12 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-                  <span className="material-symbols-outlined">chevron_right</span>
-                </button>
-              </div>
+        {/* ── NEW ARRIVALS ── */}
+        <section style={{ padding: "96px 24px", maxWidth: 1280, margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 48 }}>
+            <div>
+              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>New Arrivals</h2>
+              <p style={{ color: "#64748b", fontSize: 14 }}>The latest additions to our exclusive inventory</p>
             </div>
-
-            <div className="flex gap-6 overflow-x-auto no-scrollbar pb-8">
-              {/* Card 1 */}
-              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
-                  <img
-                    alt="Classic Leather Tote"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">New In</span>
-                  </div>
-                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
-                    <span className="material-symbols-outlined">add_shopping_cart</span>
+            <a href="#" style={{ color: "#135bec", fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, fontSize: 14 }}>
+              View All <Icon name="arrow_forward" size={18} />
+            </a>
+          </div>
+          <div className="hide-scrollbar" style={{ display: "flex", overflowX: "auto", gap: 28, paddingBottom: 16 }}>
+            {NEW_ARRIVALS.map(item => (
+              <div key={item.name} className="product-card" style={{ minWidth: 290, flexShrink: 0 }}>
+                <div style={{ position: "relative", aspectRatio: "3/4", borderRadius: 14, overflow: "hidden", marginBottom: 16, background: "#e8edf2" }}>
+                  <img src={item.src} alt={item.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  <button style={{ position: "absolute", top: 12, right: 12, padding: 8, background: "rgba(255,255,255,0.88)", backdropFilter: "blur(4px)", borderRadius: "50%", border: "none", cursor: "pointer" }}>
+                    <Icon name="favorite" size={18} />
                   </button>
                 </div>
-                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Monogram Leather Tote</h3>
-                <p className="text-[#616f89] text-sm">Classic Collection</p>
-                <p className="text-xl font-black mt-2">$2,450.00</p>
+                <h3 style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{item.name}</h3>
+                <p style={{ color: "#64748b", fontSize: 13, marginBottom: 8 }}>{item.sub}</p>
+                <p style={{ color: "#135bec", fontWeight: 800 }}>{item.price}</p>
               </div>
+            ))}
+          </div>
+        </section>
 
-              {/* Card 2 */}
-              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
-                  <img
-                    alt="Suede Crossbody"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9TsB1OZKW1UX2EF8YrcsHRB7QvWhHeVYXdDnyZbtG4RGsbyBnIhSX0DeNHq4vtIpwZYlm0RAXqDR6uVRCZdla9Yuw3IlnxkzqFGDJSM8HNtiF1MlH2bAZyj0RMGTHFUCYuMCyTcbDTkUNxI7RW84cgcw36Y91iTzEC6CDGInerpFD7lmrhPKnvvuX4sjYsbMCxJ2ijCmO-M3G5fya4FGV6cTI0r0oUlqBxB-dYe0N-HEINpbeJFZlMKd8T6SdjBeunheBtOHU5KU"
-                  />
-                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
-                    <span className="material-symbols-outlined">add_shopping_cart</span>
-                  </button>
+        {/* ── SHOP BY CATEGORY ── */}
+        <section style={{ padding: "64px 24px", background: "white" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, textAlign: "center", marginBottom: 48 }}>Shop by Category</h2>
+            <div className="category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
+              {CATEGORIES.map(cat => (
+                <div key={cat.name} className="product-card" style={{ position: "relative", height: 380, borderRadius: 18, overflow: "hidden", cursor: "pointer" }}>
+                  <img src={cat.src} alt={cat.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.82) 0%, transparent 60%)" }} />
+                  <div style={{ position: "absolute", bottom: 28, left: 28 }}>
+                    <h3 style={{ fontSize: 22, fontWeight: 700, color: "white", marginBottom: 10 }}>{cat.name}</h3>
+                    <span style={{ fontSize: 11, color: "#e2e8f0", textTransform: "uppercase", letterSpacing: "0.18em", fontWeight: 700, borderBottom: "2px solid #135bec", paddingBottom: 3 }}>Explore</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Velvet Suede Crossbody</h3>
-                <p className="text-[#616f89] text-sm">Limited Edition</p>
-                <p className="text-xl font-black mt-2">$1,890.00</p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="min-w-[320px] md:min-w-[400px] group cursor-pointer">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-gray-100 mb-4 relative">
-                  <img
-                    alt="Evening Clutch"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
-                  />
-                  <button className="absolute bottom-6 right-6 size-12 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
-                    <span className="material-symbols-outlined">add_shopping_cart</span>
-                  </button>
-                </div>
-                <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Gilded Evening Clutch</h3>
-                <p className="text-[#616f89] text-sm">Evening Wear</p>
-                <p className="text-xl font-black mt-2">$3,200.00</p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Two-up category banners */}
-        <section className="py-16 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Left */}
-          <div className="relative h-[450px] rounded-[2rem] overflow-hidden group">
-            <img
-              alt="Luxury Totes"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
-            />
-            <div className="absolute inset-0 bg-black/30"></div>
-            <div className="absolute inset-0 p-12 flex flex-col justify-end">
-              <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Luxury Totes</h3>
-              <p className="text-gray-200 mb-8 max-w-xs">Elevate your daily carry with our premium selection of oversized leather totes.</p>
-              <button className="w-fit px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-primary hover:text-white transition-all">
-                Shop Collection
-              </button>
+        {/* ── VISUAL SEARCH CTA ── */}
+        <section style={{ padding: "96px 24px", maxWidth: 1280, margin: "0 auto" }}>
+          <div style={{ background: "#135bec", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 380, display: "flex", alignItems: "center" }}>
+            <div className="visual-right-img" style={{ position: "absolute", right: 0, top: 0, width: "50%", height: "100%" }}>
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBcBAmjswE_vEeq68lo-sOT66oVW0_Oi7ktR0DeVP4vgLqczwkpO1kHAfO7WOis90MJH7IoVX0lXjvBHrULEpy3nwbh6xz282Jdpr8fDkpaWMzAiNTDtJSIarZ0mbGtRRcnzaAuj99FhQjmRvBeBQtAbZ0JGsUkQixkW9WOWKR10AS__W9AaredcnjAVQo7cx_inSY0OlT2RVuyyOA9kOq5DiQ6UTuT4r9gnHKQrsaVy3N1MWZZpFf0QwqmHQ1WSimjadchp7Q7Rc"
+                alt="Visual Search" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.82 }} />
             </div>
-          </div>
-
-          {/* Right */}
-          <div className="relative h-[450px] rounded-[2rem] overflow-hidden group">
-            <img
-              alt="Minimalist Clutches"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
-            />
-            <div className="absolute inset-0 bg-black/30"></div>
-            <div className="absolute inset-0 p-12 flex flex-col justify-end">
-              <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Minimalist Clutches</h3>
-              <p className="text-gray-200 mb-8 max-w-xs">Sophisticated simplicity for your most important evening occasions.</p>
-              <button className="w-fit px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-primary hover:text-white transition-all">
-                Shop Collection
+            <div className="cta-panel" style={{ padding: "52px 48px", position: "relative", zIndex: 1, color: "white", maxWidth: "55%" }}>
+              <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", fontWeight: 800, marginBottom: 20, lineHeight: 1.2 }}>Find exactly what you're looking for.</h2>
+              <p style={{ fontSize: 16, color: "rgba(219,234,254,1)", marginBottom: 32, lineHeight: 1.7 }}>
+                Our AI-powered visual search allows you to upload any image and find the closest matches in our luxury catalog instantly.
+              </p>
+              <button style={{ padding: "15px 28px", background: "white", color: "#135bec", fontWeight: 800, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15 }}>
+                <Icon name="add_a_photo" size={20} /> Launch AI Search
               </button>
             </div>
           </div>
         </section>
 
-        {/* Trending + Top Sellers */}
-        <section className="py-16 bg-background-light dark:bg-gray-900/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-              {/* Trending */}
-              <div className="lg:col-span-2">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-black tracking-tight">Trending Now</h2>
-                  <a href="#" className="text-sm font-bold text-primary flex items-center gap-1">
-                    View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </a>
+        {/* ── TRENDING ── */}
+        <section style={{ padding: "0 24px 96px", maxWidth: 1280, margin: "0 auto" }}>
+          <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 40 }}>Trending Now</h2>
+          <div className="trending-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 22 }}>
+            {TRENDING.map(item => (
+              <div key={item.name} className="product-card" style={{ cursor: "pointer" }}>
+                <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 14, overflow: "hidden", marginBottom: 14, background: "#e8edf2" }}>
+                  <img src={item.src} alt={item.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Trend item */}
-                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
-                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img
-                        alt="Trend"
-                        className="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h4 className="font-bold">Python Effect Tote</h4>
-                      <p className="text-[#616f89] text-xs">Exotic Skins</p>
-                      <p className="text-primary font-black mt-1">$4,200</p>
-                    </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <div>
+                    <h4 style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{item.name}</h4>
+                    <p style={{ fontSize: 11, color: "#64748b" }}>{item.label}</p>
                   </div>
-
-                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
-                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img
-                        alt="Trend"
-                        className="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9TsB1OZKW1UX2EF8YrcsHRB7QvWhHeVYXdDnyZbtG4RGsbyBnIhSX0DeNHq4vtIpwZYlm0RAXqDR6uVRCZdla9Yuw3IlnxkzqFGDJSM8HNtiF1MlH2bAZyj0RMGTHFUCYuMCyTcbDTkUNxI7RW84cgcw36Y91iTzEC6CDGInerpFD7lmrhPKnvvuX4sjYsbMCxJ2ijCmO-M3G5fya4FGV6cTI0r0oUlqBxB-dYe0N-HEINpbeJFZlMKd8T6SdjBeunheBtOHU5KU"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h4 className="font-bold">Retro Crossbody</h4>
-                      <p className="text-[#616f89] text-xs">Vintage Series</p>
-                      <p className="text-primary font-black mt-1">$1,550</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
-                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img
-                        alt="Trend"
-                        className="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8WJ-IF2cV5qDy3_g9-2gwA_7dQQdyJMhg6iA89yowNnmZfUBdBvev_h1yO7J1hg-VhQvGbABZTQw4bOI_iq5hBkPNLmx8jihUw89dE6SvlLzw78nn0DCRCGYuiWuxhqWgCc_uoocoDIBKuExZkkJsdJqSA2QZSTQO7z1_uW0uz6a7cWBCO-LCXEGCsIRaH-V2SHgWTAdgPlton-ELabuGSECYJ7h_uuDOOUSPducuHRAzN4JCtv0b2GLKkeeTpQ-3Y_jDYwJ3ALw"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h4 className="font-bold">Crystal Mini Bag</h4>
-                      <p className="text-[#616f89] text-xs">Party Edit</p>
-                      <p className="text-primary font-black mt-1">$2,100</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white dark:bg-background-dark p-4 rounded-3xl flex gap-4 hover:shadow-xl transition-all cursor-pointer">
-                    <div className="size-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img
-                        alt="Trend"
-                        className="w-full h-full object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPSuErvUQzNWlP1jYgHSy35w8kbHLVCEs-z6BHzB6xA3u31e0J35RsxamS01C-q8pZw-YDAFx8jszYBqBVe-pQuYzqs7m-V-wqkK12hRnyY9E_AWsjN2o_ZiFUNq7wNroeQfCEaO9lFYze1_1qp3f9vTUhZMzUApAquoMX30pEJbLCYvFaTyW68liLQviWg7jTlfXNIoPWod6OhbUw2jFi9H33pu_SpHHJK88W5DT-19YUcVNf5lF3AKjRWwOzmGAMB0frIyFcdk"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h4 className="font-bold">Weekend Duffel</h4>
-                      <p className="text-[#616f89] text-xs">Travel Luxe</p>
-                      <p className="text-primary font-black mt-1">$2,800</p>
-                    </div>
-                  </div>
+                  <span style={{ color: "#135bec", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>{item.price}</span>
                 </div>
               </div>
-
-              {/* Top Sellers */}
-              <div>
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-black tracking-tight">Top Sellers</h2>
-                </div>
-                <div className="space-y-6">
-                  {[
-                    { n: '01', title: 'Classic Shopper XL', sold: 'Sold 1,204 times' },
-                    { n: '02', title: 'Mini Bucket Bag', sold: 'Sold 982 times' },
-                    { n: '03', title: 'Silk Scarf Handle Bag', sold: 'Sold 845 times' },
-                  ].map((i, idx) => (
-                    <div key={idx} className="flex items-center gap-4 group cursor-pointer">
-                      <span className="text-2xl font-black text-gray-200 group-hover:text-primary transition-colors">{i.n}</span>
-                      <div className="size-16 rounded-xl overflow-hidden">
-                        <img
-                          alt="Top"
-                          className="w-full h-full object-cover"
-                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY"
-                        />
-                      </div>
-                      <div className="flex-1 border-b border-gray-200 dark:border-gray-800 pb-4">
-                        <h4 className="font-bold text-sm">{i.title}</h4>
-                        <p className="text-[#616f89] text-xs">{i.sold}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="w-full mt-8 py-3 border-2 border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all">
-                  View Leaderboard
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* WhatsApp CTA banner */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-primary/5 border border-primary/10 rounded-[3rem] p-12 flex flex-col md:flex-row items-center justify-between gap-12">
-              <div className="max-w-xl text-center md:text-left">
-                <div className="size-16 bg-white rounded-2xl flex items-center justify-center text-green-500 shadow-xl shadow-green-500/10 mb-6 mx-auto md:mx-0">
-                  <svg className="size-8" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"></path>
-                  </svg>
-                </div>
-                <h2 className="text-4xl font-black mb-4">Concierge on WhatsApp</h2>
-                <p className="text-[#616f89] text-lg">Chat directly with our styling experts. Send us a picture of your outfit and we'll recommend the perfect accessory instantly.</p>
-              </div>
-              <button className="px-12 py-5 bg-green-500 text-white font-black rounded-full flex items-center gap-3 hover:bg-green-600 transition-all shadow-xl shadow-green-500/20 whitespace-nowrap">
-                <span className="material-symbols-outlined">forum</span>
-                Start Styling Session
-              </button>
-            </div>
+            ))}
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-sm">shopping_bag</span>
+      {/* ── FOOTER ── */}
+      <footer style={{ background: "white", borderTop: "1px solid #e2e8f0", padding: "72px 24px 40px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 56 }}>
+            <div className="footer-brand">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, color: "#135bec" }}>
+                <LogoIcon />
+                <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>LuxeBag</span>
+              </div>
+              <p style={{ color: "#64748b", lineHeight: 1.7, maxWidth: 280, marginBottom: 28, fontSize: 14 }}>
+                Redefining luxury craftsmanship for the modern era. Quality materials meet intelligent discovery.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                {["public", "share", "mail"].map(ic => (
+                  <a key={ic} href="#" style={{ padding: 8, background: "#f1f5f9", borderRadius: "50%", display: "flex", color: "#0f172a", textDecoration: "none" }}>
+                    <Icon name={ic} size={18} />
+                  </a>
+                ))}
+              </div>
             </div>
-            <span className="text-lg font-black tracking-tight">LUXEBAG</span>
+            {[
+              { title: "Shop", links: ["New Arrivals", "Best Sellers", "Tote Bags", "Crossbody"] },
+              { title: "Help", links: ["Shipping", "Returns", "Contact Us", "Size Guide"] },
+              { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
+            ].map(col => (
+              <div key={col.title}>
+                <h5 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 22 }}>{col.title}</h5>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
+                  {col.links.map(link => (
+                    <li key={link}><a href="#" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>{link}</a></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <p className="text-[#616f89] text-sm">© 2024 LuxeBag International. All rights reserved.</p>
+          <div style={{ paddingTop: 28, borderTop: "1px solid #e2e8f0" }}>
+            <p style={{ fontSize: 13, color: "#94a3b8" }}>© 2024 LuxeBag International. All rights reserved.</p>
+          </div>
         </div>
       </footer>
 
-      {/* Floating Visual Search (mobile) */}
-      <div className="fixed bottom-8 right-8 z-40 md:hidden">
-        <button className="size-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl">
-          <span className="material-symbols-outlined text-3xl">image_search</span>
-        </button>
-      </div>
+      {/* ── MOBILE SIDEBAR OVERLAY ── */}
+      <div onClick={() => setSidebarOpen(false)} style={{
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.48)", zIndex: 60,
+        opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "all" : "none",
+        transition: "opacity 0.3s ease",
+      }} />
 
-      {/* Mobile Sidebar */}
-      <div 
-        className={`fixed inset-0 z-[100] transform transition-transform duration-300 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-      >
-        {/* Backdrop */}
-        <div 
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-        
-        {/* Sidebar Content */}
-        <nav className="relative w-80 h-full bg-white dark:bg-background-dark p-6 shadow-2xl flex flex-col">
-          {/* Close Button */}
-          <div className="flex items-center justify-end mb-4">
-            <button 
-              className="text-gray-400 hover:text-primary p-2" 
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
+      {/* ── MOBILE SIDEBAR PANEL ── */}
+      <aside style={{
+        position: "fixed", top: 0, left: 0, height: "100%", width: 300,
+        background: "white", zIndex: 70, display: "flex", flexDirection: "column",
+        boxShadow: "8px 0 40px rgba(0,0,0,0.14)",
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1)",
+        overflowY: "auto",
+      }}>
+        {/* Sidebar top */}
+        <div style={{ padding: "24px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec" }}>
+            <LogoIcon />
+            <span style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>LuxeBag</span>
           </div>
+          <button onClick={() => setSidebarOpen(false)} style={{ padding: 8, borderRadius: "50%", border: "none", background: "#f1f5f9", cursor: "pointer" }}>
+            <Icon name="close" size={20} />
+          </button>
+        </div>
 
-          {/* Logo in Sidebar */}
-          <div className="flex items-center gap-2 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
-            <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white">
-              <span className="material-symbols-outlined">shopping_bag</span>
+        <div style={{ padding: "0 16px", flex: 1 }}>
+          {/* Nav links */}
+          {NAV_LINKS.map(link => (
+            <a key={link} href="#" className="sidebar-link" style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "13px 12px", borderRadius: 10, marginBottom: 4,
+              fontWeight: 700, fontSize: 15, textDecoration: "none",
+              color: link === "Visual Search" ? "#135bec" : "#0f172a",
+              background: link === "Visual Search" ? "rgba(19,91,236,0.06)" : "transparent",
+              transition: "background 0.15s",
+            }}>
+              {link}
+              <Icon name={link === "Visual Search" ? "camera_enhance" : "chevron_right"} size={18} />
+            </a>
+          ))}
+
+          <div style={{ height: 1, background: "#e2e8f0", margin: "18px 0" }} />
+
+          {/* Cart & Wishlist */}
+          {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }) => (
+            <a key={label} href="#" className="sidebar-link" style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "12px 12px",
+              borderRadius: 10, marginBottom: 4, fontWeight: 600, fontSize: 15,
+              textDecoration: "none", color: "#0f172a", transition: "background 0.15s",
+            }}>
+              <Icon name={icon} size={20} /> {label}
+            </a>
+          ))}
+
+          <div style={{ height: 1, background: "#e2e8f0", margin: "18px 0" }} />
+
+          {/* Account section */}
+          <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#94a3b8", padding: "0 12px", marginBottom: 12 }}>Account</p>
+
+          {/* Profile */}
+          <a href="/profile" onClick={() => setSidebarOpen(false)} className="sidebar-link" style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
+            borderRadius: 10, marginBottom: 6, textDecoration: "none", color: "#0f172a",
+            transition: "background 0.15s",
+          }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #135bec, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Icon name="person" size={18} />
+              <style>{`.profile-icon { color: white; }`}</style>
             </div>
-            <span className="text-xl font-black tracking-tight">LUXEBAG</span>
-          </div>
-
-          {/* User Section */}
-          {user ? (
-            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
-              <button className="size-12 rounded-full border-2 border-primary overflow-hidden">
-                <img
-                  src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCvpoXo7YtW65fZoifh6-OBvboYK04miweSOuj6Xt3MU0lRTW3gROZ-yGC5x-7oo9rZ57jNo4UuErEqgoaDr1TAMdHPFfFP-vatuw0qptaMY1HfYfW5ibMHPKsvKOnRhVyJ_yK70bwtDd2fC8o-w9Wa3OtWchZ6yhFWdsOnEfszjQ_RO_7j5yBbu1XlwzB1smpV05dB47YQX77KfuNTOAVVgE7n1Bs3k07i85QoUJOXc0fFm49DcM7_v0DwmkIyfDF6Bmk3Lvj2ZWs"}
-                  alt="User"
-                  className="w-full h-full object-cover"
-                />
-              </button>
-              <div>
-                <p className="font-black text-sm">{user.name || 'User'}</p>
-                <p className="text-xs text-[#616f89]">Premium Member</p>
-              </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>My Profile</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>View & edit profile</div>
             </div>
-          ) : (
-            <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
-              <button onClick={handleFakeLogin} className="w-full px-4 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-all">
-                {loading ? 'Loading…' : 'Login'}
-              </button>
+          </a>
+
+          {/* Log Out */}
+          <button className="logout-btn" style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
+            borderRadius: 10, marginBottom: 6, border: "none", background: "transparent",
+            cursor: "pointer", width: "100%", textAlign: "left",
+            transition: "background 0.15s",
+          }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{
+                fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal",
+                fontSize: 18, color: "#ef4444", lineHeight: 1, display: "inline-block",
+              }}>logout</span>
             </div>
-          )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#ef4444" }}>Log Out</div>
+              <div style={{ fontSize: 11, color: "#fca5a5", marginTop: 1 }}>Sign out of your account</div>
+            </div>
+          </button>
+        </div>
 
-          {/* Icons Row */}
-          <div className="flex items-center justify-around mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
-            <button className="flex flex-col items-center gap-1 text-[#616f89] hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-2xl">favorite</span>
-              <span className="text-xs">Wishlist</span>
-            </button>
-            <button className="relative flex flex-col items-center gap-1 text-[#616f89] hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-              <span className="text-xs">Cart</span>
-              <span className="absolute -top-2 -right-2 size-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
-            </button>
-          </div>
-
-          {/* Navigation Items */}
-          <div className="flex flex-col gap-2">
-            {navItems.map((item, index) => (
-              <a 
-                key={index}
-                href="#" 
-                className="flex items-center gap-3 px-4 py-3 text-lg font-bold hover:bg-primary/5 hover:text-primary rounded-xl transition-all"
-              >
-                <span className="material-symbols-outlined">{item.icon}</span>
-                {item.label}
-              </a>
-            ))}
-          </div>
-
-          {/* Logout Button */}
-          <div className="mt-auto pt-8 border-t border-gray-100 dark:border-gray-800">
-            <button 
-              className="w-full py-4 bg-red-50 text-red-600 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
-              onClick={() => {
-                if (user) {
-                  logout();
-                }
-                setSidebarOpen(false);
-              }}
-            >
-              <span className="material-symbols-outlined">logout</span>
-              {user ? 'Logout' : 'Login'}
-            </button>
-          </div>
-        </nav>
-      </div>
+        {/* Sidebar footer */}
+        <div style={{ padding: "24px 24px 28px" }}>
+          <button style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>
+            Sign In
+          </button>
+          <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>Luxury Redefined</p>
+        </div>
+      </aside>
     </div>
   );
 }
