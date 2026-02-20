@@ -346,7 +346,7 @@ const Reg = () => {
               </form>
 
               <div className="text-center pt-2">
-                <p className="text-[#616f89] dark:text-slate-400 text-sm font-medium">
+                <p className="text-[#616f89] dark:text-slate-400 text-sm font-medium lg:text-[#616f89] lg:dark:text-slate-400 text-white">
                   Already have an account? 
                   <span onClick={() => navigate('/login?force=true')} className="text-primary font-bold hover:underline cursor-pointer ml-1">Login</span>
                 </p>

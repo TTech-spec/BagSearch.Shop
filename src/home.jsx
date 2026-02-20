@@ -84,7 +84,7 @@ export default function LuxeBag() {
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec" }}>
             <LogoIcon />
-            <span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>LuxeBag</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>Bag.NG</span>
           </div>
 
           {/* Desktop Nav */}
@@ -340,10 +340,10 @@ export default function LuxeBag() {
           <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#94a3b8", padding: "0 12px", marginBottom: 12 }}>Account</p>
 
           {/* Profile */}
-          <a href="/profile" onClick={() => setSidebarOpen(false)} className="sidebar-link" style={{
+          <a onClick={() => { setSidebarOpen(false); navigate("/profile"); }} className="sidebar-link" style={{
             display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
             borderRadius: 10, marginBottom: 6, textDecoration: "none", color: "#0f172a",
-            transition: "background 0.15s",
+            transition: "background 0.15s", cursor: "pointer",
           }}>
             <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #135bec, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon name="person" size={18} />

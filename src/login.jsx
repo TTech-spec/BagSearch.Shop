@@ -3,6 +3,131 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
+// ─── Success Toast Component ─────────────────────────────────────────────────
+const SuccessToast = ({ show }) => {
+  if (!show) return null;
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 9999,
+        animation: 'slideInFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+      }}
+    >
+      <style>{`
+        @keyframes slideInFade {
+          from { opacity: 0; transform: translateX(60px) scale(0.95); }
+          to   { opacity: 1; transform: translateX(0)   scale(1);    }
+        }
+        @keyframes progressShrink {
+          from { width: 100%; }
+          to   { width: 0%;   }
+        }
+        @keyframes popIn {
+          0%   { transform: scale(0); opacity: 0; }
+          60%  { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      <div style={{
+        width: 340,
+        background: 'white',
+        borderRadius: 16,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(20,75,184,0.08)',
+        overflow: 'hidden',
+        border: '1px solid rgba(20,75,184,0.08)',
+      }}>
+        {/* Top progress bar */}
+        <div style={{ height: 3, background: '#f0f4ff', position: 'relative' }}>
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, #144bb8, #4f7ef7)',
+            borderRadius: 9999,
+            animation: 'progressShrink 3s linear forwards',
+          }} />
+        </div>
+
+        <div style={{ padding: '20px 20px 20px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          {/* Animated checkmark circle */}
+          <div style={{
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #144bb8, #4f7ef7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+            animation: 'popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
+            boxShadow: '0 6px 20px rgba(20,75,184,0.3)',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M4 10.5L8.5 15L16 7"
+                stroke="white" strokeWidth="2.2"
+                strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* Text content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontSize: 15, fontWeight: 700, color: '#111318',
+              margin: 0, marginBottom: 3,
+              fontFamily: 'inherit',
+            }}>
+              Welcome back! 🎉
+            </p>
+            <p style={{
+              fontSize: 13, color: '#636f88',
+              margin: 0, lineHeight: 1.5,
+              fontFamily: 'inherit',
+            }}>
+              You've successfully signed in to your account.
+            </p>
+          </div>
+
+          {/* Bags.NG badge */}
+          <div style={{
+            flexShrink: 0,
+            background: '#f0f4ff',
+            borderRadius: 8,
+            padding: '4px 8px',
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#144bb8',
+            letterSpacing: '0.03em',
+            fontFamily: 'inherit',
+          }}>
+            Bags.NG
+          </div>
+        </div>
+
+        {/* Bottom strip */}
+        <div style={{
+          background: 'linear-gradient(90deg, #f0f4ff, #e8eeff)',
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <div style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: '#144bb8', opacity: 0.6,
+          }} />
+          <p style={{
+            fontSize: 12, color: '#144bb8', fontWeight: 600,
+            margin: 0, fontFamily: 'inherit',
+          }}>
+            Redirecting you to your dashboard…
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Login Page ──────────────────────────────────────────────────────────────
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
@@ -12,6 +137,7 @@ const LoginPage = () => {
   const [role, setRole] = useState('buyer'); // 'buyer' or 'seller'
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // 2. Handle Login Logic
   const handleLogin = async (e) => {
@@ -30,8 +156,11 @@ const LoginPage = () => {
       // Update AuthContext with user data
       login(data.user);
       
-      alert('Success! Welcome back.');
-      navigate('/home'); // Redirect to home after login
+      // Show custom success toast, then redirect after 3s
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate('/home');
+      }, 3000);
     } catch (error) {
       setErrorMsg(error.message);
     } finally {
@@ -41,6 +170,9 @@ const LoginPage = () => {
 
   return (
     <div className="bg-[#f6f6f8] dark:bg-[#111621] min-h-screen flex flex-col font-sans text-[#111318] dark:text-white">
+      {/* Success Toast */}
+      <SuccessToast show={showSuccess} />
+
       {/* Header */}
       <header className="flex items-center justify-between border-b border-[#f0f2f4] dark:border-gray-800 px-6 md:px-10 py-3 bg-white dark:bg-[#111621] z-10">
         <div className="flex items-center gap-4">
@@ -122,7 +254,7 @@ const LoginPage = () => {
                 <div>
                   <div className="flex justify-between">
                     <label className="block text-sm font-semibold mb-2">Password</label>
-                    <a href="/forgot-password" className="text-[#144bb8] text-xs font-bold hover:underline">Forgot Password?</a>
+<span onClick={() => navigate('/forgot-password')} className="text-[#144bb8] text-xs font-bold hover:underline cursor-pointer">Forgot Password?</span>
                   </div>
                   <input 
                     className="w-full rounded-lg border border-[#dcdfe5] dark:border-gray-700 bg-white dark:bg-gray-800 p-4 focus:ring-2 focus:ring-[#144bb8]/20 outline-none transition-all"
@@ -160,7 +292,7 @@ const LoginPage = () => {
               </div>
 
               <p className="text-center text-sm text-[#636f88] pt-4">
-                Don't have an account? <a href="/register" className="text-[#144bb8] font-bold hover:underline">Create an account</a>
+Don't have an account? <span onClick={() => navigate('/register')} className="text-[#144bb8] font-bold hover:underline cursor-pointer">Create an account</span>
               </p>
             </div>
           </div>
