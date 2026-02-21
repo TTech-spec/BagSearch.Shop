@@ -20,6 +20,7 @@ const Reg = () => {
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,6 +53,7 @@ const Reg = () => {
 
     try {
       setLoading(true);
+      setErrorMessage('');
       ensureSupabaseReady();
 
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -98,7 +100,7 @@ const Reg = () => {
 
     } catch (error) {
       console.error('Registration Flow Error:', error);
-      alert(error.message || 'An unexpected error occurred during registration.');
+      setErrorMessage(error.message || 'An unexpected error occurred during registration.');
     } finally {
       setLoading(false);
     }
@@ -124,6 +126,39 @@ const Reg = () => {
           color: #ef4444;
           font-size: 0.75rem;
           font-weight: 500;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(24px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
+        @keyframes popIn {
+          0%   { opacity: 0; transform: scale(0.85); }
+          60%  { transform: scale(1.04); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes checkDraw {
+          from { stroke-dashoffset: 60; }
+          to   { stroke-dashoffset: 0; }
+        }
+        @keyframes shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position:  200% center; }
+        }
+
+        .error-toast { animation: slideDown 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .success-modal-inner { animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .check-svg path { stroke-dasharray: 60; animation: checkDraw 0.5s 0.3s ease forwards; stroke-dashoffset: 60; }
+        .shimmer-text {
+          background: linear-gradient(90deg, #fff 30%, rgba(255,255,255,0.4) 50%, #fff 70%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer 2s linear infinite;
         }
       `}</style>
       
@@ -197,6 +232,27 @@ const Reg = () => {
                 <h2 className="text-[#111318] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Create your account</h2>
                 <p className="text-[#616f89] dark:text-slate-400 text-base font-normal leading-normal">Ready to explore or start selling with BagStore?</p>
               </div>
+
+              {/* ── ERROR BANNER ── */}
+              {errorMessage && (
+                <div className="error-toast flex items-start gap-3 px-4 py-3.5 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/40">
+                  <div className="flex-shrink-0 mt-0.5 size-5 rounded-full bg-red-100 dark:bg-red-900/60 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-red-500 dark:text-red-400" style={{fontSize:'14px',fontVariationSettings:"'FILL' 1"}}>error</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-300 leading-snug">Registration failed</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 leading-relaxed">{errorMessage}</p>
+                  </div>
+                  <button
+                    onClick={() => setErrorMessage('')}
+                    className="flex-shrink-0 text-red-400 hover:text-red-600 dark:hover:text-red-200 transition-colors"
+                    type="button"
+                    aria-label="Dismiss error"
+                  >
+                    <span className="material-symbols-outlined" style={{fontSize:'18px'}}>close</span>
+                  </button>
+                </div>
+              )}
 
               {/* Role Selection */}
               <div className="flex flex-col gap-3">
@@ -345,12 +401,19 @@ const Reg = () => {
                 </button>
               </form>
 
+              {/* ── ALREADY HAVE AN ACCOUNT — fixed for mobile ── */}
               <div className="text-center pt-2">
-                <p className="text-[#616f89] dark:text-slate-400 text-sm font-medium lg:text-[#616f89] lg:dark:text-slate-400 text-white">
-                  Already have an account? 
-                  <span onClick={() => navigate('/login?force=true')} className="text-primary font-bold hover:underline cursor-pointer ml-1">Login</span>
+                <p className="text-white lg:text-[#616f89] lg:dark:text-slate-400 text-sm font-medium">
+                  Already have an account?{' '}
+                  <span
+                    onClick={() => navigate('/login?force=true')}
+                    className="text-white lg:text-primary font-bold hover:underline cursor-pointer ml-1"
+                  >
+                    Login
+                  </span>
                 </p>
               </div>
+
             </div>
           </div>
         </main>
@@ -360,16 +423,50 @@ const Reg = () => {
           <p className="text-slate-400 text-xs">© 2024 BagStore. All rights reserved.</p>
         </footer>
 
-        {/* Success Modal */}
+        {/* ── SUCCESS MODAL ── */}
         {showSuccess && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4 shadow-2xl">
-              <div className="size-24 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-green-500 text-6xl">check_circle</span>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="success-modal-inner bg-white dark:bg-slate-900 rounded-3xl p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4 shadow-2xl border border-slate-100 dark:border-slate-800">
+
+              {/* Animated check circle */}
+              <div className="relative size-24 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-emerald-50 dark:bg-emerald-950/50"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-emerald-200 dark:border-emerald-800/50"></div>
+                <svg className="check-svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <path
+                    d="M12 24L20 32L36 16"
+                    stroke="#10b981"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
-              <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white">Welcome!</h3>
-                <p className="text-slate-500">Redirecting you to login...</p>
+
+              <div className="text-center space-y-1.5">
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  You're in!
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  Account created successfully.<br />Taking you to login…
+                </p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
+                <div
+                  className="h-full bg-emerald-400 rounded-full"
+                  style={{
+                    width: '100%',
+                    transition: 'width 3s linear',
+                    animation: 'none',
+                  }}
+                ></div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                <span className="material-symbols-outlined" style={{fontSize:'14px'}}>schedule</span>
+                Redirecting in 3 seconds
               </div>
             </div>
           </div>

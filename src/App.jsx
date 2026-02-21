@@ -13,11 +13,43 @@ function AuthListener() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for recovery hash on initial load
-    if (window.location.hash && window.location.hash.includes('type=recovery')) {
-      navigate('/reset-password', { replace: true });
-    }
+    const handleRecoveryLink = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
 
+      // Check if this is a password recovery link
+      if (type === 'recovery' && accessToken && refreshToken) {
+        try {
+          // Set the session from the URL tokens
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (!error) {
+            // Clear the hash from URL to clean up the UI
+            window.history.replaceState(null, '', window.location.pathname);
+            // Navigate to reset password page
+            navigate('/reset-password', { replace: true });
+          } else {
+            console.error('Failed to set session from recovery link:', error);
+          }
+        } catch (err) {
+          console.error('Error handling recovery link:', err);
+        }
+      } else if (window.location.hash && window.location.hash.includes('type=recovery')) {
+        // Fallback: if hash exists but tokens are missing, try to navigate
+        // This handles some edge cases but might not work without tokens
+        navigate('/reset-password', { replace: true });
+      }
+    };
+
+    // Handle recovery link on initial load
+    handleRecoveryLink();
+
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         navigate('/reset-password', { replace: true });
