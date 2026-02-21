@@ -14,10 +14,19 @@ function AuthListener() {
 
   useEffect(() => {
     const handleRecoveryLink = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const type = hashParams.get('type');
+      // Try to get params from hash (desktop/standard browsers)
+      let hashParams = new URLSearchParams(window.location.hash.substring(1));
+      let accessToken = hashParams.get('access_token');
+      let refreshToken = hashParams.get('refresh_token');
+      let type = hashParams.get('type');
+
+      // Fallback: try to get params from query string (mobile email clients)
+      if (!accessToken || !type) {
+        const queryParams = new URLSearchParams(window.location.search);
+        accessToken = accessToken || queryParams.get('access_token');
+        refreshToken = refreshToken || queryParams.get('refresh_token');
+        type = type || queryParams.get('type');
+      }
 
       // Check if this is a password recovery link
       if (type === 'recovery' && accessToken && refreshToken) {
@@ -29,7 +38,7 @@ function AuthListener() {
           });
 
           if (!error) {
-            // Clear the hash from URL to clean up the UI
+            // Clear the URL to clean up the UI
             window.history.replaceState(null, '', window.location.pathname);
             // Navigate to reset password page
             navigate('/reset-password', { replace: true });
@@ -39,9 +48,8 @@ function AuthListener() {
         } catch (err) {
           console.error('Error handling recovery link:', err);
         }
-      } else if (window.location.hash && window.location.hash.includes('type=recovery')) {
-        // Fallback: if hash exists but tokens are missing, try to navigate
-        // This handles some edge cases but might not work without tokens
+      } else if ((window.location.hash && window.location.hash.includes('type=recovery')) || (window.location.search && window.location.search.includes('type=recovery'))) {
+        // Fallback: if hash or query exists but tokens are missing, try to navigate
         navigate('/reset-password', { replace: true });
       }
     };
