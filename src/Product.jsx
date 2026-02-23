@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from './components/ui/badge';
+import { AuthContext } from './context/AuthContext';
+import { supabase } from './services/api';
 
 const mockProducts = [
   {
@@ -100,11 +102,40 @@ function WhatsAppIcon() {
 
 export default function Product() {
   const navigate = useNavigate();
+  const { user, logout } = useContext(AuthContext);
   const fileInputRef = useRef(null);
   const [displayedProducts, setDisplayedProducts] = useState(mockProducts);
   const [isFiltered, setIsFiltered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleProfileClick = async () => {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+        navigate('/profile');
+        return;
+      }
+
+      const isSeller = userData?.role === 'seller';
+      navigate(isSeller ? '/seller-profile' : '/profile');
+    } catch (err) {
+      console.error('Profile navigation error:', err);
+      navigate('/profile');
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -150,27 +181,106 @@ export default function Product() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+          {/* Mobile menu button - visible only on mobile */}
+          <button
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
+            onClick={() => setIsSidebarOpen(true)}
+            title="Open menu"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+
+          {/* Logo - visible on all screens */}
           <div className="flex items-center gap-2 text-blue-600">
             <LogoIcon />
             <span className="text-xl font-bold text-gray-900">Bag.NG</span>
           </div>
-          <div className="flex items-center gap-1">
+
+          {/* Desktop header buttons - hidden on mobile */}
+          <div className="hidden lg:flex items-center gap-2">
             <button
-              className="p-2 rounded-full border-none bg-transparent cursor-pointer hover:bg-gray-100"
-              onClick={() => navigate("/profile")}
+              className="p-2.5 rounded-lg border border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition text-gray-700"
+              onClick={handleProfileClick}
               title="Go to profile"
             >
-              <Icon name="person" />
+              <Icon name="person" size={24} />
             </button>
             <button
-              className="p-2 rounded-full border-none bg-transparent cursor-pointer hover:bg-gray-100"
-              title="Shopping bag"
+              className="p-2.5 rounded-lg border border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition text-gray-700"
+              title="Shopping cart"
             >
-              <Icon name="shopping_bag" />
+              <Icon name="shopping_cart" size={24} />
+            </button>
+            <button
+              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 cursor-pointer hover:bg-red-100 transition text-red-600 font-semibold text-sm"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              Logout
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4">
+          {/* Close button */}
+          <button
+            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-700 mb-6"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Sidebar menu items */}
+          <div className="space-y-4">
+            <button
+              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700"
+              onClick={() => {
+                handleProfileClick();
+                setIsSidebarOpen(false);
+              }}
+            >
+              <Icon name="person" size={24} />
+              <span className="font-medium">Profile</span>
+            </button>
+            <button
+              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700"
+              title="Shopping cart"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <Icon name="shopping_cart" size={24} />
+              <span className="font-medium">Cart</span>
+            </button>
+            <hr className="my-4 border-gray-200" />
+            <button
+              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-red-50 transition text-red-600"
+              onClick={() => {
+                handleLogout();
+                setIsSidebarOpen(false);
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Search Section */}
