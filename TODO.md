@@ -1,21 +1,16 @@
-# TODO - Forgot Password Component
+# Navigation Fixes TODO
 
-## Task: Convert HTML forgot password page to React component
+## Issues to Fix:
+1. home.jsx buttons navigate to Product.jsx instead of Login.jsx when user is logged in
+2. Product.jsx profile button doesn't navigate to userProfile.jsx properly
 
-## Steps:
-- [ ] 1. Create forgotPassword.jsx component
-  - [ ] Split-screen layout (left: hero image, right: form)
-  - [ ] Phone number input field
-  - [ ] Send Reset Link button
-  - [ ] Navigation links (back to login, contact concierge)
-  - [ ] Dark mode support
-  - [ ] Mobile responsive
+## Plan:
 
-- [ ] 2. Update App.jsx
-  - [ ] Add route for /forgot-password
-  - [ ] Make it accessible from login page
+- [ ] **luxe/src/home.jsx** - Change all navigate("/login") to navigate("/login?force=true") so login page always shows regardless of auth state
+- [ ] **luxe/src/userProfile.jsx** - Change navigate('/home') to navigate('/') since /home route doesn't exist
+- [ ] **luxe/src/Product.jsx** - Verify profile navigation works correctly
 
-## Notes:
-- Follow the same pattern as login.jsx
-- Use Tailwind CSS classes matching existing design
-- Use same color scheme as defined in index.css
+## Implementation Steps:
+1. Edit home.jsx - replace all navigate("/login") with navigate("/login?force=true")
+2. Edit userProfile.jsx - fix navigate('/home') to navigate('/')
+3. Test the navigation flow

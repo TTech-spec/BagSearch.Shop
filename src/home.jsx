@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from './context/AuthContext.jsx';
 
 const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search"];
 
@@ -106,7 +107,7 @@ export default function LuxeBag() {
                 key={ic} 
                 className="icon-btn desktop-icons" 
                 style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer" }}
-                onClick={() => ic === "person" && navigate("/profile")}
+onClick={() => ic === "person" && navigate("/login?force=true")}
               >
                 <Icon name={ic} />
               </button>
@@ -139,10 +140,10 @@ export default function LuxeBag() {
               Experience the pinnacle of luxury with our curated collection of bags, powered by intuitive visual discovery.
             </p>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <button style={{ padding: "15px 28px", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: "0 8px 24px rgba(19,91,236,0.3)" }}>
+<button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: "0 8px 24px rgba(19,91,236,0.3)" }}>
                 <Icon name="camera" size={20} /> Try Visual Search
               </button>
-              <button style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }}>
+<button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }}>
                 Browse Collections
               </button>
             </div>
@@ -208,7 +209,7 @@ export default function LuxeBag() {
               <p style={{ fontSize: 16, color: "rgba(219,234,254,1)", marginBottom: 32, lineHeight: 1.7 }}>
                 Our AI-powered visual search allows you to upload any image and find the closest matches in our luxury catalog instantly.
               </p>
-              <button style={{ padding: "15px 28px", background: "white", color: "#135bec", fontWeight: 800, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15 }}>
+<button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", background: "white", color: "#135bec", fontWeight: 800, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15 }}>
                 <Icon name="add_a_photo" size={20} /> Launch AI Search
               </button>
             </div>
@@ -340,7 +341,7 @@ export default function LuxeBag() {
           <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#94a3b8", padding: "0 12px", marginBottom: 12 }}>Account</p>
 
           {/* Profile */}
-          <a onClick={() => { setSidebarOpen(false); navigate("/profile"); }} className="sidebar-link" style={{
+<a onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} className="sidebar-link" style={{
             display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
             borderRadius: 10, marginBottom: 6, textDecoration: "none", color: "#0f172a",
             transition: "background 0.15s", cursor: "pointer",
@@ -377,7 +378,7 @@ export default function LuxeBag() {
 
         {/* Sidebar footer */}
         <div style={{ padding: "24px 24px 28px" }}>
-          <button style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>
+<button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>
             Sign In
           </button>
           <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>Luxury Redefined</p>

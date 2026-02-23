@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Calendar, History, AlertCircle, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Calendar, History, AlertCircle, ArrowLeft, Upload } from 'lucide-react';
 import { Card } from './components/ui/card';
 import { Badge } from './components/ui/badge';
 import { supabase } from './services/api';
@@ -132,6 +132,8 @@ function UserProfile() {
     loadAll();
   }, []);
 
+  const isSeller = profile?.role === 'seller';
+
   // ── Error state ──────────────────────────────────────────────────────────
   if (!loading && error) {
     return (
@@ -183,8 +185,8 @@ function UserProfile() {
         >
           {/* ── Back Button ── */}
           <button
-            onClick={() => navigate('/home')}
-            aria-label="Go back to home"
+onClick={() => navigate(-1)}
+            aria-label="Go back"
             style={{
               display: "flex",
               alignItems: "center",
@@ -216,9 +218,46 @@ function UserProfile() {
           </button>
 
           {/* ── Page Title ── */}
-          <span style={{ fontSize: 17, fontWeight: 700, color: "#111827", letterSpacing: "-0.3px" }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#111827", letterSpacing: "-0.3px", flex: 1 }}>
             My Profile
           </span>
+
+          {/* ── Upload Product Button (sellers only) ── */}
+          {!loading && isSeller && (
+            <button
+              onClick={() => navigate('/upload-product')}
+              aria-label="Upload a product"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "9px 18px",
+                borderRadius: 10,
+                border: "none",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                cursor: "pointer",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                transition: "all 0.18s ease",
+                boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+                letterSpacing: "0.01em",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(99,102,241,0.45)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(99,102,241,0.35)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              <Upload size={16} strokeWidth={2.2} />
+              <span>Upload Product</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -264,6 +303,23 @@ function UserProfile() {
                     )}
                     <Badge variant="outline">{stats?.totalSearches ?? 0}+ Searches</Badge>
                   </div>
+
+                  {/* ── Seller Upload Product CTA (inside card, mobile-friendly) ── */}
+                  {isSeller && (
+                    <button
+                      onClick={() => navigate('/upload-product')}
+                      className="mt-4 md:hidden inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white"
+                      style={{
+                        background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Upload size={15} strokeWidth={2.2} />
+                      Upload Product
+                    </button>
+                  )}
                 </>
               )}
             </div>

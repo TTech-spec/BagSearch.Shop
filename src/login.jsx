@@ -158,8 +158,8 @@ const LoginPage = () => {
       
       // Show custom success toast, then redirect after 3s
       setShowSuccess(true);
-      setTimeout(() => {
-        navigate('/home');
+setTimeout(() => {
+        navigate('/products');
       }, 3000);
     } catch (error) {
       setErrorMsg(error.message);

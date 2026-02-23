@@ -5,6 +5,7 @@ import { supabase } from './services/api';
 import Reg from './Reg.jsx';
 import Login from './login.jsx';
 import Home from './home.jsx';
+import Product from './Product.jsx';
 import UserProfile from './userProfile.jsx';
 import ForgotPassword from './forgotPassword.jsx';
 import ResetPassword from './resetPassword.jsx';
@@ -84,9 +85,9 @@ function LoginRoute() {
   const [searchParams] = useSearchParams();
   const force = searchParams.get('force') === 'true';
   
-  // If user is logged in and force parameter is not set, redirect to home
+  // If user is logged in and force parameter is not set, redirect to products
   if (user && !force) {
-    return <Navigate to="/home" replace />;
+    return <Navigate to="/products" replace />;
   }
   
   return <Login />;
@@ -99,14 +100,13 @@ function App() {
     <Router>
       <AuthListener />
       <Routes>
-        {/* Default route -> Registration first */}
-        <Route path="/" element={<Navigate to="/register" replace />} />
+        {/* Default route -> Home (public landing page) */}
+        <Route path="/" element={<Home />} />
 
         {/* Registration route */}
         <Route path="/register" element={<Reg />} />
 
-        {/* Login route: only accessible after registration if you want to enforce a flow.
-            If you store a flag after registration, you can gate this route similarly. */}
+        {/* Login route */}
         <Route path="/login" element={<LoginRoute />} />
 
         {/* Forgot Password route */}
@@ -115,17 +115,17 @@ function App() {
         {/* Reset Password route */}
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Home protected behind login */}
+        {/* Products page - protected behind login */}
         <Route
-          path="/home"
+          path="/products"
           element={
             <PrivateRoute>
-              <Home />
+              <Product />
             </PrivateRoute>
           }
         />
 
-        {/* User Profile protected behind login */}
+        {/* User Profile - protected behind login */}
         <Route
           path="/profile"
           element={
@@ -135,8 +135,8 @@ function App() {
           }
         />
 
-        {/* Fallback unknown routes -> registration */}
-        <Route path="*" element={<Navigate to="/register" replace />} />
+        {/* Fallback unknown routes -> home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
