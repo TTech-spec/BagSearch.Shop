@@ -21,18 +21,13 @@ const ResetPassword = () => {
 
   // Check if we arrived here via an email reset link
   React.useEffect(() => {
-    const checkSession = async () => {
-      // Add a small delay to allow AuthListener to set the session
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // If there's a session, it might be from a recovery link
-        setIsEmailReset(true);
-      }
-    };
-    checkSession();
-  }, []);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      setIsEmailReset(true);
+    }
+  });
+  return () => subscription.unsubscribe();
+}, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

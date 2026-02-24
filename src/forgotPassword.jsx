@@ -28,7 +28,7 @@ const ForgotPassword = () => {
         navigate('/reset-password', { state: { phone: identifier, method: 'phone' } });
       } else {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(identifier, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: `${import.meta.env.VITE_APP_URL || 'https://aninri-luxe.vercel.app'}/reset-password`,
         });
         if (resetError) throw resetError;
         alert('Password reset link sent to your email!');
