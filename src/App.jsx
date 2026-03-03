@@ -6,6 +6,7 @@ import Reg from './Reg.jsx';
 import Login from './login.jsx';
 import Home from './home.jsx';
 import Product from './Product.jsx';
+import ProductDetail from './productDetail.jsx';
 import UserProfile from './userProfile.jsx';
 import SellerProfile from './sellerProfile.jsx';
 import ForgotPassword from './forgotPassword.jsx';
@@ -122,6 +123,16 @@ function App() {
           element={
             <PrivateRoute>
               <Product />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Product Detail page - protected behind login */}
+        <Route
+          path="/products/:id"
+          element={
+            <PrivateRoute>
+              <ProductDetail />
             </PrivateRoute>
           }
         />

@@ -68,12 +68,12 @@ function UserProfile() {
 
         const { data: profileData, error: profileErr } = await supabase
           .from('users')
-          .select('id, full_name, email, phone, role, created_at')
-          .eq('id', userId)
+          .select('user_id, full_name, email, phone, role, created_at')
+          .eq('user_id', userId)
           .maybeSingle();
 
         const profile = profileData || {
-          id: user.id,
+          user_id: user.id,
           full_name: user.user_metadata?.full_name || 'User',
           email: user.email,
           phone: user.user_metadata?.phone || '',

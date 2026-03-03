@@ -110,26 +110,9 @@ export default function Product() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const handleProfileClick = async () => {
-    try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user role:', error);
-        navigate('/profile');
-        return;
-      }
-
-      const isSeller = userData?.role === 'seller';
-      navigate(isSeller ? '/seller-profile' : '/profile');
-    } catch (err) {
-      console.error('Profile navigation error:', err);
-      navigate('/profile');
-    }
+  const handleProfileClick = () => {
+    const isSeller = user?.user_metadata?.role === 'seller';
+    navigate(isSeller ? '/seller-profile' : '/profile');
   };
 
   const handleLogout = async () => {
@@ -357,7 +340,11 @@ export default function Product() {
         {displayedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayedProducts.map((product) => (
-              <div key={product.id} className="product-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow">
+              <div 
+                key={product.id} 
+                className="product-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => navigate(`/products/${product.id}`)}
+              >
                 {/* Image */}
                 <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '4/3' }}>
                   <img

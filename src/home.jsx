@@ -187,10 +187,10 @@ export default function LuxeBag() {
             <span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>Bag.NG</span>
           </div>
 
-          {/* Desktop Nav */}
+{/* Desktop Nav */}
           <nav className="desktop-nav" style={{ display: "flex", gap: 40 }}>
             {NAV_LINKS.map(link => (
-              <a key={link} href="#" className="nav-link" style={{ fontSize: 14, fontWeight: 600, textDecoration: "none", color: "#0f172a", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s" }}>
+              <a key={link} onClick={() => navigate("/register")} className="nav-link" style={{ fontSize: 14, fontWeight: 600, textDecoration: "none", color: "#0f172a", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s", cursor: "pointer" }}>
                 {link}
                 {link === "Visual Search" && (
                   <span style={{ fontSize: 10, background: "rgba(19,91,236,0.1)", color: "#135bec", padding: "2px 7px", borderRadius: 9999, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI</span>
@@ -199,14 +199,14 @@ export default function LuxeBag() {
             ))}
           </nav>
 
-          {/* Right icons */}
+{/* Right icons */}
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {["search", "shopping_bag", "person"].map(ic => (
               <button
                 key={ic}
                 className="icon-btn desktop-icons"
                 style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer" }}
-                onClick={() => ic === "person" && navigate("/login?force=true")}
+                onClick={() => navigate("/register")}
               >
                 <Icon name={ic} />
               </button>
@@ -246,11 +246,11 @@ export default function LuxeBag() {
             <p className="hero-subtitle" style={{ fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "#cbd5e1", maxWidth: 440, fontWeight: 300, lineHeight: 1.7, marginBottom: 40 }}>
               Experience the pinnacle of luxury with our curated collection of bags, powered by intuitive visual discovery.
             </p>
-            <div className="hero-buttons" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: "0 8px 24px rgba(19,91,236,0.3)" }}>
+<div className="hero-buttons" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <button onClick={() => navigate("/register")} style={{ padding: "15px 28px", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: "0 8px 24px rgba(19,91,236,0.3)" }}>
                 <Icon name="camera" size={20} /> Try Visual Search
               </button>
-              <button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }}>
+              <button onClick={() => navigate("/register")} style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }}>
                 Browse Collections
               </button>
             </div>
@@ -319,7 +319,7 @@ export default function LuxeBag() {
               <p style={{ fontSize: 16, color: "rgba(219,234,254,1)", marginBottom: 32, lineHeight: 1.7 }}>
                 Our AI-powered visual search allows you to upload any image and find the closest matches in our luxury catalog instantly.
               </p>
-              <button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", background: "white", color: "#135bec", fontWeight: 800, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15 }}>
+<button onClick={() => navigate("/register?force=true")} style={{ padding: "15px 28px", background: "white", color: "#135bec", fontWeight: 800, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15 }}>
                 <Icon name="add_a_photo" size={20} /> Launch AI Search
               </button>
             </div>
@@ -419,13 +419,13 @@ export default function LuxeBag() {
         <div style={{ padding: "0 16px", flex: 1 }}>
           {/* Nav links */}
           {NAV_LINKS.map(link => (
-            <a key={link} href="#" className="sidebar-link" style={{
+<a key={link} onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
               padding: "13px 12px", borderRadius: 10, marginBottom: 4,
               fontWeight: 700, fontSize: 15, textDecoration: "none",
               color: link === "Visual Search" ? "#135bec" : "#0f172a",
               background: link === "Visual Search" ? "rgba(19,91,236,0.06)" : "transparent",
-              transition: "background 0.15s",
+              transition: "background 0.15s", cursor: "pointer",
             }}>
               {link}
               <Icon name={link === "Visual Search" ? "camera_enhance" : "chevron_right"} size={18} />
@@ -436,10 +436,10 @@ export default function LuxeBag() {
 
           {/* Cart & Wishlist */}
           {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }) => (
-            <a key={label} href="#" className="sidebar-link" style={{
+<a key={label} onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{
               display: "flex", alignItems: "center", gap: 12, padding: "12px 12px",
               borderRadius: 10, marginBottom: 4, fontWeight: 600, fontSize: 15,
-              textDecoration: "none", color: "#0f172a", transition: "background 0.15s",
+              textDecoration: "none", color: "#0f172a", transition: "background 0.15s", cursor: "pointer",
             }}>
               <Icon name={icon} size={20} /> {label}
             </a>
@@ -451,7 +451,7 @@ export default function LuxeBag() {
           <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#94a3b8", padding: "0 12px", marginBottom: 12 }}>Account</p>
 
           {/* Profile */}
-          <a onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} className="sidebar-link" style={{
+<a onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{
             display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
             borderRadius: 10, marginBottom: 6, textDecoration: "none", color: "#0f172a",
             transition: "background 0.15s", cursor: "pointer",
@@ -467,7 +467,7 @@ export default function LuxeBag() {
           </a>
 
           {/* Log Out */}
-          <button className="logout-btn" style={{
+<button onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="logout-btn" style={{
             display: "flex", alignItems: "center", gap: 14, padding: "10px 12px",
             borderRadius: 10, marginBottom: 6, border: "none", background: "transparent",
             cursor: "pointer", width: "100%", textAlign: "left",
@@ -488,7 +488,7 @@ export default function LuxeBag() {
 
         {/* Sidebar footer */}
         <div style={{ padding: "24px 24px 28px" }}>
-          <button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>
+<button onClick={() => { setSidebarOpen(false); navigate("/register"); }} style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>
             Sign In
           </button>
           <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>Luxury Redefined</p>
