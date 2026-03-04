@@ -1,8 +1,87 @@
-import { useState, useRef, useContext } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from './components/ui/badge';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
+
+// ─── Luxury Page Loader (reused from login.jsx) ──────────────────────────────
+const PageLoader = ({ onDone }) => {
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 5 + 2;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        setProgress(100);
+        setTimeout(() => setPhase(1), 500);
+        setTimeout(() => onDone(), 1300);
+      } else {
+        setProgress(Math.min(p, 100));
+      }
+    }, 35);
+    return () => clearInterval(interval);
+  }, [onDone]);
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: phase === 1 ? 0 : 1, transform: phase === 1 ? 'scale(1.03)' : 'scale(1)', transition: 'opacity 0.7s ease, transform 0.7s ease', pointerEvents: phase === 1 ? 'none' : 'all' }}>
+      <style>{`
+        @keyframes loaderSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes loaderPulseRing { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.22);opacity:0.4} }
+        @keyframes loaderBagBounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.04)} }
+        @keyframes loaderDot { 0%,80%,100%{transform:scale(0.55);opacity:0.25} 40%{transform:scale(1);opacity:1} }
+        @keyframes loaderFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmerBar { 0%{background-position:200% center} 100%{background-position:-200% center} }
+        @keyframes loaderGlow { 0%,100%{box-shadow:0 8px 28px rgba(20,75,184,0.25)} 50%{box-shadow:0 8px 36px rgba(20,75,184,0.55)} }
+        @keyframes loaderRingFade { 0%{transform:scale(0.85);opacity:0.6} 100%{transform:scale(1.6);opacity:0} }
+      `}</style>
+      {[0, 1].map(i => (
+        <div key={i} style={{ position: 'absolute', width: 130, height: 130, borderRadius: '50%', border: '1.5px solid rgba(20,75,184,0.2)', animation: `loaderRingFade 2.2s ease-out ${i * 1.1}s infinite` }} />
+      ))}
+      <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,75,184,0.05) 0%, transparent 70%)', animation: 'loaderPulseRing 3s ease-in-out infinite' }} />
+      <div style={{ position: 'relative', width: 92, height: 92, marginBottom: 30 }}>
+        <svg width="92" height="92" viewBox="0 0 92 92" style={{ position: 'absolute', inset: 0, animation: 'loaderSpin 1.9s linear infinite' }}>
+          <circle cx="46" cy="46" r="40" fill="none" stroke="#eef1fb" strokeWidth="2.5" />
+          <circle cx="46" cy="46" r="40" fill="none" stroke="#144bb8" strokeWidth="2.5" strokeDasharray={`${2 * Math.PI * 40 * progress / 100} ${2 * Math.PI * 40}`} strokeLinecap="round" style={{ transformOrigin: '46px 46px', transition: 'stroke-dasharray 0.08s ease' }} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #144bb8 0%, #4f7ef7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'loaderBagBounce 1.7s ease-in-out infinite, loaderGlow 1.7s ease-in-out infinite' }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 01-8 0" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div style={{ animation: 'loaderFadeUp 0.55s ease 0.15s both', textAlign: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em', color: '#111318', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+          Bags<span style={{ color: '#144bb8' }}>.NG</span>
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 38, animation: 'loaderFadeUp 0.55s ease 0.3s both' }}>
+        <span style={{ fontSize: 11, color: '#8a96b0', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'system-ui, sans-serif' }}>
+          Loading your experience
+        </span>
+        <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#144bb8', display: 'inline-block', animation: `loaderDot 1.3s ease-in-out ${i * 0.18}s infinite` }} />
+          ))}
+        </span>
+      </div>
+      <div style={{ width: 'min(260px, 60vw)', animation: 'loaderFadeUp 0.55s ease 0.45s both' }}>
+        <div style={{ height: 3, background: '#eef1fb', borderRadius: 9999, overflow: 'hidden' }}>
+          <div style={{ height: '100%', borderRadius: 9999, width: `${progress}%`, background: 'linear-gradient(90deg, #144bb8, #4f7ef7, #144bb8)', backgroundSize: '200% auto', animation: 'shimmerBar 1.5s linear infinite', transition: 'width 0.08s ease', boxShadow: '0 0 10px rgba(20,75,184,0.45)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'system-ui, sans-serif' }}>
+          <span style={{ color: '#c5cad8' }}>BAGS.NG</span>
+          <span style={{ color: '#144bb8' }}>{Math.round(progress)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const mockProducts = [
   {
@@ -71,16 +150,9 @@ const LogoIcon = () => (
 const Icon = ({ name, size = 22 }) => (
   <span style={{
     fontFamily: "'Material Symbols Outlined'",
-    fontWeight: "normal",
-    fontStyle: "normal",
-    fontSize: size,
-    lineHeight: 1,
-    display: "inline-block",
-    textTransform: "none",
-    letterSpacing: "normal",
-    wordWrap: "normal",
-    whiteSpace: "nowrap",
-    direction: "ltr",
+    fontWeight: "normal", fontStyle: "normal", fontSize: size,
+    lineHeight: 1, display: "inline-block", textTransform: "none",
+    letterSpacing: "normal", wordWrap: "normal", whiteSpace: "nowrap", direction: "ltr",
   }}>{name}</span>
 );
 
@@ -92,327 +164,600 @@ function ShoppingBagEmpty({ className }) {
   );
 }
 
-function WhatsAppIcon() {
+/* ── Scroll-reveal hook ── */
+function useScrollReveal(threshold = 0.12) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, visible];
+}
+
+/* ── Product card with stagger + hover ── */
+function ProductCard({ product, index, navigate }) {
+  const [cardRef, cardVisible] = useScrollReveal(0.08);
+  const [hovered, setHovered] = useState(false);
+  const [btnHovered, setBtnHovered] = useState(false);
+  const delay = (index % 4) * 80; // stagger per row
+
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
+    <div
+      ref={cardRef}
+      onClick={() => navigate(`/products/${product.id}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: "white",
+        borderRadius: 18,
+        overflow: "hidden",
+        border: "1px solid #f0f0f0",
+        cursor: "pointer",
+        position: "relative",
+        opacity: cardVisible ? 1 : 0,
+        transform: cardVisible
+          ? "translateY(0) scale(1)"
+          : "translateY(32px) scale(0.97)",
+        transition: `opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms, box-shadow 0.3s ease`,
+        boxShadow: hovered
+          ? "0 20px 50px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)"
+          : "0 2px 12px rgba(0,0,0,0.05)",
+      }}
+    >
+      {/* Image */}
+      <div style={{ position: "relative", overflow: "hidden", aspectRatio: "4/3", background: "#f4f4f4" }}>
+        <img
+          src={product.src}
+          alt={product.name}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            transition: "transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)",
+            transform: hovered ? "scale(1.07)" : "scale(1)",
+          }}
+        />
+
+        {/* Hover overlay shimmer */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%)",
+          opacity: hovered ? 1 : 0,
+          transition: "opacity 0.4s ease",
+          pointerEvents: "none",
+        }} />
+
+        {product.lowStock && (
+          <span style={{
+            position: "absolute", top: 12, left: 12,
+            background: "#ef4444", color: "white",
+            fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
+            textTransform: "uppercase", padding: "4px 10px", borderRadius: 20,
+            boxShadow: "0 2px 8px rgba(239,68,68,0.4)",
+            animation: "pulseBadge 2s ease-in-out infinite",
+          }}>
+            Low Stock
+          </span>
+        )}
+
+        {/* Quick-view pill on hover */}
+        <div style={{
+          position: "absolute", bottom: 10, left: "50%",
+          transform: hovered ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(12px)",
+          opacity: hovered ? 1 : 0,
+          transition: "all 0.3s cubic-bezier(0.22,1,0.36,1)",
+          background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)",
+          color: "white", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+          textTransform: "uppercase", padding: "5px 16px", borderRadius: 20,
+          whiteSpace: "nowrap", pointerEvents: "none",
+        }}>
+          Quick View
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "16px 16px 14px" }}>
+        <h3 style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", marginBottom: 2, lineHeight: 1.3 }}>{product.name}</h3>
+        <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 14, fontWeight: 500 }}>{product.seller}</p>
+
+        {/* Colors */}
+        <p style={{ fontSize: 11, color: "#cbd5e1", marginBottom: 6, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>Colors</p>
+        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+          {product.colors.map((color, i) => (
+            <span
+              key={i}
+              style={{
+                width: 18, height: 18, borderRadius: "50%", background: color,
+                border: "2px solid white", outline: "1px solid #e2e8f0",
+                display: "inline-block",
+                transition: "transform 0.2s ease",
+                transform: hovered ? "scale(1.15)" : "scale(1)",
+                transitionDelay: `${i * 30}ms`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Price + Qty */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
+          <div>
+            <p style={{ fontSize: 10, color: "#cbd5e1", marginBottom: 2, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Stock</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>{product.quantity} units</p>
+          </div>
+          <p style={{
+            fontSize: 22, fontWeight: 900, color: "#2563eb", letterSpacing: "-0.03em",
+            transition: "color 0.2s",
+            ...(hovered && { color: "#1d4ed8" }),
+          }}>{product.price}</p>
+        </div>
+
+        {/* WhatsApp CTA */}
+        <a
+          href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          onMouseEnter={() => setBtnHovered(true)}
+          onMouseLeave={() => setBtnHovered(false)}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            width: "100%", padding: "11px 0",
+            background: btnHovered ? "#16a34a" : "#22c55e",
+            color: "white", fontWeight: 700, fontSize: 13,
+            borderRadius: 10, textDecoration: "none",
+            transition: "background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease",
+            transform: btnHovered ? "translateY(-1px)" : "translateY(0)",
+            boxShadow: btnHovered ? "0 6px 20px rgba(34,197,94,0.4)" : "0 2px 8px rgba(34,197,94,0.2)",
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Contact Seller
+        </a>
+        <p style={{ textAlign: "center", fontSize: 10, color: "#cbd5e1", marginTop: 6, fontWeight: 500 }}>via WhatsApp</p>
+      </div>
+    </div>
   );
 }
 
 export default function Product() {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
+  const [pageLoading, setPageLoading] = useState(true);
+  const handleLoaderDone = useCallback(() => setPageLoading(false), []);
   const fileInputRef = useRef(null);
   const [displayedProducts, setDisplayedProducts] = useState(mockProducts);
+  const [realProducts, setRealProducts] = useState([]);
   const [isFiltered, setIsFiltered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [resultsKey, setResultsKey] = useState(0); // triggers grid re-animation on search
+
+  // Page-load sequence
+  useEffect(() => {
+    setTimeout(() => setHeaderVisible(true), 60);
+    setTimeout(() => setHeroVisible(true), 180);
+    setTimeout(() => setSearchVisible(true), 340);
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      if (data) {
+        const formatted = data.map(p => ({
+          id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller',
+          sub: `${p.brand} • ${p.condition}`, price: `$${p.price}`,
+          quantity: 1, lowStock: false, colors: [],
+          src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400'
+        }));
+        setRealProducts(formatted);
+        setDisplayedProducts([...formatted, ...mockProducts]);
+      }
+    } catch (err) { console.error('Error fetching products:', err); }
+  };
 
   const handleProfileClick = () => {
-    const isSeller = user?.user_metadata?.role === 'seller';
-    navigate(isSeller ? '/seller-profile' : '/profile');
+    navigate(user?.user_metadata?.role === 'seller' ? '/seller-profile' : '/profile');
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
+  const handleLogout = async () => { await logout(); navigate('/login', { replace: true }); };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
+    const allProducts = [...realProducts, ...mockProducts];
     if (query.trim()) {
-      const results = mockProducts.filter(product =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.sub.toLowerCase().includes(query.toLowerCase()) ||
-        product.seller.toLowerCase().includes(query.toLowerCase())
+      const results = allProducts.filter(p =>
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.sub.toLowerCase().includes(query.toLowerCase()) ||
+        p.seller.toLowerCase().includes(query.toLowerCase())
       );
       setDisplayedProducts(results);
       setIsFiltered(true);
-    } else {
-      handleClearSearch();
-    }
+    } else { handleClearSearch(); }
+    setResultsKey(k => k + 1);
   };
 
   const handleClearSearch = () => {
-    setDisplayedProducts(mockProducts);
+    setDisplayedProducts([...realProducts, ...mockProducts]);
     setIsFiltered(false);
     setSearchQuery('');
     setUploadedImage(null);
+    setResultsKey(k => k + 1);
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setUploadedImage(url);
+    setUploadedImage(URL.createObjectURL(file));
     setIsFiltered(true);
-    setDisplayedProducts(mockProducts);
-    // Reset the file input so the same file can be re-selected
+    setDisplayedProducts([...realProducts, ...mockProducts]);
+    setResultsKey(k => k + 1);
     e.target.value = '';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Manrope', sans-serif" }}>
+      {/* Page Loader */}
+      <PageLoader onDone={handleLoaderDone} />
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
-        .card-img { transition: transform 0.5s ease; }
-        .product-card:hover .card-img { transform: scale(1.04); }
+        *, *::before, *::after { box-sizing: border-box; }
+
+        /* ── Page load ── */
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.93); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+
+        /* ── Looping badge pulse ── */
+        @keyframes pulseBadge {
+          0%, 100% { box-shadow: 0 2px 8px rgba(239,68,68,0.4); }
+          50%       { box-shadow: 0 2px 18px rgba(239,68,68,0.7); }
+        }
+
+        /* ── Search bar focus ring ── */
+        @keyframes ringExpand {
+          from { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+          to   { box-shadow: 0 0 0 5px rgba(37,99,235,0); }
+        }
+        .search-focus-ring { animation: ringExpand 0.45s ease forwards; }
+
+        /* ── Skeleton shimmer ── */
+        @keyframes shimmer {
+          from { background-position: -600px 0; }
+          to   { background-position: 600px 0; }
+        }
+
+        /* ── Sidebar ── */
+        @keyframes sidebarIn {
+          from { transform: translateX(-100%); opacity: 0; }
+          to   { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes sidebarOut {
+          from { transform: translateX(0); opacity: 1; }
+          to   { transform: translateX(-100%); opacity: 0; }
+        }
+
+        /* ── Empty state bounce ── */
+        @keyframes bounceIn {
+          0%   { opacity: 0; transform: scale(0.7) translateY(20px); }
+          60%  { opacity: 1; transform: scale(1.06) translateY(-4px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+
+        /* ── Image upload preview ── */
+        @keyframes slideInPreview {
+          from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── Scroll-reveal for grid items handled inline via JS ── */
+
+        /* Nav hover underline */
+        .nav-btn-anim {
+          position: relative;
+          overflow: hidden;
+        }
+        .nav-btn-anim::after {
+          content: '';
+          position: absolute;
+          bottom: 0; left: 50%;
+          width: 0; height: 2px;
+          background: #2563eb;
+          transition: width 0.25s ease, left 0.25s ease;
+          border-radius: 2px;
+        }
+        .nav-btn-anim:hover::after {
+          width: 100%; left: 0;
+        }
+
+        /* Color dot hover */
+        .color-dot:hover { transform: scale(1.35) !important; }
+
+        /* Focus outline reset */
+        :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
       `}</style>
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          {/* Mobile menu button - visible only on mobile */}
+      {/* ── HEADER ── */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(14px)",
+        borderBottom: "1px solid #e9ecef",
+        opacity: headerVisible ? 1 : 0,
+        transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
+        transition: "opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+        boxShadow: "0 1px 24px rgba(0,0,0,0.05)",
+      }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+
+          {/* Mobile hamburger */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
+            className="nav-btn-anim"
             onClick={() => setIsSidebarOpen(true)}
-            title="Open menu"
+            style={{ display: "none", padding: 8, borderRadius: 10, border: "none", background: "transparent", cursor: "pointer", color: "#374151", transition: "background 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <svg className="w-6 h-6" style={{ width: 22, height: 22 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
 
-          {/* Logo - visible on all screens */}
-          <div className="flex items-center gap-2 text-blue-600">
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#2563eb", cursor: "pointer" }} onClick={() => navigate('/')}>
             <LogoIcon />
-            <span className="text-xl font-bold text-gray-900">Bag.NG</span>
+            <span style={{ fontSize: 20, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.5px" }}>Bag.NG</span>
           </div>
 
-          {/* Desktop header buttons - hidden on mobile */}
-          <div className="hidden lg:flex items-center gap-2">
+          {/* Desktop actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {[
+              { icon: "person", label: "Profile", action: handleProfileClick },
+              { icon: "shopping_cart", label: "Cart", action: () => {} },
+            ].map(({ icon, label, action }) => (
+              <button
+                key={icon}
+                className="nav-btn-anim"
+                onClick={action}
+                title={label}
+                style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, transition: "background 0.2s, border-color 0.2s, transform 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#eff6ff"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#f9fafb"; e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.transform = "none"; }}
+              >
+                <Icon name={icon} size={20} />
+                <span style={{ display: "none" }}>{label}</span>
+              </button>
+            ))}
             <button
-              className="p-2.5 rounded-lg border border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition text-gray-700"
-              onClick={handleProfileClick}
-              title="Go to profile"
-            >
-              <Icon name="person" size={24} />
-            </button>
-            <button
-              className="p-2.5 rounded-lg border border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition text-gray-700"
-              title="Shopping cart"
-            >
-              <Icon name="shopping_cart" size={24} />
-            </button>
-            <button
-              className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 cursor-pointer hover:bg-red-100 transition text-red-600 font-semibold text-sm"
               onClick={handleLogout}
-              title="Logout"
+              style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid #fecaca", background: "#fef2f2", cursor: "pointer", color: "#dc2626", fontSize: 13, fontWeight: 700, transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.transform = "none"; }}
             >
               Logout
             </button>
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 768px) {
+            header > div > button:first-child { display: flex !important; }
+            header > div > div:last-child { display: none !important; }
+          }
+        `}</style>
       </header>
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* ── SIDEBAR OVERLAY ── */}
+      <div
+        onClick={() => setIsSidebarOpen(false)}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 60,
+          opacity: isSidebarOpen ? 1 : 0, pointerEvents: isSidebarOpen ? "all" : "none",
+          transition: "opacity 0.3s ease",
+        }}
+      />
 
-      {/* Mobile Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-4">
-          {/* Close button */}
-          <button
-            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-700 mb-6"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+      {/* ── SIDEBAR ── */}
+      <aside style={{
+        position: "fixed", top: 0, left: 0, height: "100%", width: 260,
+        background: "white", zIndex: 70,
+        transform: isSidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1)",
+        boxShadow: "6px 0 32px rgba(0,0,0,0.12)",
+        display: "flex", flexDirection: "column",
+        padding: "24px 16px",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#2563eb" }}>
+            <LogoIcon />
+            <span style={{ fontWeight: 900, fontSize: 17, color: "#0f172a" }}>Bag.NG</span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} style={{ padding: 8, borderRadius: 9, border: "none", background: "#f3f4f6", cursor: "pointer", display: "flex", transition: "background 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "#e5e7eb"}
+            onMouseLeave={e => e.currentTarget.style.background = "#f3f4f6"}>
+            <svg style={{ width: 18, height: 18 }} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="#374151">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-
-          {/* Sidebar menu items */}
-          <div className="space-y-4">
-            <button
-              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700"
-              onClick={() => {
-                handleProfileClick();
-                setIsSidebarOpen(false);
-              }}
-            >
-              <Icon name="person" size={24} />
-              <span className="font-medium">Profile</span>
-            </button>
-            <button
-              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700"
-              title="Shopping cart"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <Icon name="shopping_cart" size={24} />
-              <span className="font-medium">Cart</span>
-            </button>
-            <hr className="my-4 border-gray-200" />
-            <button
-              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-red-50 transition text-red-600"
-              onClick={() => {
-                handleLogout();
-                setIsSidebarOpen(false);
-              }}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Search Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Your Perfect Bag</h1>
-          <p className="text-gray-600 mb-6">Search by text or upload an image to find similar bags</p>
+        {[
+          { icon: "person", label: "Profile", action: () => { handleProfileClick(); setIsSidebarOpen(false); } },
+          { icon: "shopping_cart", label: "Cart", action: () => setIsSidebarOpen(false) },
+        ].map(({ icon, label, action }) => (
+          <button key={label} onClick={action} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: "none", background: "transparent", cursor: "pointer", color: "#0f172a", fontSize: 15, fontWeight: 600, marginBottom: 4, textAlign: "left", transition: "background 0.18s, transform 0.18s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#eff6ff"; e.currentTarget.style.transform = "translateX(4px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "none"; }}>
+            <Icon name={icon} size={20} />{label}
+          </button>
+        ))}
 
-          {/* Search Bar */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm px-4 py-3 gap-3">
-            <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <div style={{ height: 1, background: "#f1f5f9", margin: "16px 0" }} />
+
+        <button onClick={() => { handleLogout(); setIsSidebarOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: "none", background: "transparent", cursor: "pointer", color: "#dc2626", fontSize: 15, fontWeight: 600, textAlign: "left", transition: "background 0.18s, transform 0.18s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.transform = "translateX(4px)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "none"; }}>
+          <svg style={{ width: 20, height: 20 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+          </svg>
+          Logout
+        </button>
+      </aside>
+
+      {/* ── MAIN ── */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 20px 80px", opacity: pageLoading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+
+        {/* Hero text */}
+        <div style={{
+          marginBottom: 32,
+          opacity: heroVisible ? 1 : 0,
+          transform: heroVisible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+        }}>
+          <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.6rem)", fontWeight: 900, color: "#0f172a", marginBottom: 6, letterSpacing: "-0.04em", lineHeight: 1.1 }}>
+            Find Your Perfect Bag
+          </h1>
+          <p style={{ color: "#64748b", fontSize: 15, fontWeight: 500 }}>Search by text or upload an image to find similar bags</p>
+        </div>
+
+        {/* Search bar */}
+        <div style={{
+          marginBottom: 28,
+          opacity: searchVisible ? 1 : 0,
+          transform: searchVisible ? "translateY(0)" : "translateY(16px)",
+          transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center",
+            background: "white",
+            border: `1.5px solid ${searchFocused ? "#2563eb" : "#e2e8f0"}`,
+            borderRadius: 16,
+            padding: "12px 16px", gap: 10,
+            boxShadow: searchFocused
+              ? "0 0 0 4px rgba(37,99,235,0.1), 0 4px 20px rgba(0,0,0,0.06)"
+              : "0 2px 12px rgba(0,0,0,0.05)",
+            transition: "border-color 0.25s ease, box-shadow 0.3s ease",
+          }}>
+            <svg style={{ width: 20, height: 20, color: searchFocused ? "#2563eb" : "#94a3b8", flexShrink: 0, transition: "color 0.25s" }} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
             </svg>
             <input
               type="text"
-              placeholder="Search for bags..."
+              placeholder="Search bags by name, material, or seller…"
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+              onChange={e => handleSearch(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 14, color: "#0f172a", fontFamily: "inherit", fontWeight: 500 }}
             />
             {isFiltered && (
-              <button onClick={handleClearSearch} className="text-gray-400 hover:text-gray-600 transition shrink-0 text-sm">✕</button>
+              <button onClick={handleClearSearch} style={{ width: 26, height: 26, borderRadius: "50%", border: "none", background: "#f1f5f9", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#64748b", flexShrink: 0, transition: "background 0.2s, transform 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.transform = "scale(1.1) rotate(90deg)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.transform = "none"; }}>
+                ✕
+              </button>
             )}
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
             <button
               onClick={() => fileInputRef.current.click()}
-              className="w-9 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shrink-0 transition-colors"
               title="Upload image to search"
+              style={{ width: 38, height: 38, borderRadius: 10, border: "none", background: "#2563eb", color: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "background 0.2s, transform 0.2s, box-shadow 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#1d4ed8"; e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.4)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <svg style={{ width: 16, height: 16 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
               </svg>
             </button>
           </div>
 
-          {/* Uploaded image preview */}
+          {/* Image preview */}
           {uploadedImage && (
-            <div className="mt-4 flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <img src={uploadedImage} alt="Uploaded" className="w-12 h-12 object-cover rounded-lg border border-blue-200" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-blue-800">Image uploaded</p>
-                <p className="text-xs text-blue-600">Showing visually similar bags</p>
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, animation: "slideInPreview 0.35s cubic-bezier(0.22,1,0.36,1) both" }}>
+              <img src={uploadedImage} alt="Uploaded" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, border: "1.5px solid #93c5fd" }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#1e40af", marginBottom: 2 }}>Image uploaded</p>
+                <p style={{ fontSize: 11, color: "#3b82f6" }}>Showing visually similar bags</p>
               </div>
-              <button onClick={handleClearSearch} className="text-sm text-blue-500 hover:text-blue-700 font-medium">Remove</button>
+              <button onClick={handleClearSearch} style={{ fontSize: 12, color: "#3b82f6", fontWeight: 700, background: "none", border: "none", cursor: "pointer", transition: "color 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#1d4ed8"}
+                onMouseLeave={e => e.currentTarget.style.color = "#3b82f6"}>Remove</button>
             </div>
           )}
         </div>
 
-        {/* Results Info */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Results bar */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: 24,
+          opacity: searchVisible ? 1 : 0,
+          transition: "opacity 0.5s ease 0.1s",
+        }}>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 2, letterSpacing: "-0.02em" }}>
               {isFiltered ? 'Search Results' : 'All Bags'}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500 }}>
               {displayedProducts.length} {displayedProducts.length === 1 ? 'item' : 'items'} found
             </p>
           </div>
           {isFiltered && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Filtered Results
-            </Badge>
+            <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", animation: "scaleIn 0.3s ease both" }}>
+              Filtered
+            </span>
           )}
         </div>
 
         {/* Product Grid */}
         {displayedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {displayedProducts.map((product) => (
-              <div 
-                key={product.id} 
-                className="product-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => navigate(`/products/${product.id}`)}
-              >
-                {/* Image */}
-                <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '4/3' }}>
-                  <img
-                    src={product.src}
-                    alt={product.name}
-                    className="card-img w-full h-full object-cover"
-                  />
-                  {product.lowStock && (
-                    <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                      Low Stock
-                    </span>
-                  )}
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4">
-                  <h3 className="font-bold text-base text-gray-900 mb-0.5">{product.name}</h3>
-                  <p className="text-sm text-gray-500 mb-3">{product.seller}</p>
-
-                  {/* Colors */}
-                  <p className="text-xs text-gray-500 mb-1.5">Available Colors:</p>
-                  <div className="flex gap-1.5 mb-3">
-                    {product.colors.map((color, i) => (
-                      <span
-                        key={i}
-                        className="w-5 h-5 rounded-full border-2 border-white shadow"
-                        style={{ backgroundColor: color, outline: '1px solid #e5e7eb' }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Quantity + Price row */}
-                  <div className="flex items-end justify-between mb-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Quantity Available</p>
-                      <p className="text-sm font-semibold text-gray-800">{product.quantity} units</p>
-                    </div>
-                    <p className="text-blue-600 font-bold text-xl">{product.price}</p>
-                  </div>
-
-                  {/* Contact Seller Button */}
-                  <a
-                    href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm rounded-lg transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                    Contact Seller
-                  </a>
-                  <p className="text-center text-xs text-gray-400 mt-1.5">via WhatsApp</p>
-                </div>
-              </div>
+          <div
+            key={resultsKey}
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}
+          >
+            {displayedProducts.map((product, index) => (
+              <ProductCard key={`${product.id}-${resultsKey}`} product={product} index={index} navigate={navigate} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto flex items-center justify-center mb-4">
-              <ShoppingBagEmpty className="w-12 h-12 text-gray-400" />
+          <div style={{ textAlign: "center", padding: "80px 20px", animation: "bounceIn 0.6s cubic-bezier(0.22,1,0.36,1) both" }}>
+            <div style={{ width: 88, height: 88, background: "#f1f5f9", borderRadius: "50%", margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ShoppingBagEmpty style={{ width: 44, height: 44, color: "#94a3b8" }} />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No bags found</h3>
-            <p className="text-gray-600 mb-6">Try adjusting your search or browse all categories</p>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>No bags found</h3>
+            <p style={{ color: "#64748b", marginBottom: 24, fontSize: 14 }}>Try adjusting your search or browse all bags</p>
             <button
               onClick={handleClearSearch}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              style={{ padding: "11px 28px", background: "#2563eb", color: "white", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, transition: "all 0.25s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#1d4ed8"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(37,99,235,0.35)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
             >
               View All Bags
             </button>

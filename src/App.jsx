@@ -9,6 +9,7 @@ import Product from './Product.jsx';
 import ProductDetail from './productDetail.jsx';
 import UserProfile from './userProfile.jsx';
 import SellerProfile from './sellerProfile.jsx';
+import CreateProduct from './createProduct.jsx';
 import ForgotPassword from './forgotPassword.jsx';
 import ResetPassword from './resetPassword.jsx';
 
@@ -153,6 +154,16 @@ function App() {
           element={
             <PrivateRoute>
               <SellerProfile />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Create Product - protected behind login */}
+        <Route
+          path="/upload-product"
+          element={
+            <PrivateRoute>
+              <CreateProduct />
             </PrivateRoute>
           }
         />

@@ -1,12 +1,93 @@
 // src/Reg.jsx
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase, ensureSupabaseReady } from './services/api';
 
+// ─── Luxury Page Loader (reused from login.jsx) ──────────────────────────────
+const PageLoader = ({ onDone }) => {
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 5 + 2;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        setProgress(100);
+        setTimeout(() => setPhase(1), 500);
+        setTimeout(() => onDone(), 1300);
+      } else {
+        setProgress(Math.min(p, 100));
+      }
+    }, 35);
+    return () => clearInterval(interval);
+  }, [onDone]);
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: phase === 1 ? 0 : 1, transform: phase === 1 ? 'scale(1.03)' : 'scale(1)', transition: 'opacity 0.7s ease, transform 0.7s ease', pointerEvents: phase === 1 ? 'none' : 'all' }}>
+      <style>{`
+        @keyframes loaderSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes loaderPulseRing { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.22);opacity:0.4} }
+        @keyframes loaderBagBounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.04)} }
+        @keyframes loaderDot { 0%,80%,100%{transform:scale(0.55);opacity:0.25} 40%{transform:scale(1);opacity:1} }
+        @keyframes loaderFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmerBar { 0%{background-position:200% center} 100%{background-position:-200% center} }
+        @keyframes loaderGlow { 0%,100%{box-shadow:0 8px 28px rgba(20,75,184,0.25)} 50%{box-shadow:0 8px 36px rgba(20,75,184,0.55)} }
+        @keyframes loaderRingFade { 0%{transform:scale(0.85);opacity:0.6} 100%{transform:scale(1.6);opacity:0} }
+      `}</style>
+      {[0,1].map(i => (
+        <div key={i} style={{ position: 'absolute', width: 130, height: 130, borderRadius: '50%', border: '1.5px solid rgba(20,75,184,0.2)', animation: `loaderRingFade 2.2s ease-out ${i * 1.1}s infinite` }} />
+      ))}
+      <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,75,184,0.05) 0%, transparent 70%)', animation: 'loaderPulseRing 3s ease-in-out infinite' }} />
+      <div style={{ position: 'relative', width: 92, height: 92, marginBottom: 30 }}>
+        <svg width="92" height="92" viewBox="0 0 92 92" style={{ position: 'absolute', inset: 0, animation: 'loaderSpin 1.9s linear infinite' }}>
+          <circle cx="46" cy="46" r="40" fill="none" stroke="#eef1fb" strokeWidth="2.5" />
+          <circle cx="46" cy="46" r="40" fill="none" stroke="#144bb8" strokeWidth="2.5" strokeDasharray={`${2 * Math.PI * 40 * progress / 100} ${2 * Math.PI * 40}`} strokeLinecap="round" style={{ transformOrigin: '46px 46px', transition: 'stroke-dasharray 0.08s ease' }} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, #144bb8 0%, #4f7ef7 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'loaderBagBounce 1.7s ease-in-out infinite, loaderGlow 1.7s ease-in-out infinite' }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 01-8 0" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div style={{ animation: 'loaderFadeUp 0.55s ease 0.15s both', textAlign: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em', color: '#111318', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+          Bags<span style={{ color: '#144bb8' }}>.NG</span>
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 38, animation: 'loaderFadeUp 0.55s ease 0.3s both' }}>
+        <span style={{ fontSize: 11, color: '#8a96b0', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'system-ui, sans-serif' }}>
+          Loading your experience
+        </span>
+        <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          {[0,1,2].map(i => (
+            <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#144bb8', display: 'inline-block', animation: `loaderDot 1.3s ease-in-out ${i * 0.18}s infinite` }} />
+          ))}
+        </span>
+      </div>
+      <div style={{ width: 'min(260px, 60vw)', animation: 'loaderFadeUp 0.55s ease 0.45s both' }}>
+        <div style={{ height: 3, background: '#eef1fb', borderRadius: 9999, overflow: 'hidden' }}>
+          <div style={{ height: '100%', borderRadius: 9999, width: `${progress}%`, background: 'linear-gradient(90deg, #144bb8, #4f7ef7, #144bb8)', backgroundSize: '200% auto', animation: 'shimmerBar 1.5s linear infinite', transition: 'width 0.08s ease', boxShadow: '0 0 10px rgba(20,75,184,0.45)' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'system-ui, sans-serif' }}>
+          <span style={{ color: '#c5cad8' }}>BAGS.NG</span>
+          <span style={{ color: '#144bb8' }}>{Math.round(progress)}%</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Reg = () => {
   const navigate = useNavigate();
   const { login, setLoading, loading } = useContext(AuthContext);
+  const [pageLoading, setPageLoading] = useState(true);
+  const handleLoaderDone = useCallback(() => setPageLoading(false), []);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -96,6 +177,8 @@ const Reg = () => {
 
   return (
     <>
+      {/* Page Loader */}
+      <PageLoader onDone={handleLoaderDone} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
@@ -259,7 +342,7 @@ const Reg = () => {
         }
       `}</style>
       
-      <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col">
+      <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col" style={{ opacity: pageLoading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
 
         {/* HEADER */}
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-10 py-3 bg-white dark:bg-slate-900 z-10">
@@ -282,7 +365,7 @@ const Reg = () => {
               <a className="text-[#111318] dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Visual Search</a>
               <a className="text-[#111318] dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Help</a>
             </div>
-            <button onClick={() => navigate('/login?force=true')} className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-all">
+<button onClick={() => navigate('/login?force=true')} className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#144bb8] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#144bb8]/90 transition-all">
               <span className="truncate">Login</span>
             </button>
           </div>
@@ -492,26 +575,26 @@ const Reg = () => {
                     onChange={handleChange}
                     required
                   />
-                  <label className="text-sm text-slate-600 dark:text-slate-400 leading-tight" htmlFor="terms">
-                    I agree to the <a className="text-primary font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-primary font-semibold hover:underline" href="#">Privacy Policy</a>.
+<label className="text-sm text-white lg:text-slate-600 dark:text-slate-400 leading-tight" htmlFor="terms">
+                    I agree to the <a className="text-[#144bb8] font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-[#144bb8] font-semibold hover:underline" href="#">Privacy Policy</a>.
                   </label>
                 </div>
                 {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
 
                 {/* Submit */}
-                <button
+<button
                   disabled={loading}
-                  className={`mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 hover:shadow-lg transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  className={`mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-[#144bb8] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#144bb8]/90 hover:shadow-lg transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   type="submit"
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
 
-              <div className="text-center pt-2">
-                <p className="text-[#616f89] dark:text-slate-400 text-sm font-medium">
+<div className="text-center pt-2">
+                <p className="text-white lg:text-[#616f89] lg:dark:text-slate-400 text-sm font-medium">
                   Already have an account?{' '}
-                  <span onClick={() => navigate('/login?force=true')} className="text-primary font-bold hover:underline cursor-pointer ml-1">
+                  <span onClick={() => navigate('/login?force=true')} className="text-white lg:text-[#144bb8] font-bold hover:underline cursor-pointer ml-1">
                     Login
                   </span>
                 </p>
