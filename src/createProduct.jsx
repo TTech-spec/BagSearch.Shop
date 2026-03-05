@@ -1,16 +1,56 @@
-import { useState, useContext, useRef } from 'react';
+import { useState, useContext, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
-const MS = ({ name, className = '', size = 22 }) => (
-  <span
-    className={`material-symbols-outlined ${className}`}
-    style={{ fontSize: size, fontVariationSettings: "'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24" }}
-  >
+const MS = ({ name, size = 22, style: s = {} }) => (
+  <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", whiteSpace: "nowrap", direction: "ltr", fontVariationSettings: "'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24", ...s }}>
     {name}
   </span>
 );
+
+// ─── Nigerian locations ───────────────────────────────────────────────────────
+const NIGERIAN_LOCATIONS = [
+  { id: 'lagos-island',   label: 'Lagos Island',    state: 'Lagos',       emoji: '🏙️' },
+  { id: 'lekki',          label: 'Lekki',            state: 'Lagos',       emoji: '🌴' },
+  { id: 'victoria-island',label: 'Victoria Island',  state: 'Lagos',       emoji: '💎' },
+  { id: 'ikeja',          label: 'Ikeja',             state: 'Lagos',       emoji: '✈️' },
+  { id: 'surulere',       label: 'Surulere',          state: 'Lagos',       emoji: '🏘️' },
+  { id: 'yaba',           label: 'Yaba',              state: 'Lagos',       emoji: '🎓' },
+  { id: 'abuja-central',  label: 'Abuja Central',    state: 'FCT',         emoji: '🏛️' },
+  { id: 'wuse',           label: 'Wuse',              state: 'FCT',         emoji: '🏢' },
+  { id: 'garki',          label: 'Garki',             state: 'FCT',         emoji: '🌆' },
+  { id: 'port-harcourt',  label: 'Port Harcourt',    state: 'Rivers',      emoji: '⚓' },
+  { id: 'kano-central',   label: 'Kano Central',     state: 'Kano',        emoji: '🌅' },
+  { id: 'ibadan',         label: 'Ibadan',            state: 'Oyo',         emoji: '🌇' },
+  { id: 'enugu',          label: 'Enugu',             state: 'Enugu',       emoji: '⛰️' },
+  { id: 'benin-city',     label: 'Benin City',       state: 'Edo',         emoji: '👑' },
+  { id: 'aba',            label: 'Aba',               state: 'Abia',        emoji: '👜' },
+  { id: 'calabar',        label: 'Calabar',           state: 'Cross River', emoji: '🌿' },
+  { id: 'warri',          label: 'Warri',             state: 'Delta',       emoji: '🛢️' },
+  { id: 'onitsha',        label: 'Onitsha',           state: 'Anambra',     emoji: '🛒' },
+];
+
+// ─── Progress steps definition ────────────────────────────────────────────────
+const STEPS = [
+  { id: 'images',      label: 'Photos',      icon: 'photo_camera',   field: 'images' },
+  { id: 'name',        label: 'Bag Name',    icon: 'label',          field: 'name' },
+  { id: 'brand',       label: 'Brand',       icon: 'workspace_premium', field: 'brand' },
+  { id: 'category',    label: 'Category',    icon: 'category',       field: 'category' },
+  { id: 'condition',   label: 'Condition',   icon: 'star',           field: 'condition' },
+  { id: 'price',       label: 'Price',       icon: 'payments',       field: 'price' },
+  { id: 'location',    label: 'Location',    icon: 'location_on',    field: 'location' },
+  { id: 'whatsapp',    label: 'WhatsApp',    icon: 'chat',           field: 'whatsapp' },
+  { id: 'description', label: 'Description', icon: 'description',    field: 'description' },
+];
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+function formatNaira(value) {
+  if (!value) return '';
+  const num = parseInt(value.toString().replace(/,/g, ''), 10);
+  if (isNaN(num)) return value;
+  return num.toLocaleString('en-NG');
+}
 
 export default function CreateProduct() {
   const navigate = useNavigate();
@@ -24,90 +64,86 @@ export default function CreateProduct() {
     condition: 'Pristine (Like New)',
     description: '',
     price: '',
+    location: '',
+    whatsapp: '',
   });
 
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
 
+  // ── Page entrance animation ──
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
+
+  // ── Compute per-step completion ──
+  const getStepDone = useCallback((step) => {
+    if (step.field === 'images')   return images.length > 0;
+    if (step.field === 'condition') return true; // has default
+    return !!formData[step.field]?.toString().trim();
+  }, [formData, images]);
+
+  const completedCount = STEPS.filter(s => getStepDone(s)).length;
+  const progressPct = Math.round((completedCount / STEPS.length) * 100);
+
+  const progressColor = progressPct < 35 ? '#f97316' : progressPct < 70 ? '#3b82f6' : '#22c55e';
+  const progressLabel = progressPct < 35 ? 'Just getting started' : progressPct < 70 ? 'Making great progress!' : progressPct < 100 ? 'Almost ready to list!' : '🎉 Ready to list!';
+
+  // ── Field handlers ──
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length + images.length > 10) {
-      alert('You can only upload up to 10 photos');
-      return;
-    }
-
-    const newImages = files.map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
-    }));
-
-    setImages(prev => [...prev, ...newImages]);
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length > 10) { alert('Max 10 photos'); return; }
+    const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+    setImages(prev => [...prev, ...newImgs]);
   };
 
-  const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const handleDrop = (e) => {
+    e.preventDefault(); setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length + images.length > 10) { alert('Max 10 photos'); return; }
+    const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+    setImages(prev => [...prev, ...newImgs]);
   };
+
+  const removeImage = (index) => setImages(prev => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) {
-      setError('You must be logged in to list a product');
-      return;
-    }
-
-    if (images.length === 0) {
-      setError('Please upload at least one image');
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-
+    if (!user) { setError('You must be logged in to list a product'); return; }
+    if (images.length === 0) { setError('Please upload at least one image'); return; }
+    if (!formData.whatsapp.trim()) { setError('Please enter your WhatsApp number'); return; }
+    setUploading(true); setError(null);
     try {
       const uploadedImageUrls = [];
-
       for (const img of images) {
         const fileExt = img.file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, img.file);
-
+        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('products').upload(filePath, img.file);
         if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-
+        const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(filePath);
         uploadedImageUrls.push(publicUrl);
       }
-
-      const { error: insertError } = await supabase
-        .from('products')
-        .insert([
-          {
-            user_id: user.id,
-            name: formData.name,
-            brand: formData.brand,
-            category: formData.category,
-            condition: formData.condition,
-            description: formData.description,
-            price: formData.price || '0',
-            images: uploadedImageUrls,
-            seller_name: user.user_metadata?.full_name || 'Anonymous Seller',
-          }
-        ]);
-
+      const rawPrice = formData.price.toString().replace(/,/g, '');
+      const { error: insertError } = await supabase.from('products').insert([{
+        user_id: user.id,
+        name: formData.name,
+        brand: formData.brand,
+        category: formData.category,
+        condition: formData.condition,
+        description: formData.description,
+        price: rawPrice || '0',
+        location: formData.location,
+        whatsapp: formData.whatsapp,
+        images: uploadedImageUrls,
+        seller_name: user.user_metadata?.full_name || 'Anonymous Seller',
+      }]);
       if (insertError) throw insertError;
-
       navigate('/products');
     } catch (err) {
       console.error('Error creating product:', err);
@@ -118,241 +154,420 @@ export default function CreateProduct() {
   };
 
   return (
-    <div className="bg-gray-50 text-gray-900 min-h-screen font-sans">
+    <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'Manrope', sans-serif", color: "#0f172a" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-        body { font-family: 'Manrope', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Entrance ── */
+        @keyframes fadeSlideUp   { from{opacity:0;transform:translateY(28px)}  to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes scaleIn       { from{opacity:0;transform:scale(0.94)}       to{opacity:1;transform:scale(1)}     }
+        @keyframes fadeIn        { from{opacity:0}                              to{opacity:1}                        }
+
+        /* ── Progress ── */
+        @keyframes progressFill  { from{width:0%} to{width:var(--target-width)} }
+        @keyframes shimmerProg   { 0%{transform:translateX(-120%)} 100%{transform:translateX(320%)} }
+        @keyframes stepPop       { 0%{transform:scale(0.7)} 60%{transform:scale(1.18)} 100%{transform:scale(1)} }
+        @keyframes stepPulse     { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)} 50%{box-shadow:0 0 0 8px rgba(34,197,94,0)} }
+        @keyframes stepRipple    { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(2.4);opacity:0} }
+        @keyframes pctBounce     { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
+
+        /* ── Image zone ── */
+        @keyframes imgAppear     { from{opacity:0;transform:scale(0.8) rotate(-3deg)} to{opacity:1;transform:scale(1) rotate(0)} }
+        @keyframes bounce        { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes uploadPulse   { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+        /* ── Input focus ring ── */
+        @keyframes focusRing     { from{box-shadow:0 0 0 0 rgba(37,99,235,0.3)} to{box-shadow:0 0 0 5px rgba(37,99,235,0)} }
+
+        /* ── Section reveal ── */
+        @keyframes sectionIn     { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ── Success tick ── */
+        @keyframes tickDraw      { from{stroke-dashoffset:30} to{stroke-dashoffset:0} }
+
+        /* ── WhatsApp ping ── */
+        @keyframes waPing        { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
+
+        ::-webkit-scrollbar        { width: 5px; }
+        ::-webkit-scrollbar-track  { background: transparent; }
+        ::-webkit-scrollbar-thumb  { background: #cbd5e1; border-radius: 3px; }
+
+        .field-input {
+          width: 100%; height: 46px; padding: 0 16px;
+          border: 1.5px solid #e2e8f0; border-radius: 12px;
+          font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 500;
+          color: #0f172a; background: white; outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease;
+        }
+        .field-input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+          transform: translateY(-1px);
+        }
+        .field-input:not(:placeholder-shown):not(:focus) {
+          border-color: #86efac;
+          background: #f0fdf4;
+        }
+        .field-select { appearance: none; cursor: pointer; }
+        .field-select:not([value=""]):not([value="Select a brand"]):not([value="Select category"]) {
+          border-color: #86efac; background: #f0fdf4;
+        }
+        .img-thumb { animation: imgAppear 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+        .img-thumb:hover .remove-btn { opacity: 1 !important; transform: scale(1) !important; }
       `}</style>
 
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 md:px-10 py-3 sticky top-0 z-50">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-4 text-gray-900 cursor-pointer" onClick={() => navigate('/products')}>
-            <div className="size-6 text-blue-600">
-              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd"></path>
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold leading-tight">BagMarket</h2>
+      {/* ── HEADER ── */}
+      <header style={{ background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 20px rgba(0,0,0,0.05)", opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(-100%)", transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: "#2563eb" }} onClick={() => navigate('/products')}>
+            <svg width="24" height="24" fill="none" viewBox="0 0 48 48">
+              <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
+            </svg>
+            <span style={{ fontSize: 20, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.5px" }}>Bag.NG</span>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/seller-profile')} className="hidden sm:flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-blue-600 text-white text-sm font-bold">
-            Profile
+          <button onClick={() => navigate('/seller-profile')} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 10, border: "none", background: "#2563eb", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#1d4ed8"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "none"; }}>
+            <MS name="person" size={17} /> Profile
           </button>
         </div>
       </header>
 
-      <main className="max-w-[960px] mx-auto py-8 px-4 flex flex-col gap-6">
-        <nav className="flex gap-2 text-sm text-gray-500">
-          <a className="hover:underline" href="#" onClick={(e) => { e.preventDefault(); navigate('/seller-profile'); }}>Dashboard</a>
-          <span>/</span>
-          <span className="text-gray-900 font-medium">List a Bag</span>
+      <main style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 20px 80px" }}>
+
+        {/* Breadcrumb */}
+        <nav style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13, color: "#94a3b8", marginBottom: 24, opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideDown 0.5s ease 0.1s both" : "none" }}>
+          <a href="#" onClick={e => { e.preventDefault(); navigate('/seller-profile'); }} style={{ color: "#3b82f6", fontWeight: 700, textDecoration: "none" }}>Dashboard</a>
+          <MS name="chevron_right" size={16} style={{ color: "#cbd5e1" }} />
+          <span style={{ color: "#0f172a", fontWeight: 600 }}>List a Bag</span>
         </nav>
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-black text-gray-900">List Your Bag</h1>
-          <p className="text-gray-500 max-w-2xl">
-            Fill in the details below to help buyers find your product. Our AI visual search indexes your bag's photos for better visibility.
+        {/* Page title */}
+        <div style={{ marginBottom: 32, opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.15s both" : "none" }}>
+          <h1 style={{ fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif", marginBottom: 8 }}>
+            List Your Bag
+          </h1>
+          <p style={{ color: "#64748b", fontSize: 15, fontWeight: 500, maxWidth: 520 }}>
+            Fill in all details below. Our AI visual search will index your bag for maximum buyer visibility.
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
+        {/* ── LIVE PROGRESS TRACKER ── */}
+        <div style={{ background: "white", borderRadius: 20, border: "1px solid #e2e8f0", padding: "24px 24px 20px", marginBottom: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.06)", opacity: mounted ? 1 : 0, animation: mounted ? "scaleIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both" : "none", overflow: "hidden", position: "relative" }}>
+          {/* BG shimmer on complete */}
+          {progressPct === 100 && (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(34,197,94,0.04) 0%, rgba(16,185,129,0.06) 100%)", pointerEvents: "none", borderRadius: 20 }} />
+          )}
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-gray-900 text-base font-bold">Step 1: Product Details</p>
-                <p className="text-gray-500 text-sm">Next: Pricing & Shipping</p>
-              </div>
-              <p className="text-blue-600 text-sm font-bold bg-blue-50 px-3 py-1 rounded-full">33% Complete</p>
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 3 }}>Listing Progress</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{progressLabel}</div>
             </div>
-            <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
-              <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: '33%' }}></div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, animation: "pctBounce 0.4s ease" }}>
+              <span style={{ fontSize: 36, fontWeight: 900, color: progressColor, letterSpacing: "-0.04em", transition: "color 0.5s ease", lineHeight: 1 }}>{progressPct}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: progressColor }}>%</span>
             </div>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ height: 10, background: "#f1f5f9", borderRadius: 9999, overflow: "hidden", marginBottom: 20, position: "relative" }}>
+            <div style={{
+              height: "100%", background: `linear-gradient(90deg, ${progressColor}, ${progressColor === '#22c55e' ? '#16a34a' : progressColor === '#3b82f6' ? '#2563eb' : '#ea580c'})`,
+              borderRadius: 9999, width: `${progressPct}%`,
+              transition: "width 0.65s cubic-bezier(0.34,1.56,0.64,1), background 0.5s ease",
+              position: "relative", overflow: "hidden",
+              boxShadow: `0 0 12px ${progressColor}88`,
+            }}>
+              {progressPct > 5 && (
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.3) 50%, transparent 80%)", animation: "shimmerProg 2s ease-in-out infinite" }} />
+              )}
+            </div>
+          </div>
+
+          {/* Step indicators — scrollable on mobile */}
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+            {STEPS.map((step, i) => {
+              const done = getStepDone(step);
+              return (
+                <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0, minWidth: 56 }}>
+                  {/* Circle */}
+                  <div style={{ position: "relative", width: 36, height: 36 }}>
+                    {done && (
+                      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `2px solid ${progressColor}`, opacity: 0.4, animation: "stepRipple 1.8s ease-out infinite" }} />
+                    )}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                      background: done ? progressColor : "#f1f5f9",
+                      border: done ? `2px solid ${progressColor}` : "2px solid #e2e8f0",
+                      transition: "all 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+                      transform: done ? "scale(1)" : "scale(0.92)",
+                      animation: done ? "stepPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both" : "none",
+                      position: "relative", zIndex: 1,
+                      boxShadow: done ? `0 3px 12px ${progressColor}55` : "none",
+                    }}>
+                      {done ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" style={{ strokeDasharray: 30, strokeDashoffset: 0, animation: "tickDraw 0.3s ease both" }} />
+                        </svg>
+                      ) : (
+                        <MS name={step.icon} size={16} style={{ color: "#94a3b8" }} />
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: done ? progressColor : "#94a3b8", letterSpacing: "0.06em", textAlign: "center", textTransform: "uppercase", transition: "color 0.3s" }}>{step.label}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Upload Images</h2>
-              <MS name="info" className="text-blue-600 text-lg cursor-help" />
-            </div>
-            
-            <div 
-              className="group relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-12 hover:border-blue-600 bg-gray-50 transition-colors cursor-pointer"
+        {/* Error */}
+        {error && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 600, marginBottom: 20, display: "flex", alignItems: "center", gap: 8, animation: "scaleIn 0.3s ease both" }}>
+            <MS name="error" size={18} style={{ color: "#ef4444", flexShrink: 0 }} /> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+
+          {/* ── SECTION 1: Images ── */}
+          <FormSection icon="photo_camera" title="Upload Photos" subtitle="Add up to 10 clear photos" delay={0.35} mounted={mounted}>
+            <div
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
               onClick={() => fileInputRef.current.click()}
-            >
-              <input 
-                ref={fileInputRef}
-                className="hidden" 
-                multiple 
-                type="file" 
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-              <div className="flex flex-col items-center gap-3">
-                <div className="size-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                  <MS name="cloud_upload" size={40} />
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900">Drag and drop or click to upload</p>
-                  <p className="text-sm text-gray-500">Add up to 10 photos (Front, Back, Inside, Serial Number)</p>
-                </div>
+              style={{
+                border: `2px dashed ${dragOver ? "#3b82f6" : images.length > 0 ? "#86efac" : "#e2e8f0"}`,
+                borderRadius: 16, padding: "36px 20px", cursor: "pointer", textAlign: "center",
+                background: dragOver ? "#eff6ff" : images.length > 0 ? "#f0fdf4" : "#fafafa",
+                transition: "all 0.3s ease",
+                transform: dragOver ? "scale(1.01)" : "none",
+              }}>
+              <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: images.length > 0 ? "#dcfce7" : "#eff6ff", margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center", animation: dragOver ? "bounce 0.6s ease infinite" : images.length === 0 ? "uploadPulse 2s ease-in-out infinite" : "none" }}>
+                <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: images.length > 0 ? "#22c55e" : "#3b82f6" }} />
               </div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginBottom: 5 }}>
+                {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add more?` : "Drag & drop or click to upload"}
+              </p>
+              <p style={{ fontSize: 12, color: "#94a3b8" }}>Up to 10 photos (Front, Back, Inside, Serial Number)</p>
             </div>
 
             {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 mt-6">
-                {images.map((img, index) => (
-                  <div key={index} className="aspect-square rounded-lg border border-gray-300 relative group overflow-hidden">
-                    <img src={img.preview} alt="preview" className="w-full h-full object-cover" />
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MS name="close" size={16} />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginTop: 16 }}>
+                {images.map((img, idx) => (
+                  <div key={idx} className="img-thumb" style={{ aspectRatio: "1", borderRadius: 12, overflow: "hidden", position: "relative", border: "2px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", animationDelay: `${idx * 50}ms` }}>
+                    <img src={img.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <button type="button" className="remove-btn" onClick={e => { e.stopPropagation(); removeImage(idx); }}
+                      style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", border: "none", background: "#ef4444", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transform: "scale(0.8)", transition: "all 0.2s" }}>
+                      <MS name="close" size={14} />
                     </button>
+                    {idx === 0 && <span style={{ position: "absolute", bottom: 4, left: 4, fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", background: "#0f172a", color: "white", padding: "2px 6px", borderRadius: 4 }}>Main</span>}
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </FormSection>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-900">Bag Name</label>
-              <input 
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full h-11 rounded-lg border border-gray-300 focus:ring-blue-600 focus:border-blue-600 px-4" 
-                placeholder="e.g., Chanel Classic Flap Caviar" 
-                type="text"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-900">Brand</label>
-              <select 
-                name="brand"
-                value={formData.brand}
-                onChange={handleInputChange}
-                required
-                className="w-full h-11 rounded-lg border border-gray-300 focus:ring-blue-600 focus:border-blue-600 px-4"
-              >
-                <option value="">Select a brand</option>
-                <option>Chanel</option>
-                <option>Hermès</option>
-                <option>Louis Vuitton</option>
-                <option>Gucci</option>
-                <option>Prada</option>
-                <option>Dior</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-900">Category</label>
-              <select 
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-                className="w-full h-11 rounded-lg border border-gray-300 focus:ring-blue-600 focus:border-blue-600 px-4"
-              >
-                <option value="">Select category</option>
-                <option>Handbags</option>
-                <option>Shoulder Bags</option>
-                <option>Clutches</option>
-                <option>Totes</option>
-                <option>Backpacks</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-900">Condition</label>
-              <select 
-                name="condition"
-                value={formData.condition}
-                onChange={handleInputChange}
-                required
-                className="w-full h-11 rounded-lg border border-gray-300 focus:ring-blue-600 focus:border-blue-600 px-4"
-              >
-                <option>Pristine (Like New)</option>
-                <option>Excellent (Minor Wear)</option>
-                <option>Very Good (Gentle Use)</option>
-                <option>Fair (Visible Wear)</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-900">Price ($)</label>
-              <input 
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-                className="w-full h-11 rounded-lg border border-gray-300 focus:ring-blue-600 focus:border-blue-600 px-4" 
-                placeholder="e.g., 2500" 
-                type="number"
-              />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-sm font-bold text-gray-900">Description</label>
-              <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
-                  <button type="button" className="p-1 hover:bg-gray-200 rounded"><MS name="format_bold" size={20} /></button>
-                  <button type="button" className="p-1 hover:bg-gray-200 rounded"><MS name="format_italic" size={20} /></button>
-                  <button type="button" className="p-1 hover:bg-gray-200 rounded"><MS name="format_list_bulleted" size={20} /></button>
+          {/* ── SECTION 2: Bag Details ── */}
+          <FormSection icon="label" title="Bag Details" subtitle="Basic information about your bag" delay={0.45} mounted={mounted}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
+
+              <FieldGroup label="Bag Name" icon="label" done={!!formData.name}>
+                <input name="name" value={formData.name} onChange={handleInputChange} required className="field-input" placeholder="e.g., Chanel Classic Flap Caviar" type="text" />
+              </FieldGroup>
+
+              <FieldGroup label="Brand" icon="workspace_premium" done={!!formData.brand}>
+                <div style={{ position: "relative" }}>
+                  <select name="brand" value={formData.brand} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
+                    <option value="">Select a brand</option>
+                    {['Chanel','Hermès','Louis Vuitton','Gucci','Prada','Dior','Balenciaga','Fendi','Celine','Bottega Veneta','Other'].map(b => <option key={b}>{b}</option>)}
+                  </select>
+                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
                 </div>
-                <textarea 
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full border-none focus:ring-0 text-gray-900 text-base px-4 py-3 resize-none" 
-                  placeholder="Mention any wear and tear, material details, and when/where it was purchased..." 
-                  rows="6"
-                />
+              </FieldGroup>
+
+              <FieldGroup label="Category" icon="category" done={!!formData.category}>
+                <div style={{ position: "relative" }}>
+                  <select name="category" value={formData.category} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
+                    <option value="">Select category</option>
+                    {['Handbags','Shoulder Bags','Clutches','Totes','Backpacks','Crossbody','Evening Bags','Mini Bags','Satchels'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
+                </div>
+              </FieldGroup>
+
+              <FieldGroup label="Condition" icon="star" done={true}>
+                <div style={{ position: "relative" }}>
+                  <select name="condition" value={formData.condition} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
+                    {['Pristine (Like New)','Excellent (Minor Wear)','Very Good (Gentle Use)','Fair (Visible Wear)'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
+                </div>
+              </FieldGroup>
+
+            </div>
+          </FormSection>
+
+          {/* ── SECTION 3: Pricing & Location ── */}
+          <FormSection icon="payments" title="Pricing & Location" subtitle="Set your price in Naira and where you're selling from" delay={0.55} mounted={mounted}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
+
+              {/* ── Price in Naira ── */}
+              <FieldGroup label="Price (₦)" icon="payments" done={!!formData.price}>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 800, color: formData.price ? "#059669" : "#94a3b8", lineHeight: 1, transition: "color 0.25s", userSelect: "none" }}>₦</span>
+                  <input
+                    name="price" value={formData.price ? formatNaira(formData.price) : ''} required
+                    onChange={e => {
+                      const raw = e.target.value.replace(/,/g, '');
+                      if (/^\d*$/.test(raw)) setFormData(prev => ({ ...prev, price: raw }));
+                    }}
+                    className="field-input" placeholder="e.g., 2,500,000" type="text"
+                    style={{ paddingLeft: 32 }}
+                  />
+                </div>
+                {formData.price && (
+                  <p style={{ fontSize: 11, color: "#059669", fontWeight: 700, marginTop: 5 }}>
+                    ≈ ${(parseInt(formData.price) / 1600).toFixed(0)} USD at current rate
+                  </p>
+                )}
+              </FieldGroup>
+
+              {/* ── Location ── */}
+              <FieldGroup label="Your Location" icon="location_on" done={!!formData.location}>
+                <div style={{ position: "relative" }}>
+                  <select name="location" value={formData.location} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
+                    <option value="">Select your city</option>
+                    {Object.entries(NIGERIAN_LOCATIONS.reduce((acc, l) => { (acc[l.state] = acc[l.state] || []).push(l); return acc; }, {})).map(([state, locs]) => (
+                      <optgroup key={state} label={`── ${state}`}>
+                        {locs.map(l => <option key={l.id} value={l.id}>{l.emoji} {l.label}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
+                </div>
+                {formData.location && (() => {
+                  const loc = NIGERIAN_LOCATIONS.find(l => l.id === formData.location);
+                  return loc ? (
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, animation: "scaleIn 0.3s ease both" }}>
+                      <span style={{ fontSize: 16 }}>{loc.emoji}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#2563eb" }}>{loc.label}, {loc.state}</span>
+                    </div>
+                  ) : null;
+                })()}
+              </FieldGroup>
+
+            </div>
+          </FormSection>
+
+          {/* ── SECTION 4: WhatsApp Contact ── */}
+          <FormSection icon="chat" title="WhatsApp Contact" subtitle="Buyers will reach you directly on WhatsApp" delay={0.65} mounted={mounted}>
+            <FieldGroup label="Your WhatsApp Number" icon="chat" done={!!formData.whatsapp}>
+              <div style={{ position: "relative" }}>
+                {/* Pulsing WA icon */}
+                <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {formData.whatsapp && <div style={{ position: "absolute", width: 22, height: 22, borderRadius: "50%", background: "rgba(34,197,94,0.2)", animation: "waPing 1.8s ease-out infinite" }} />}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill={formData.whatsapp ? "#22c55e" : "#94a3b8"} style={{ position: "relative", zIndex: 1, transition: "fill 0.3s" }}>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                </div>
+                <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} required className="field-input" placeholder="e.g., 08012345678 or +2348012345678" type="tel" style={{ paddingLeft: 42 }} />
+              </div>
+              <p style={{ fontSize: 11, color: "#64748b", marginTop: 5 }}>
+                Buyers will tap "Chat on WhatsApp" to contact you directly about this listing.
+              </p>
+              {formData.whatsapp && (
+                <a href={`https://wa.me/${formData.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10, padding: "7px 14px", borderRadius: 8, background: "#dcfce7", border: "1px solid #bbf7d0", color: "#15803d", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s", animation: "scaleIn 0.3s ease both" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#bbf7d0"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#dcfce7"}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  Test your WhatsApp link
+                </a>
+              )}
+            </FieldGroup>
+          </FormSection>
+
+          {/* ── SECTION 5: Description ── */}
+          <FormSection icon="description" title="Description" subtitle="Describe condition, history, and details" delay={0.75} mounted={mounted}>
+            <FieldGroup label="Detailed Description" icon="description" done={!!formData.description}>
+              <div style={{ border: "1.5px solid #e2e8f0", borderRadius: 12, overflow: "hidden", transition: "border-color 0.25s, box-shadow 0.25s" }}
+                onFocusCapture={e => { e.currentTarget.style.borderColor = "#3b82f6"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59,130,246,0.12)"; }}
+                onBlurCapture={e => { e.currentTarget.style.borderColor = formData.description ? "#86efac" : "#e2e8f0"; e.currentTarget.style.boxShadow = "none"; }}>
+                {/* Mini toolbar */}
+                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                  {[["format_bold","Bold"],["format_italic","Italic"],["format_list_bulleted","List"]].map(([icon, label]) => (
+                    <button key={icon} type="button" title={label} style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", transition: "all 0.18s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748b"; }}>
+                      <MS name={icon} size={18} />
+                    </button>
+                  ))}
+                  <div style={{ marginLeft: "auto", fontSize: 10, color: "#cbd5e1", fontWeight: 700 }}>{formData.description.length}/1000</div>
+                </div>
+                <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
+                  style={{ width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none", resize: "vertical", fontFamily: "inherit", fontSize: 14, color: "#0f172a", lineHeight: 1.65, background: "white" }}
+                  placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />
+              </div>
+            </FieldGroup>
+          </FormSection>
+
+          {/* ── SUBMIT FOOTER ── */}
+          <div style={{ marginTop: 28, background: "white", borderRadius: 20, border: "1px solid #e2e8f0", padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.5s ease 0.85s both" : "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#22c55e"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              </div>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#15803d" }}>Buyers contact via WhatsApp</p>
+                <p style={{ fontSize: 11, color: "#94a3b8" }}>Get live purchase inquiries directly to your phone</p>
               </div>
             </div>
-          </div>
-
-          <div className="p-6 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-green-600">
-              <MS name="chat" size={20} />
-              <p className="text-xs font-medium">Get live updates via WhatsApp</p>
-            </div>
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <button 
-                type="button"
-                onClick={() => navigate('/seller-profile')}
-                className="flex-1 sm:flex-none px-6 h-11 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
-              >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button type="button" onClick={() => navigate('/seller-profile')} style={{ padding: "11px 20px", borderRadius: 12, border: "1px solid #e2e8f0", background: "white", color: "#64748b", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#94a3b8"; e.currentTarget.style.color = "#0f172a"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
                 Cancel
               </button>
-              <button 
-                type="submit"
-                disabled={uploading}
-                className="flex-1 sm:flex-none px-10 h-11 bg-blue-600 text-white text-sm font-bold rounded-lg shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {uploading ? 'Uploading...' : 'List Product'}
-                {!uploading && <MS name="arrow_forward" size={18} />}
+              <button type="submit" disabled={uploading}
+                style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12, border: "none", background: progressPct === 100 ? "#22c55e" : "#2563eb", color: "white", fontSize: 14, fontWeight: 800, cursor: uploading ? "not-allowed" : "pointer", transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)", boxShadow: `0 4px 16px ${progressPct === 100 ? "rgba(34,197,94,0.4)" : "rgba(37,99,235,0.35)"}`, opacity: uploading ? 0.7 : 1 }}
+                onMouseEnter={e => { if (!uploading) { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; e.currentTarget.style.boxShadow = `0 8px 24px ${progressPct === 100 ? "rgba(34,197,94,0.5)" : "rgba(37,99,235,0.45)"}`; }}}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 4px 16px ${progressPct === 100 ? "rgba(34,197,94,0.4)" : "rgba(37,99,235,0.35)"}`; }}>
+                {uploading ? (
+                  <>
+                    <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "waPing 0.7s linear infinite" }} />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    {progressPct === 100 ? '🎉 ' : ''} List My Bag
+                    <MS name="arrow_forward" size={18} />
+                  </>
+                )}
               </button>
             </div>
           </div>
         </form>
 
-        <footer className="mt-8 mb-12 flex flex-col items-center gap-2">
-          <p className="text-gray-500 text-sm">Need help? Chat with us on <a className="text-blue-600 font-bold" href="#">WhatsApp Support</a></p>
-          <div className="flex gap-4 text-xs text-gray-400">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Authentication Guide</a>
+        {/* Footer */}
+        <footer style={{ marginTop: 40, textAlign: "center", opacity: mounted ? 1 : 0, animation: mounted ? "fadeIn 0.6s ease 1s both" : "none" }}>
+          <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 10 }}>
+            Need help? Chat with us on{' '}
+            <a href="https://wa.me/2348147061837" target="_blank" rel="noopener noreferrer" style={{ color: "#22c55e", fontWeight: 700, textDecoration: "none" }}>WhatsApp Support</a>
+          </p>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+            {['Terms','Privacy','Authentication Guide'].map(l => (
+              <a key={l} href="#" style={{ fontSize: 12, color: "#cbd5e1", textDecoration: "none" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#64748b"}
+                onMouseLeave={e => e.currentTarget.style.color = "#cbd5e1"}>{l}</a>
+            ))}
           </div>
         </footer>
       </main>
@@ -360,3 +575,38 @@ export default function CreateProduct() {
   );
 }
 
+/* ── Form Section wrapper ── */
+function FormSection({ icon, title, subtitle, delay, mounted, children }) {
+  return (
+    <div style={{ background: "white", borderRadius: 20, border: "1px solid #e2e8f0", overflow: "hidden", marginBottom: 20, boxShadow: "0 2px 16px rgba(0,0,0,0.04)", opacity: mounted ? 1 : 0, animation: mounted ? `sectionIn 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}s both` : "none" }}>
+      {/* Section header */}
+      <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f5f9", background: "#fafafa", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <MS name={icon} size={19} style={{ color: "#2563eb" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.01em" }}>{title}</div>
+          {subtitle && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 1 }}>{subtitle}</div>}
+        </div>
+      </div>
+      <div style={{ padding: "22px 24px" }}>{children}</div>
+    </div>
+  );
+}
+
+/* ── Field group with animated label ── */
+function FieldGroup({ label, icon, done, children }) {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: done ? "#059669" : "#374151", letterSpacing: "0.02em", transition: "color 0.3s" }}>{label}</span>
+        {done && (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "stepPop 0.3s ease both" }}>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}

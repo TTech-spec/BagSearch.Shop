@@ -10,29 +10,30 @@ const NEW_ARRIVALS = [
   { name: "Onyx Evening Clutch", sub: "Polished Suede", material: "Onyx Black", price: "$3,100", tag: "Exclusive", tagColor: "#b45309", accent: "#fbbf24", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E" },
 ];
 
+// ── Updated HERO_SLIDES with new H1 texts, matching badges, and new descriptions ──
 const HERO_SLIDES = [
   {
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4I73hqMmV64iEPGtSEJ3mNAbQtvPBqQQ22x1JA6F2E-E4U0-SmUat1vO0Z0c7l1142DjBBzcn-afis9xsHhMBa7rnrhdTWhV7aq8FUXyZDIlxADoYFJcdrsprs-bYJQOcAqih5olePRiw0nJPBPNpLCL32-aAsv9zAtqbGV6bFBMK5ypVAi4i0E2wq4chZKL5jOOJyPh6HoEXvJKPkNeXbHs-Kqqip9Cgq3VAIn0gqtoVtmGQwzvnFhaifm9ecmgYdWkGPqlRExE",
-    badge: "Premium Craftsmanship",
-    title: "Discover",
-    subtitle: "Timeless Elegance",
-    desc: "Experience the pinnacle of luxury with our curated collection of bags, powered by intuitive visual discovery.",
+    badge: "Shop Bags with Your Camera.",
+    title: "Shop Bags",
+    subtitle: "with Your Camera.",
+    desc: "Point, shoot, and discover. Our AI-powered camera search finds the perfect luxury bag from your surroundings in an instant — no typing needed.",
     accent: "#135bec",
   },
   {
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8",
-    badge: "New Collection",
-    title: "Midnight",
-    subtitle: "Luxury Satchels",
-    desc: "Italian-crafted masterpieces in breathtaking midnight blue. Each piece tells a story of uncompromising quality.",
+    badge: "Snap. Shop. Chat. Buy Bags in Seconds.",
+    title: "Snap. Shop.",
+    subtitle: "Buy in Seconds.",
+    desc: "See a bag you love? Snap it, shop it, chat with our AI stylist, and checkout — all in one seamless flow. The fastest way to own luxury.",
     accent: "#3b82f6",
   },
   {
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E",
-    badge: "Exclusive Edition",
-    title: "Onyx",
-    subtitle: "Evening Clutches",
-    desc: "Polished suede evening clutches for those who demand nothing short of perfection on every occasion.",
+    badge: "Find Any Bag. Instantly. Just Upload a Photo.",
+    title: "Find Any Bag.",
+    subtitle: "Just Upload a Photo.",
+    desc: "Upload any photo from anywhere on the web — or your camera roll — and our visual AI matches it to the closest luxury pieces in our catalog within seconds.",
     accent: "#fbbf24",
   },
   {
@@ -53,7 +54,7 @@ const CATEGORIES = [
 
 const TRENDING = [
   { name: "Crimson Structured Bag", label: "Popular Choice", price: "$3,200", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8" },
-  { name: "Minimalist Sand Tote", label: "Editor's Pick", price: "$1,950", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_sKNiKX7NJOoRuxirNhqYW2CVrSgjx_0rJlgl3Xgtd91hKF7Al_wJ5OcwAsQIoSjiNyJH4zyPL7xJu9ggym4aGrZJU-PpyBDYb8bURs1qfYfAJy2fK4zkBJDV24R6XOCHKVAq9BLsgcTb-NRNTTgiNb5lp0QftxV3I0Ra86dQ1lfhnbt-4bsxZFh1_0DOBjY_hudNpjkjfW6SnC5bbsWRyT1tAjx5pqimCUzaGwdNf7r6dcOKx6rDKjvnabQan2CQfRkkURf7VLY" },
+  { name: "Minimalist Sand Tote", label: "Editor's Pick", price: "$1,950", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_sKNiKX7NJOoRuxirNhqYW2CVrSgjx_0rJlgl3Xgtd91hKF7Al_wJ5OcwAsQIoSjiNyJH4zyPL7xJu9ggym4aGrZJU-PpyBDYb8bURs1qfYfAJy2fK4zkBJDV24R6XOCHKVAq9BLsgcTb-NRNTTgiNb5lp0QftxV3I0Ra86dQ1lfhnbt-4bsxZFh1_0DOBjY_hudNpjkjfW6SnC5bbsWRyT1tAjx5pqimCUzaGawdNf7r6dcOKx6rDKjvnabQan2CQfRkkURf7VLY" },
   { name: "Emerald Suede Clutch", label: "New Trend", price: "$2,100", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks" },
   { name: "Urban Heritage Pack", label: "Best Seller", price: "$1,600", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhRkGSg7Va0LHjp_dhl_1nOfsT69AcfKsT87IGMf4WFKySlhwVu2YbM24F5LEXYXeQBi910qpL7m28onkj1Ukw53DQt0ks4kIQDe7u2XhHh9t45Cw2n7rfXt7GEO2Ul4cyPv1NtKePCqQpbg_tJvMtGLm4gnLgyDIc5efzDZA4edimRL8upoZdtbsG9nn1R5J0GH70OTXUXJu3iZgne1KYmDSGHSi8use1KRPU6wE0OfE5HnQRIFnufOyMqHZ8ZFsXNLydzWxthDg" },
 ];
@@ -75,13 +76,215 @@ const arrowBtn = {
   transition: "all 0.25s", flexShrink: 0,
 };
 
+/* ─── AUTH GATE MODAL ─── */
+function AuthGateModal({ open, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);  // 0=hidden, 1=entering, 2=visible, 3=exiting
+
+  useEffect(() => {
+    if (open) {
+      setPhase(1);
+      const t = setTimeout(() => setPhase(2), 20);
+      return () => clearTimeout(t);
+    } else {
+      setPhase(3);
+      const t = setTimeout(() => setPhase(0), 400);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  if (phase === 0) return null;
+
+  const visible = phase === 2;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9000,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "20px",
+    }}>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{
+        position: "absolute", inset: 0,
+        background: "rgba(6,6,13,0.72)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.35s ease",
+      }} />
+
+      {/* Card */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        width: "100%", maxWidth: 440,
+        background: "linear-gradient(160deg, #0d0f1a 0%, #0a0c18 100%)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 24,
+        overflow: "hidden",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(19,91,236,0.15) inset",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0) scale(1)" : "translateY(32px) scale(0.95)",
+        transition: "opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)",
+      }}>
+        {/* Top accent glow */}
+        <div style={{
+          position: "absolute", top: 0, left: "20%", right: "20%", height: 1,
+          background: "linear-gradient(90deg, transparent, #135bec, transparent)",
+        }} />
+        <div style={{
+          position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)",
+          width: 280, height: 120,
+          background: "radial-gradient(ellipse, rgba(19,91,236,0.22) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Close button */}
+        <button onClick={onClose} style={{
+          position: "absolute", top: 16, right: 16,
+          width: 32, height: 32, borderRadius: "50%",
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.04)",
+          color: "rgba(255,255,255,0.4)", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.2s", zIndex: 2,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "white"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
+          <Icon name="close" size={16} />
+        </button>
+
+        {/* Body */}
+        <div style={{ padding: "44px 40px 40px", textAlign: "center", position: "relative" }}>
+          {/* Icon cluster */}
+          <div style={{
+            position: "relative", width: 76, height: 76, margin: "0 auto 28px",
+            animation: visible ? "authIconFloat 3s ease-in-out infinite" : "none",
+          }}>
+            {/* Outer pulse ring */}
+            <div style={{
+              position: "absolute", inset: -8,
+              borderRadius: "50%",
+              border: "1px solid rgba(19,91,236,0.3)",
+              animation: visible ? "authRingPulse 2.4s ease-out infinite" : "none",
+            }} />
+            <div style={{
+              position: "absolute", inset: -16,
+              borderRadius: "50%",
+              border: "1px solid rgba(19,91,236,0.12)",
+              animation: visible ? "authRingPulse 2.4s ease-out 0.5s infinite" : "none",
+            }} />
+            {/* Icon circle */}
+            <div style={{
+              width: 76, height: 76, borderRadius: "50%",
+              background: "linear-gradient(135deg, #135bec 0%, #6366f1 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 8px 32px rgba(19,91,236,0.45)",
+              position: "relative", zIndex: 1,
+            }}>
+              <Icon name="lock" size={32} />
+            </div>
+          </div>
+
+          {/* Headline */}
+          <h2 style={{
+            fontSize: "1.65rem", fontWeight: 900, color: "white",
+            letterSpacing: "-0.03em", lineHeight: 1.2,
+            marginBottom: 12,
+            fontFamily: "'Cormorant Garamond', serif",
+            animation: visible ? "authFadeUp 0.5s ease 0.1s both" : "none",
+          }}>
+            Members Only Access
+          </h2>
+          <p style={{
+            fontSize: 14, color: "rgba(203,213,225,0.7)", lineHeight: 1.7,
+            marginBottom: 32,
+            animation: visible ? "authFadeUp 0.5s ease 0.18s both" : "none",
+          }}>
+            This feature is exclusively available to registered members. Sign in or create a free account to unlock visual search, wishlists, and more.
+          </p>
+
+          {/* Feature pills */}
+          <div style={{
+            display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap",
+            marginBottom: 32,
+            animation: visible ? "authFadeUp 0.5s ease 0.26s both" : "none",
+          }}>
+            {[
+              { icon: "image_search", label: "Visual Search" },
+              { icon: "favorite",     label: "Wishlist" },
+              { icon: "notifications",label: "Alerts" },
+            ].map(({ icon, label }) => (
+              <span key={label} style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 12px", borderRadius: 9999,
+                background: "rgba(19,91,236,0.1)",
+                border: "1px solid rgba(19,91,236,0.2)",
+                fontSize: 11, fontWeight: 700, color: "#7dd3fc",
+                letterSpacing: "0.05em",
+              }}>
+                <Icon name={icon} size={13} /> {label}
+              </span>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 10,
+            animation: visible ? "authFadeUp 0.5s ease 0.34s both" : "none",
+          }}>
+            <button onClick={() => { onClose(); navigate("/register"); }} style={{
+              width: "100%", padding: "14px 0",
+              background: "linear-gradient(135deg, #135bec 0%, #6366f1 100%)",
+              color: "white", fontWeight: 800, fontSize: 15,
+              border: "none", borderRadius: 12, cursor: "pointer",
+              boxShadow: "0 6px 24px rgba(19,91,236,0.4)",
+              transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)",
+              letterSpacing: "-0.01em",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(19,91,236,0.5)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(19,91,236,0.4)"; }}>
+              Create Free Account
+            </button>
+            <button onClick={() => { onClose(); navigate("/login"); }} style={{
+              width: "100%", padding: "13px 0",
+              background: "transparent",
+              color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 14,
+              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}>
+              Already a member? Sign In
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom brand bar */}
+        <div style={{
+          padding: "14px 40px", borderTop: "1px solid rgba(255,255,255,0.04)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          background: "rgba(0,0,0,0.2)",
+        }}>
+          <div style={{ color: "#135bec" }}><LogoIcon /></div>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.25)", letterSpacing: "-0.01em" }}>Bag<span style={{ color: "#135bec" }}>.NG</span></span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", letterSpacing: "0.2em", textTransform: "uppercase" }}>· Members Only</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes authRingPulse { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(1.6);opacity:0} }
+        @keyframes authIconFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes authFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+    </div>
+  );
+}
+
 /* ─── LUXURY LOADER ─── */
 function LuxuryLoader({ onDone }) {
-  const [phase, setPhase] = useState(0); // 0=intro, 1=filling, 2=exit
+  const [phase, setPhase] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Phase 0: brief pause then start filling
     const t1 = setTimeout(() => setPhase(1), 400);
     return () => clearTimeout(t1);
   }, []);
@@ -114,7 +317,6 @@ function LuxuryLoader({ onDone }) {
       transform: phase === 2 ? "translateY(-4%)" : "none",
       pointerEvents: phase === 2 ? "none" : "all",
     }}>
-      {/* Ambient radial */}
       <div style={{
         position: "absolute", top: "50%", left: "50%",
         width: "70vw", height: "70vw", maxWidth: 700,
@@ -124,8 +326,6 @@ function LuxuryLoader({ onDone }) {
         pointerEvents: "none",
         animation: "loaderPulse 2.4s ease-in-out infinite",
       }} />
-
-      {/* Spinning ring */}
       <div style={{ position: "relative", width: 110, height: 110, marginBottom: 40 }}>
         <svg width="110" height="110" viewBox="0 0 110 110" style={{ position: "absolute", inset: 0, animation: "spinRing 2.5s linear infinite" }}>
           <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(19,91,236,0.12)" strokeWidth="1" />
@@ -135,7 +335,6 @@ function LuxuryLoader({ onDone }) {
             style={{ transition: "stroke-dasharray 0.1s ease", transformOrigin: "55px 55px" }}
           />
         </svg>
-        {/* Inner diamond logo */}
         <div style={{
           position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
           color: "#135bec",
@@ -144,12 +343,7 @@ function LuxuryLoader({ onDone }) {
           <LogoIcon />
         </div>
       </div>
-
-      {/* Brand name */}
-      <div style={{
-        overflow: "hidden", marginBottom: 8,
-        opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.3s",
-      }}>
+      <div style={{ overflow: "hidden", marginBottom: 8, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.3s" }}>
         <div style={{
           fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 900, color: "#fff",
           fontFamily: "'Cormorant Garamond', serif", letterSpacing: "0.08em",
@@ -158,8 +352,6 @@ function LuxuryLoader({ onDone }) {
           Bag<span style={{ color: "#135bec" }}>.NG</span>
         </div>
       </div>
-
-      {/* Tagline */}
       <p style={{
         fontSize: 10, letterSpacing: "0.4em", textTransform: "uppercase",
         color: "rgba(255,255,255,0.3)", marginBottom: 44, fontWeight: 600,
@@ -167,8 +359,6 @@ function LuxuryLoader({ onDone }) {
       }}>
         Luxury Redefined
       </p>
-
-      {/* Progress bar */}
       <div style={{
         width: "min(260px, 65vw)", height: 1,
         background: "rgba(255,255,255,0.06)",
@@ -178,12 +368,9 @@ function LuxuryLoader({ onDone }) {
         <div style={{
           height: "100%", background: "linear-gradient(90deg, #135bec, #6366f1)",
           width: `${progress}%`, transition: "width 0.1s ease",
-          borderRadius: 1,
-          boxShadow: "0 0 8px rgba(19,91,236,0.6)",
+          borderRadius: 1, boxShadow: "0 0 8px rgba(19,91,236,0.6)",
         }} />
       </div>
-
-      {/* Progress number */}
       <div style={{
         fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)",
         marginTop: 12, fontWeight: 700, fontVariantNumeric: "tabular-nums",
@@ -191,7 +378,6 @@ function LuxuryLoader({ onDone }) {
       }}>
         {Math.round(progress)}%
       </div>
-
       <style>{`
         @keyframes loaderPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.6} 50%{transform:translate(-50%,-50%) scale(1.15);opacity:1} }
         @keyframes spinRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
@@ -276,7 +462,7 @@ function TypewriterH1({ title, subtitle, accentColor, id }) {
 }
 
 /* ─── HERO CAROUSEL ─── */
-function HeroCarousel({ navigate }) {
+function HeroCarousel({ navigate, newArrivalsRef, onAuthGate }) {
   const [active, setActive] = useState(0);
   const [prev, setPrev] = useState(null);
   const [animating, setAnimating] = useState(false);
@@ -307,10 +493,15 @@ function HeroCarousel({ navigate }) {
   const slide = HERO_SLIDES[active];
   const prevSlide = prev !== null ? HERO_SLIDES[prev] : null;
 
+  // ── scroll to New Arrivals helper ──
+  const scrollToNewArrivals = () => {
+    if (newArrivalsRef && newArrivalsRef.current) {
+      newArrivalsRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section style={{ position: "relative", minHeight: "88vh", overflow: "hidden" }}>
-
-      {/* BG Images */}
       {prevSlide && (
         <div key={`prev-bg-${prev}`} style={{
           position: "absolute", inset: 0,
@@ -327,13 +518,12 @@ function HeroCarousel({ navigate }) {
         animation: animating ? `heroBgEnter${dir > 0 ? "R" : "L"} 0.9s cubic-bezier(0.77,0,0.175,1) forwards` : "none",
         zIndex: 2,
       }} />
-
-      {/* Ken Burns effect overlay */}
       <div style={{ position: "absolute", inset: 0, zIndex: 2, background: "transparent", animation: "kenBurns 5.5s ease-in-out infinite alternate" }} />
 
       {/* Content */}
       <div style={{ position: "relative", zIndex: 10, maxWidth: 1280, margin: "0 auto", padding: "120px 24px 100px", display: "flex", flexDirection: "column", minHeight: "88vh", justifyContent: "center" }}>
 
+        {/* ── Badge now mirrors the full H1 text ── */}
         <span key={`badge-${textKey}`} style={{
           display: "inline-block", padding: "6px 18px", marginBottom: 28,
           fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
@@ -352,6 +542,7 @@ function HeroCarousel({ navigate }) {
           id={textKey}
         />
 
+        {/* ── Description <p> for each slide ── */}
         <p key={`desc-${textKey}`} style={{
           fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "#cbd5e1", maxWidth: 440,
           fontWeight: 300, lineHeight: 1.7, marginBottom: 44,
@@ -359,22 +550,23 @@ function HeroCarousel({ navigate }) {
         }}>{slide.desc}</p>
 
         <div key={`btns-${textKey}`} style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 56, animation: "heroTextIn 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both" }}>
-          <button onClick={() => navigate("/register")} style={{
+          <button onClick={() => onAuthGate()} style={{
             padding: "15px 28px", background: slide.accent, color: "white", fontWeight: 700,
             borderRadius: 10, border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", gap: 8, fontSize: 15,
             boxShadow: `0 8px 24px ${slide.accent}44`, transition: "background 0.5s, box-shadow 0.5s",
           }}><Icon name="camera" size={20} /> Try Visual Search</button>
+
+          {/* ── "Browse Collections" changed to "Sign In" ── */}
           <button onClick={() => navigate("/register")} style={{
             padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10,
             border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)",
             backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15,
-          }}>Browse Collections</button>
+          }}>Sign In</button>
         </div>
 
         {/* Carousel controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Prev / Next */}
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => { back(); resetAuto(); }} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white", transition: "all 0.2s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.18)"}
@@ -385,8 +577,6 @@ function HeroCarousel({ navigate }) {
               <Icon name="arrow_forward" size={18} />
             </button>
           </div>
-
-          {/* Dot indicators */}
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {HERO_SLIDES.map((s, i) => (
               <button key={i} onClick={() => { goTo(i); resetAuto(); }} style={{
@@ -398,14 +588,11 @@ function HeroCarousel({ navigate }) {
               }} />
             ))}
           </div>
-
-          {/* Slide counter */}
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.15em", fontWeight: 700, marginLeft: "auto" }}>
             {String(active + 1).padStart(2, "0")} <span style={{ color: "rgba(255,255,255,0.15)" }}>/</span> {String(HERO_SLIDES.length).padStart(2, "0")}
           </span>
         </div>
 
-        {/* Progress bar auto-advance */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "rgba(255,255,255,0.06)" }}>
           <div key={`prog-${active}`} style={{
             height: "100%", background: slide.accent,
@@ -429,7 +616,7 @@ function HeroCarousel({ navigate }) {
 }
 
 /* ─── NEW ARRIVALS ─── */
-function NewArrivalsSection({ navigate }) {
+function NewArrivalsSection({ navigate, sectionRef }) {
   const [active, setActive] = useState(0);
   const [prevIdx, setPrevIdx] = useState(null);
   const [dir, setDir] = useState(1);
@@ -438,6 +625,12 @@ function NewArrivalsSection({ navigate }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef(null);
   const autoRef = useRef(null);
+
+  // Combine the internal ref with the forwarded sectionRef
+  const setRefs = useCallback((node) => {
+    ref.current = node;
+    if (sectionRef) sectionRef.current = node;
+  }, [sectionRef]);
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.08 });
@@ -468,7 +661,7 @@ function NewArrivalsSection({ navigate }) {
   const prevItem = prevIdx !== null ? NEW_ARRIVALS[prevIdx] : null;
 
   return (
-    <section ref={ref} style={{ background: "#06060d", position: "relative", overflow: "hidden", padding: "72px 0 60px" }}>
+    <section ref={setRefs} style={{ background: "#06060d", position: "relative", overflow: "hidden", padding: "72px 0 60px" }}>
       <div style={{ position: "absolute", top: "40%", left: "30%", width: "60vw", height: "60vw", maxWidth: 700, borderRadius: "50%", background: `radial-gradient(circle, ${item.accent}1a 0%, transparent 65%)`, transition: "background 1.2s ease", pointerEvents: "none", transform: "translate(-50%,-50%)" }} />
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 48, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.7s ease, transform 0.7s ease" }}>
@@ -558,9 +751,24 @@ function NewArrivalsSection({ navigate }) {
 export default function LuxeBag() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authGateOpen, setAuthGateOpen] = useState(false);
   const navigate = useNavigate();
 
+  // ── ref to the New Arrivals section for smooth scroll ──
+  const newArrivalsRef = useRef(null);
+
   const handleLoadDone = useCallback(() => setLoading(false), []);
+
+  // ── Nav click handler — scrolls to New Arrivals, else shows auth gate ──
+  const handleNavClick = (link) => {
+    if (link === "New Arrivals") {
+      if (newArrivalsRef.current) {
+        newArrivalsRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      setAuthGateOpen(true);
+    }
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -586,7 +794,7 @@ export default function LuxeBag() {
         .product-card:hover .card-img{transform:scale(1.08);}
         .nav-link:hover{color:#135bec;}
         .icon-btn:hover{background:#f1f5f9!important;}
-        .sidebar-link:hover{background:#f8fafc;}
+        .sidebar-link:hover{background:rgba(255,255,255,0.05)!important;}
         .logout-btn:hover{background:#fef2f2!important;}
         .hero-subtitle{opacity:0;transform:translateY(12px);animation:fadeUp 0.6s ease 3.6s forwards;}
         .hero-buttons{opacity:0;transform:translateY(12px);animation:fadeUp 0.6s ease 4s forwards;}
@@ -613,28 +821,27 @@ export default function LuxeBag() {
       {/* LOADER */}
       <LuxuryLoader onDone={handleLoadDone} />
 
-      {/* PAGE — fades in after loader */}
-      <div style={{
-        opacity: loading ? 0 : 1,
-        transition: "opacity 0.6s ease",
-        pointerEvents: loading ? "none" : "all",
-      }}>
+      {/* PAGE */}
+      <div style={{ opacity: loading ? 0 : 1, transition: "opacity 0.6s ease", pointerEvents: loading ? "none" : "all" }}>
         {/* HEADER */}
         <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.88)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e2e8f0" }}>
           <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec" }}>
               <LogoIcon /><span style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>Bag.NG</span>
             </div>
+            {/* ── Nav: "New Arrivals" scrolls, others navigate ── */}
             <nav className="desktop-nav" style={{ display: "flex", gap: 40 }}>
               {NAV_LINKS.map(link => (
-                <a key={link} onClick={() => navigate("/register")} className="nav-link" style={{ fontSize: 14, fontWeight: 600, textDecoration: "none", color: "#0f172a", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s", cursor: "pointer" }}>
+                <a key={link} onClick={() => handleNavClick(link)} className="nav-link" style={{ fontSize: 14, fontWeight: 600, textDecoration: "none", color: "#0f172a", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s", cursor: "pointer" }}>
                   {link}{link === "Visual Search" && <span style={{ fontSize: 10, background: "rgba(19,91,236,0.1)", color: "#135bec", padding: "2px 7px", borderRadius: 9999, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI</span>}
                 </a>
               ))}
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               {["search", "shopping_bag", "person"].map(ic => (
-                <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer" }} onClick={() => navigate("/register")}><Icon name={ic} /></button>
+                <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer" }}
+                  onClick={() => ic === "person" ? navigate("/register") : setAuthGateOpen(true)}>
+                  <Icon name={ic} /></button>
               ))}
               <button className="mobile-menu-btn icon-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", alignItems: "center" }}><Icon name="menu" /></button>
             </div>
@@ -642,11 +849,11 @@ export default function LuxeBag() {
         </header>
 
         <main>
-          {/* HERO CAROUSEL */}
-          <HeroCarousel navigate={navigate} />
+          {/* HERO CAROUSEL — passes newArrivalsRef for the scroll action */}
+          <HeroCarousel navigate={navigate} newArrivalsRef={newArrivalsRef} onAuthGate={() => setAuthGateOpen(true)} />
 
-          {/* NEW ARRIVALS */}
-          <NewArrivalsSection navigate={navigate} />
+          {/* NEW ARRIVALS — receives sectionRef so the header can scroll to it */}
+          <NewArrivalsSection navigate={navigate} sectionRef={newArrivalsRef} />
 
           {/* SHOP BY CATEGORY */}
           <section style={{ padding: "64px 24px", background: "white" }}>
@@ -726,39 +933,122 @@ export default function LuxeBag() {
         <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.48)", zIndex: 60, opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "all" : "none", transition: "opacity 0.3s ease" }} />
 
         {/* SIDEBAR */}
-        <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 300, background: "white", zIndex: 70, display: "flex", flexDirection: "column", boxShadow: "8px 0 40px rgba(0,0,0,0.14)", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto" }}>
-          <div style={{ padding: "24px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec" }}><LogoIcon /><span style={{ fontWeight: 800, fontSize: 18, color: "#0f172a" }}>LuxeBag</span></div>
-            <button onClick={() => setSidebarOpen(false)} style={{ padding: 8, borderRadius: "50%", border: "none", background: "#f1f5f9", cursor: "pointer" }}><Icon name="close" size={20} /></button>
+        <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 300, background: "#08090f", zIndex: 70, display: "flex", flexDirection: "column", boxShadow: "8px 0 40px rgba(0,0,0,0.5)", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+
+          {/* Sidebar header */}
+          <div style={{ padding: "24px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
+            {/* ── Changed to Bags.ng on mobile ── */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#135bec",
+              opacity: sidebarOpen ? 1 : 0, transform: sidebarOpen ? "translateX(0)" : "translateX(-20px)",
+              transition: "opacity 0.45s ease 0.1s, transform 0.45s cubic-bezier(0.22,1,0.36,1) 0.1s" }}>
+              <LogoIcon />
+              <span style={{ fontWeight: 900, fontSize: 20, color: "white", letterSpacing: "-0.03em" }}>
+                Bags<span style={{ color: "#135bec" }}>.ng</span>
+              </span>
+            </div>
+            <button onClick={() => setSidebarOpen(false)} style={{ padding: 8, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", cursor: "pointer", display: "flex", color: "rgba(255,255,255,0.5)", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}>
+              <Icon name="close" size={20} />
+            </button>
           </div>
+
           <div style={{ padding: "0 16px", flex: 1 }}>
-            {NAV_LINKS.map(link => (
-              <a key={link} onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 12px", borderRadius: 10, marginBottom: 4, fontWeight: 700, fontSize: 15, textDecoration: "none", color: link === "Visual Search" ? "#135bec" : "#0f172a", background: link === "Visual Search" ? "rgba(19,91,236,0.06)" : "transparent", transition: "background 0.15s", cursor: "pointer" }}>
-                {link}<Icon name={link === "Visual Search" ? "camera_enhance" : "chevron_right"} size={18} />
+            {/* ── Nav links — all except New Arrivals trigger auth gate ── */}
+            {NAV_LINKS.map((link, i) => (
+              <a key={link} onClick={() => {
+                setSidebarOpen(false);
+                if (link === "New Arrivals") {
+                  setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350);
+                } else {
+                  setTimeout(() => setAuthGateOpen(true), 150);
+                }
+              }} className="sidebar-link" style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "13px 14px", borderRadius: 12, marginBottom: 4,
+                fontWeight: 700, fontSize: 15, textDecoration: "none",
+                color: link === "Visual Search" ? "#60a5fa" : "rgba(255,255,255,0.85)",
+                background: link === "Visual Search" ? "rgba(19,91,236,0.1)" : "transparent",
+                border: link === "Visual Search" ? "1px solid rgba(19,91,236,0.2)" : "1px solid transparent",
+                cursor: "pointer", transition: "all 0.2s",
+                opacity: sidebarOpen ? 1 : 0,
+                transform: sidebarOpen ? "translateX(0)" : "translateX(-24px)",
+                transitionProperty: "background, border-color, opacity, transform",
+                transitionDuration: `0.2s, 0.2s, 0.4s, 0.4s`,
+                transitionDelay: `0s, 0s, ${0.12 + i * 0.06}s, ${0.12 + i * 0.06}s`,
+                transitionTimingFunction: "ease, ease, cubic-bezier(0.22,1,0.36,1), cubic-bezier(0.22,1,0.36,1)",
+              }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : "new_releases"} size={18} />
+                  {link}
+                </span>
+                {link === "Visual Search"
+                  ? <span style={{ fontSize: 9, background: "rgba(19,91,236,0.2)", color: "#60a5fa", padding: "2px 8px", borderRadius: 9999, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" }}>AI</span>
+                  : <Icon name="chevron_right" size={18} style={{ color: "rgba(255,255,255,0.25)" }} />}
               </a>
             ))}
-            <div style={{ height: 1, background: "#e2e8f0", margin: "18px 0" }} />
-            {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }) => (
-              <a key={label} onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 12px", borderRadius: 10, marginBottom: 4, fontWeight: 600, fontSize: 15, textDecoration: "none", color: "#0f172a", transition: "background 0.15s", cursor: "pointer" }}>
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "18px 0",
+              opacity: sidebarOpen ? 1 : 0, transition: `opacity 0.4s ease ${0.12 + NAV_LINKS.length * 0.06}s` }} />
+
+            {/* ── Cart & Wishlist → auth gate ── */}
+            {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }, i) => (
+              <a key={label} onClick={() => { setSidebarOpen(false); setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 14px", borderRadius: 12, marginBottom: 4,
+                fontWeight: 600, fontSize: 15, textDecoration: "none",
+                color: "rgba(255,255,255,0.7)", transition: "all 0.2s", cursor: "pointer",
+                opacity: sidebarOpen ? 1 : 0,
+                transform: sidebarOpen ? "translateX(0)" : "translateX(-24px)",
+                transitionProperty: "background, opacity, transform",
+                transitionDuration: "0.2s, 0.4s, 0.4s",
+                transitionDelay: `0s, ${0.24 + i * 0.06}s, ${0.24 + i * 0.06}s`,
+                transitionTimingFunction: "ease, cubic-bezier(0.22,1,0.36,1), cubic-bezier(0.22,1,0.36,1)",
+              }}>
                 <Icon name={icon} size={20} /> {label}
               </a>
             ))}
-            <div style={{ height: 1, background: "#e2e8f0", margin: "18px 0" }} />
-            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#94a3b8", padding: "0 12px", marginBottom: 12 }}>Account</p>
-            <a onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="sidebar-link" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 12px", borderRadius: 10, marginBottom: 6, textDecoration: "none", color: "#0f172a", transition: "background 0.15s", cursor: "pointer" }}>
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "18px 0",
+              opacity: sidebarOpen ? 1 : 0, transition: "opacity 0.4s ease 0.36s" }} />
+
+            <p style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.22em", color: "rgba(255,255,255,0.2)", padding: "0 14px", marginBottom: 12,
+              opacity: sidebarOpen ? 1 : 0, transition: "opacity 0.4s ease 0.38s" }}>Account</p>
+
+            {/* My Profile → auth gate */}
+            <a onClick={() => { setSidebarOpen(false); setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "10px 14px", borderRadius: 12, marginBottom: 6,
+              textDecoration: "none", color: "rgba(255,255,255,0.75)", cursor: "pointer",
+              transition: "all 0.2s",
+              opacity: sidebarOpen ? 1 : 0,
+              transform: sidebarOpen ? "translateX(0)" : "translateX(-24px)",
+              transitionProperty: "background, opacity, transform",
+              transitionDuration: "0.2s, 0.4s, 0.4s",
+              transitionDelay: "0s, 0.4s, 0.4s",
+              transitionTimingFunction: "ease, cubic-bezier(0.22,1,0.36,1), cubic-bezier(0.22,1,0.36,1)",
+            }}>
               <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #135bec, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "white" }}><Icon name="person" size={18} /></div>
-              <div><div style={{ fontWeight: 700, fontSize: 14 }}>My Profile</div><div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>View & edit profile</div></div>
+              <div><div style={{ fontWeight: 700, fontSize: 14 }}>My Profile</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>View & edit profile</div></div>
             </a>
-            <button onClick={() => { setSidebarOpen(false); navigate("/register"); }} className="logout-btn" style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 12px", borderRadius: 10, marginBottom: 6, border: "none", background: "transparent", cursor: "pointer", width: "100%", textAlign: "left", transition: "background 0.15s" }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ fontFamily: "'Material Symbols Outlined'", fontSize: 18, color: "#ef4444", lineHeight: 1 }}>logout</span></div>
-              <div><div style={{ fontWeight: 700, fontSize: 14, color: "#ef4444" }}>Log Out</div><div style={{ fontSize: 11, color: "#fca5a5", marginTop: 1 }}>Sign out of your account</div></div>
-            </button>
           </div>
-          <div style={{ padding: "24px 24px 28px" }}>
-            <button onClick={() => { setSidebarOpen(false); navigate("/register"); }} style={{ width: "100%", padding: "14px 0", background: "#135bec", color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12 }}>Sign In</button>
-            <p style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>Luxury Redefined</p>
+
+          {/* Sign In CTA — this one navigates (no auth gate) */}
+          <div style={{ padding: "24px 24px 28px",
+            opacity: sidebarOpen ? 1 : 0, transform: sidebarOpen ? "translateY(0)" : "translateY(16px)",
+            transition: "opacity 0.45s ease 0.48s, transform 0.45s cubic-bezier(0.22,1,0.36,1) 0.48s" }}>
+            <button onClick={() => { setSidebarOpen(false); navigate("/register"); }} style={{ width: "100%", padding: "14px 0", background: "linear-gradient(135deg, #135bec 0%, #6366f1 100%)", color: "white", fontWeight: 800, borderRadius: 12, border: "none", cursor: "pointer", fontSize: 15, marginBottom: 12, boxShadow: "0 6px 24px rgba(19,91,236,0.35)", transition: "all 0.25s" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 36px rgba(19,91,236,0.45)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(19,91,236,0.35)"; }}>
+              Sign In
+            </button>
+            <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.18)", fontStyle: "italic", letterSpacing: "0.12em", textTransform: "uppercase" }}>Luxury Redefined</p>
           </div>
         </aside>
+
+        {/* AUTH GATE MODAL */}
+        <AuthGateModal open={authGateOpen} onClose={() => setAuthGateOpen(false)} navigate={navigate} />
+
       </div>
     </div>
   );

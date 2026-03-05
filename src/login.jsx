@@ -89,7 +89,6 @@ const PageLoader = ({ onDone }) => {
 
       {/* Main icon */}
       <div style={{ position: 'relative', width: 92, height: 92, marginBottom: 30 }}>
-        {/* Spinning arc */}
         <svg width="92" height="92" viewBox="0 0 92 92"
           style={{ position: 'absolute', inset: 0, animation: 'loaderSpin 1.9s linear infinite' }}>
           <circle cx="46" cy="46" r="40" fill="none" stroke="#eef1fb" strokeWidth="2.5" />
@@ -99,12 +98,7 @@ const PageLoader = ({ onDone }) => {
             style={{ transformOrigin: '46px 46px', transition: 'stroke-dasharray 0.08s ease' }}
           />
         </svg>
-
-        {/* Inner circle with bag icon */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{
             width: 56, height: 56, borderRadius: '50%',
             background: 'linear-gradient(135deg, #144bb8 0%, #4f7ef7 100%)',
@@ -180,75 +174,307 @@ const PageLoader = ({ onDone }) => {
   );
 };
 
-// ─── Success Toast Component ──────────────────────────────────────────────────
+// ─── Success Toast Component — REDESIGNED ────────────────────────────────────
 const SuccessToast = ({ show }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      const t = setTimeout(() => setMounted(true), 20);
+      return () => clearTimeout(t);
+    }
+  }, [show]);
+
   if (!show) return null;
+
   return (
-    <div style={{
-      position: 'fixed', top: 24, right: 24, zIndex: 9999,
-      animation: 'slideInFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-    }}>
+    <>
       <style>{`
-        @keyframes slideInFade {
-          from { opacity: 0; transform: translateX(60px) scale(0.95); }
-          to   { opacity: 1; transform: translateX(0)   scale(1);    }
+        @keyframes toastSlideIn {
+          from { opacity: 0; transform: translateY(-28px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0)     scale(1);    }
         }
-        @keyframes progressShrink { from { width: 100%; } to { width: 0%; } }
-        @keyframes popIn {
-          0%   { transform: scale(0); opacity: 0; }
-          60%  { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes toastProgressDrain {
+          from { width: 100%; }
+          to   { width: 0%;   }
+        }
+        @keyframes toastCheckDraw {
+          from { stroke-dashoffset: 36; opacity: 0; }
+          to   { stroke-dashoffset: 0;  opacity: 1; }
+        }
+        @keyframes toastRipple {
+          0%   { transform: scale(0.6); opacity: 0.7; }
+          100% { transform: scale(2.0); opacity: 0;   }
+        }
+        @keyframes toastBadgeFade {
+          from { opacity: 0; transform: translateX(8px); }
+          to   { opacity: 1; transform: translateX(0);   }
+        }
+        @keyframes toastLineFill {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        @keyframes toastTextIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0);   }
         }
       `}</style>
+
+      {/* Full-width top banner — fixed at very top of screen */}
       <div style={{
-        width: 340, background: 'white', borderRadius: 16,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(20,75,184,0.08)',
-        overflow: 'hidden', border: '1px solid rgba(20,75,184,0.08)',
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        animation: 'toastSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both',
       }}>
-        <div style={{ height: 3, background: '#f0f4ff', position: 'relative' }}>
+        {/* Drain bar — runs for 3 seconds matching the redirect timeout */}
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.12)', position: 'relative', overflow: 'hidden' }}>
           <div style={{
-            height: '100%', background: 'linear-gradient(90deg, #144bb8, #4f7ef7)',
-            borderRadius: 9999, animation: 'progressShrink 3s linear forwards',
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.5))',
+            animation: 'toastProgressDrain 3s linear forwards',
+            transformOrigin: 'left',
           }} />
         </div>
-        <div style={{ padding: '20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #144bb8, #4f7ef7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            animation: 'popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
-            boxShadow: '0 6px 20px rgba(20,75,184,0.3)',
-          }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 10.5L8.5 15L16 7" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#111318', margin: 0, marginBottom: 3 }}>
-              Welcome back! 🎉
-            </p>
-            <p style={{ fontSize: 13, color: '#636f88', margin: 0, lineHeight: 1.5 }}>
-              You've successfully signed in to your account.
-            </p>
-          </div>
-          <div style={{
-            flexShrink: 0, background: '#f0f4ff', borderRadius: 8,
-            padding: '4px 8px', fontSize: 11, fontWeight: 700, color: '#144bb8', letterSpacing: '0.03em',
-          }}>
-            Bags.NG
-          </div>
-        </div>
+
+        {/* Banner body */}
         <div style={{
-          background: 'linear-gradient(90deg, #f0f4ff, #e8eeff)',
-          padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 6,
+          background: 'linear-gradient(135deg, #0f2f7a 0%, #144bb8 55%, #1a5cd4 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 40px rgba(20,75,184,0.45)',
+          padding: '0 24px',
         }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#144bb8', opacity: 0.6 }} />
-          <p style={{ fontSize: 12, color: '#144bb8', fontWeight: 600, margin: 0 }}>
-            Redirecting you to your dashboard…
-          </p>
+          <div style={{
+            maxWidth: 1280, margin: '0 auto',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            height: 68, gap: 20,
+          }}>
+
+            {/* Left — icon + message */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Animated check circle */}
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                {/* Ripple rings */}
+                {[0, 1].map(i => (
+                  <div key={i} style={{
+                    position: 'absolute', inset: -6 - i * 6,
+                    borderRadius: '50%',
+                    border: '1.5px solid rgba(255,255,255,0.25)',
+                    animation: `toastRipple 1.8s ease-out ${i * 0.55}s infinite`,
+                    pointerEvents: 'none',
+                  }} />
+                ))}
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(4px)',
+                  border: '1.5px solid rgba(255,255,255,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', zIndex: 1,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <polyline
+                      points="4 13 9 18 20 7"
+                      stroke="white" strokeWidth="2.5"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{
+                        strokeDasharray: 36, strokeDashoffset: 36,
+                        animation: 'toastCheckDraw 0.45s cubic-bezier(0.22,1,0.36,1) 0.25s forwards',
+                      }}
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Text block */}
+              <div>
+                <p style={{
+                  margin: 0, fontSize: 15, fontWeight: 800, color: '#ffffff',
+                  letterSpacing: '-0.02em', lineHeight: 1.2,
+                  animation: 'toastTextIn 0.45s ease 0.15s both',
+                }}>
+                  Signed in successfully
+                </p>
+                <p style={{
+                  margin: 0, marginTop: 2, fontSize: 12.5, color: 'rgba(255,255,255,0.65)',
+                  fontWeight: 500, letterSpacing: '0.01em',
+                  animation: 'toastTextIn 0.45s ease 0.22s both',
+                }}>
+                  Redirecting you to your dashboard in a moment…
+                </p>
+              </div>
+            </div>
+
+            {/* Right — brand + status pill */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
+              animation: 'toastBadgeFade 0.4s ease 0.3s both',
+            }}>
+              {/* Pulsing dot */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ position: 'relative', width: 8, height: 8 }}>
+                  <div style={{
+                    position: 'absolute', inset: -3, borderRadius: '50%',
+                    background: 'rgba(134,239,172,0.35)',
+                    animation: 'toastRipple 1.5s ease-out infinite',
+                  }} />
+                  <div style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: '#86efac',
+                    boxShadow: '0 0 8px rgba(134,239,172,0.8)',
+                    position: 'relative', zIndex: 1,
+                  }} />
+                </div>
+                <span style={{ fontSize: 12, color: '#86efac', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  Active
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.15)' }} />
+
+              {/* Brand */}
+              <span style={{ fontSize: 13, fontWeight: 900, color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.01em' }}>
+                Bags<span style={{ color: 'rgba(255,255,255,0.9)' }}>.NG</span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Spacer so content doesn't hide under the banner */}
+      <div style={{ height: 71 }} />
+    </>
+  );
+};
+
+// ─── Error Message — REDESIGNED ──────────────────────────────────────────────
+const ErrorMessage = ({ message }) => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (message) {
+      setVisible(false);
+      const t = setTimeout(() => setVisible(true), 20);
+      return () => clearTimeout(t);
+    } else {
+      setVisible(false);
+    }
+  }, [message]);
+
+  if (!message) return null;
+
+  return (
+    <>
+      <style>{`
+        @keyframes errSlideIn {
+          from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes errShake {
+          0%,100% { transform: translateX(0); }
+          20%     { transform: translateX(-5px); }
+          40%     { transform: translateX(5px); }
+          60%     { transform: translateX(-3px); }
+          80%     { transform: translateX(3px); }
+        }
+        @keyframes errGlowPulse {
+          0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+          50%     { box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
+        }
+        @keyframes errIconSpin {
+          0%   { transform: rotate(0deg) scale(0.7); opacity: 0; }
+          60%  { transform: rotate(15deg) scale(1.1); opacity: 1; }
+          100% { transform: rotate(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes errLineFill {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+      `}</style>
+
+      <div style={{
+        borderRadius: 14,
+        background: 'linear-gradient(135deg, #1a0808 0%, #1f0c0c 100%)',
+        border: '1px solid rgba(239,68,68,0.25)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px rgba(239,68,68,0.12), 0 1px 4px rgba(0,0,0,0.08)',
+        animation: visible
+          ? 'errSlideIn 0.38s cubic-bezier(0.22,1,0.36,1) both, errGlowPulse 2s ease-in-out 0.4s 2'
+          : 'none',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        {/* Top accent line — animates in */}
+        <div style={{
+          height: 2, background: 'rgba(239,68,68,0.15)', overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, #ef4444, #f97316)',
+            transformOrigin: 'left',
+            animation: visible ? 'errLineFill 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s both' : 'none',
+          }} />
+        </div>
+
+        {/* Body */}
+        <div style={{
+          padding: '14px 16px',
+          display: 'flex', alignItems: 'flex-start', gap: 12,
+        }}>
+          {/* Icon */}
+          <div style={{
+            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: visible ? 'errIconSpin 0.5s cubic-bezier(0.22,1,0.36,1) 0.05s both' : 'none',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="#ef4444" strokeWidth="2" />
+              <line x1="12" y1="8" x2="12" y2="13" stroke="#ef4444" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="12" cy="16.5" r="1.2" fill="#ef4444" />
+            </svg>
+          </div>
+
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: 0, fontSize: 12, fontWeight: 800,
+              color: 'rgba(239,68,68,0.7)', letterSpacing: '0.1em',
+              textTransform: 'uppercase', marginBottom: 3,
+            }}>
+              Authentication Failed
+            </p>
+            <p style={{
+              margin: 0, fontSize: 13.5, fontWeight: 500,
+              color: 'rgba(255,255,255,0.75)', lineHeight: 1.55,
+              animation: visible ? 'errSlideIn 0.4s ease 0.18s both' : 'none',
+            }}>
+              {message}
+            </p>
+          </div>
+        </div>
+
+        {/* Footer hint */}
+        <div style={{
+          padding: '9px 16px 11px 62px',
+          borderTop: '1px solid rgba(239,68,68,0.1)',
+          background: 'rgba(239,68,68,0.04)',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2a5 5 0 100 10A5 5 0 0012 2zm0 13c-5 0-9 2.5-9 4v1h18v-1c0-1.5-4-4-9-4z"
+              fill="rgba(239,68,68,0.5)" />
+          </svg>
+          <span style={{
+            fontSize: 11, color: 'rgba(239,68,68,0.5)',
+            fontWeight: 600, letterSpacing: '0.03em',
+          }}>
+            Double-check your email and password, then try again
+          </span>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -418,11 +644,8 @@ const LoginPage = () => {
                   <p className="text-[#636f88] dark:text-gray-400 mt-2">Enter your details to access your account.</p>
                 </div>
 
-                {errorMsg && (
-                  <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-                    {errorMsg}
-                  </div>
-                )}
+                {/* ── REDESIGNED ERROR MESSAGE ── */}
+                {errorMsg && <ErrorMessage message={errorMsg} />}
 
                 {/* Role Toggle */}
                 <div>
