@@ -17,12 +17,13 @@ const C = {
   danger:       '#DC2626',
   dangerBg:     '#FEF2F2',
   surface:      '#FFFFFF',
-  surfaceDim:   '#FDF8F5',
+  surfaceDim:   '#FDF8F5',       // Very light peach (main background)
   border:       '#F0D9CC',
   borderLight:  '#F7ECE4',
-  text:         '#1A0A00',       // Dark brown
-  textMid:      '#7A4030',       // Medium brown
-  textMuted:    '#B07060',       // Muted orange-brown
+  text:         '#1A0A00',       // Dark brown (primary text)
+  textMid:      '#7A4030',       // Medium brown (secondary text)
+  textMuted:    '#B07060',       // Muted orange-brown (tertiary text)
+  textLight:    '#FFFFFF',       // White text
   textFaint:    '#E8C4B5',       // Very light peach-brown
 };
 
@@ -768,12 +769,28 @@ const Reg = () => {
         }
       `}</style>
       
-      <div className="bg-[#F5F0EE] dark:bg-[#1A0A00] font-display min-h-screen flex flex-col" style={{ opacity: pageLoading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+      <div style={{ 
+        background: C.surfaceDim,  // #FDF8F5 very light peach
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'Manrope, sans-serif',
+        opacity: pageLoading ? 0 : 1,
+        transition: 'opacity 0.5s ease'
+      }}>
 
-        {/* HEADER */}
-        <header className="register-header flex items-center justify-between whitespace-nowrap border-b border-solid border-[#F0C8BB] dark:border-[#7A4030] px-6 md:px-10 py-3 bg-white dark:bg-[#2A1A10] z-10">
-          <div className="flex items-center gap-4 text-[#1A0A00] dark:text-white">
-            <div className="size-6 text-[#C94B2C]">
+        {/* HEADER - White background for contrast */}
+        <header style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: `1px solid ${C.border}`,
+          padding: '12px 24px',
+          background: C.surface,
+          zIndex: 10
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 24, height: 24, color: C.primary }}>
               <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <g clipPath="url(#clip0_6_535)">
                   <path clipRule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="currentColor" fillRule="evenodd" />
@@ -783,80 +800,220 @@ const Reg = () => {
                 </defs>
               </svg>
             </div>
-            <h2 className="text-[#1A0A00] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Bag<span className="text-[#C94B2C]">.NG</span></h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text }}>
+              Bag<span style={{ color: C.primary }}>.NG</span>
+            </h2>
           </div>
-          <div className="flex flex-1 justify-end gap-8">
-            <div className="hidden md:flex items-center gap-9">
-              <a className="text-[#1A0A00] dark:text-slate-300 text-sm font-medium leading-normal hover:text-[#C94B2C] transition-colors" href="#">Shop</a>
-              <a className="text-[#1A0A00] dark:text-slate-300 text-sm font-medium leading-normal hover:text-[#C94B2C] transition-colors" href="#">Visual Search</a>
-              <a className="text-[#1A0A00] dark:text-slate-300 text-sm font-medium leading-normal hover:text-[#C94B2C] transition-colors" href="#">Help</a>
+          <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+            <div style={{ display: 'none', '@media (min-width: 768px)': { display: 'flex', gap: 32 } }}>
+              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                Shop
+              </a>
+              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                Visual Search
+              </a>
+              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                Help
+              </a>
             </div>
-            <button onClick={() => navigate('/login')} className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#C94B2C] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#B33A1E] transition-all">
-              <span className="truncate">Login</span>
+            <button 
+              onClick={() => navigate('/login')}
+              style={{
+                background: C.primary,
+                color: C.textLight,
+                border: 'none',
+                borderRadius: 8,
+                padding: '8px 16px',
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: `0 2px 8px ${C.primary}40`
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = C.accent}
+              onMouseLeave={e => e.currentTarget.style.background = C.primary}>
+              Login
             </button>
           </div>
         </header>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 flex overflow-hidden">
+        <main style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
           {/* Left Side - Hero (Warm Theme) */}
-          <div className="hidden lg:flex lg:w-1/2 relative bg-[#C94B2C] items-center justify-center overflow-hidden">
+          <div style={{ 
+            display: 'none', 
+            '@media (min-width: 1024px)': { display: 'flex' },
+            width: '50%',
+            position: 'relative',
+            background: C.primary,
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
+          }}>
             <div
-              className="absolute inset-0 opacity-30 bg-cover bg-center"
-              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')" }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.3,
+                backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#C94B2C]/90 via-transparent to-transparent" />
-            <div className="relative z-10 px-12 text-white max-w-xl">
-              <h1 className="text-5xl font-black leading-tight tracking-[-0.033em] mb-6">Step into the future of luxury.</h1>
-              <p className="text-lg font-medium text-white/90 mb-8 leading-relaxed">
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: `linear-gradient(to top, ${C.primary}E6, transparent)`
+            }} />
+            <div style={{
+              position: 'relative',
+              zIndex: 10,
+              padding: '0 48px',
+              color: C.textLight,
+              maxWidth: 600
+            }}>
+              <h1 style={{
+                fontSize: 48,
+                fontWeight: 900,
+                lineHeight: 1.2,
+                letterSpacing: '-0.02em',
+                marginBottom: 24
+              }}>
+                Step into the future of luxury.
+              </h1>
+              <p style={{
+                fontSize: 18,
+                fontWeight: 500,
+                opacity: 0.9,
+                marginBottom: 32,
+                lineHeight: 1.6
+              }}>
                 Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
               </p>
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">photo_camera</span>
-                  <span className="font-medium">Search by uploading a photo</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    padding: 8,
+                    borderRadius: '50%',
+                    fontFamily: "'Material Symbols Outlined'"
+                  }}>photo_camera</span>
+                  <span style={{ fontWeight: 500 }}>Search by uploading a photo</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">chat_bubble</span>
-                  <span className="font-medium">Real-time WhatsApp tracking</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    padding: 8,
+                    borderRadius: '50%',
+                    fontFamily: "'Material Symbols Outlined'"
+                  }}>chat_bubble</span>
+                  <span style={{ fontWeight: 500 }}>Real-time WhatsApp tracking</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined bg-white/20 p-2 rounded-full">verified</span>
-                  <span className="font-medium">Early access to limited drops</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    padding: 8,
+                    borderRadius: '50%',
+                    fontFamily: "'Material Symbols Outlined'"
+                  }}>verified</span>
+                  <span style={{ fontWeight: 500 }}>Early access to limited drops</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Form */}
-          <div className="register-form-container w-full lg:w-1/2 flex items-center justify-center p-8 bg-white dark:bg-[#1A0A00] overflow-y-auto">
-            <div className="max-w-[480px] w-full flex flex-col gap-6 py-8">
+          <div className="register-form-container" style={{
+            width: '100%',
+            '@media (min-width: 1024px)': { width: '50%' },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 32,
+            background: C.surface,
+            overflowY: 'auto'
+          }}>
+            <div style={{ maxWidth: 480, width: '100%', display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0' }}>
 
-              <div className="flex flex-col gap-2">
-                <h2 className="register-title text-[#1A0A00] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Create your account</h2>
-                <p className="text-[#B07060] dark:text-[#E8856A] text-base font-normal leading-normal">Ready to explore or start selling with Bag.NG?</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <h2 className="register-title" style={{
+                  fontSize: 36,
+                  fontWeight: 900,
+                  color: C.text,
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.02em'
+                }}>
+                  Create your account
+                </h2>
+                <p style={{
+                  color: C.textMuted,
+                  fontSize: 16,
+                  fontWeight: 400
+                }}>
+                  Ready to explore or start selling with Bag.NG?
+                </p>
               </div>
 
               {/* Error Banner */}
               {errorMessage && (
-                <div className="error-toast flex items-start gap-3 px-4 py-3.5 rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-950/40">
-                  <div className="flex-shrink-0 mt-0.5 size-5 rounded-full bg-red-100 dark:bg-red-900/60 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-red-500 dark:text-red-400" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>error</span>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                  padding: '14px 16px',
+                  borderRadius: 12,
+                  border: `1px solid ${C.danger}40`,
+                  background: C.dangerBg
+                }}>
+                  <div style={{
+                    flexShrink: 0,
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: '#FECACA',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <span className="material-symbols-outlined" style={{ color: C.danger, fontSize: 14, fontVariationSettings: "'FILL' 1" }}>error</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-300 leading-snug">Registration failed</p>
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 leading-relaxed">{errorMessage}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#991B1B', marginBottom: 4 }}>Registration failed</p>
+                    <p style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.5 }}>{errorMessage}</p>
                   </div>
-                  <button onClick={() => setErrorMessage('')} className="flex-shrink-0 text-red-400 hover:text-red-600 dark:hover:text-red-200 transition-colors" type="button">
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                  <button 
+                    onClick={() => setErrorMessage('')}
+                    style={{
+                      flexShrink: 0,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#EF4444',
+                      cursor: 'pointer',
+                      padding: 2
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = C.danger}
+                    onMouseLeave={e => e.currentTarget.style.color = '#EF4444'}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
                   </button>
                 </div>
               )}
 
               {/* ── Beautiful Role Toggle (Warm Theme) ── */}
-              <div className="flex flex-col gap-3">
-                <p className="text-[#1A0A00] dark:text-slate-200 text-sm font-semibold leading-normal">How do you want to join?</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <p style={{
+                  color: C.text,
+                  fontSize: 14,
+                  fontWeight: 600
+                }}>
+                  How do you want to join?
+                </p>
 
                 <div className="role-track">
                   {/* Sliding pill */}
@@ -913,87 +1070,197 @@ const Reg = () => {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
                 {/* Full Name */}
-                <label className="flex flex-col w-full">
-                  <p className="text-[#1A0A00] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Full Name</p>
+                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Full Name</p>
                   <input
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#1A0A00] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#C94B2C]/50 border border-[#F0C8BB] dark:border-[#7A4030] bg-white dark:bg-[#2A1A10] focus:border-[#C94B2C] h-14 placeholder:text-[#B07060] p-[15px] text-base font-normal transition-all"
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      border: `1px solid ${C.border}`,
+                      background: C.surface,
+                      padding: 16,
+                      height: 56,
+                      fontSize: 14,
+                      color: C.text,
+                      outline: 'none',
+                      transition: 'all 0.2s'
+                    }}
                     placeholder="Enter your full name"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
                     required
+                    onFocus={e => {
+                      e.currentTarget.style.borderColor = C.primary;
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
+                    }}
+                    onBlur={e => {
+                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
-                  {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
+                  {errors.fullName && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.fullName}</p>}
                 </label>
 
                 {/* Email */}
-                <label className="flex flex-col w-full">
-                  <p className="text-[#1A0A00] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Email Address</p>
+                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Email Address</p>
                   <input
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#1A0A00] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#C94B2C]/50 border border-[#F0C8BB] dark:border-[#7A4030] bg-white dark:bg-[#2A1A10] focus:border-[#C94B2C] h-14 placeholder:text-[#B07060] p-[15px] text-base font-normal transition-all"
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      border: `1px solid ${C.border}`,
+                      background: C.surface,
+                      padding: 16,
+                      height: 56,
+                      fontSize: 14,
+                      color: C.text,
+                      outline: 'none',
+                      transition: 'all 0.2s'
+                    }}
                     placeholder="name@example.com"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    onFocus={e => {
+                      e.currentTarget.style.borderColor = C.primary;
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
+                    }}
+                    onBlur={e => {
+                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                  {errors.email && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
                 </label>
 
                 {/* Phone */}
-                <label className="flex flex-col w-full">
-                  <div className="flex items-center gap-2 pb-2">
-                    <p className="text-[#1A0A00] dark:text-slate-200 text-sm font-semibold leading-normal" id="phone-label">Phone Number</p>
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-[#F9DDD0] dark:bg-[#C94B2C]/30 rounded text-[#C94B2C] dark:text-[#E8856A] text-[10px] font-bold uppercase tracking-wider">
-                      <span className="material-symbols-outlined text-[12px]">chat</span>
+                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <p style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Phone Number</p>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '2px 8px',
+                      background: C.primaryBg,
+                      borderRadius: 4,
+                      color: C.primary,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 12 }}>chat</span>
                       WhatsApp Sync
                     </div>
                   </div>
                   <input
-                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#1A0A00] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#C94B2C]/50 border border-[#F0C8BB] dark:border-[#7A4030] bg-white dark:bg-[#2A1A10] focus:border-[#C94B2C] h-14 placeholder:text-[#B07060] p-[15px] text-base font-normal transition-all"
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      border: `1px solid ${C.border}`,
+                      background: C.surface,
+                      padding: 16,
+                      height: 56,
+                      fontSize: 14,
+                      color: C.text,
+                      outline: 'none',
+                      transition: 'all 0.2s'
+                    }}
                     id="phone-field"
                     placeholder="+1 (555) 000-0000"
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    onFocus={e => {
+                      e.currentTarget.style.borderColor = C.primary;
+                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
+                    }}
+                    onBlur={e => {
+                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
-                  <p className="text-xs text-[#B07060] mt-1">We'll send order updates and inventory notifications via WhatsApp.</p>
-                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                  <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>
+                    We'll send order updates and inventory notifications via WhatsApp.
+                  </p>
+                  {errors.phone && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.phone}</p>}
                 </label>
 
                 {/* Password */}
-                <label className="flex flex-col w-full">
-                  <p className="text-[#1A0A00] dark:text-slate-200 text-sm font-semibold leading-normal pb-2">Password</p>
-                  <div className="relative group">
+                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Password</p>
+                  <div style={{ position: 'relative' }}>
                     <input
-                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#1A0A00] dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#C94B2C]/50 border border-[#F0C8BB] dark:border-[#7A4030] bg-white dark:bg-[#2A1A10] focus:border-[#C94B2C] h-14 placeholder:text-[#B07060] p-[15px] text-base font-normal transition-all"
+                      style={{
+                        width: '100%',
+                        borderRadius: 8,
+                        border: `1px solid ${C.border}`,
+                        background: C.surface,
+                        padding: 16,
+                        height: 56,
+                        fontSize: 14,
+                        color: C.text,
+                        outline: 'none',
+                        transition: 'all 0.2s',
+                        paddingRight: 48
+                      }}
                       placeholder="Create a strong password"
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
                       required
+                      onFocus={e => {
+                        e.currentTarget.style.borderColor = C.primary;
+                        e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
+                      }}
+                      onBlur={e => {
+                        e.currentTarget.style.borderColor = C.border;
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
                     />
                     <button
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B07060] hover:text-[#C94B2C] dark:hover:text-slate-200 transition-colors"
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: C.textMuted,
+                        cursor: 'pointer',
+                        padding: 4
+                      }}
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                    >
+                      onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                      onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>
                       <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
                     </button>
                   </div>
-                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                  {errors.password && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.password}</p>}
                 </label>
 
                 {/* Terms */}
-                <div className="flex items-start gap-3 mt-2">
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 8 }}>
                   <input
-                    className="mt-1 h-5 w-5 rounded border-[#F0C8BB] text-[#C94B2C] focus:ring-[#C94B2C] cursor-pointer"
+                    style={{
+                      marginTop: 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: 4,
+                      border: `1px solid ${C.border}`,
+                      accentColor: C.primary,
+                      cursor: 'pointer'
+                    }}
                     id="terms"
                     type="checkbox"
                     name="terms"
@@ -1001,26 +1268,64 @@ const Reg = () => {
                     onChange={handleChange}
                     required
                   />
-                  <label className="text-sm text-[#1A0A00] lg:text-[#B07060] dark:text-slate-400 leading-tight" htmlFor="terms">
-                    I agree to the <a className="text-[#C94B2C] font-semibold hover:underline" href="#">Terms of Service</a> and <a className="text-[#C94B2C] font-semibold hover:underline" href="#">Privacy Policy</a>.
+                  <label style={{ fontSize: 14, color: C.text, lineHeight: 1.5 }} htmlFor="terms">
+                    I agree to the <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
+                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Terms of Service</a> and <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
+                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Privacy Policy</a>.
                   </label>
                 </div>
-                {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
+                {errors.terms && <p style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</p>}
 
                 {/* Submit */}
                 <button
                   disabled={loading}
-                  className={`mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-[#C94B2C] text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#B33A1E] hover:shadow-lg transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  style={{
+                    marginTop: 8,
+                    width: '100%',
+                    height: 56,
+                    background: C.primary,
+                    color: C.textLight,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: `0 4px 12px ${C.primary}50`,
+                    opacity: loading ? 0.7 : 1
+                  }}
                   type="submit"
-                >
+                  onMouseEnter={e => {
+                    if (!loading) {
+                      e.currentTarget.style.background = C.accent;
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!loading) {
+                      e.currentTarget.style.background = C.primary;
+                      e.currentTarget.style.transform = 'none';
+                    }
+                  }}>
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
 
-              <div className="text-center pt-2">
-                <p className="text-[#1A0A00] lg:text-[#B07060] lg:dark:text-slate-400 text-sm font-medium">
+              <div style={{ textAlign: 'center', paddingTop: 8 }}>
+                <p style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>
                   Already have an account?{' '}
-                  <span onClick={() => navigate('/login')} className="text-[#1A0A00] lg:text-[#C94B2C] font-bold hover:underline cursor-pointer ml-1">
+                  <span 
+                    onClick={() => navigate('/login')} 
+                    style={{
+                      color: C.primary,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      marginLeft: 4
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                    onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                     Login
                   </span>
                 </p>
@@ -1031,8 +1336,15 @@ const Reg = () => {
         </main>
 
         {/* Mobile Footer */}
-        <footer className="lg:hidden p-6 border-t border-[#F0C8BB] dark:border-[#7A4030] bg-white dark:bg-[#2A1A10] text-center">
-          <p className="text-[#B07060] dark:text-[#E8856A] text-xs">© 2024 Bag.NG. All rights reserved.</p>
+        <footer style={{
+          display: 'block',
+          '@media (min-width: 1024px)': { display: 'none' },
+          padding: 24,
+          borderTop: `1px solid ${C.border}`,
+          background: C.surface,
+          textAlign: 'center'
+        }}>
+          <p style={{ color: C.textMuted, fontSize: 12 }}>© 2024 Bag.NG. All rights reserved.</p>
         </footer>
 
         {/* Success Modal */}
