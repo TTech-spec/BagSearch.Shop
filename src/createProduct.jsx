@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+const CLOUDINARY_FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER || 'products';
+
 const MS = ({ name, size = 22, style: s = {} }) => (
   <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", whiteSpace: "nowrap", direction: "ltr", fontVariationSettings: "'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24", ...s }}>
     {name}
@@ -50,6 +54,29 @@ function formatNaira(value) {
   const num = parseInt(value.toString().replace(/,/g, ''), 10);
   if (isNaN(num)) return value;
   return num.toLocaleString('en-NG');
+}
+
+async function uploadImageToCloudinary(file, userId) {
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    throw new Error('Cloudinary is not configured. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+  }
+
+  const payload = new FormData();
+  payload.append('file', file);
+  payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  payload.append('folder', `${CLOUDINARY_FOLDER}/${userId}`);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: payload,
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data?.secure_url) {
+    throw new Error(data?.error?.message || 'Failed to upload image to Cloudinary.');
+  }
+
+  return data.secure_url;
 }
 
 export default function CreateProduct() {
@@ -122,12 +149,8 @@ export default function CreateProduct() {
     try {
       const uploadedImageUrls = [];
       for (const img of images) {
-        const fileExt = img.file.name.split('.').pop();
-        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('products').upload(filePath, img.file);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(filePath);
-        uploadedImageUrls.push(publicUrl);
+        const imageUrl = await uploadImageToCloudinary(img.file, user.id);
+        uploadedImageUrls.push(imageUrl);
       }
       const rawPrice = formData.price.toString().replace(/,/g, '');
       const { error: insertError } = await supabase.from('products').insert([{
