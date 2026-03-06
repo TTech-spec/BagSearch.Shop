@@ -118,15 +118,8 @@ function App() {
         {/* Reset Password route */}
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Products page - protected behind login */}
-        <Route
-          path="/products"
-          element={
-            <PrivateRoute>
-              <Product />
-            </PrivateRoute>
-          }
-        />
+        {/* Products page - public (auth-gated actions handled inside Product.jsx) */}
+        <Route path="/products" element={<Product />} />
 
         {/* Product Detail page - protected behind login */}
         <Route

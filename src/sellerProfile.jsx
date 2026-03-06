@@ -3,6 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
+// ─── Color Palette (warm orange/peach inspired by Criibb) ────────────────────
+const C = {
+  primary:      '#c84b11',
+  primaryLight: '#f97316',
+  primaryBg:    '#fde8d8',
+  primaryPale:  '#fdf4ee',
+  primaryBorder:'#f9c4a0',
+  accent:       '#ea580c',
+  success:      '#16a34a',
+  successBg:    '#dcfce7',
+  danger:       '#dc2626',
+  dangerBg:     '#fef2f2',
+  surface:      '#ffffff',
+  surfaceDim:   '#fdf8f5',
+  border:       '#f0d9cc',
+  borderLight:  '#f7ece4',
+  text:         '#1a0a00',
+  textMid:      '#5c3317',
+  textMuted:    '#9a6348',
+  textFaint:    '#c4957a',
+};
+
 const inquiries = [
   { id: 1, bag: 'Classic Leather Tote', sku: 'BT-2041', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDQ1M-wNA_bDjdtXcWFW2QQ0Ap7H7fHvxOZkodgM-Y2TJUYl_INGZIeYNItkrfwCultBnZL7YWSxI9aWicu3lYoTQX76ihjq-4JVOVmBqUWC49ml9jbAvu_0oPPBCNMCa5ecigl35vGH3JkFwhsdfuywahciLurV0Qg2EIUIuf7Yef7m3nOUVmQwCdaQ6I9UmF5ubB4pz27Wk-3kyO0aKi293kQpytkSxa89xvgKAdktzshKTqWKcT_hpuxGwsQVRpoIwWLtHOR3sY', buyer: 'Sarah Jenkins', source: 'visual', time: '2 mins ago', replied: false },
   { id: 2, bag: 'Suede Crossbody', sku: 'BC-5592', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9TsB1OZKW1UX2EF8YrcsHRB7QvWhHeVYXdDnyZbtG4RGsbyBnIhSX0DeNHq4vtIpwZYlm0RAXqDR6uVRCZdla9Yuw3IlnxkzqFGDJSM8HNtiF1MlH2bAZyj0RMGTHFUCYuMCyTcbDTkUNxI7RW84cgcw36Y91iTzEC6CDGInerpFD7lmrhPKnvvuX4sjYsbMCxJ2ijCmO-M3G5fya4FGV6cTI0r0oUlqBxB-dYe0N-HEINpbeJFZlMKd8T6SdjBeunheBtOHU5KU', buyer: 'Michael Chen', source: 'direct', time: '15 mins ago', replied: false },
@@ -11,7 +33,7 @@ const inquiries = [
 ];
 
 const stats = [
-  { icon: 'payments',        label: 'Total Revenue',      value: '$12,450.00', badge: '+12.5%', accent: '#3b82f6', glow: 'rgba(59,130,246,0.15)',  sub: null },
+  { icon: 'payments',        label: 'Total Revenue',      value: '$12,450.00', badge: '+12.5%', accent: C.primary, glow: 'rgba(200,75,17,0.15)',  sub: null },
   { icon: 'shopping_basket', label: 'Active Listings',    value: '84',         badge: '+2%',    accent: '#f97316', glow: 'rgba(249,115,22,0.12)',  sub: null },
   { icon: 'chat',            label: 'WhatsApp Inquiries', value: '12',         badge: 'Urgent', accent: '#22c55e', glow: 'rgba(34,197,94,0.12)',   sub: null },
   { icon: 'visibility',      label: 'Total Views',        value: '3,205',      badge: '+18%',   accent: '#a78bfa', glow: 'rgba(167,139,250,0.12)', sub: '42% from Visual Search' },
@@ -37,9 +59,9 @@ const WhatsAppIcon = ({ size = 20 }) => (
 
 function SourceBadge({ source }) {
   const map = {
-    visual:   { icon: 'image_search', label: 'Visual Search', bg: 'rgba(59,130,246,0.08)',  color: '#60a5fa', border: 'rgba(59,130,246,0.2)' },
-    direct:   { icon: 'search',       label: 'Direct Search', bg: 'rgba(148,163,184,0.08)', color: '#94a3b8', border: 'rgba(148,163,184,0.15)' },
-    referral: { icon: 'link',         label: 'Referral',      bg: 'rgba(148,163,184,0.08)', color: '#94a3b8', border: 'rgba(148,163,184,0.15)' },
+    visual:   { icon: 'image_search', label: 'Visual Search', bg: C.primaryBg,  color: C.primary, border: C.primaryBorder },
+    direct:   { icon: 'search',       label: 'Direct Search', bg: C.surfaceDim, color: C.textMuted, border: C.border },
+    referral: { icon: 'link',         label: 'Referral',      bg: C.surfaceDim, color: C.textMuted, border: C.border },
   };
   const s = map[source] || map.direct;
   return (
@@ -55,10 +77,10 @@ function NavItem({ item, delay, ready, onClick }) {
   return (
     <a href="#" onClick={e => { e.preventDefault(); onClick?.(); }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, textDecoration: "none", background: item.active ? "rgba(59,130,246,0.12)" : hovered ? "rgba(255,255,255,0.05)" : "transparent", color: item.active ? "#60a5fa" : hovered ? "#cbd5e1" : "#64748b", transition: "all 0.2s", transform: hovered && !item.active ? "translateX(3px)" : "none", opacity: ready ? 1 : 0, animation: ready ? `slideRight 0.4s cubic-bezier(0.22,1,0.36,1) ${delay}ms both` : "none" }}>
+      style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, textDecoration: "none", background: item.active ? C.primaryBg : hovered ? "rgba(255,255,255,0.05)" : "transparent", color: item.active ? C.primary : hovered ? C.textMuted : C.textMuted, transition: "all 0.2s", transform: hovered && !item.active ? "translateX(3px)" : "none", opacity: ready ? 1 : 0, animation: ready ? `slideRight 0.4s cubic-bezier(0.22,1,0.36,1) ${delay}ms both` : "none" }}>
       <MS name={item.icon} size={20} />
       <span style={{ fontSize: 13, fontWeight: item.active ? 700 : 600 }}>{item.label}</span>
-      {item.active && <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#3b82f6" }} />}
+      {item.active && <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: C.primary }} />}
     </a>
   );
 }
@@ -69,15 +91,13 @@ function StatCard({ stat, delay, ready, isRevenue }) {
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{ background: "white", borderRadius: 16, padding: "22px 20px",
-        // ── Revenue card: NO border, NO top accent bar ──
-        border: isRevenue ? 'none' : '1px solid #f1f5f9',
-        boxShadow: hovered ? `0 8px 32px ${stat.glow}, 0 2px 8px rgba(0,0,0,0.06)` : "0 2px 10px rgba(0,0,0,0.05)",
+        border: isRevenue ? 'none' : `1px solid ${C.borderLight}`,
+        boxShadow: hovered ? `0 8px 32px ${stat.glow}, 0 2px 8px rgba(0,0,0,0.06)` : `0 2px 10px rgba(200,75,17,0.05)`,
         transition: "all 0.3s cubic-bezier(0.22,1,0.36,1)", transform: hovered ? "translateY(-4px)" : "translateY(0)",
         cursor: "default", opacity: ready ? 1 : 0,
         animation: ready ? `fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) ${delay}ms both` : "none",
         position: "relative", overflow: "hidden",
       }}>
-      {/* Accent top bar — hidden for revenue card */}
       {!isRevenue && (
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: stat.accent, opacity: hovered ? 1 : 0, transition: "opacity 0.3s", borderRadius: "16px 16px 0 0" }} />
       )}
@@ -87,10 +107,10 @@ function StatCard({ stat, delay, ready, isRevenue }) {
         </div>
         <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: `${stat.accent}15`, color: stat.accent, letterSpacing: "0.06em" }}>{stat.badge}</span>
       </div>
-      <p style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600, marginBottom: 4 }}>{stat.label}</p>
-      <p style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", lineHeight: 1 }}>{stat.value}</p>
+      <p style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, marginBottom: 4 }}>{stat.label}</p>
+      <p style={{ fontSize: 24, fontWeight: 900, color: C.text, letterSpacing: "-0.04em", lineHeight: 1 }}>{stat.value}</p>
       {stat.sub && (
-        <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+        <p style={{ fontSize: 10, color: C.textMuted, marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
           <MS name="image_search" size={12} /> {stat.sub}
         </p>
       )}
@@ -98,35 +118,35 @@ function StatCard({ stat, delay, ready, isRevenue }) {
   );
 }
 
-/* ── Mobile Inquiry Card (replaces table row on small screens) ── */
+/* ── Mobile Inquiry Card ── */
 function InquiryCard({ row, index, ready }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{ background: hovered ? "#fafbff" : "white", borderRadius: 14, border: "1px solid #f1f5f9", padding: "16px", marginBottom: 12, transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)", boxShadow: hovered ? "0 6px 24px rgba(0,0,0,0.07)" : "0 1px 6px rgba(0,0,0,0.04)", transform: hovered ? "translateY(-2px)" : "none", opacity: ready ? 1 : 0, animation: ready ? `cardSlideUp 0.5s cubic-bezier(0.22,1,0.36,1) ${index * 80 + 100}ms both` : "none" }}>
+      style={{ background: hovered ? "#fffaf5" : "white", borderRadius: 14, border: `1px solid ${C.borderLight}`, padding: "16px", marginBottom: 12, transition: "all 0.25s cubic-bezier(0.22,1,0.36,1)", boxShadow: hovered ? `0 6px 24px rgba(200,75,17,0.07)` : `0 1px 6px rgba(0,0,0,0.04)`, transform: hovered ? "translateY(-2px)" : "none", opacity: ready ? 1 : 0, animation: ready ? `cardSlideUp 0.5s cubic-bezier(0.22,1,0.36,1) ${index * 80 + 100}ms both` : "none" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <div style={{ width: 52, height: 52, borderRadius: 12, backgroundImage: `url('${row.img}')`, backgroundSize: "cover", backgroundPosition: "center", border: "1px solid #f1f5f9", flexShrink: 0, transition: "transform 0.3s", transform: hovered ? "scale(1.06)" : "scale(1)" }} />
+        <div style={{ width: 52, height: 52, borderRadius: 12, backgroundImage: `url('${row.img}')`, backgroundSize: "cover", backgroundPosition: "center", border: `1px solid ${C.borderLight}`, flexShrink: 0, transition: "transform 0.3s", transform: hovered ? "scale(1.06)" : "scale(1)" }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.bag}</p>
-          <p style={{ fontSize: 11, color: "#94a3b8" }}>SKU: {row.sku}</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.bag}</p>
+          <p style={{ fontSize: 11, color: C.textMuted }}>SKU: {row.sku}</p>
         </div>
         <SourceBadge source={row.source} />
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#334155" }}>{row.buyer}</p>
-          <p style={{ fontSize: 11, color: "#94a3b8" }}>{row.time}</p>
+          <p style={{ fontSize: 12, fontWeight: 700, color: C.textMid }}>{row.buyer}</p>
+          <p style={{ fontSize: 11, color: C.textMuted }}>{row.time}</p>
         </div>
         {row.replied ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#f1f5f9", color: "#64748b", fontSize: 12, fontWeight: 700 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.surfaceDim, color: C.textMuted, fontSize: 12, fontWeight: 700 }}>
             <MS name="check_circle" size={16} /> Replied
           </span>
         ) : (
           <a href={`https://wa.me/2348147061837?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#3b82f6", color: "white", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(59,130,246,0.3)" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#3b82f6"; e.currentTarget.style.transform = "none"; }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.primary, color: "white", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s", boxShadow: `0 2px 8px rgba(200,75,17,0.3)` }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = "none"; }}>
             <MS name="chat" size={15} /> Chat on WhatsApp
           </a>
         )}
@@ -140,28 +160,28 @@ function InquiryRow({ row, index, ready }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{ display: "grid", gridTemplateColumns: "2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding: "14px 24px", alignItems: "center", borderBottom: index < inquiries.length - 1 ? "1px solid #f8fafc" : "none", background: hovered ? "#fafbff" : "white", transition: "background 0.18s", opacity: ready ? 1 : 0, animation: ready ? `rowSlide 0.45s cubic-bezier(0.22,1,0.36,1) ${index * 70 + 100}ms both` : "none" }}>
+      style={{ display: "grid", gridTemplateColumns: "2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding: "14px 24px", alignItems: "center", borderBottom: index < inquiries.length - 1 ? `1px solid ${C.borderLight}` : "none", background: hovered ? "#fffaf5" : "white", transition: "background 0.18s", opacity: ready ? 1 : 0, animation: ready ? `rowSlide 0.45s cubic-bezier(0.22,1,0.36,1) ${index * 70 + 100}ms both` : "none" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 46, height: 46, borderRadius: 10, backgroundImage: `url('${row.img}')`, backgroundSize: "cover", backgroundPosition: "center", border: "1px solid #f1f5f9", flexShrink: 0, transition: "transform 0.3s", transform: hovered ? "scale(1.06)" : "scale(1)" }} />
+        <div style={{ width: 46, height: 46, borderRadius: 10, backgroundImage: `url('${row.img}')`, backgroundSize: "cover", backgroundPosition: "center", border: `1px solid ${C.borderLight}`, flexShrink: 0, transition: "transform 0.3s", transform: hovered ? "scale(1.06)" : "scale(1)" }} />
         <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{row.bag}</p>
-          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>SKU: {row.sku}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{row.bag}</p>
+          <p style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>SKU: {row.sku}</p>
         </div>
       </div>
-      <p style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>{row.buyer}</p>
+      <p style={{ fontSize: 13, fontWeight: 600, color: C.textMid }}>{row.buyer}</p>
       <div><SourceBadge source={row.source} /></div>
-      <p style={{ fontSize: 12, color: "#94a3b8" }}>{row.time}</p>
+      <p style={{ fontSize: 12, color: C.textMuted }}>{row.time}</p>
       <div style={{ textAlign: "right" }}>
         {row.replied ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#f1f5f9", color: "#64748b", fontSize: 12, fontWeight: 700 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.surfaceDim, color: C.textMuted, fontSize: 12, fontWeight: 700 }}>
             <MS name="check_circle" size={16} /> Replied
           </span>
         ) : (
           <a href={`https://wa.me/2348147061837?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "#3b82f6", color: "white", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(59,130,246,0.3)" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 5px 16px rgba(59,130,246,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#3b82f6"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,130,246,0.3)"; }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: C.primary, color: "white", fontSize: 12, fontWeight: 700, textDecoration: "none", transition: "all 0.2s", boxShadow: `0 2px 8px rgba(200,75,17,0.3)` }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 5px 16px rgba(200,75,17,0.4)`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 2px 8px rgba(200,75,17,0.3)`; }}>
             <MS name="chat" size={15} /> Chat on WhatsApp
           </a>
         )}
@@ -175,14 +195,14 @@ function AnimatedHeading({ text, sub, ready, delay = 0 }) {
   const [chars] = useState(text.split(''));
   return (
     <div style={{ opacity: ready ? 1 : 0, transition: `opacity 0.3s ease ${delay}ms` }}>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: 4, display: 'flex', flexWrap: 'wrap', gap: 0 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: "-0.02em", marginBottom: 4, display: 'flex', flexWrap: 'wrap', gap: 0 }}>
         {chars.map((char, i) => (
           <span key={i} style={{ display: 'inline-block', opacity: ready ? 1 : 0, transform: ready ? 'translateY(0)' : 'translateY(12px)', transition: `opacity 0.4s ease ${delay + i * 28}ms, transform 0.4s cubic-bezier(0.22,1,0.36,1) ${delay + i * 28}ms` }}>
             {char === ' ' ? '\u00a0' : char}
           </span>
         ))}
       </h3>
-      {sub && <p style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500, opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(8px)', transition: `all 0.4s ease ${delay + chars.length * 28 + 60}ms` }}>{sub}</p>}
+      {sub && <p style={{ fontSize: 12, color: C.textMuted, fontWeight: 500, opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(8px)', transition: `all 0.4s ease ${delay + chars.length * 28 + 60}ms` }}>{sub}</p>}
     </div>
   );
 }
@@ -234,20 +254,20 @@ export default function SellerProfile() {
   }, [user]);
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#f8fafc" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: `linear-gradient(180deg, ${C.primaryPale} 0%, ${C.surfaceDim} 25%, white 100%)` }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid #e2e8f0", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 12px" }} />
-        <p style={{ color: "#64748b", fontSize: 14, fontWeight: 500 }}>Loading dashboard…</p>
+        <div style={{ width: 36, height: 36, border: `3px solid ${C.borderLight}`, borderTopColor: C.primary, borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 12px" }} />
+        <p style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>Loading dashboard…</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
   );
 
   if (error) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#f8fafc" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: `linear-gradient(180deg, ${C.primaryPale} 0%, ${C.surfaceDim} 25%, white 100%)` }}>
       <div style={{ textAlign: "center", maxWidth: 360, padding: 32 }}>
-        <p style={{ color: "#ef4444", fontWeight: 700, marginBottom: 16 }}>Error: {error}</p>
-        <button onClick={() => navigate('/products')} style={{ padding: "10px 22px", background: "#3b82f6", color: "white", border: "none", borderRadius: 9, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'Manrope', sans-serif" }}>Back to Products</button>
+        <p style={{ color: C.danger, fontWeight: 700, marginBottom: 16 }}>Error: {error}</p>
+        <button onClick={() => navigate('/products')} style={{ padding: "10px 22px", background: C.primary, color: "white", border: "none", borderRadius: 9, cursor: "pointer", fontSize: 13, fontWeight: 700, fontFamily: "'Manrope', sans-serif" }}>Back to Products</button>
       </div>
     </div>
   );
@@ -255,7 +275,7 @@ export default function SellerProfile() {
   const initials = seller?.name ? seller.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'S';
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f1f5f9", fontFamily: "'Manrope', sans-serif", overflow: "hidden" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: `linear-gradient(180deg, ${C.primaryPale} 0%, ${C.surfaceDim} 25%, white 100%)`, fontFamily: "'Manrope', sans-serif", overflow: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
@@ -264,7 +284,7 @@ export default function SellerProfile() {
         @keyframes slideRight  { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
         @keyframes slideDown   { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeUp      { from{opacity:0;transform:translateY(22px)}  to{opacity:1;transform:translateY(0)} }
-        @keyframes scaleIn     { from{opacity:0;transform:scale(0.95)}       to{opacity:1;transform:scale(1)}     }
+        @keyframes scaleIn     { from{opacity:scale(0.0;transform:95)}       to{opacity:1;transform:scale(1)}     }
         @keyframes rowSlide    { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
         @keyframes cardSlideUp { from{opacity:0;transform:translateY(20px)}  to{opacity:1;transform:translateY(0)} }
         @keyframes pulse       { 0%,100%{opacity:1} 50%{opacity:0.5} }
@@ -276,9 +296,8 @@ export default function SellerProfile() {
 
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: ${C.border}; borderRadius: 3px; }
 
-        /* ── Responsive ── */
         .sidebar-desktop { display: flex !important; }
         .sidebar-mobile-overlay { display: none !important; }
         .main-content { margin-left: 240px !important; }
@@ -302,12 +321,12 @@ export default function SellerProfile() {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
           .page-padding { padding: 20px 16px 64px !important; }
           .header-inner { padding: 0 16px !important; }
-          .page-title { font-size: 1.6rem !important; }
+          .page-title { fontSize: 1.6rem !important; }
         }
       `}</style>
 
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="sidebar-desktop" style={{ width: 240, background: "#0f172a", borderRight: "1px solid rgba(255,255,255,0.06)", position: "fixed", height: "100%", flexDirection: "column", zIndex: 20, opacity: sidebarIn ? 1 : 0, transform: sidebarIn ? "translateX(0)" : "translateX(-100%)", transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
+      <aside className="sidebar-desktop" style={{ width: 240, background: C.text, borderRight: "1px solid rgba(255,255,255,0.06)", position: "fixed", height: "100%", flexDirection: "column", zIndex: 20, opacity: sidebarIn ? 1 : 0, transform: sidebarIn ? "translateX(0)" : "translateX(-100%)", transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
         <SidebarContents initials={initials} seller={seller} sidebarIn={sidebarIn} navigate={navigate} />
       </aside>
 
@@ -316,8 +335,8 @@ export default function SellerProfile() {
         {mobileSidebarOpen && (
           <div onClick={() => setMobileSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 40, animation: "overlayFade 0.25s ease both" }} />
         )}
-        <aside style={{ width: 260, background: "#0f172a", position: "fixed", top: 0, left: 0, height: "100%", display: "flex", flexDirection: "column", zIndex: 50, transform: mobileSidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1)", boxShadow: "8px 0 32px rgba(0,0,0,0.3)" }}>
-          <button onClick={() => setMobileSidebarOpen(false)} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.08)", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, zIndex: 1 }}>✕</button>
+        <aside style={{ width: 260, background: C.text, position: "fixed", top: 0, left: 0, height: "100%", display: "flex", flexDirection: "column", zIndex: 50, transform: mobileSidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.32s cubic-bezier(0.4,0,0.2,1)", boxShadow: "8px 0 32px rgba(0,0,0,0.3)" }}>
+          <button onClick={() => setMobileSidebarOpen(false)} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.08)", color: C.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, zIndex: 1 }}>✕</button>
           <SidebarContents initials={initials} seller={seller} sidebarIn={mobileSidebarOpen} navigate={navigate} onNav={() => setMobileSidebarOpen(false)} />
         </aside>
       </div>
@@ -326,44 +345,41 @@ export default function SellerProfile() {
       <main className="main-content" style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
         {/* Top bar */}
-        <header style={{ height: 64, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10, opacity: headerIn ? 1 : 0, transform: headerIn ? "translateY(0)" : "translateY(-100%)", transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)", boxShadow: "0 1px 0 rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.04)" }}>
+        <header style={{ height: 64, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${C.borderLight}`, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10, opacity: headerIn ? 1 : 0, transform: headerIn ? "translateY(0)" : "translateY(-100%)", transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)", boxShadow: `0 1px 0 ${C.borderLight}, 0 4px 20px rgba(200,75,17,0.04)` }}>
           <div className="header-inner" style={{ width: "100%", maxWidth: "100%", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
-              {/* Hamburger (mobile) */}
               <button className="hamburger-btn" onClick={() => setMobileSidebarOpen(true)}
-                style={{ padding: 8, borderRadius: 10, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0 }}>
+                style={{ padding: 8, borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: "pointer", alignItems: "center", justifyContent: "center", color: C.textMuted, flexShrink: 0 }}>
                 <svg style={{ width: 20, height: 20 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
               </button>
-              {/* Back */}
               <button onClick={() => navigate('/products')} title="Back to Products"
-                style={{ padding: 8, borderRadius: 10, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", transition: "all 0.2s", flexShrink: 0 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#eff6ff"; e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.color = "#3b82f6"; e.currentTarget.style.transform = "translateX(-2px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; e.currentTarget.style.transform = "none"; }}>
+                style={{ padding: 8, borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: C.textMuted, transition: "all 0.2s", flexShrink: 0 }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; e.currentTarget.style.transform = "translateX(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; e.currentTarget.style.transform = "none"; }}>
                 <MS name="arrow_back" size={20} />
               </button>
-              {/* Search (hidden on mobile) */}
               <div className="header-search" style={{ position: "relative", flex: 1, maxWidth: 480 }}>
-                <MS name="search" size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <MS name="search" size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted }} />
                 <input type="text" placeholder="Search orders, inquiries, or products..."
-                  style={{ width: "100%", paddingLeft: 38, paddingRight: 14, paddingTop: 9, paddingBottom: 9, background: "#f1f5f9", border: "1.5px solid transparent", borderRadius: 10, fontSize: 13, color: "#0f172a", outline: "none", fontFamily: "inherit", transition: "all 0.2s" }}
-                  onFocus={e => { e.target.style.borderColor = "#bfdbfe"; e.target.style.background = "white"; e.target.style.boxShadow = "0 0 0 3px rgba(59,130,246,0.1)"; }}
-                  onBlur={e => { e.target.style.borderColor = "transparent"; e.target.style.background = "#f1f5f9"; e.target.style.boxShadow = "none"; }} />
+                  style={{ width: "100%", paddingLeft: 38, paddingRight: 14, paddingTop: 9, paddingBottom: 9, background: C.surfaceDim, border: "1.5px solid transparent", borderRadius: 10, fontSize: 13, color: C.text, outline: "none", fontFamily: "inherit", transition: "all 0.2s" }}
+                  onFocus={e => { e.target.style.borderColor = C.primaryBorder; e.target.style.background = "white"; e.target.style.boxShadow = `0 0 0 3px ${C.primaryBg}`; }}
+                  onBlur={e => { e.target.style.borderColor = "transparent"; e.target.style.background = C.surfaceDim; e.target.style.boxShadow = "none"; }} />
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <button style={{ position: "relative", padding: 8, borderRadius: 10, border: "none", background: "transparent", cursor: "pointer", color: "#64748b", transition: "all 0.2s" }}
-                onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+              <button style={{ position: "relative", padding: 8, borderRadius: 10, border: "none", background: "transparent", cursor: "pointer", color: C.textMuted, transition: "all 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.background = C.surfaceDim}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                 <MS name="notifications" size={22} />
-                <span style={{ position: "absolute", top: 7, right: 7, width: 8, height: 8, background: "#ef4444", borderRadius: "50%", border: "2px solid white", animation: "pulse 2s ease-in-out infinite" }} />
+                <span style={{ position: "absolute", top: 7, right: 7, width: 8, height: 8, background: C.danger, borderRadius: "50%", border: "2px solid white", animation: "pulse 2s ease-in-out infinite" }} />
               </button>
-              <div style={{ width: 1, height: 28, background: "#e2e8f0", margin: "0 2px" }} />
+              <div style={{ width: 1, height: 28, background: C.border, margin: "0 2px" }} />
               <button onClick={() => navigate('/upload-product')}
-                style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 10, border: "none", background: "#3b82f6", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit", boxShadow: "0 2px 8px rgba(59,130,246,0.3)", whiteSpace: "nowrap" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(59,130,246,0.4)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#3b82f6"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,130,246,0.3)"; }}>
+                style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 10, border: "none", background: C.primary, color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit", boxShadow: `0 2px 8px rgba(200,75,17,0.3)`, whiteSpace: "nowrap" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 6px 18px rgba(200,75,17,0.4)`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 2px 8px rgba(200,75,17,0.3)`; }}>
                 <MS name="add" size={17} /> <span className="stats-label">New Listing</span>
               </button>
             </div>
@@ -373,12 +389,12 @@ export default function SellerProfile() {
         {/* Content */}
         <div className="page-padding" style={{ padding: "36px 32px 64px", flex: 1 }}>
 
-          {/* ── Page heading: "Seller Profile" ── */}
+          {/* ── Page heading ── */}
           <div style={{ marginBottom: 32, opacity: headingIn ? 1 : 0, transform: headingIn ? "none" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
-            <h2 className="page-title" style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif" }}>
+            <h2 className="page-title" style={{ fontSize: "clamp(1.8rem,3vw,2.4rem)", fontWeight: 900, color: C.text, letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif" }}>
               Seller Profile
             </h2>
-            <p style={{ color: "#94a3b8", fontSize: 14, marginTop: 6, fontWeight: 500 }}>Monitor your performance and handle customer inquiries.</p>
+            <p style={{ color: C.textMuted, fontSize: 14, marginTop: 6, fontWeight: 500 }}>Monitor your performance and handle customer inquiries.</p>
           </div>
 
           {/* Stats Grid */}
@@ -391,40 +407,37 @@ export default function SellerProfile() {
           {/* ── "Buyers that Viewed Product" Section ── */}
           <div style={{ opacity: tableIn ? 1 : 0, transform: tableIn ? "none" : "translateY(24px)", transition: "opacity 0.55s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
 
-            {/* Animated section heading */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-              {/* Animated eye icon + char-by-char title */}
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                {/* Pulsing eye animation */}
                 <div style={{ position: "relative", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <div style={{ position: "absolute", width: 36, height: 36, borderRadius: "50%", background: "rgba(59,130,246,0.12)", animation: tableIn ? "eyePing 2s ease-out 0.8s infinite" : "none" }} />
-                  <div style={{ position: "absolute", width: 36, height: 36, borderRadius: "50%", background: "rgba(59,130,246,0.08)", animation: tableIn ? "eyePing 2s ease-out 1.5s infinite" : "none" }} />
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #eff6ff, #dbeafe)", display: "flex", alignItems: "center", justifyContent: "center", animation: tableIn ? "eyeBounce 2.4s ease-in-out infinite" : "none", position: "relative", zIndex: 1 }}>
-                    <MS name="visibility" size={17} style={{ color: "#3b82f6" }} />
+                  <div style={{ position: "absolute", width: 36, height: 36, borderRadius: "50%", background: C.primaryBg, animation: tableIn ? `eyePing 2s ease-out 0.8s infinite` : "none" }} />
+                  <div style={{ position: "absolute", width: 36, height: 36, borderRadius: "50%", background: C.primaryBg, animation: tableIn ? `eyePing 2s ease-out 1.5s infinite` : "none" }} />
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.primaryBg, display: "flex", alignItems: "center", justifyContent: "center", animation: tableIn ? `eyeBounce 2.4s ease-in-out infinite` : "none", position: "relative", zIndex: 1 }}>
+                    <MS name="visibility" size={17} style={{ color: C.primary }} />
                   </div>
                 </div>
                 <AnimatedHeading text="Buyers that Viewed Product" sub={`${inquiries.length} recent views`} ready={tableIn} delay={200} />
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>
-                <button style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", border: "1px solid #e2e8f0", borderRadius: 8, background: "white", cursor: "pointer", fontSize: 12, fontWeight: 700, color: "#64748b", fontFamily: "'Manrope', sans-serif", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.color = "#0f172a"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
+                <button style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", border: `1px solid ${C.border}`, borderRadius: 8, background: "white", cursor: "pointer", fontSize: 12, fontWeight: 700, color: C.textMuted, fontFamily: "'Manrope', sans-serif", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
                   <MS name="filter_list" size={15} /> Filter
                 </button>
-                <button style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", border: "1px solid #e2e8f0", borderRadius: 8, background: "white", cursor: "pointer", fontSize: 12, fontWeight: 700, color: "#64748b", fontFamily: "'Manrope', sans-serif", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.color = "#0f172a"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}>
+                <button style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 13px", border: `1px solid ${C.border}`, borderRadius: 8, background: "white", cursor: "pointer", fontSize: 12, fontWeight: 700, color: C.textMuted, fontFamily: "'Manrope', sans-serif", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
                   View All
                 </button>
               </div>
             </div>
 
             {/* Desktop Table */}
-            <div className="inquiry-table" style={{ background: "white", borderRadius: 16, border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.04)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding: "14px 24px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+            <div className="inquiry-table" style={{ background: "white", borderRadius: 16, border: `1px solid ${C.borderLight}`, overflow: "hidden", boxShadow: `0 2px 16px rgba(200,75,17,0.04)` }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding: "14px 24px", background: C.surfaceDim, borderBottom: `1px solid ${C.borderLight}` }}>
                 {['Bag Detail', 'Buyer Name', 'Source', 'Received', 'Action'].map((h, i) => (
-                  <div key={h} style={{ fontSize: 10, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: i === 4 ? "right" : "left" }}>{h}</div>
+                  <div key={h} style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.1em", textAlign: i === 4 ? "right" : "left" }}>{h}</div>
                 ))}
               </div>
               {inquiries.map((row, i) => <InquiryRow key={row.id} row={row} index={i} ready={tableIn} />)}
@@ -437,14 +450,14 @@ export default function SellerProfile() {
           </div>
 
           {/* WhatsApp banner */}
-          <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", background: "white", border: "1px solid #e2e8f0", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.04)", opacity: bannerIn ? 1 : 0, transform: bannerIn ? "none" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)", flexWrap: "wrap" }}>
+          <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 16, padding: "18px 24px", background: "white", border: `1px solid ${C.borderLight}`, borderRadius: 16, boxShadow: `0 2px 12px rgba(200,75,17,0.04)`, opacity: bannerIn ? 1 : 0, transform: bannerIn ? "none" : "translateY(16px)", transition: "opacity 0.5s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)", flexWrap: "wrap" }}>
             <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
               <WhatsAppIcon size={22} />
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#15803d", marginBottom: 3 }}>WhatsApp Business API Active</div>
-              <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
-                You are currently receiving direct inquiries from your product pages. Response time is averaged at <strong style={{ color: "#0f172a" }}>14 minutes</strong>.
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#16a34a", marginBottom: 3 }}>WhatsApp Business API Active</div>
+              <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
+                You are currently receiving direct inquiries from your product pages. Response time is averaged at <strong style={{ color: C.text }}>14 minutes</strong>.
               </div>
             </div>
           </div>
@@ -460,12 +473,12 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, onNav }) {
     <>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #3b82f6, #818cf8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MS name="shopping_bag" size={18} style={{ color: "white" }} />
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 900, color: "#f8fafc", letterSpacing: "-0.02em" }}>LuxeBag</div>
-            <div style={{ fontSize: 10, color: "#475569", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin</div>
+            <div style={{ fontSize: 10, color: C.textMuted, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin</div>
           </div>
         </div>
       </div>
@@ -476,23 +489,24 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, onNav }) {
       </nav>
       <div style={{ padding: "16px 14px 20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #818cf8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "white", flexShrink: 0 }}>{initials}</div>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "white", flexShrink: 0 }}>{initials}</div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{seller?.name}</div>
-            <div style={{ fontSize: 9, fontWeight: 800, color: "#3b82f6", letterSpacing: "0.15em", textTransform: "uppercase" }}>Pro Seller</div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: C.primary, letterSpacing: "0.15em", textTransform: "uppercase" }}>Pro Seller</div>
           </div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MS name="mail" size={13} style={{ color: "#475569" }} />
-            <span style={{ fontSize: 11, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{seller?.email}</span>
+            <MS name="mail" size={13} style={{ color: C.textMuted }} />
+            <span style={{ fontSize: 11, color: C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{seller?.email}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MS name="phone" size={13} style={{ color: "#475569" }} />
-            <span style={{ fontSize: 11, color: "#475569" }}>{seller?.phone}</span>
+            <MS name="phone" size={13} style={{ color: C.textMuted }} />
+            <span style={{ fontSize: 11, color: C.textMuted }}>{seller?.phone}</span>
           </div>
         </div>
       </div>
     </>
   );
 }
+

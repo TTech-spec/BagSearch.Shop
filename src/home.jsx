@@ -474,7 +474,7 @@ function NewArrivalsSection({ navigate, sectionRef }) {
             </div>
             <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em", lineHeight: 1, fontFamily: "'Cormorant Garamond', serif" }}>New Arrivals</h2>
           </div>
-          <a href="#" onClick={e => { e.preventDefault(); navigate("/register"); }} style={{ color: "#C94B2C", fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, borderBottom: "1.5px solid #C94B2C", paddingBottom: 3 }}>
+          <a href="#" onClick={e => { e.preventDefault(); navigate("/products"); }} style={{ color: "#C94B2C", fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, borderBottom: "1.5px solid #C94B2C", paddingBottom: 3 }}>
             All Pieces <Icon name="north_east" size={13} />
           </a>
         </div>
@@ -574,6 +574,8 @@ export default function LuxeBag() {
   const handleNavClick = (link) => {
     if (link === "New Arrivals") {
       if (newArrivalsRef.current) newArrivalsRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (link === "Collections") {
+      navigate("/products");
     } else {
       setAuthGateOpen(true);
     }
@@ -599,6 +601,8 @@ export default function LuxeBag() {
         .nav-link:hover{color:#C94B2C!important;}
         .icon-btn:hover{background:#F9DDD0!important;}
         .sidebar-link:hover{background:rgba(201,75,44,0.06)!important;}
+        
+        /* Responsive styles for visual search section */
         @media(max-width:768px){
           .desktop-nav{display:none!important}.mobile-menu-btn{display:flex!important}.desktop-icons{display:none!important}
           .hero-right-circles{display:none!important}
@@ -607,6 +611,65 @@ export default function LuxeBag() {
           .footer-grid{grid-template-columns:1fr 1fr!important}.footer-brand{grid-column:span 2!important}
           .hero-content-wrap{max-width:100%!important;padding:80px 24px 80px!important}
         }
+
+        /* Enhanced mobile styles for visual search CTA */
+        @media (max-width: 640px) {
+          .visual-search-container {
+            min-height: 400px !important;
+            padding: 40px 20px !important;
+          }
+          
+          .visual-search-content {
+            max-width: 100% !important;
+            padding: 32px 20px !important;
+            text-align: center !important;
+          }
+          
+          .visual-search-image {
+            position: absolute !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            opacity: 0.2 !important;
+          }
+          
+          .visual-search-title {
+            font-size: 28px !important;
+            margin-bottom: 12px !important;
+          }
+          
+          .visual-search-description {
+            font-size: 14px !important;
+            margin-bottom: 24px !important;
+          }
+          
+          .visual-search-button {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 16px !important;
+            font-size: 16px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .visual-search-container {
+            padding: 30px 16px !important;
+          }
+          
+          .visual-search-content {
+            padding: 24px 16px !important;
+          }
+          
+          .visual-search-badge {
+            font-size: 10px !important;
+            padding: 6px 12px !important;
+          }
+          
+          .visual-search-title {
+            font-size: 24px !important;
+          }
+        }
+
         .scroll-reveal{opacity:0;transform:translateY(32px);transition:opacity 0.7s ease,transform 0.7s ease;}
         .scroll-reveal.visible{opacity:1;transform:translateY(0);}
         .scroll-reveal-scale{opacity:0;transform:scale(0.93);transition:opacity 0.7s ease,transform 0.7s ease;}
@@ -638,7 +701,7 @@ export default function LuxeBag() {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               {["search", "shopping_bag", "person"].map(ic => (
                 <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }}
-                  onClick={() => ic === "person" ? navigate("/register") : setAuthGateOpen(true)}>
+                  onClick={() => ic === "person" ? navigate("/register") : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}>
                   <Icon name={ic} />
                 </button>
               ))}
@@ -675,22 +738,116 @@ export default function LuxeBag() {
             </div>
           </section>
 
-          {/* VISUAL SEARCH CTA */}
+          {/* VISUAL SEARCH CTA - FULLY RESPONSIVE */}
           <section style={{ padding: "80px 24px", maxWidth: 1280, margin: "0 auto" }}>
-            <div className="scroll-reveal-scale" style={{ background: "#C94B2C", borderRadius: 20, overflow: "hidden", position: "relative", minHeight: 340, display: "flex", alignItems: "center" }}>
-              <div style={{ position: "absolute", right: 0, top: 0, width: "48%", height: "100%" }}>
-                <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" alt="Visual Search" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }} />
+            <div className="scroll-reveal-scale visual-search-container" style={{ 
+              background: "#C94B2C", 
+              borderRadius: 20, 
+              overflow: "hidden", 
+              position: "relative", 
+              minHeight: 340, 
+              display: "flex", 
+              alignItems: "center" 
+            }}>
+              <div className="visual-search-image" style={{ 
+                position: "absolute", 
+                right: 0, 
+                top: 0, 
+                width: "48%", 
+                height: "100%" 
+              }}>
+                <img 
+                  src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" 
+                  alt="Visual Search" 
+                  style={{ 
+                    width: "100%", 
+                    height: "100%", 
+                    objectFit: "cover", 
+                    opacity: 0.85 
+                  }} 
+                />
+                {/* Gradient overlay for better text readability on mobile */}
+                <div style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(90deg, rgba(201,75,44,0.8) 0%, rgba(201,75,44,0.4) 50%, transparent 80%)",
+                  pointerEvents: "none"
+                }} />
               </div>
+              
               {/* Peach circles decorative */}
               <div style={{ position: "absolute", right: "48%", top: "-40px", width: 200, height: 200, borderRadius: "50%", background: "rgba(249,221,208,0.1)", pointerEvents: "none" }} />
               <div style={{ position: "absolute", right: "38%", bottom: "-60px", width: 280, height: 280, borderRadius: "50%", background: "rgba(249,221,208,0.07)", pointerEvents: "none" }} />
-              <div className="scroll-reveal-left" style={{ padding: "52px 52px", position: "relative", zIndex: 1, color: "white", maxWidth: "52%" }}>
-                <div style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", borderRadius: 9999, padding: "4px 14px", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 20 }}>AI Powered</div>
-                <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 900, marginBottom: 16, lineHeight: 1.2, letterSpacing: "-0.04em", fontFamily: "'Cormorant Garamond', serif" }}>Find it. Instantly.</h2>
-                <p style={{ fontSize: 14, color: "rgba(255,245,242,0.85)", marginBottom: 32, lineHeight: 1.65 }}>Upload any photo. Our AI matches it to the closest luxury pieces in seconds.</p>
-                <button onClick={() => navigate("/register?force=true")} style={{ padding: "13px 26px", background: "white", color: "#C94B2C", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 14, boxShadow: "0 8px 24px rgba(0,0,0,0.2)", transition: "all 0.3s" }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.25)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}>
+              
+              <div className="scroll-reveal-left visual-search-content" style={{ 
+                padding: "52px 52px", 
+                position: "relative", 
+                zIndex: 2, 
+                color: "white", 
+                maxWidth: "52%",
+                width: "100%"
+              }}>
+                <div className="visual-search-badge" style={{ 
+                  display: "inline-block", 
+                  background: "rgba(255,255,255,0.15)", 
+                  borderRadius: 9999, 
+                  padding: "4px 14px", 
+                  fontSize: 9, 
+                  fontWeight: 800, 
+                  letterSpacing: "0.2em", 
+                  textTransform: "uppercase", 
+                  marginBottom: 20 
+                }}>
+                  AI POWERED
+                </div>
+                
+                <h2 className="visual-search-title" style={{ 
+                  fontSize: "clamp(1.6rem,2.8vw,2.2rem)", 
+                  fontWeight: 900, 
+                  marginBottom: 16, 
+                  lineHeight: 1.2, 
+                  letterSpacing: "-0.04em", 
+                  fontFamily: "'Cormorant Garamond', serif" 
+                }}>
+                  Find it. Instantly.
+                </h2>
+                
+                <p className="visual-search-description" style={{ 
+                  fontSize: 14, 
+                  color: "rgba(255,245,242,0.95)", 
+                  marginBottom: 32, 
+                  lineHeight: 1.65,
+                  maxWidth: 320
+                }}>
+                  Upload any photo. Our AI matches it to the closest luxury pieces in seconds.
+                </p>
+                
+                <button 
+                  onClick={() => navigate("/register?force=true")} 
+                  className="visual-search-button"
+                  style={{ 
+                    padding: "13px 26px", 
+                    background: "white", 
+                    color: "#C94B2C", 
+                    fontWeight: 900, 
+                    borderRadius: 50, 
+                    border: "none", 
+                    cursor: "pointer", 
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    gap: 8, 
+                    fontSize: 14, 
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.2)", 
+                    transition: "all 0.3s"
+                  }}
+                  onMouseEnter={e => { 
+                    e.currentTarget.style.transform = "translateY(-2px)"; 
+                    e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.25)"; 
+                  }}
+                  onMouseLeave={e => { 
+                    e.currentTarget.style.transform = "none"; 
+                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; 
+                  }}>
                   <Icon name="add_a_photo" size={18} /> Launch AI Search
                 </button>
               </div>
@@ -780,8 +937,13 @@ export default function LuxeBag() {
             {NAV_LINKS.map((link, i) => (
               <a key={link} onClick={() => {
                 setSidebarOpen(false);
-                if (link === "New Arrivals") setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350);
-                else setTimeout(() => setAuthGateOpen(true), 150);
+                if (link === "New Arrivals") {
+                  setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350);
+                } else if (link === "Collections") {
+                  setTimeout(() => navigate("/products"), 150);
+                } else {
+                  setTimeout(() => setAuthGateOpen(true), 150);
+                }
               }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 700, fontSize: 14, textDecoration: "none", color: link === "Visual Search" ? "#C94B2C" : "#1A0A00", background: link === "Visual Search" ? "#FFF5F2" : "transparent", cursor: "pointer", transition: "background 0.2s", letterSpacing: "-0.01em" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : "new_releases"} size={17} />
