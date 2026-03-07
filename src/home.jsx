@@ -701,7 +701,7 @@ export default function LuxeBag() {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               {["search", "shopping_bag", "person"].map(ic => (
                 <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }}
-                  onClick={() => ic === "person" ? navigate("/register") : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}>
+                  onClick={() => ic === "person" ? navigate("/login") : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}>
                   <Icon name={ic} />
                 </button>
               ))}

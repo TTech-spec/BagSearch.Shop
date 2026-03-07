@@ -1,35 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const LogoIcon = () => (
-  <svg width="28" height="28" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
-  </svg>
-);
+// ─── Criibb-inspired Color Palette ───────────────────────────────────────────
+const C = {
+  primary:      '#c84b11',
+  primaryLight: '#f97316',
+  primaryBg:    '#fde8d8',
+  primaryPale:  '#fdf4ee',
+  primaryBorder:'#f9c4a0',
+  accent:       '#ea580c',
+  success:      '#16a34a',
+  successBg:    '#dcfce7',
+  danger:       '#dc2626',
+  dangerBg:     '#fef2f2',
+  surface:      '#ffffff',
+  surfaceDim:   '#fdf8f5',
+  border:       '#f0d9cc',
+  borderLight:  '#f7ece4',
+  text:         '#1a0a00',
+  textMid:      '#5c3317',
+  textMuted:    '#9a6348',
+  textFaint:    '#c4957a',
+};
 
-const Icon = ({ name, size = 22 }) => (
-  <span style={{
-    fontFamily: "'Material Symbols Outlined'",
-    fontWeight: "normal",
-    fontStyle: "normal",
-    fontSize: size,
-    lineHeight: 1,
-    display: "inline-block",
-    textTransform: "none",
-    letterSpacing: "normal",
-    wordWrap: "normal",
-    whiteSpace: "nowrap",
-    direction: "ltr",
-  }}>{name}</span>
-);
-
-const WaIcon = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-);
-
-// Mock product data — replace with real data from your router/context
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 const product = {
   id: 1,
   name: "The Midnight Satchel",
@@ -40,8 +34,7 @@ const product = {
   sellerVerified: true,
   sellerJoined: "2021",
   sub: "Italian Leather • Midnight Blue",
-  description:
-    "Crafted from premium Italian leather, The Midnight Satchel combines timeless elegance with modern functionality. Its structured silhouette and deep midnight blue tone make it the perfect statement piece for any occasion — from boardrooms to evening soirées.",
+  description: "Crafted from premium Italian leather, The Midnight Satchel combines timeless elegance with modern functionality. Its structured silhouette and deep midnight blue tone make it the perfect statement piece for any occasion — from boardrooms to evening soirées.",
   price: "$2,450",
   originalPrice: "$2,900",
   quantity: 12,
@@ -59,56 +52,90 @@ const product = {
 };
 
 const similarProducts = [
-  {
-    id: 2,
-    name: "Ivory Essential Tote",
-    seller: "Eco Style Hub",
-    price: "$1,800",
-    lowStock: true,
-    colors: ["#f5f0e8", "#e8ddd0", "#d4c5b0"],
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo",
-  },
-  {
-    id: 3,
-    name: "Azure Mini Crossbody",
-    seller: "Trendy Fashion Hub",
-    price: "$1,250",
-    lowStock: false,
-    colors: ["#4a90d9", "#357abd", "#2868a8"],
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk",
-  },
-  {
-    id: 4,
-    name: "Onyx Evening Clutch",
-    seller: "Elite Accessories",
-    price: "$3,100",
-    lowStock: true,
-    colors: ["#1a1a1a", "#333333", "#4d4d4d"],
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E",
-  },
-  {
-    id: 5,
-    name: "Crimson Structured Bag",
-    seller: "Premium Leather Co.",
-    price: "$3,200",
-    lowStock: false,
-    colors: ["#c0392b", "#e74c3c", "#922b21"],
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8",
-  },
+  { id: 2, name: "Ivory Essential Tote", seller: "Eco Style Hub", price: "$1,800", lowStock: true, colors: ["#f5f0e8","#e8ddd0","#d4c5b0"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo" },
+  { id: 3, name: "Azure Mini Crossbody", seller: "Trendy Fashion Hub", price: "$1,250", lowStock: false, colors: ["#4a90d9","#357abd","#2868a8"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk" },
+  { id: 4, name: "Onyx Evening Clutch", seller: "Elite Accessories", price: "$3,100", lowStock: true, colors: ["#1a1a1a","#333333","#4d4d4d"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E" },
+  { id: 5, name: "Crimson Structured Bag", seller: "Premium Leather Co.", price: "$3,200", lowStock: false, colors: ["#c0392b","#e74c3c","#922b21"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8" },
 ];
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const LogoIcon = () => (
+  <svg width="26" height="26" fill="none" viewBox="0 0 48 48">
+    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd"/>
+  </svg>
+);
+
+const WaIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
 
 function StarRating({ rating }) {
   return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <svg key={s} width="15" height="15" viewBox="0 0 24 24" fill={s <= Math.round(rating) ? "#F59E0B" : "#D1D5DB"}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    <div style={{ display:'flex', alignItems:'center', gap:3 }}>
+      {[1,2,3,4,5].map(s => (
+        <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s <= Math.round(rating) ? C.primaryLight : C.border}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
       ))}
     </div>
   );
 }
 
+// ─── Network Error Loader ─────────────────────────────────────────────────────
+function NetworkLoader({ onRetry }) {
+  return (
+    <div style={{
+      position:'fixed', inset:0, background:'rgba(253,244,238,0.97)',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+      zIndex:100, gap:20,
+    }}>
+      <div style={{ position:'relative', width:64, height:64 }}>
+        <div style={{
+          position:'absolute', inset:0, borderRadius:'50%',
+          border:`3px solid ${C.borderLight}`,
+        }}/>
+        <div style={{
+          position:'absolute', inset:0, borderRadius:'50%',
+          border:`3px solid transparent`,
+          borderTopColor: C.primary,
+          animation:'spin 1s linear infinite',
+        }}/>
+        <div style={{
+          position:'absolute', inset:8,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color: C.primary,
+        }}>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z"/>
+          </svg>
+        </div>
+      </div>
+      <div style={{ textAlign:'center' }}>
+        <p style={{ fontSize:15, fontWeight:800, color:C.text, marginBottom:4 }}>No connection</p>
+        <p style={{ fontSize:12, color:C.textMuted }}>Check your network and try again</p>
+      </div>
+      <button
+        onClick={onRetry}
+        style={{
+          padding:'10px 24px', borderRadius:100, border:'none', cursor:'pointer',
+          background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+          color:'white', fontWeight:800, fontSize:13,
+          boxShadow:`0 4px 14px ${C.primary}44`,
+          transition:'transform 0.2s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+        onMouseLeave={e => e.currentTarget.style.transform='none'}
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ProductDetail() {
   const navigate = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
@@ -117,241 +144,480 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [cartAdded, setCartAdded] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlisted, setWishlisted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [pageLoaded, setPageLoaded] = useState(false);
+  const [imgZoom, setImgZoom] = useState(false);
+
+  // simulate page entry animation
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoaded(true), 80);
+    // detect offline
+    const goOffline = () => setNetworkError(true);
+    const goOnline = () => setNetworkError(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    if (!navigator.onLine) setNetworkError(true);
+    return () => { clearTimeout(t); window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
+  }, []);
 
   const handleAddToCart = () => {
     setCartAdded(true);
-    setCartCount((c) => c + quantity);
-    setTimeout(() => setCartAdded(false), 2000);
+    setCartCount(c => c + quantity);
+    setTimeout(() => setCartAdded(false), 2200);
   };
 
-  const whatsappMsg = encodeURIComponent(
-    `Hi! I'm interested in the *${product.name}* by ${product.brand} listed at ${product.price}. Is it still available?`
-  );
+  const whatsappMsg = encodeURIComponent(`Hi! I'm interested in the *${product.name}* by ${product.brand} listed at ${product.price}. Is it still available?`);
   const whatsappUrl = `https://wa.me/${product.sellerPhone}?text=${whatsappMsg}`;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
-        *, *::before, *::after { box-sizing: border-box; }
-        .thumb-img { transition: transform 0.4s ease; }
-        .thumb-card:hover .thumb-img { transform: scale(1.05); }
-        .product-card { transition: box-shadow 0.25s ease, transform 0.25s ease; }
-        .product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }
-        .card-img { transition: transform 0.5s ease; }
-        .product-card:hover .card-img { transform: scale(1.04); }
+  const discount = Math.round((1 - 2450 / 2900) * 100);
+  const openCartInProducts = () => navigate('/products', { state: { openCart: true } });
 
-        /* ── Sticky bottom CTA bar on mobile only ── */
-        .sticky-bottom-cta {
-          display: none;
+  return (
+    <div style={{
+      minHeight:'100vh',
+      background: `radial-gradient(ellipse 80% 50% at 50% -10%, ${C.primaryBg} 0%, #fff 60%)`,
+      fontFamily:"'Sora', sans-serif",
+      opacity: pageLoaded ? 1 : 0,
+      transform: pageLoaded ? 'none' : 'translateY(12px)',
+      transition: 'opacity 0.5s ease, transform 0.5s ease',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&display=swap');
+        *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @keyframes gradShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(0.97)} }
+        @keyframes floatUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        @keyframes badgePop { 0%{transform:scale(0)} 60%{transform:scale(1.25)} 100%{transform:scale(1)} }
+        @keyframes waveIn { from{clip-path:inset(0 100% 0 0)} to{clip-path:inset(0 0% 0 0)} }
+        @keyframes dotBounce { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
+
+        .fade-in { animation: floatUp 0.55s ease both; }
+        .fade-in-d1 { animation: floatUp 0.55s 0.08s ease both; }
+        .fade-in-d2 { animation: floatUp 0.55s 0.16s ease both; }
+        .fade-in-d3 { animation: floatUp 0.55s 0.24s ease both; }
+        .fade-in-d4 { animation: floatUp 0.55s 0.32s ease both; }
+        .fade-in-d5 { animation: floatUp 0.55s 0.4s ease both; }
+
+        .thumb-btn { transition: transform 0.25s ease, border-color 0.2s; }
+        .thumb-btn:hover { transform: scale(1.04); }
+
+        .size-btn { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+        .size-btn:hover { transform: scale(1.06); }
+
+        .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor:pointer; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(200,75,17,0.13); }
+        .card-hover:hover .card-img-inner { transform: scale(1.05); }
+        .card-img-inner { transition: transform 0.5s ease; }
+
+        .cta-btn { transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .cta-btn:hover { transform: translateY(-2px) scale(1.02); }
+        .cta-btn:active { transform: scale(0.97); }
+
+        .wa-btn { transition: all 0.25s ease; }
+        .wa-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+        .wishlist-btn { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .wishlist-btn:hover { transform: scale(1.18); }
+        .wishlist-btn.active { animation: pulse 0.4s ease; }
+
+        .bar-accent {
+          height:3px;
+          background: linear-gradient(90deg, ${C.primary}, ${C.primaryLight}, ${C.accent}, ${C.primaryLight}, ${C.primary});
+          background-size: 300% auto;
+          animation: gradShift 4s ease-in-out infinite;
         }
-        @media (max-width: 767px) {
-          .sticky-bottom-cta {
-            display: flex;
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            z-index: 40;
-            background: #ffffff;
-            border-top: 1px solid #e5e7eb;
-            padding: 10px 12px;
-            gap: 8px;
-            align-items: center;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
-          }
-          .hide-on-mobile { display: none !important; }
-          .main-content { padding-bottom: 80px; }
+
+        .img-zoom { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); cursor:zoom-in; }
+        .img-zoom:hover { transform: scale(1.04); }
+        .img-zoom.zoomed { transform: scale(1.08); cursor:zoom-out; }
+
+        .badge-new { animation: badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+        .progress-track { background: ${C.borderLight}; border-radius:99px; overflow:hidden; }
+        .progress-fill {
+          height:100%;
+          background: linear-gradient(90deg, ${C.primary}, ${C.primaryLight});
+          border-radius:99px;
+          animation: waveIn 1.2s 0.5s ease both;
         }
-        @media (min-width: 768px) {
-          .sticky-bottom-cta { display: none !important; }
-          .main-content { padding-bottom: 0; }
+
+        /* Sticky bottom bar */
+        .sticky-bar {
+          display:none;
+        }
+        @media (max-width:767px) {
+          .sticky-bar { display:flex; }
+          .desktop-cta { display:none !important; }
+          .main-wrap { padding-bottom: 84px; }
+        }
+        @media (min-width:768px) {
+          .sticky-bar { display:none !important; }
+          .main-wrap { padding-bottom: 0; }
+        }
+
+        /* Responsive grid */
+        .product-grid {
+          display:grid;
+          grid-template-columns:1fr;
+          gap:28px;
+        }
+        @media (min-width:900px) {
+          .product-grid { grid-template-columns:1fr 1fr; gap:48px; }
+        }
+        .similar-grid {
+          display:grid;
+          grid-template-columns:repeat(2,1fr);
+          gap:14px;
+        }
+        .mobile-only {}
+        .desktop-only { display: flex; }
+        @media (min-width:768px) {
+          .similar-grid { grid-template-columns:repeat(4,1fr); gap:20px; }
+          .mobile-only { display: none !important; }
+        }
+        @media (max-width:767px) {
+          .desktop-only { display: none !important; }
         }
       `}</style>
 
-      {/* ════════════ HEADER ════════════ */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14 md:h-16">
+      {/* Network Error Overlay */}
+      {networkError && <NetworkLoader onRetry={() => window.location.reload()} />}
 
-          {/* Hamburger — mobile only */}
+      {/* ═══ HEADER ═══ */}
+      <header style={{
+        position:'sticky', top:0, zIndex:50,
+        background:'rgba(255,255,255,0.92)',
+        backdropFilter:'blur(20px)',
+        borderBottom:`1px solid ${C.borderLight}`,
+        boxShadow:`0 1px 24px rgba(200,75,17,0.06)`,
+      }}>
+        <div className="bar-accent" />
+        <div style={{ maxWidth:1320, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'space-between', height:60 }}>
+
+          {/* Hamburger (mobile) */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
             onClick={() => setIsSidebarOpen(true)}
-            aria-label="Open menu"
+            style={{ padding:8, border:'none', background:'transparent', cursor:'pointer', color:C.textMid, borderRadius:8 }}
+            className="mobile-only"
           >
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
             </svg>
           </button>
 
           {/* Logo */}
-          <div
-            className="flex items-center gap-1.5 sm:gap-2 text-blue-600 cursor-pointer"
-            onClick={() => navigate('/products')}
-          >
+          <div style={{ display:'flex', alignItems:'center', gap:7, color:C.primary, cursor:'pointer', userSelect:'none' }}>
             <LogoIcon />
-            <span className="text-lg sm:text-xl font-bold text-gray-900">Bag.NG</span>
+            <span style={{ fontSize:19, fontWeight:900, color:C.text, letterSpacing:'-0.6px' }}>
+              Bag<span style={{ color:C.primary }}>.NG</span>
+            </span>
           </div>
 
-          {/* Desktop nav buttons */}
-          <div className="hidden lg:flex items-center gap-2">
-            <button className="p-2.5 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 transition text-gray-700">
-              <Icon name="person" size={24} />
+          {/* Desktop nav */}
+          <nav style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {/* Search */}
+            <button className="desktop-only" style={{
+              display:'flex', alignItems:'center', gap:8,
+              padding:'8px 16px', borderRadius:100,
+              border:'none',
+              background:'transparent', cursor:'pointer', color:C.textMuted,
+              fontSize:12, fontWeight:600,
+              transition:'all 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.color=C.primary; }}
+              onMouseLeave={e => { e.currentTarget.style.color=C.textMuted; }}
+            >
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35"/></svg>
+              Search
             </button>
-            <button className="relative p-2.5 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 transition text-gray-700">
-              <Icon name="shopping_cart" size={24} />
+
+            {/* Cart */}
+            <button style={{ position:'relative', padding:10, borderRadius:12, border:`1.5px solid ${C.border}`, background:C.surfaceDim, cursor:'pointer', color:C.textMid, transition:'all 0.2s' }}
+              onClick={openCartInProducts}
+              onMouseEnter={e => { e.currentTarget.style.background=C.primaryBg; e.currentTarget.style.borderColor=C.primaryBorder; }}
+              onMouseLeave={e => { e.currentTarget.style.background=C.surfaceDim; e.currentTarget.style.borderColor=C.border; }}
+            >
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="badge-new" style={{ position:'absolute', top:-5, right:-5, minWidth:18, height:18, padding:'0 4px', background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, color:'white', fontSize:9, fontWeight:900, borderRadius:99, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid white' }}>
                   {cartCount}
                 </span>
               )}
             </button>
-            <button
-              onClick={() => navigate('/products')}
-              className="px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 transition text-gray-700 font-semibold text-sm"
-            >
-              ← Back to Shop
-            </button>
-          </div>
 
-          {/* Mobile cart icon */}
-          <div className="lg:hidden relative">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-700">
-              <Icon name="shopping_cart" size={22} />
+            {/* Back to shop */}
+            <button style={{
+              display:'flex', alignItems:'center', gap:6,
+              padding:'8px 16px', borderRadius:100,
+              border:`1.5px solid ${C.primaryBorder}`,
+              background:C.primaryBg, cursor:'pointer',
+              color:C.primary, fontSize:12, fontWeight:700,
+              transition:'all 0.2s',
+            }}
+              onClick={() => navigate('/products')}
+              onMouseEnter={e => { e.currentTarget.style.background=C.primary; e.currentTarget.style.color='white'; }}
+              onMouseLeave={e => { e.currentTarget.style.background=C.primaryBg; e.currentTarget.style.color=C.primary; }}
+            >
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+              Back to Shop
             </button>
-            {cartCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center pointer-events-none">
-                {cartCount}
-              </span>
-            )}
-          </div>
+          </nav>
         </div>
       </header>
 
-      {/* ════════════ MOBILE SIDEBAR OVERLAY ════════════ */}
+      {/* ═══ MOBILE SIDEBAR ═══ */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+        <div className="mobile-only" style={{ position:'fixed', inset:0, background:'rgba(26,10,0,0.4)', zIndex:60 }} onClick={() => setIsSidebarOpen(false)}/>
       )}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-4">
-          <button
-            className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-700 mb-6"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div className="space-y-3">
-            <button className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700">
-              <Icon name="person" size={24} /><span className="font-medium">Profile</span>
-            </button>
-            <button className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-gray-700">
-              <Icon name="shopping_cart" size={24} /><span className="font-medium">Cart {cartCount > 0 && `(${cartCount})`}</span>
-            </button>
-            <hr className="border-gray-200" />
-            <button
-              onClick={() => { navigate('/products'); setIsSidebarOpen(false); }}
-              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-blue-50 transition text-blue-600"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              <span className="font-medium">Back to Shop</span>
-            </button>
-          </div>
+      <div className="mobile-only" style={{
+        position:'fixed', top:0, left:0, height:'100%', width:260,
+        background:'white', zIndex:70,
+        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',
+        boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,
+        padding:'20px 16px',
+        display:'flex', flexDirection:'column', gap:12,
+      }}>
+        <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:8 }}>
+          <button onClick={() => setIsSidebarOpen(false)} style={{ width:32, height:32, borderRadius:8, border:'none', background:C.primaryBg, color:C.primary, cursor:'pointer', fontSize:14, fontWeight:800 }}>✕</button>
         </div>
+        {[{ label:'Profile', icon:'👤', action: () => navigate('/profile') },{ label:`Cart ${cartCount>0?`(${cartCount})`:''}`, icon:'🛒', action: openCartInProducts }].map(({ label, icon, action }) => (
+          <button key={label} onClick={() => { setIsSidebarOpen(false); action?.(); }} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:'none', background:'transparent', cursor:'pointer', color:C.text, fontSize:14, fontWeight:600, textAlign:'left', transition:'all 0.18s' }}
+            onMouseEnter={e => { e.currentTarget.style.background=C.primaryBg; e.currentTarget.style.color=C.primary; }}
+            onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color=C.text; }}>
+            <span>{icon}</span><span>{label}</span>
+          </button>
+        ))}
+        <hr style={{ border:`1px solid ${C.borderLight}` }}/>
+        <button onClick={() => navigate('/products')} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', borderRadius:12, border:'none', background:'transparent', cursor:'pointer', color:C.primary, fontSize:14, fontWeight:700, textAlign:'left' }}>
+          ← Back to Shop
+        </button>
       </div>
 
-      {/* ════════════ PAGE CONTENT ════════════ */}
-      <div className="main-content max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+      {/* ═══ MAIN CONTENT ═══ */}
+      <div className="main-wrap" style={{ maxWidth:1320, margin:'0 auto', padding:'28px 20px 40px' }}>
 
         {/* Breadcrumb */}
-        <nav className="flex items-center flex-wrap gap-1 text-xs sm:text-sm text-gray-500 mb-4 md:mb-6">
-          <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/products')}>Home</span>
-          <span>/</span>
-          <span className="hover:text-blue-600 cursor-pointer">{product.category}</span>
-          <span>/</span>
-          <span className="text-gray-900 font-medium truncate" style={{ maxWidth: '45vw' }}>{product.name}</span>
+        <nav className="fade-in" style={{ display:'flex', alignItems:'center', gap:6, fontSize:11, color:C.textFaint, marginBottom:24, flexWrap:'wrap' }}>
+          <span style={{ cursor:'pointer', transition:'color 0.2s' }} onMouseEnter={e=>e.target.style.color=C.primary} onMouseLeave={e=>e.target.style.color=C.textFaint}>Home</span>
+          <span style={{ color:C.borderLight }}>›</span>
+          <span style={{ cursor:'pointer' }}>{product.category}</span>
+          <span style={{ color:C.borderLight }}>›</span>
+          <span style={{ color:C.textMid, fontWeight:600 }}>{product.name}</span>
         </nav>
 
-        {/* ════ MAIN GRID ════ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 mb-12 md:mb-16">
+        {/* ═══ MAIN GRID ═══ */}
+        <div className="product-grid">
 
-          {/* ── LEFT: Images ── */}
-          <div>
-            {/* Main image */}
-            <div
-              className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 mb-2.5 sm:mb-3"
-              style={{ aspectRatio: '4/3' }}
-            >
+          {/* LEFT: Images */}
+          <div className="fade-in-d1" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+
+            {/* Hero image */}
+            <div style={{
+              position:'relative', borderRadius:24, overflow:'hidden',
+              background:`linear-gradient(135deg, ${C.primaryBg}, ${C.primaryPale})`,
+              border:`1.5px solid ${C.borderLight}`,
+              aspectRatio:'4/3',
+              boxShadow:`0 8px 40px rgba(200,75,17,0.1)`,
+            }}>
               <img
                 src={product.images[activeImg]}
                 alt={product.name}
-                className="w-full h-full object-cover"
-                style={{ transition: 'opacity 0.3s' }}
+                className={`img-zoom${imgZoom?' zoomed':''}`}
+                onClick={() => setImgZoom(z => !z)}
+                style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
               />
-              {product.lowStock && (
-                <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
-                  Low Stock
-                </span>
-              )}
+
+              {/* Gradient overlay bottom */}
+              <div style={{
+                position:'absolute', bottom:0, left:0, right:0, height:'40%',
+                background:'linear-gradient(to top, rgba(26,10,0,0.15), transparent)',
+                pointerEvents:'none',
+              }}/>
+
+              {/* Wishlist */}
+              <button
+                className={`wishlist-btn${wishlisted?' active':''}`}
+                onClick={() => setWishlisted(w=>!w)}
+                style={{
+                  position:'absolute', top:14, right:14,
+                  width:40, height:40, borderRadius:12,
+                  border:'none', cursor:'pointer',
+                  background:'rgba(255,255,255,0.9)',
+                  backdropFilter:'blur(8px)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  boxShadow:'0 2px 10px rgba(0,0,0,0.08)',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlisted?'#dc2626':'none'} stroke={wishlisted?'#dc2626':C.textMid} strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                </svg>
+              </button>
+
+              {/* Image counter */}
+              <div style={{
+                position:'absolute', bottom:12, left:12,
+                background:'rgba(255,255,255,0.88)', backdropFilter:'blur(8px)',
+                borderRadius:99, padding:'4px 12px',
+                fontSize:11, fontWeight:700, color:C.textMid,
+                border:`1px solid ${C.borderLight}`,
+              }}>
+                {activeImg + 1} / {product.images.length}
+              </div>
+
+              {/* Zoom hint */}
+              <div style={{
+                position:'absolute', bottom:12, right:12,
+                background:'rgba(255,255,255,0.7)', backdropFilter:'blur(8px)',
+                borderRadius:99, padding:'4px 10px',
+                fontSize:10, fontWeight:600, color:C.textMuted,
+              }}>
+                {imgZoom ? 'Zoom out' : 'Click to zoom'}
+              </div>
             </div>
+
             {/* Thumbnails */}
-            <div className="flex gap-2 sm:gap-3">
+            <div style={{ display:'flex', gap:10 }}>
               {product.images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
-                  className={`thumb-card flex-1 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${activeImg === i ? 'border-blue-600 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
-                  style={{ aspectRatio: '1' }}
+                  className="thumb-btn"
+                  style={{
+                    flex:1, borderRadius:12, overflow:'hidden', padding:0,
+                    border:`2px solid ${activeImg===i ? C.primary : C.borderLight}`,
+                    background:'transparent', cursor:'pointer',
+                    aspectRatio:'1',
+                    boxShadow: activeImg===i ? `0 0 0 3px ${C.primaryBg}` : 'none',
+                    outline: activeImg===i ? `2px solid ${C.primaryBorder}` : 'none',
+                  }}
                 >
-                  <img src={img} alt="" className="thumb-img w-full h-full object-cover" />
+                  <img src={img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
                 </button>
+              ))}
+            </div>
+
+            {/* Delivery info strip */}
+            <div style={{
+              display:'flex', gap:0, borderRadius:16,
+              border:`1.5px solid ${C.borderLight}`,
+              overflow:'hidden', background:C.surfaceDim,
+            }}>
+              {[
+                { icon:'🚚', label:'Free Delivery', sub:'Orders over $500' },
+                { icon:'🔄', label:'Easy Returns', sub:'30-day policy' },
+                { icon:'🔒', label:'Secure Pay', sub:'256-bit SSL' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  flex:1, padding:'12px 10px', textAlign:'center',
+                  borderLeft: i>0 ? `1px solid ${C.borderLight}` : 'none',
+                }}>
+                  <div style={{ fontSize:18, marginBottom:3 }}>{item.icon}</div>
+                  <p style={{ fontSize:10, fontWeight:800, color:C.textMid }}>{item.label}</p>
+                  <p style={{ fontSize:9, color:C.textFaint }}>{item.sub}</p>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* ── RIGHT: Info ── */}
-          <div className="flex flex-col gap-4 sm:gap-5">
+          {/* RIGHT: Product Info */}
+          <div style={{ display:'flex', flexDirection:'column', gap:22 }}>
 
-            {/* Brand badge + name */}
-            <div>
-              <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full mb-2 tracking-wide uppercase">
-                {product.brand}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-1">{product.name}</h1>
-              <p className="text-gray-500 text-sm">{product.sub}</p>
+            {/* Brand + Name */}
+            <div className="fade-in-d2">
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, flexWrap:'wrap' }}>
+                <span style={{
+                  background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                  color:'white', fontSize:9, fontWeight:800,
+                  letterSpacing:'0.12em', textTransform:'uppercase',
+                  padding:'4px 12px', borderRadius:99,
+                }}>
+                  {product.brand}
+                </span>
+                <span style={{
+                  background:C.successBg, color:C.success,
+                  fontSize:9, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase',
+                  padding:'4px 10px', borderRadius:99,
+                }}>
+                  ✓ Authentic
+                </span>
+                <span style={{
+                  background:C.dangerBg, color:C.danger,
+                  fontSize:9, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase',
+                  padding:'4px 10px', borderRadius:99,
+                }}>
+                  -{discount}% OFF
+                </span>
+              </div>
+              <h1 style={{ fontSize:28, fontWeight:900, color:C.text, lineHeight:1.15, letterSpacing:'-0.5px', marginBottom:6 }}>
+                {product.name}
+              </h1>
+              <p style={{ color:C.textMuted, fontSize:14, fontWeight:500 }}>{product.sub}</p>
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <StarRating rating={product.rating} />
-              <span className="text-sm text-gray-500">{product.rating} ({product.reviews} reviews)</span>
+            {/* Rating + reviews */}
+            <div className="fade-in-d2" style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, background:C.surfaceDim, border:`1.5px solid ${C.borderLight}`, borderRadius:100, padding:'6px 12px' }}>
+                <StarRating rating={product.rating}/>
+                <span style={{ fontSize:12, fontWeight:800, color:C.text }}>{product.rating}</span>
+                <span style={{ fontSize:11, color:C.textFaint }}>({product.reviews})</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.textMuted }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:C.success, boxShadow:`0 0 0 3px ${C.successBg}` }}/>
+                {product.quantity} in stock
+              </div>
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-2.5 flex-wrap">
-              <span className="text-2xl sm:text-3xl font-bold text-blue-600">{product.price}</span>
-              <span className="text-base sm:text-lg text-gray-400 line-through">{product.originalPrice}</span>
-              <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">SALE</span>
+            <div className="fade-in-d2" style={{
+              background:`linear-gradient(135deg, ${C.primaryBg}, ${C.primaryPale})`,
+              borderRadius:16, padding:'16px 20px',
+              border:`1.5px solid ${C.primaryBorder}`,
+              display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8,
+            }}>
+              <div>
+                <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
+                  <span style={{ fontSize:34, fontWeight:900, color:C.primary, letterSpacing:'-1px' }}>{product.price}</span>
+                  <span style={{ fontSize:16, color:C.textFaint, textDecoration:'line-through' }}>{product.originalPrice}</span>
+                </div>
+                <p style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>
+                  You save <strong style={{ color:C.success }}>$450</strong> on this item
+                </p>
+              </div>
+              {/* Stock progress */}
+              <div style={{ minWidth:120 }}>
+                <p style={{ fontSize:10, fontWeight:700, color:C.textFaint, marginBottom:5 }}>STOCK LEVEL</p>
+                <div className="progress-track" style={{ height:6, width:'100%' }}>
+                  <div className="progress-fill" style={{ width:`${(product.quantity/20)*100}%`, height:'100%' }}/>
+                </div>
+                <p style={{ fontSize:9, color:C.textMuted, marginTop:4 }}>🔒 Only {product.quantity} units left</p>
+              </div>
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+            <p className="fade-in-d3" style={{ color:C.textMuted, fontSize:13.5, lineHeight:1.7 }}>{product.description}</p>
 
             {/* Colors */}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Colors</p>
-              <div className="flex gap-2 flex-wrap">
-                {product.colors.map((c) => (
+            <div className="fade-in-d3">
+              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.12em', textTransform:'uppercase', color:C.textFaint, marginBottom:10 }}>Color</p>
+              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                {product.colors.map(c => (
                   <button
                     key={c}
                     onClick={() => setSelectedColor(c)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === c ? 'border-blue-600 scale-110 shadow-md' : 'border-white shadow'}`}
                     style={{
-                      backgroundColor: c,
-                      outline: selectedColor === c ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                      outlineOffset: '2px',
+                      width:34, height:34, borderRadius:'50%', border:'none', cursor:'pointer',
+                      background:c,
+                      boxShadow: selectedColor===c
+                        ? `0 0 0 2px white, 0 0 0 4px ${C.primary}, 0 4px 12px ${c}99`
+                        : `0 0 0 1.5px ${C.border}`,
+                      transform: selectedColor===c ? 'scale(1.15)' : 'scale(1)',
+                      transition:'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
                     }}
                   />
                 ))}
@@ -359,14 +625,27 @@ export default function ProductDetail() {
             </div>
 
             {/* Sizes */}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Size</p>
-              <div className="flex gap-2 flex-wrap">
-                {product.sizes.map((s) => (
+            <div className="fade-in-d3">
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.12em', textTransform:'uppercase', color:C.textFaint }}>Size</p>
+                <button style={{ fontSize:11, color:C.primary, fontWeight:700, background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>Size guide →</button>
+              </div>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                {product.sizes.map(s => (
                   <button
                     key={s}
                     onClick={() => setSelectedSize(s)}
-                    className={`px-3.5 py-2 rounded-lg border text-sm font-semibold transition-all ${selectedSize === s ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'}`}
+                    className="size-btn"
+                    style={{
+                      padding:'8px 16px', borderRadius:10,
+                      border:`1.5px solid ${selectedSize===s ? C.primary : C.border}`,
+                      background: selectedSize===s
+                        ? `linear-gradient(135deg,${C.primary},${C.primaryLight})`
+                        : 'white',
+                      color: selectedSize===s ? 'white' : C.textMid,
+                      fontSize:12, fontWeight:800, cursor:'pointer',
+                      boxShadow: selectedSize===s ? `0 4px 12px ${C.primary}44` : 'none',
+                    }}
                   >
                     {s}
                   </button>
@@ -374,135 +653,180 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Quantity + Add to Cart — hidden on mobile (moved to sticky bar) */}
-            <div className="hide-on-mobile flex items-center gap-3">
-              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-10 h-11 text-gray-600 hover:bg-gray-100 transition text-xl font-medium">−</button>
-                <span className="w-10 text-center text-sm font-bold text-gray-800">{quantity}</span>
-                <button onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))} className="w-10 h-11 text-gray-600 hover:bg-gray-100 transition text-xl font-medium">+</button>
-              </div>
-              <button
-                onClick={handleAddToCart}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${cartAdded ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-              >
-                {cartAdded ? (
-                  <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> Added to Cart!</>
-                ) : (
-                  <><Icon name="shopping_cart" size={18} /> Add to Cart</>
-                )}
-              </button>
-            </div>
+            {/* Qty + Cart + WhatsApp — desktop */}
+            <div className="desktop-cta fade-in-d4" style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                {/* Qty */}
+                <div style={{
+                  display:'flex', alignItems:'center',
+                  border:`1.5px solid ${C.border}`, borderRadius:12,
+                  overflow:'hidden', background:'white',
+                  boxShadow:`0 2px 8px rgba(0,0,0,0.04)`,
+                }}>
+                  <button onClick={() => setQuantity(q => Math.max(1,q-1))} style={{ width:42, height:46, border:'none', background:'transparent', cursor:'pointer', fontSize:20, color:C.textMid, transition:'background 0.2s', fontWeight:700 }}
+                    onMouseEnter={e=>e.currentTarget.style.background=C.primaryBg}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>−</button>
+                  <span style={{ width:44, textAlign:'center', fontSize:15, fontWeight:900, color:C.text }}>{quantity}</span>
+                  <button onClick={() => setQuantity(q => Math.min(product.quantity,q+1))} style={{ width:42, height:46, border:'none', background:'transparent', cursor:'pointer', fontSize:20, color:C.textMid, transition:'background 0.2s', fontWeight:700 }}
+                    onMouseEnter={e=>e.currentTarget.style.background=C.primaryBg}
+                    onMouseLeave={e=>e.currentTarget.style.background='transparent'}>+</button>
+                </div>
 
-            {/* WhatsApp Button — hidden on mobile (moved to sticky bar) */}
-            <div className="hide-on-mobile">
+                {/* Add to cart */}
+                <button
+                  onClick={handleAddToCart}
+                  className="cta-btn"
+                  style={{
+                    flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                    padding:'13px 0', borderRadius:12, border:'none', cursor:'pointer',
+                    background: cartAdded
+                      ? `linear-gradient(135deg,${C.success},#22c55e)`
+                      : `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                    color:'white', fontWeight:800, fontSize:14,
+                    boxShadow: cartAdded
+                      ? `0 6px 20px ${C.success}55`
+                      : `0 6px 20px ${C.primary}44`,
+                    transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+                  }}
+                >
+                  {cartAdded ? (
+                    <><svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added to Cart!</>
+                  ) : (
+                    <><svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>Add to Cart</>
+                  )}
+                </button>
+              </div>
+
+              {/* WhatsApp */}
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm rounded-lg transition-colors"
+                className="wa-btn"
+                style={{
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                  padding:'13px 0', borderRadius:12, textDecoration:'none',
+                  background:`linear-gradient(135deg,#16a34a,#22c55e)`,
+                  color:'white', fontWeight:800, fontSize:14,
+                  boxShadow:`0 6px 20px #16a34a44`,
+                }}
               >
-                <WaIcon size={16} />
+                <WaIcon size={17}/>
                 Chat Seller on WhatsApp
               </a>
-              <p className="text-center text-xs text-gray-400 mt-1">via WhatsApp</p>
             </div>
 
             {/* Seller Card */}
-            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3.5 sm:p-4 flex flex-col gap-3 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Seller Information</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
+            <div className="fade-in-d5" style={{
+              background:'white', borderRadius:20,
+              border:`1.5px solid ${C.borderLight}`,
+              padding:18, display:'flex', flexDirection:'column', gap:14,
+              boxShadow:`0 4px 20px rgba(200,75,17,0.06)`,
+            }}>
+              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.12em', textTransform:'uppercase', color:C.textFaint }}>Seller</p>
+              <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                <div style={{
+                  width:48, height:48, borderRadius:14, flexShrink:0,
+                  background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                  color:'white', display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:22, fontWeight:900,
+                  boxShadow:`0 4px 12px ${C.primary}44`,
+                }}>
                   {product.seller.charAt(0)}
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-gray-900 text-sm">{product.seller}</p>
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                    <p style={{ fontWeight:800, color:C.text, fontSize:15 }}>{product.seller}</p>
                     {product.sellerVerified && (
-                      <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">✓ Verified</span>
+                      <span style={{ background:C.primaryBg, color:C.primary, fontSize:9, fontWeight:800, padding:'3px 8px', borderRadius:99 }}>✓ Verified</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400">Member since {product.sellerJoined}</p>
+                  <p style={{ fontSize:11, color:C.textFaint, marginTop:2 }}>Member since {product.sellerJoined} • ⭐ 4.9 seller rating</p>
                 </div>
               </div>
-              {/* Location row */}
-              <div className="flex items-start gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                <svg className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              <div style={{
+                display:'flex', alignItems:'flex-start', gap:10,
+                background:C.surfaceDim, borderRadius:12, padding:'12px 14px',
+                border:`1px solid ${C.borderLight}`,
+              }}>
+                <svg style={{ width:15, height:15, color:C.primary, marginTop:2, flexShrink:0 }} fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
                 </svg>
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Seller Location</p>
-                  <p className="text-sm font-semibold text-gray-800 mt-0.5 leading-snug">{product.sellerLocation}</p>
+                  <p style={{ fontSize:9, fontWeight:800, letterSpacing:'0.1em', textTransform:'uppercase', color:C.textFaint }}>Location</p>
+                  <p style={{ fontSize:12, fontWeight:600, color:C.textMid, marginTop:2 }}>{product.sellerLocation}</p>
                 </div>
               </div>
             </div>
-
-            {/* Stock note */}
-            <p className="text-xs text-gray-500">
-              🔒 Only <strong className="text-gray-700">{product.quantity} units</strong> left in stock
-            </p>
           </div>
         </div>
 
-        {/* ════ SIMILAR PRODUCTS ════ */}
-        <div>
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 whitespace-nowrap">Similar Products</h2>
-            <div className="flex-1 h-px bg-gray-200" />
-            <button
-              onClick={() => navigate('/products')}
-              className="text-xs sm:text-sm text-blue-600 hover:underline whitespace-nowrap font-medium"
-            >
-              View All →
+        {/* ═══ SIMILAR PRODUCTS ═══ */}
+        <div style={{ marginTop:56 }}>
+          {/* Section header */}
+          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:24 }}>
+            <div style={{ width:4, height:28, borderRadius:99, background:`linear-gradient(180deg,${C.primary},${C.primaryLight})` }}/>
+            <h2 style={{ fontSize:22, fontWeight:900, color:C.text }}>Similar Products</h2>
+            <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${C.borderLight},transparent)` }}/>
+            <button style={{ fontSize:12, color:C.primary, fontWeight:700, background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>
+              View All
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
             </button>
           </div>
 
-          {/*
-            Responsive grid:
-            mobile  < 640px  → 1 col
-            sm      ≥ 640px  → 2 cols
-            lg      ≥ 1024px → 4 cols
-          */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-            {similarProducts.map((p) => (
+          <div className="similar-grid">
+            {similarProducts.map((p, idx) => (
               <div
                 key={p.id}
-                className="product-card bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer"
+                className="card-hover"
+                style={{
+                  background:'white', borderRadius:20, overflow:'hidden',
+                  border:`1.5px solid ${C.borderLight}`,
+                  animation:`floatUp 0.55s ${0.05 + idx * 0.07}s ease both`,
+                }}
               >
-                <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '4/3' }}>
-                  <img
-                    src={p.src}
-                    alt={p.name}
-                    className="card-img w-full h-full object-cover"
-                  />
+                <div style={{ position:'relative', overflow:'hidden', aspectRatio:'4/3', background:C.primaryBg }}>
+                  <img src={p.src} alt={p.name} className="card-img-inner" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
                   {p.lowStock && (
-                    <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
+                    <span style={{ position:'absolute', top:10, left:10, background:C.danger, color:'white', fontSize:9, fontWeight:800, padding:'3px 10px', borderRadius:99, letterSpacing:'0.06em', textTransform:'uppercase', boxShadow:`0 2px 8px ${C.danger}55`, animation:'pulse 2s ease infinite' }}>
                       Low Stock
                     </span>
                   )}
+                  {/* Quick view overlay */}
+                  <div style={{
+                    position:'absolute', inset:0,
+                    background:'rgba(26,10,0,0)', backdropFilter:'blur(0px)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    transition:'all 0.3s ease',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background='rgba(26,10,0,0.18)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background='rgba(26,10,0,0)'; }}
+                  />
                 </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="font-bold text-sm sm:text-base text-gray-900 mb-0.5 truncate">{p.name}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mb-2.5 sm:mb-3 truncate">{p.seller}</p>
-                  <p className="text-xs text-gray-500 mb-1.5">Available Colors:</p>
-                  <div className="flex gap-1.5 mb-3">
-                    {p.colors.map((color, i) => (
-                      <span
-                        key={i}
-                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white shadow"
-                        style={{ backgroundColor: color, outline: '1px solid #e5e7eb' }}
-                      />
+                <div style={{ padding:'14px 14px 16px' }}>
+                  <h3 style={{ fontWeight:800, fontSize:14, color:C.text, marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</h3>
+                  <p style={{ fontSize:11, color:C.textFaint, marginBottom:10, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.seller}</p>
+                  <div style={{ display:'flex', gap:5, marginBottom:12 }}>
+                    {p.colors.map((color,i) => (
+                      <span key={i} style={{ width:16, height:16, borderRadius:'50%', background:color, border:'2px solid white', outline:`1px solid ${C.border}`, display:'inline-block' }}/>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-blue-600 font-bold text-lg sm:text-xl">{p.price}</p>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <p style={{ fontSize:19, fontWeight:900, color:C.primary }}>{p.price}</p>
+                    <button style={{
+                      padding:'7px 14px', background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                      color:'white', fontWeight:800, fontSize:11, border:'none',
+                      borderRadius:8, cursor:'pointer',
+                      boxShadow:`0 3px 10px ${C.primary}44`,
+                      transition:'all 0.2s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 16px ${C.primary}44`; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow=`0 3px 10px ${C.primary}44`; }}
+                    >
+                      View →
+                    </button>
                   </div>
-                  <button
-                    onClick={() => navigate(`/products/${p.id}`)}
-                    className="w-full py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-lg transition-colors"
-                  >
-                    View Product
-                  </button>
                 </div>
               </div>
             ))}
@@ -510,41 +834,43 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* ════════════ STICKY BOTTOM CTA — mobile only ════════════ */}
-      <div className="sticky-bottom-cta">
-        {/* Quantity control */}
-        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white shrink-0">
-          <button
-            onClick={() => setQuantity(q => Math.max(1, q - 1))}
-            className="w-9 h-10 text-gray-600 hover:bg-gray-100 transition text-lg font-medium"
-          >−</button>
-          <span className="w-8 text-center text-sm font-bold text-gray-800">{quantity}</span>
-          <button
-            onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))}
-            className="w-9 h-10 text-gray-600 hover:bg-gray-100 transition text-lg font-medium"
-          >+</button>
+      {/* ═══ STICKY BOTTOM BAR (mobile) ═══ */}
+      <div className="sticky-bar" style={{
+        position:'fixed', bottom:0, left:0, right:0, zIndex:40,
+        background:'rgba(255,255,255,0.97)', backdropFilter:'blur(20px)',
+        borderTop:`1px solid ${C.borderLight}`,
+        padding:'10px 16px', gap:8, alignItems:'center',
+        boxShadow:'0 -6px 24px rgba(0,0,0,0.07)',
+      }}>
+        {/* qty */}
+        <div style={{ display:'flex', alignItems:'center', border:`1.5px solid ${C.border}`, borderRadius:10, overflow:'hidden', background:'white', flexShrink:0 }}>
+          <button onClick={() => setQuantity(q=>Math.max(1,q-1))} style={{ width:36,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>−</button>
+          <span style={{ width:32,textAlign:'center',fontSize:14,fontWeight:900,color:C.text }}>{quantity}</span>
+          <button onClick={() => setQuantity(q=>Math.min(product.quantity,q+1))} style={{ width:36,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>+</button>
         </div>
-
-        {/* Add to Cart */}
-        <button
-          onClick={handleAddToCart}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-semibold text-sm transition-all ${cartAdded ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-        >
-          {cartAdded ? (
-            <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>Added!</>
-          ) : (
-            <><Icon name="shopping_cart" size={16} />Add to Cart</>
-          )}
+        {/* add to cart */}
+        <button onClick={handleAddToCart} style={{
+          flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+          padding:'11px 0',borderRadius:10,border:'none',cursor:'pointer',
+          background: cartAdded ? `linear-gradient(135deg,${C.success},#22c55e)` : `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+          color:'white',fontWeight:800,fontSize:13,
+          boxShadow: cartAdded ? `0 4px 14px ${C.success}55` : `0 4px 14px ${C.primary}44`,
+          transition:'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+          {cartAdded
+            ? <><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
+            : <>🛒 Add</>
+          }
         </button>
-
-        {/* WhatsApp */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm rounded-lg transition-colors shrink-0 whitespace-nowrap"
-        >
-          <WaIcon size={15} /> WhatsApp
+        {/* whatsapp */}
+        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{
+          display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+          padding:'11px 14px',background:`linear-gradient(135deg,#16a34a,#22c55e)`,
+          color:'white',fontWeight:800,fontSize:12,borderRadius:10,
+          textDecoration:'none',flexShrink:0,
+          boxShadow:`0 4px 14px #16a34a44`,
+        }}>
+          <WaIcon size={14}/> Chat
         </a>
       </div>
     </div>

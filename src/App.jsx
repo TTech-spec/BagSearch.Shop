@@ -9,6 +9,7 @@ import Product from './Product.jsx';
 import ProductDetail from './productDetail.jsx';
 import UserProfile from './userProfile.jsx';
 import SellerProfile from './sellerProfile.jsx';
+import Sellerlisting from './Sellerlisting.jsx';
 import CreateProduct from './createProduct.jsx';
 import ForgotPassword from './forgotPassword.jsx';
 import ResetPassword from './resetPassword.jsx';
@@ -157,6 +158,16 @@ function App() {
           element={
             <PrivateRoute>
               <CreateProduct />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Seller Listings - protected behind login */}
+        <Route
+          path="/seller-listing"
+          element={
+            <PrivateRoute>
+              <Sellerlisting />
             </PrivateRoute>
           }
         />

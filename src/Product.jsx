@@ -1,7 +1,8 @@
 import { useState, useRef, useContext, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
+import logoImage from './images/logo.jpg.jpeg';
 
 // ─── Color Palette (warm orange/peach inspired by Criibb) ────────────────────
 const C = {
@@ -139,9 +140,11 @@ const mockVendors = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const LogoIcon = () => (
-  <svg width="26" height="26" fill="none" viewBox="0 0 48 48">
-    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd"/>
-  </svg>
+  <img
+    src={logoImage}
+    alt="Bags.NG logo"
+    style={{ width: 26, height: 26, objectFit: 'contain', display: 'block' }}
+  />
 );
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
@@ -498,7 +501,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Product(){
-  const navigate=useNavigate();const{user,logout}=useContext(AuthContext);
+  const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);
   const[pageLoading,setPageLoading]=useState(true);const handleLoaderDone=useCallback(()=>setPageLoading(false),[]);
   const fileInputRef=useRef(null);
   const[allProducts,setAllProducts]=useState(mockProducts);const[displayedProducts,setDisplayedProducts]=useState(mockProducts);
@@ -534,6 +537,12 @@ export default function Product(){
   }
   navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');
 };
+  useEffect(()=>{
+    if(location.state?.openCart){
+      setCartOpen(true);
+      navigate('/products',{replace:true,state:{}});
+    }
+  },[location.state,navigate]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const getCategoryCount=id=>id==='all'?allProducts.length:allProducts.filter(p=>p.category===id).length;
   const categoriesWithCounts=CATEGORIES.map(c=>({...c,count:getCategoryCount(c.id)}));

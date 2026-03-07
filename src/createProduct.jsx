@@ -30,6 +30,14 @@ const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 const CLOUDINARY_FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER || 'products';
 
+// Check for missing configuration on load
+if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+  console.error('Cloudinary Configuration Error:', {
+    cloudName: CLOUDINARY_CLOUD_NAME ? 'set' : 'missing',
+    uploadPreset: CLOUDINARY_UPLOAD_PRESET ? 'set' : 'missing'
+  });
+}
+
 const MS = ({ name, size = 22, style: s = {} }) => (
   <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", whiteSpace: "nowrap", direction: "ltr", fontVariationSettings: "'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24", ...s }}>
     {name}
@@ -81,7 +89,10 @@ function formatNaira(value) {
 
 async function uploadImageToCloudinary(file, userId) {
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error('Cloudinary is not configured. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+    const missing = [];
+    if (!CLOUDINARY_CLOUD_NAME) missing.push('VITE_CLOUDINARY_CLOUD_NAME');
+    if (!CLOUDINARY_UPLOAD_PRESET) missing.push('VITE_CLOUDINARY_UPLOAD_PRESET');
+    throw new Error(`Cloudinary is not configured. Missing: ${missing.join(', ')}. Please check your .env file and RESTART your dev server.`);
   }
 
   const payload = new FormData();
