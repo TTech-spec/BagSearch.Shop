@@ -459,7 +459,7 @@ const SuccessToast = ({ show, onClose }) => {
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: 12 }}>
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => window.location.href = '/login?force=true'}
             style={{
               flex: 1,
               padding: '16px 24px',
@@ -615,7 +615,7 @@ const Reg = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       login(currentUser || data.user);
       setShowSuccess(true);
-      setTimeout(() => navigate('/login'), 3500);
+      setTimeout(() => navigate('/login?force=true'), 3500);
 
     } catch (error) {
       console.error('Registration Flow Error:', error);
@@ -823,7 +823,7 @@ const Reg = () => {
               </a>
             </div>
             <button 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login?force=true')}
               style={{
                 background: C.primary,
                 color: C.textLight,
@@ -1317,7 +1317,7 @@ const Reg = () => {
                 <p style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>
                   Already have an account?{' '}
                   <span 
-                    onClick={() => navigate('/login')} 
+                    onClick={() => navigate('/login?force=true')} 
                     style={{
                       color: C.primary,
                       fontWeight: 700,

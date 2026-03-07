@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logoImage from './images/logo.jpg';
 
 // ─── Criibb-inspired Color Palette ───────────────────────────────────────────
 const C = {
@@ -60,10 +61,12 @@ const similarProducts = [
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const LogoIcon = () => (
-  <svg width="26" height="26" fill="none" viewBox="0 0 48 48">
-    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd"/>
-  </svg>
+const LogoIcon = ({ size = 26 }) => (
+  <img
+    src={logoImage}
+    alt="Bag.NG logo"
+    style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
+  />
 );
 
 const WaIcon = ({ size = 16 }) => (
@@ -312,7 +315,7 @@ export default function ProductDetail() {
 
           {/* Logo */}
           <div style={{ display:'flex', alignItems:'center', gap:7, color:C.primary, cursor:'pointer', userSelect:'none' }}>
-            <LogoIcon />
+            <LogoIcon size="clamp(34px, 5vw, 50px)" />
             <span style={{ fontSize:19, fontWeight:900, color:C.text, letterSpacing:'-0.6px' }}>
               Bag<span style={{ color:C.primary }}>.NG</span>
             </span>

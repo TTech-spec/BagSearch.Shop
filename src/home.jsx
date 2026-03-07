@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import logoImage from "./images/logo.jpg";
 
 // ── CRIIBB PALETTE ──
 // Peach bg: #F9DDD0 / #F5C4A8
@@ -64,10 +65,12 @@ const TRENDING = [
   { name: "Urban Heritage Pack", label: "Best Seller", price: "$1,600", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhRkGSg7Va0LHjp_dhl_1nOfsT69AcfKsT87IGMf4WFKySlhwVu2YbM24F5LEXYXeQBi910qpL7m28onkj1Ukw53DQt0ks4kIQDe7u2XhHh9t45Cw2n7rfXt7GEO2Ul4cyPv1NtKePCqQpbg_tJvMtGLm4gnLgyDIc5efzDZA4edimRL8upoZdtbsG9nn1R5J0GH70OTXUXJu3iZgne1KYmDSGHSi8use1KRPU6wE0OfE5HnQRIFnufOyMqHZ8ZFsXNLydzWxthDg" },
 ];
 
-const LogoIcon = () => (
-  <svg width="26" height="26" fill="none" viewBox="0 0 48 48">
-    <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
-  </svg>
+const LogoIcon = ({ size = 26 }) => (
+  <img
+    src={logoImage}
+    alt="Bag.NG logo"
+    style={{ width: size, height: size, objectFit: "contain", display: "block" }}
+  />
 );
 
 const Icon = ({ name, size = 22 }) => (
@@ -137,7 +140,7 @@ function AuthGateModal({ open, onClose, navigate }) {
               onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(201,75,44,0.35)"; }}>
               Create Free Account
             </button>
-            <button onClick={() => { onClose(); navigate("/login"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}
+            <button onClick={() => { onClose(); navigate("/login?force=true"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; }}>
               Already a member? Sign In
@@ -360,7 +363,7 @@ function HeroCarousel({ navigate, newArrivalsRef, onAuthGate }) {
             onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.filter = "none"; e.currentTarget.style.boxShadow = `0 8px 24px ${slide.accent}55`; }}>
             <Icon name="camera" size={20} /> Try Visual Search
           </button>
-          <button onClick={() => navigate("/login")} style={{
+          <button onClick={() => navigate("/login?force=true")} style={{
             padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10,
             border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)",
             backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15, transition: "all 0.2s",
@@ -687,7 +690,7 @@ export default function LuxeBag() {
         <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(201,75,44,0.12)" }}>
           <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#C94B2C" }}>
-              <LogoIcon />
+              <LogoIcon size="clamp(34px, 5vw, 50px)" />
               <span style={{ fontSize: 20, fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>.NG</span></span>
             </div>
             <nav className="desktop-nav" style={{ display: "flex", gap: 36 }}>
@@ -701,7 +704,7 @@ export default function LuxeBag() {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               {["search", "shopping_bag", "person"].map(ic => (
                 <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }}
-                  onClick={() => ic === "person" ? navigate("/login") : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}>
+                  onClick={() => ic === "person" ? navigate("/login?force=true") : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}>
                   <Icon name={ic} />
                 </button>
               ))}
@@ -965,7 +968,7 @@ export default function LuxeBag() {
           </div>
 
           <div style={{ padding: "20px 20px 24px" }}>
-            <button onClick={() => { setSidebarOpen(false); navigate("/login"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", fontSize: 14, marginBottom: 10, boxShadow: "0 6px 20px rgba(201,75,44,0.35)", transition: "all 0.25s", letterSpacing: "-0.01em" }}
+            <button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", fontSize: 14, marginBottom: 10, boxShadow: "0 6px 20px rgba(201,75,44,0.35)", transition: "all 0.25s", letterSpacing: "-0.01em" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 30px rgba(201,75,44,0.45)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(201,75,44,0.35)"; }}>
               Sign In

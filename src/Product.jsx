@@ -2,7 +2,7 @@ import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import logoImage from './images/logo.jpg.jpeg';
+import logoImage from './images/logo.jpg';
 
 // ─── Color Palette (warm orange/peach inspired by Criibb) ────────────────────
 const C = {
@@ -139,11 +139,11 @@ const mockVendors = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const LogoIcon = () => (
+const LogoIcon = ({ size = 26 }) => (
   <img
     src={logoImage}
     alt="Bags.NG logo"
-    style={{ width: 26, height: 26, objectFit: 'contain', display: 'block' }}
+    style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
   />
 );
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
@@ -585,8 +585,8 @@ export default function Product(){
           <button className="mob-menu" onClick={()=>setIsSidebarOpen(true)} style={{display:'none',padding:8,borderRadius:10,border:'none',background:'transparent',cursor:'pointer',color:C.textMid}}>
             <svg style={{width:22,height:22}} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
           </button>
-          <div style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',flexShrink:0,color:C.primary}} onClick={()=>navigate('/')}>
-            <LogoIcon/><span style={{fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px'}}>Bags<span style={{color:C.primary}}>.NG</span></span>
+          <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer',flexShrink:0,color:C.primary}} onClick={()=>navigate('/')}>
+            <LogoIcon size="clamp(34px, 5vw, 50px)" /><span style={{fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px'}}>Bags<span style={{color:C.primary}}>.NG</span></span>
           </div>
           <button onClick={()=>setLocationModalOpen(true)} style={{flex:1,maxWidth:250,display:'flex',alignItems:'center',gap:8,padding:'7px 13px',borderRadius:12,border:`1.5px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',transition:'all 0.25s'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.background=C.primaryBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.surfaceDim;}}>
@@ -616,7 +616,7 @@ export default function Product(){
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
       <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon/><span style={{fontWeight:900,fontSize:17,color:C.text}}>Bags.NG</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32} /><span style={{fontWeight:900,fontSize:17,color:C.text}}>Bags.NG</span></div>
           <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',color:C.primary,fontSize:16}}>✕</button>
         </div>
         {[{label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}].map(({icon,label,action})=>(
