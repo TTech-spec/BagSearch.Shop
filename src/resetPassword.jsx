@@ -114,14 +114,12 @@ const ResetPassword = () => {
 
       if (updateError) throw updateError;
       
-      // If email reset, sign out after password update to ensure clean state
-      if (isEmailReset) {
-        await supabase.auth.signOut();
-      }
+      // Always sign out after reset so user lands on login screen cleanly
+      await supabase.auth.signOut();
 
       // Show success message and redirect to login
       alert('Password reset successfully! Please login with your new password.');
-      navigate('/login');
+      navigate('/login?force=true', { replace: true });
     } catch (error) {
       console.error('Error resetting password:', error);
       setError('Failed to reset password: ' + error.message);
@@ -317,7 +315,7 @@ const ResetPassword = () => {
           <div className="mt-10 text-center">
             <Link 
               className="text-sm font-medium text-[#636f88] dark:text-[#94a3b8] hover:text-primary dark:hover:text-primary transition-colors flex items-center justify-center gap-2 group" 
-              to="/login"
+              to="/login?force=true"
             >
               <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform" data-icon="arrow_back" data-size="18px">arrow_back</span>
               Back to Login

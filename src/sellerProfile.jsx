@@ -724,7 +724,7 @@ export default function SellerProfile() {
                 style={{ display:"flex", alignItems:"center", gap:7, padding:"8px 16px", borderRadius:10, border:"none", background:C.primary, color:"white", fontSize:13, fontWeight:700, cursor:"pointer", transition:"all 0.2s", fontFamily:"inherit", boxShadow:`0 2px 8px rgba(200,75,17,0.3)`, whiteSpace:"nowrap" }}
                 onMouseEnter={e=>{e.currentTarget.style.background=C.accent;e.currentTarget.style.transform="translateY(-1px)";}}
                 onMouseLeave={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.transform="none";}}>
-                <MS name="add" size={17}/> New Listing
+                <MS name="add" size={17}/> Upload Product
               </button>
             </div>
           </div>
@@ -851,12 +851,14 @@ export default function SellerProfile() {
 // ─── Sidebar contents ─────────────────────────────────────────────────────────
 function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, switchTab, onNav }) {
   const extNavItems = [
+    { icon:'home',         label:'Home',         key:'home'      },
     { icon:'dashboard',    label:'Dashboard',    key:'dashboard' },
     { icon:'inventory_2',  label:'My Listings',  key:'listings'  },
     { icon:'edit',         label:'Edit Profile', key:'edit',  badge:true },
   ];
 
   const handleClick = (item) => {
+    if (item.key==='home') navigate('/products');
     if (item.key==='dashboard' || item.key==='edit') { switchTab?.(item.key==='listings'?'dashboard':item.key); }
     if (item.key==='listings') navigate('/seller-listing');
     onNav?.();
@@ -909,3 +911,4 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     </>
   );
 }
+

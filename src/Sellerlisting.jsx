@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Plus, MapPin, Eye, Heart, Star, MoreVertical,
@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./services/api";
 
-// ── Criibb palette extracted from screenshot ──────────────────────────────────
+// â”€â”€ Criibb palette extracted from screenshot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   // Core brand
   hero:         "#f5c5a8",   // warm peach hero bg
@@ -46,9 +46,9 @@ const C = {
   white:        "#ffffff",
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (n) => n != null ? Number(n).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }) : "—";
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const fmt = (n) => n != null ? Number(n).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }) : "â€”";
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "â€”";
 
 const STATUS_CONFIG = {
   active:   { label: "Active",   color: C.success,  bg: C.successBg,  border: C.successBorder, Icon: CheckCircle },
@@ -56,17 +56,61 @@ const STATUS_CONFIG = {
   inactive: { label: "Inactive", color: C.inactive, bg: C.inactiveBg, border: "#e5e7eb",       Icon: XCircle     },
 };
 
-// ── Mock data (replace with Supabase query) ───────────────────────────────────
-const MOCK_LISTINGS = [
-  { id: "1", title: "Luxury 3-Bed Shortlet, Lekki Phase 1", location: "Lekki Phase 1, Lagos", price: 85000, status: "active",  views: 342, saves: 28, rating: 4.8, reviews: 14, image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80", created_at: "2025-11-10", type: "Apartment", bedrooms: 3 },
-  { id: "2", title: "Modern Studio, Victoria Island",         location: "Victoria Island, Lagos",  price: 45000, status: "active",  views: 198, saves: 19, rating: 4.6, reviews: 8,  image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80", created_at: "2025-12-02", type: "Studio",    bedrooms: 1 },
-  { id: "3", title: "Cozy 2-Bed, Ikoyi",                     location: "Ikoyi, Lagos",            price: 65000, status: "pending", views: 87,  saves: 6,  rating: null, reviews: 0,  image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80", created_at: "2026-01-15", type: "Apartment", bedrooms: 2 },
-  { id: "4", title: "Penthouse Suite, Eko Atlantic",         location: "Eko Atlantic, Lagos",     price: 150000,status: "active",  views: 531, saves: 47, rating: 4.9, reviews: 22, image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80", created_at: "2025-10-05", type: "Penthouse", bedrooms: 4 },
-  { id: "5", title: "Serviced 1-Bed, Ikeja GRA",             location: "Ikeja GRA, Lagos",        price: 35000, status: "inactive",views: 54,  saves: 3,  rating: 4.2, reviews: 5,  image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80", created_at: "2025-09-20", type: "Apartment", bedrooms: 1 },
-  { id: "6", title: "Duplex Short Stay, Ajah",               location: "Ajah, Lagos",             price: 55000, status: "pending", views: 29,  saves: 4,  rating: null, reviews: 0,  image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80", created_at: "2026-02-01", type: "Duplex",    bedrooms: 3 },
-];
+const DEFAULT_PRODUCT_IMAGE = "https://via.placeholder.com/640x420?text=Product";
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+function prettyLocation(raw) {
+  if (!raw) return "Unknown location";
+  return String(raw)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function isMissingColumnError(err) {
+  const msg = String(err?.message || "").toLowerCase();
+  const code = String(err?.code || "").toUpperCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    (msg.includes("column") && msg.includes("does not exist")) ||
+    (msg.includes("could not find") && msg.includes("column"))
+  );
+}
+
+function getImageList(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // If it's not JSON, treat as a direct URL.
+      return value ? [value] : [];
+    }
+  }
+  return [];
+}
+function mapProductToListing(row) {
+  const images = getImageList(row?.images);
+  const normalizedStatus = ["active", "pending", "inactive"].includes(row?.status) ? row.status : "active";
+
+  return {
+    id: row?.id,
+    title: row?.name || "Untitled Product",
+    location: prettyLocation(row?.location),
+    price: Number(row?.price ?? 0),
+    status: normalizedStatus,
+    views: Number(row?.views_count ?? row?.views ?? 0),
+    saves: Number(row?.saves_count ?? row?.saves ?? 0),
+    rating: row?.rating != null ? Number(row.rating) : null,
+    reviews: Number(row?.review_count ?? row?.reviews ?? 0),
+    image: images[0] || row?.image || DEFAULT_PRODUCT_IMAGE,
+    created_at: row?.created_at || null,
+    type: row?.category || "Bag",
+    subType: row?.condition || "",
+  };
+}
+
+// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Skel({ w = "100%", h = 16, r = 8 }) {
   return (
     <div style={{
@@ -79,7 +123,7 @@ function Skel({ w = "100%", h = 16, r = 8 }) {
   );
 }
 
-// ── Stat pill ─────────────────────────────────────────────────────────────────
+// â”€â”€ Stat pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatPill({ icon: Icon, value, label, color, delay = 0, visible }) {
   return (
     <div style={{
@@ -105,7 +149,7 @@ function StatPill({ icon: Icon, value, label, color, delay = 0, visible }) {
   );
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.inactive;
   return (
@@ -120,7 +164,7 @@ function StatusBadge({ status }) {
   );
 }
 
-// ── Listing card ──────────────────────────────────────────────────────────────
+// â”€â”€ Listing card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ListingCard({ listing, index, visible, onDelete, onEdit }) {
   const [hovered,     setHovered]     = useState(false);
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -246,7 +290,7 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
         {/* Type pill */}
         <div style={{ position: "absolute", bottom: 12, right: 14 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.9)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", padding: "3px 9px", borderRadius: 20, letterSpacing: "0.08em" }}>
-            {listing.type} · {listing.bedrooms} bed
+            {listing.type}{listing.subType ? ` - ${listing.subType}` : ""}
           </span>
         </div>
       </div>
@@ -304,7 +348,7 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
   );
 }
 
-// ── Filter tab ────────────────────────────────────────────────────────────────
+// â”€â”€ Filter tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function FilterTab({ label, count, active, onClick }) {
   return (
     <button
@@ -333,7 +377,7 @@ function FilterTab({ label, count, active, onClick }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function SellerListings() {
   const navigate   = useNavigate();
   const [listings, setListings] = useState([]);
@@ -357,15 +401,41 @@ export default function SellerListings() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Not authenticated");
-        const { data, error } = await supabase
-          .from("listings")
+        const byUser = await supabase
+          .from("products")
           .select("*")
-          .eq("seller_id", user.id)
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false });
-        if (error) throw error;
-        setListings(data?.length ? data : MOCK_LISTINGS);
-      } catch {
-        setListings(MOCK_LISTINGS);
+
+        let rows = byUser.data || [];
+        let queryError = byUser.error;
+
+        const shouldTrySellerId =
+          rows.length === 0 || (queryError && isMissingColumnError(queryError));
+
+        if (shouldTrySellerId) {
+          const bySeller = await supabase
+            .from("products")
+            .select("*")
+            .eq("seller_id", user.id)
+            .order("created_at", { ascending: false });
+
+          if (!bySeller.error) {
+            rows = bySeller.data || [];
+            queryError = null;
+          } else if (!queryError || isMissingColumnError(queryError)) {
+            queryError = bySeller.error;
+          }
+        }
+
+        if (queryError && rows.length === 0 && !isMissingColumnError(queryError)) {
+          throw queryError;
+        }
+
+        setListings(rows.map(mapProductToListing));
+      } catch (err) {
+        console.error("Failed to load seller listings:", err);
+        setListings([]);
       } finally {
         setLoading(false);
       }
@@ -426,7 +496,7 @@ export default function SellerListings() {
         ::-webkit-scrollbar-thumb { background: ${C.hero}; border-radius: 3px; }
       `}</style>
 
-      {/* ── Background decorations ── */}
+      {/* â”€â”€ Background decorations â”€â”€ */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
         {/* Dot grid */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle, rgba(200,75,17,0.1) 1px, transparent 1px)`, backgroundSize: "32px 32px" }} />
@@ -437,7 +507,7 @@ export default function SellerListings() {
         <div style={{ position: "absolute", top: "35%", right: "8%", width: 180, height: 180, background: `linear-gradient(135deg, ${C.hero}66, ${C.surfacePeach}44)`, animation: "blobMorph 10s ease-in-out infinite, floatOrb 7s ease-in-out infinite", opacity: 0.6, zIndex: 0 }} />
       </div>
 
-      {/* ── HEADER ── */}
+      {/* â”€â”€ HEADER â”€â”€ */}
       <header style={{
         position: "sticky", top: 0, zIndex: 100,
         background: "rgba(253,247,243,0.93)", backdropFilter: "blur(20px)",
@@ -458,7 +528,7 @@ export default function SellerListings() {
             <div style={{ width: 1, height: 28, background: C.borderLight }} />
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 900, color: C.text, letterSpacing: "-0.03em", fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>My Listings</h1>
-              <p style={{ fontSize: 10, color: C.textFaint, fontWeight: 500 }}>{counts.all} total · {counts.active} active</p>
+              <p style={{ fontSize: 10, color: C.textFaint, fontWeight: 500 }}>{counts.all} total Â· {counts.active} active</p>
             </div>
           </div>
 
@@ -466,7 +536,7 @@ export default function SellerListings() {
 
           {/* Add listing CTA */}
           <button
-            onClick={() => navigate("/new-listing")}
+            onClick={() => navigate("/upload-product")}
             style={{
               display: "flex", alignItems: "center", gap: 8, padding: "10px 22px",
               borderRadius: 12, border: "none",
@@ -481,14 +551,14 @@ export default function SellerListings() {
             onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 4px 20px rgba(200,75,17,0.35)`; e.currentTarget.style.animation = "pulseRing 2.5s ease-in-out infinite"; }}
           >
             <Plus size={15} strokeWidth={2.5} />
-            New Listing
+            Upload Product
           </button>
         </div>
       </header>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 28px 80px", position: "relative", zIndex: 1 }}>
 
-        {/* ── HERO BANNER ── */}
+        {/* â”€â”€ HERO BANNER â”€â”€ */}
         <div style={{
           borderRadius: 28, overflow: "hidden", marginBottom: 32,
           background: `linear-gradient(135deg, ${C.hero} 0%, ${C.heroDark} 50%, #f0a882 100%)`,
@@ -524,7 +594,7 @@ export default function SellerListings() {
             {[
               { icon: Eye,       val: totalViews.toLocaleString(), label: "Total Views",  delay: 0 },
               { icon: Heart,     val: totalSaves.toLocaleString(), label: "Total Saves",  delay: 120 },
-              { icon: Award,     val: avgRating ? avgRating.toFixed(1) + " ★" : "—",     label: "Avg Rating", delay: 240 },
+              { icon: Award,     val: avgRating ? avgRating.toFixed(1) + " â˜…" : "â€”",     label: "Avg Rating", delay: 240 },
             ].map(({ icon: Ic, val, label, delay }) => (
               <div key={label} style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
@@ -545,7 +615,7 @@ export default function SellerListings() {
           </div>
         </div>
 
-        {/* ── STATS ROW ── */}
+        {/* â”€â”€ STATS ROW â”€â”€ */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
           <StatPill icon={Home}       value={counts.all}            label="Total Listed"  color={C.brand}    delay={0}   visible={visible} />
           <StatPill icon={CheckCircle}value={counts.active}         label="Active"        color={C.success}  delay={80}  visible={visible} />
@@ -553,7 +623,7 @@ export default function SellerListings() {
           <StatPill icon={TrendingUp} value={totalViews.toLocaleString()} label="Total Views" color={C.accent} delay={240} visible={visible} />
         </div>
 
-        {/* ── CONTROLS ── */}
+        {/* â”€â”€ CONTROLS â”€â”€ */}
         <div style={{
           display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 24,
           opacity: visible ? 1 : 0,
@@ -579,7 +649,7 @@ export default function SellerListings() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search your listings…"
+                placeholder="Search your listingsâ€¦"
                 style={{
                   width: "100%", padding: "9px 14px 9px 36px", borderRadius: 12,
                   border: `1.5px solid ${C.cardBorder}`, background: C.surface,
@@ -608,14 +678,14 @@ export default function SellerListings() {
               }}
             >
               <option value="newest">Newest First</option>
-              <option value="price_hi">Price: High → Low</option>
-              <option value="price_lo">Price: Low → High</option>
+              <option value="price_hi">Price: High â†’ Low</option>
+              <option value="price_lo">Price: Low â†’ High</option>
               <option value="views">Most Viewed</option>
             </select>
           </div>
         </div>
 
-        {/* ── GRID ── */}
+        {/* â”€â”€ GRID â”€â”€ */}
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 22 }}>
             {[...Array(6)].map((_, i) => (
@@ -641,8 +711,8 @@ export default function SellerListings() {
             <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 24 }}>
               {search ? `No results for "${search}"` : "You don't have any listings in this category yet."}
             </p>
-            <button onClick={() => navigate("/new-listing")} style={{ padding: "11px 26px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${C.brand}, ${C.brandLight})`, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 6px 20px rgba(200,75,17,0.35)` }}>
-              + Add Your First Listing
+            <button onClick={() => navigate("/upload-product")} style={{ padding: "11px 26px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${C.brand}, ${C.brandLight})`, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 6px 20px rgba(200,75,17,0.35)` }}>
+              + Upload Your First Product
             </button>
           </div>
         ) : (
@@ -660,14 +730,14 @@ export default function SellerListings() {
           </div>
         )}
 
-        {/* ── BOTTOM CTA ── */}
+        {/* â”€â”€ BOTTOM CTA â”€â”€ */}
         {!loading && filtered.length > 0 && (
           <div style={{
             marginTop: 48, textAlign: "center",
             opacity: visible ? 1 : 0,
             transition: "opacity 0.6s ease 800ms",
           }}>
-            <button onClick={() => navigate("/new-listing")} style={{
+            <button onClick={() => navigate("/upload-product")} style={{
               display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 36px",
               borderRadius: 16, border: `2px dashed ${C.heroDark}`,
               background: "transparent", cursor: "pointer",
@@ -678,7 +748,7 @@ export default function SellerListings() {
               onMouseEnter={e => { e.currentTarget.style.background = C.surfacePeach; e.currentTarget.style.borderStyle = "solid"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderStyle = "dashed"; }}
             >
-              <Plus size={18} /> List Another Space
+              <Plus size={18} /> Upload Another Product
             </button>
           </div>
         )}
@@ -686,3 +756,6 @@ export default function SellerListings() {
     </div>
   );
 }
+
+
+
