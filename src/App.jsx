@@ -6,6 +6,7 @@ import Reg from './Reg.jsx';
 import Login from './login.jsx';
 import Home from './home.jsx';
 import Product from './Product.jsx';
+import SellerProduct from './SellerProduct.jsx';
 import ProductDetail from './productDetail.jsx';
 import UserProfile from './userProfile.jsx';
 import SellerProfile from './sellerProfile.jsx';
@@ -121,6 +122,10 @@ function App() {
 
         {/* Products page - public (auth-gated actions handled inside Product.jsx) */}
         <Route path="/products" element={<Product />} />
+
+        {/* Seller storefront from vendor cards */}
+        <Route path="/seller-products" element={<SellerProduct />} />
+        <Route path="/seller-product" element={<SellerProduct />} />
 
         {/* Product Detail page - protected behind login */}
         <Route

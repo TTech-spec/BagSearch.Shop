@@ -526,7 +526,9 @@ export default function Product(){
   const handleClearSearch=()=>{setDisplayedProducts(allProducts);setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');setSelectedLocation(NIGERIAN_LOCATIONS[0]);setSelectedVendor(null);setResultsKey(k=>k+1);};
   const handleImageUpload=e=>{const f=e.target.files[0];if(!f)return;setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setDisplayedProducts(allProducts);setResultsKey(k=>k+1);e.target.value='';};
   const handleVendorSearch=q=>{setVendorSearch(q);setFilteredVendors(mockVendors.filter(v=>v.name.toLowerCase().includes(q.toLowerCase())||v.specialty.toLowerCase().includes(q.toLowerCase())||v.tags.some(t=>t.toLowerCase().includes(q.toLowerCase()))));};
-  const handleViewVendorProducts=vendor=>{setSelectedVendor(vendor);setActiveTab('products');setSearchQuery(vendor.name);const r=allProducts.filter(p=>p.seller===vendor.name||p.sellerId===vendor.id);setDisplayedProducts(r.length>0?r:allProducts);setIsFiltered(true);setResultsKey(k=>k+1);window.scrollTo({top:0,behavior:'smooth'});};
+  const handleViewVendorProducts = (vendor) => {
+    navigate('/seller-products', { state: { vendor } });
+  };
   const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg(`${product.name} added!`);setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
   const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
