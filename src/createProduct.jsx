@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
-// ─── WARM COLOR PALETTE (Criibb Theme) ───────────────────────────────────────
+// ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
   primary:      '#C94B2C',      // Burnt orange
   primaryLight: '#E8856A',       // Lighter orange
@@ -305,7 +305,7 @@ export default function CreateProduct() {
             <svg width="24" height="24" fill="none" viewBox="0 0 48 48">
               <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
             </svg>
-            <span style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: "-0.5px" }}>Bag<span style={{ color: C.primary }}>.NG</span></span>
+            <span style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: "-0.5px" }}>Bag<span style={{ color: C.primary }}>Search</span></span>
           </div>
           <button onClick={() => navigate('/seller-profile')} style={{ 
             display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 10, 

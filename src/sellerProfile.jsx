@@ -455,7 +455,7 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
 
       {/* Section 1 — Identity */}
       <SCard visible={sec1In}>
-        <SHead icon="person" title="Personal Info" subtitle="Your identity on Criibb"/>
+        <SHead icon="person" title="Personal Info" subtitle="Your identity on BagSearch"/>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
           <FloatInput label="Full Name"    value={form.full_name} onChange={f('full_name')} icon="badge"       iconColor={C.primary}/>
           <FloatInput label="Email"        value={form.email}     onChange={f('email')}     icon="mail"        iconColor={C.accent}  type="email"/>
@@ -571,13 +571,65 @@ export default function SellerProfile() {
       try {
         if (!user) return;
         setMetricsLoading(true);
-        const { count:lc } = await supabase.from('products').select('id',{count:'exact',head:true}).eq('seller_id',user.id);
-        setActiveListingsCount(lc||0);
-        const { data:vd, count:vc, error:ve } = await supabase.from('product_views').select(`id,viewed_at,source,products:product_id(id,name,sku,images),users:buyer_id(full_name,email)`,{count:'exact'}).eq('products.seller_id',user.id).order('viewed_at',{ascending:false}).limit(20);
-        if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
-        else {
-          const { data:pv } = await supabase.from('products').select('views_count').eq('seller_id',user.id);
-          if (pv) setTotalViewsCount(pv.reduce((a,p)=>a+(Number(p.views_count)||0),0));
+        const byUser = await supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        let rows = byUser.data || [];
+        let queryError = byUser.error;
+
+        const shouldTrySellerId =
+          rows.length === 0 || (queryError && isMissingColumnError(queryError));
+
+        if (shouldTrySellerId) {
+          const bySeller = await supabase
+            .from('products')
+            .select('*')
+            .eq('seller_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (!bySeller.error) {
+            rows = bySeller.data || [];
+            queryError = null;
+          } else if (!queryError || isMissingColumnError(queryError)) {
+            queryError = bySeller.error;
+          }
+        }
+
+        if (queryError && rows.length === 0 && !isMissingColumnError(queryError)) {
+          throw queryError;
+        }
+
+        const getStatus = (row) => {
+          const normalized = String(row?.status || '').toLowerCase();
+          return ['active', 'pending', 'inactive'].includes(normalized) ? normalized : 'active';
+        };
+
+        const activeCount = rows.filter((p) => getStatus(p) === 'active').length;
+        const productIds = rows.map((p) => p.id).filter(Boolean);
+
+        setActiveListingsCount(activeCount);
+
+        if (!productIds.length) {
+          setTotalViewsCount(0);
+          setBuyerViews([]);
+          return;
+        }
+
+        const { data:vd, count:vc, error:ve } = await supabase
+          .from('product_views')
+          .select(`id,viewed_at,source,products:product_id(id,name,sku,images),users:buyer_id(full_name,email)`, { count:'exact' })
+          .in('product_id', productIds)
+          .order('viewed_at', { ascending:false })
+          .limit(20);
+
+        if (!ve) {
+          setTotalViewsCount(vc || 0);
+          setBuyerViews((vd || []).map(mapBuyerViewRow));
+        } else {
+          setTotalViewsCount(rows.reduce((a, p) => a + (Number(p.views_count) || 0), 0));
         }
       } catch(e){ console.error(e); }
       finally { setMetricsLoading(false); }
@@ -872,7 +924,7 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
             <MS name="shopping_bag" size={18} style={{ color:"white" }}/>
           </div>
           <div>
-            <div style={{ fontSize:14, fontWeight:900, color:"#f8fafc", letterSpacing:"-0.02em" }}>LuxeBag</div>
+            <div style={{ fontSize:14, fontWeight:900, color:"#f8fafc", letterSpacing:"-0.02em" }}>BagSearch</div>
             <div style={{ fontSize:10, color:C.textMuted, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase" }}>Seller</div>
           </div>
         </div>
@@ -911,4 +963,5 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     </>
   );
 }
+
 

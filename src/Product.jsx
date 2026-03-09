@@ -2,9 +2,9 @@ import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import logoImage from './images/logo.jpg';
+import logoImage from './images/a00b2158-82d4-4c37-8602-a33e18a7a9f2_removalai_preview.png';
 
-// ─── Color Palette (warm orange/peach inspired by Criibb) ────────────────────
+// ─── Color Palette (warm orange/peach inspired by BagSearch) ────────────────────
 const C = {
   primary:      '#c84b11',
   primaryLight: '#f97316',
@@ -78,11 +78,11 @@ const PageLoader = ({ onDone }) => {
       </div>
       <div style={{animation:'ldFadeUp 0.55s ease 0.15s both',textAlign:'center',marginBottom:5}}>
         <span style={{fontSize:30,fontWeight:900,letterSpacing:'-0.03em',color:'#fff',fontFamily:'system-ui,sans-serif'}}>
-          Bags<span style={{background:'linear-gradient(135deg,#f97316,#c84b11)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>.NG</span>
+          Bag<span style={{background:'linear-gradient(135deg,#f97316,#c84b11)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Search</span>
         </span>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:38,animation:'ldFadeUp 0.55s ease 0.3s both'}}>
-        <span style={{fontSize:11,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase'}}>Loading your experience</span>
+        <span style={{fontSize:11,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase'}}>Loading BagSearch experience</span>
         <span style={{display:'flex',gap:3}}>{[0,1,2].map(i=>(<span key={i} style={{width:4,height:4,borderRadius:'50%',background:'#f97316',display:'inline-block',animation:`ldDot 1.3s ease-in-out ${i*0.18}s infinite`}}/>))}</span>
       </div>
       <div style={{width:'min(260px,60vw)',animation:'ldFadeUp 0.55s ease 0.45s both'}}>
@@ -90,7 +90,7 @@ const PageLoader = ({ onDone }) => {
           <div style={{height:'100%',borderRadius:9999,width:`${progress}%`,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#f97316,#c84b11)',backgroundSize:'200% auto',animation:'ldShimmer 1.5s linear infinite',transition:'width 0.08s ease',boxShadow:'0 0 14px rgba(249,115,22,0.7)'}}/>
         </div>
         <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:10,fontWeight:700,letterSpacing:'0.08em'}}>
-          <span style={{color:'rgba(255,255,255,0.25)'}}>BAGS.NG</span>
+          <span style={{color:'rgba(255,255,255,0.25)'}}>BagSearch</span>
           <span style={{color:'#f97316'}}>{Math.round(progress)}%</span>
         </div>
       </div>
@@ -140,11 +140,13 @@ const mockVendors = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const LogoIcon = ({ size = 26 }) => (
-  <img
-    src={logoImage}
-    alt="Bags.NG logo"
-    style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
-  />
+  <span style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', flexShrink: 0 }}>
+    <img
+      src={logoImage}
+      alt="BagSearch logo"
+      style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transform: 'scale(1.45)', transformOrigin: 'center', filter: 'drop-shadow(0 3px 8px rgba(201,75,44,0.25))' }}
+    />
+  </span>
 );
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
@@ -210,7 +212,7 @@ function AuthGateModal({ open, onClose, navigate }) {
               onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(201,75,44,0.35)"; }}>
               Create Free Account
             </button>
-            <button onClick={() => { onClose(); navigate("/login"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}
+            <button onClick={() => { onClose(); navigate("/login?force=true"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; }}>
               Already a member? Sign In
@@ -220,7 +222,7 @@ function AuthGateModal({ open, onClose, navigate }) {
 
         <div style={{ padding: "12px 36px", borderTop: "1px solid #F5EAE5", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#FDFAFA" }}>
           <div style={{ color: "#C94B2C" }}><LogoIcon /></div>
-          <span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.02em" }}>Bag<span style={{ color: "#C94B2C" }}>.NG</span></span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.02em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
         </div>
       </div>
       <style>{`
@@ -588,7 +590,7 @@ export default function Product(){
             <svg style={{width:22,height:22}} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
           </button>
           <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer',flexShrink:0,color:C.primary}} onClick={()=>navigate('/')}>
-            <LogoIcon size="clamp(34px, 5vw, 50px)" /><span style={{fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px'}}>Bags<span style={{color:C.primary}}>.NG</span></span>
+            <LogoIcon size="clamp(34px, 5vw, 50px)" /><span style={{fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px'}}>Bag<span style={{color:C.primary}}>Search</span></span>
           </div>
           <button onClick={()=>setLocationModalOpen(true)} style={{flex:1,maxWidth:250,display:'flex',alignItems:'center',gap:8,padding:'7px 13px',borderRadius:12,border:`1.5px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',transition:'all 0.25s'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.background=C.primaryBg;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.surfaceDim;}}>
@@ -608,20 +610,36 @@ export default function Product(){
               <Icon name="person" size={20}/>
             </button>
             <CartBadge count={cartCount} onClick={()=>setCartOpen(true)}/>
-            <button onClick={handleLogout} style={{padding:'8px 16px',borderRadius:10,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',color:'#dc2626',fontSize:13,fontWeight:700,transition:'all 0.2s'}}
-              onMouseEnter={e=>{e.currentTarget.style.background='#fee2e2';e.currentTarget.style.transform='translateY(-1px)';}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.transform='none';}}>Logout</button>
+            {user ? (
+              <button onClick={handleLogout} style={{padding:'8px 16px',borderRadius:10,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',color:'#dc2626',fontSize:13,fontWeight:700,transition:'all 0.2s'}}
+                onMouseEnter={e=>{e.currentTarget.style.background='#fee2e2';e.currentTarget.style.transform='translateY(-1px)';}} onMouseLeave={e=>{e.currentTarget.style.background='#fef2f2';e.currentTarget.style.transform='none';}}>Logout</button>
+            ) : (
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={() => navigate('/login')} style={{padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>Login</button>
+                <button onClick={() => navigate('/register')} style={{padding:'8px 16px',borderRadius:10,border:'none',background:C.primary,cursor:'pointer',color:'white',fontSize:13,fontWeight:700,transition:'all 0.2s',boxShadow:`0 4px 12px rgba(200,75,17,0.2)`}}
+                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow=`0 6px 16px rgba(200,75,17,0.3)`;}} onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 4px 12px rgba(200,75,17,0.2)`;}}>Register</button>
+              </div>
+            )}
           </div>
-        </div>
-      </header>
+        </div>      </header>
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
       <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32} /><span style={{fontWeight:900,fontSize:17,color:C.text}}>Bags.NG</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32} /><span style={{fontWeight:900,fontSize:17,color:C.text}}>BagSearch</span></div>
           <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',color:C.primary,fontSize:16}}>✕</button>
         </div>
-        {[{label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}].map(({icon,label,action})=>(
+        {(user ? [
+          {label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},
+          {label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
+          {label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}
+        ] : [
+          {label:'Login',icon:'login',action:()=>{navigate('/login');setIsSidebarOpen(false);}},
+          {label:'Register',icon:'person_add',action:()=>{navigate('/register');setIsSidebarOpen(false);}},
+          {label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}}
+        ]).map(({icon,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':'transparent',cursor:'pointer',color:label==='Logout'?C.danger:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s'}}
             onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
             <Icon name={icon} size={20}/>{label}
@@ -735,3 +753,4 @@ export default function Product(){
     </div>
   );
 } 
+

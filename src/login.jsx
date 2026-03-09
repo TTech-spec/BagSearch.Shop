@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
-// ─── WARM COLOR PALETTE (Criibb Theme) ───────────────────────────────────────
+// ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
   primary:      '#C94B2C',      // Burnt orange
   primaryLight: '#E8856A',       // Lighter orange
@@ -151,7 +151,7 @@ const PageLoader = ({ onDone }) => {
           fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em',
           color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif',
         }}>
-          Bag<span style={{ color: C.primary }}>.NG</span>
+          Bag<span style={{ color: C.primary }}>Search</span>
         </span>
       </div>
 
@@ -165,7 +165,7 @@ const PageLoader = ({ onDone }) => {
           letterSpacing: '0.1em', textTransform: 'uppercase',
           fontFamily: 'system-ui, sans-serif',
         }}>
-          Loading your experience
+          Loading BagSearch experience
         </span>
         <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
           {[0, 1, 2].map(i => (
@@ -196,7 +196,7 @@ const PageLoader = ({ onDone }) => {
           fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
           fontFamily: 'system-ui, sans-serif',
         }}>
-          <span style={{ color: C.textMuted }}>BAGS.NG</span>
+          <span style={{ color: C.textMuted }}>BagSearch</span>
           <span style={{ color: C.primary }}>{Math.round(progress)}%</span>
         </div>
       </div>
@@ -546,7 +546,7 @@ const SuccessToast = ({ show, onClose }) => {
           letterSpacing: '0.2em',
           textTransform: 'uppercase',
         }}>
-          Bag<span style={{ color: C.primary, fontWeight: 800 }}>.NG</span> • Luxury Redefined
+          Bag<span style={{ color: C.primary, fontWeight: 800 }}>Search</span> • Luxury Redefined
         </div>
       </div>
 
@@ -721,7 +721,7 @@ const LoginPage = () => {
               </svg>
             </div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text }}>
-              Bag<span style={{ color: C.primary }}>.NG</span>
+              Bag<span style={{ color: C.primary }}>Search</span>
             </h2>
           </div>
           <div style={{ display: 'none', gap: 24, '@media (min-width: 768px)': { display: 'flex' } }}>

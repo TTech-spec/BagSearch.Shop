@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Plus, MapPin, Eye, Heart, Star, MoreVertical,
@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./services/api";
 
-// â”€â”€ Criibb palette extracted from screenshot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── BagSearch palette extracted from screenshot ──────────────────────────────────
 const C = {
   // Core brand
   hero:         "#f5c5a8",   // warm peach hero bg
@@ -46,9 +46,9 @@ const C = {
   white:        "#ffffff",
 };
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const fmt = (n) => n != null ? Number(n).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }) : "â€”";
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "â€”";
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = (n) => n != null ? Number(n).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }) : "—";
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
 const STATUS_CONFIG = {
   active:   { label: "Active",   color: C.success,  bg: C.successBg,  border: C.successBorder, Icon: CheckCircle },
@@ -110,7 +110,7 @@ function mapProductToListing(row) {
   };
 }
 
-// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Skeleton ──────────────────────────────────────────────────────────────────
 function Skel({ w = "100%", h = 16, r = 8 }) {
   return (
     <div style={{
@@ -123,7 +123,7 @@ function Skel({ w = "100%", h = 16, r = 8 }) {
   );
 }
 
-// â”€â”€ Stat pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Stat pill ─────────────────────────────────────────────────────────────────
 function StatPill({ icon: Icon, value, label, color, delay = 0, visible }) {
   return (
     <div style={{
@@ -149,7 +149,7 @@ function StatPill({ icon: Icon, value, label, color, delay = 0, visible }) {
   );
 }
 
-// â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Status badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.inactive;
   return (
@@ -164,7 +164,7 @@ function StatusBadge({ status }) {
   );
 }
 
-// â”€â”€ Listing card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Listing card ──────────────────────────────────────────────────────────────
 function ListingCard({ listing, index, visible, onDelete, onEdit }) {
   const [hovered,     setHovered]     = useState(false);
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -348,7 +348,7 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
   );
 }
 
-// â”€â”€ Filter tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Filter tab ────────────────────────────────────────────────────────────────
 function FilterTab({ label, count, active, onClick }) {
   return (
     <button
@@ -377,10 +377,11 @@ function FilterTab({ label, count, active, onClick }) {
   );
 }
 
-// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function SellerListings() {
   const navigate   = useNavigate();
   const [listings, setListings] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [filter,   setFilter]   = useState("all");
   const [search,   setSearch]   = useState("");
@@ -401,6 +402,7 @@ export default function SellerListings() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Not authenticated");
+        setCurrentUserId(user.id);
         const byUser = await supabase
           .from("products")
           .select("*")
@@ -465,7 +467,65 @@ export default function SellerListings() {
   const totalSaves  = listings.reduce((s, l) => s + (l.saves ?? 0), 0);
   const avgRating   = listings.filter(l => l.rating).reduce((s, l, _, a) => s + l.rating / a.length, 0);
 
-  const handleDelete = (id) => setListings(prev => prev.filter(l => l.id !== id));
+  const handleDelete = async (id) => {
+    if (!id) return;
+    if (!window.confirm("Delete this listing? This cannot be undone.")) return;
+    if (!currentUserId) {
+      alert("Could not verify your account. Please refresh and try again.");
+      return;
+    }
+
+    try {
+      let queryError = null;
+      let deletedRows = [];
+
+      const byUser = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", currentUserId)
+        .select("id");
+
+      if (!byUser.error) {
+        deletedRows = byUser.data || [];
+      } else {
+        queryError = byUser.error;
+      }
+
+      const shouldTrySellerId =
+        deletedRows.length === 0 || (queryError && isMissingColumnError(queryError));
+
+      if (shouldTrySellerId) {
+        const bySeller = await supabase
+          .from("products")
+          .delete()
+          .eq("id", id)
+          .eq("seller_id", currentUserId)
+          .select("id");
+
+        if (!bySeller.error) {
+          deletedRows = bySeller.data || [];
+          queryError = null;
+        } else if (!queryError || isMissingColumnError(queryError)) {
+          queryError = bySeller.error;
+        }
+      }
+
+      if (queryError && deletedRows.length === 0 && !isMissingColumnError(queryError)) {
+        throw queryError;
+      }
+
+      if (deletedRows.length === 0) {
+        alert("Listing could not be deleted. Please try again.");
+        return;
+      }
+
+      setListings(prev => prev.filter(l => l.id !== id));
+    } catch (err) {
+      console.error("Failed to delete listing:", err);
+      alert("Failed to delete listing. Please try again.");
+    }
+  };
   const handleEdit   = (listing) => navigate(`/edit-listing/${listing.id}`);
 
   return (
@@ -496,7 +556,7 @@ export default function SellerListings() {
         ::-webkit-scrollbar-thumb { background: ${C.hero}; border-radius: 3px; }
       `}</style>
 
-      {/* â”€â”€ Background decorations â”€â”€ */}
+      {/* ── Background decorations ── */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
         {/* Dot grid */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle, rgba(200,75,17,0.1) 1px, transparent 1px)`, backgroundSize: "32px 32px" }} />
@@ -507,7 +567,7 @@ export default function SellerListings() {
         <div style={{ position: "absolute", top: "35%", right: "8%", width: 180, height: 180, background: `linear-gradient(135deg, ${C.hero}66, ${C.surfacePeach}44)`, animation: "blobMorph 10s ease-in-out infinite, floatOrb 7s ease-in-out infinite", opacity: 0.6, zIndex: 0 }} />
       </div>
 
-      {/* â”€â”€ HEADER â”€â”€ */}
+      {/* ── HEADER ── */}
       <header style={{
         position: "sticky", top: 0, zIndex: 100,
         background: "rgba(253,247,243,0.93)", backdropFilter: "blur(20px)",
@@ -528,7 +588,7 @@ export default function SellerListings() {
             <div style={{ width: 1, height: 28, background: C.borderLight }} />
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 900, color: C.text, letterSpacing: "-0.03em", fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>My Listings</h1>
-              <p style={{ fontSize: 10, color: C.textFaint, fontWeight: 500 }}>{counts.all} total Â· {counts.active} active</p>
+              <p style={{ fontSize: 10, color: C.textFaint, fontWeight: 500 }}>{counts.all} total · {counts.active} active</p>
             </div>
           </div>
 
@@ -558,7 +618,7 @@ export default function SellerListings() {
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 28px 80px", position: "relative", zIndex: 1 }}>
 
-        {/* â”€â”€ HERO BANNER â”€â”€ */}
+        {/* ── HERO BANNER ── */}
         <div style={{
           borderRadius: 28, overflow: "hidden", marginBottom: 32,
           background: `linear-gradient(135deg, ${C.hero} 0%, ${C.heroDark} 50%, #f0a882 100%)`,
@@ -585,7 +645,7 @@ export default function SellerListings() {
               Your <span style={{ color: C.brand }}>Spaces</span>,<br />Your Earnings.
             </h2>
             <p style={{ fontSize: 14, color: C.textMid, fontWeight: 500, lineHeight: 1.6 }}>
-              Manage, monitor and maximise every shortlet<br />you have listed on Criibb.
+              Manage, monitor and maximise every shortlet<br />you have listed on BagSearch.
             </p>
           </div>
 
@@ -594,7 +654,7 @@ export default function SellerListings() {
             {[
               { icon: Eye,       val: totalViews.toLocaleString(), label: "Total Views",  delay: 0 },
               { icon: Heart,     val: totalSaves.toLocaleString(), label: "Total Saves",  delay: 120 },
-              { icon: Award,     val: avgRating ? avgRating.toFixed(1) + " â˜…" : "â€”",     label: "Avg Rating", delay: 240 },
+              { icon: Award,     val: avgRating ? avgRating.toFixed(1) + " ★" : "—",     label: "Avg Rating", delay: 240 },
             ].map(({ icon: Ic, val, label, delay }) => (
               <div key={label} style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
@@ -615,7 +675,7 @@ export default function SellerListings() {
           </div>
         </div>
 
-        {/* â”€â”€ STATS ROW â”€â”€ */}
+        {/* ── STATS ROW ── */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
           <StatPill icon={Home}       value={counts.all}            label="Total Listed"  color={C.brand}    delay={0}   visible={visible} />
           <StatPill icon={CheckCircle}value={counts.active}         label="Active"        color={C.success}  delay={80}  visible={visible} />
@@ -623,7 +683,7 @@ export default function SellerListings() {
           <StatPill icon={TrendingUp} value={totalViews.toLocaleString()} label="Total Views" color={C.accent} delay={240} visible={visible} />
         </div>
 
-        {/* â”€â”€ CONTROLS â”€â”€ */}
+        {/* ── CONTROLS ── */}
         <div style={{
           display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 24,
           opacity: visible ? 1 : 0,
@@ -649,7 +709,7 @@ export default function SellerListings() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search your listingsâ€¦"
+                placeholder="Search your listings…"
                 style={{
                   width: "100%", padding: "9px 14px 9px 36px", borderRadius: 12,
                   border: `1.5px solid ${C.cardBorder}`, background: C.surface,
@@ -678,14 +738,14 @@ export default function SellerListings() {
               }}
             >
               <option value="newest">Newest First</option>
-              <option value="price_hi">Price: High â†’ Low</option>
-              <option value="price_lo">Price: Low â†’ High</option>
+              <option value="price_hi">Price: High → Low</option>
+              <option value="price_lo">Price: Low → High</option>
               <option value="views">Most Viewed</option>
             </select>
           </div>
         </div>
 
-        {/* â”€â”€ GRID â”€â”€ */}
+        {/* ── GRID ── */}
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 22 }}>
             {[...Array(6)].map((_, i) => (
@@ -730,7 +790,7 @@ export default function SellerListings() {
           </div>
         )}
 
-        {/* â”€â”€ BOTTOM CTA â”€â”€ */}
+        {/* ── BOTTOM CTA ── */}
         {!loading && filtered.length > 0 && (
           <div style={{
             marginTop: 48, textAlign: "center",
@@ -756,6 +816,7 @@ export default function SellerListings() {
     </div>
   );
 }
+
 
 
 
