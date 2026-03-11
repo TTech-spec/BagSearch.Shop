@@ -98,6 +98,35 @@ function LoginRoute() {
   return <Login />;
 }
 
+function RegRoute() {
+  const { user } = useContext(AuthContext);
+  
+  // If user is logged in, redirect to products
+  if (user) {
+    return <Navigate to="/products" replace />;
+  }
+  
+  return <Reg />;
+}
+
+// Root route - redirects based on auth status
+function RootRoute() {
+  const { user, loading } = useContext(AuthContext);
+  
+  // While loading, show nothing or a loading spinner
+  if (loading) {
+    return null;
+  }
+  
+  // If user is logged in, redirect to products
+  if (user) {
+    return <Navigate to="/products" replace />;
+  }
+  
+  // If not logged in, show Home page
+  return <Home />;
+}
+
 function App() {
   const { user } = useContext(AuthContext);
 
@@ -105,11 +134,11 @@ function App() {
     <Router>
       <AuthListener />
       <Routes>
-        {/* Default route -> Home (public landing page) */}
-        <Route path="/" element={<Home />} />
+        {/* Default route -> Home (public landing page) or Products (if logged in) */}
+        <Route path="/" element={<RootRoute />} />
 
         {/* Registration route */}
-        <Route path="/register" element={<Reg />} />
+        <Route path="/register" element={<RegRoute />} />
 
         {/* Login route */}
         <Route path="/login" element={<LoginRoute />} />
