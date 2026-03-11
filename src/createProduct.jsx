@@ -5,32 +5,31 @@ import { AuthContext } from './context/AuthContext';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
-  primary:      '#C94B2C',      // Burnt orange
-  primaryLight: '#E8856A',       // Lighter orange
-  primaryBg:    '#F9DDD0',       // Peach
-  primaryPale:  '#FFF5F2',       // Very light peach
-  primaryBorder:'#F0C8BB',       // Peach border
-  accent:       '#B33A1E',       // Darker orange
-  success:      '#C94B2C',       // Use orange for success
-  successBg:    '#F9DDD0',       // Peach background
-  successLight: '#FCE8E0',       // Very light orange
+  primary:      '#C94B2C',
+  primaryLight: '#E8856A',
+  primaryBg:    '#F9DDD0',
+  primaryPale:  '#FFF5F2',
+  primaryBorder:'#F0C8BB',
+  accent:       '#B33A1E',
+  success:      '#C94B2C',
+  successBg:    '#F9DDD0',
+  successLight: '#FCE8E0',
   danger:       '#DC2626',
   dangerBg:     '#FEF2F2',
   surface:      '#FFFFFF',
   surfaceDim:   '#FDF8F5',
   border:       '#F0D9CC',
   borderLight:  '#F7ECE4',
-  text:         '#1A0A00',       // Dark brown
-  textMid:      '#7A4030',       // Medium brown
-  textMuted:    '#B07060',       // Muted orange-brown
-  textFaint:    '#E8C4B5',       // Very light peach-brown
+  text:         '#1A0A00',
+  textMid:      '#7A4030',
+  textMuted:    '#B07060',
+  textFaint:    '#E8C4B5',
 };
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 const CLOUDINARY_FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER || 'products';
 
-// Check for missing configuration on load
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
   console.error('Cloudinary Configuration Error:', {
     cloudName: CLOUDINARY_CLOUD_NAME ? 'set' : 'missing',
@@ -46,37 +45,38 @@ const MS = ({ name, size = 22, style: s = {} }) => (
 
 // ─── Nigerian locations ───────────────────────────────────────────────────────
 const NIGERIAN_LOCATIONS = [
-  { id: 'lagos-island',   label: 'Lagos Island',    state: 'Lagos',       emoji: '🏙️' },
-  { id: 'lekki',          label: 'Lekki',            state: 'Lagos',       emoji: '🌴' },
-  { id: 'victoria-island',label: 'Victoria Island',  state: 'Lagos',       emoji: '💎' },
-  { id: 'ikeja',          label: 'Ikeja',             state: 'Lagos',       emoji: '✈️' },
-  { id: 'surulere',       label: 'Surulere',          state: 'Lagos',       emoji: '🏘️' },
-  { id: 'yaba',           label: 'Yaba',              state: 'Lagos',       emoji: '🎓' },
-  { id: 'abuja-central',  label: 'Abuja Central',    state: 'FCT',         emoji: '🏛️' },
-  { id: 'wuse',           label: 'Wuse',              state: 'FCT',         emoji: '🏢' },
-  { id: 'garki',          label: 'Garki',             state: 'FCT',         emoji: '🌆' },
-  { id: 'port-harcourt',  label: 'Port Harcourt',    state: 'Rivers',      emoji: '⚓' },
-  { id: 'kano-central',   label: 'Kano Central',     state: 'Kano',        emoji: '🌅' },
-  { id: 'ibadan',         label: 'Ibadan',            state: 'Oyo',         emoji: '🌇' },
-  { id: 'enugu',          label: 'Enugu',             state: 'Enugu',       emoji: '⛰️' },
-  { id: 'benin-city',     label: 'Benin City',       state: 'Edo',         emoji: '👑' },
-  { id: 'aba',            label: 'Aba',               state: 'Abia',        emoji: '👜' },
-  { id: 'calabar',        label: 'Calabar',           state: 'Cross River', emoji: '🌿' },
-  { id: 'warri',          label: 'Warri',             state: 'Delta',       emoji: '🛢️' },
-  { id: 'onitsha',        label: 'Onitsha',           state: 'Anambra',     emoji: '🛒' },
+  { id: 'lagos-island',    label: 'Lagos Island',   state: 'Lagos',       emoji: '🏙️' },
+  { id: 'lekki',           label: 'Lekki',           state: 'Lagos',       emoji: '🌴' },
+  { id: 'victoria-island', label: 'Victoria Island', state: 'Lagos',       emoji: '💎' },
+  { id: 'ikeja',           label: 'Ikeja',            state: 'Lagos',       emoji: '✈️' },
+  { id: 'surulere',        label: 'Surulere',         state: 'Lagos',       emoji: '🏘️' },
+  { id: 'yaba',            label: 'Yaba',             state: 'Lagos',       emoji: '🎓' },
+  { id: 'abuja-central',   label: 'Abuja Central',   state: 'FCT',         emoji: '🏛️' },
+  { id: 'wuse',            label: 'Wuse',             state: 'FCT',         emoji: '🏢' },
+  { id: 'garki',           label: 'Garki',            state: 'FCT',         emoji: '🌆' },
+  { id: 'port-harcourt',   label: 'Port Harcourt',   state: 'Rivers',      emoji: '⚓' },
+  { id: 'kano-central',    label: 'Kano Central',    state: 'Kano',        emoji: '🌅' },
+  { id: 'ibadan',          label: 'Ibadan',           state: 'Oyo',         emoji: '🌇' },
+  { id: 'enugu',           label: 'Enugu',            state: 'Enugu',       emoji: '⛰️' },
+  { id: 'benin-city',      label: 'Benin City',      state: 'Edo',         emoji: '👑' },
+  { id: 'aba',             label: 'Aba',              state: 'Abia',        emoji: '👜' },
+  { id: 'calabar',         label: 'Calabar',          state: 'Cross River', emoji: '🌿' },
+  { id: 'warri',           label: 'Warri',            state: 'Delta',       emoji: '🛢️' },
+  { id: 'onitsha',         label: 'Onitsha',          state: 'Anambra',     emoji: '🛒' },
 ];
 
 // ─── Progress steps definition ────────────────────────────────────────────────
 const STEPS = [
-  { id: 'images',      label: 'Photos',      icon: 'photo_camera',   field: 'images' },
-  { id: 'name',        label: 'Bag Name',    icon: 'label',          field: 'name' },
+  { id: 'images',      label: 'Photos',      icon: 'photo_camera',      field: 'images' },
+  { id: 'name',        label: 'Bag Name',    icon: 'label',             field: 'name' },
   { id: 'brand',       label: 'Brand',       icon: 'workspace_premium', field: 'brand' },
-  { id: 'category',    label: 'Category',    icon: 'category',       field: 'category' },
-  { id: 'condition',   label: 'Condition',   icon: 'star',           field: 'condition' },
-  { id: 'price',       label: 'Price',       icon: 'payments',       field: 'price' },
-  { id: 'location',    label: 'Location',    icon: 'location_on',    field: 'location' },
-  { id: 'whatsapp',    label: 'WhatsApp',    icon: 'chat',           field: 'whatsapp' },
-  { id: 'description', label: 'Description', icon: 'description',    field: 'description' },
+  { id: 'category',    label: 'Category',    icon: 'category',          field: 'category' },
+  { id: 'condition',   label: 'Condition',   icon: 'star',              field: 'condition' },
+  { id: 'quantity',    label: 'Quantity',    icon: 'inventory_2',       field: 'quantity' },
+  { id: 'price',       label: 'Price',       icon: 'payments',          field: 'price' },
+  { id: 'location',    label: 'Location',    icon: 'location_on',       field: 'location' },
+  { id: 'whatsapp',    label: 'WhatsApp',    icon: 'chat',              field: 'whatsapp' },
+  { id: 'description', label: 'Description', icon: 'description',       field: 'description' },
 ];
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
@@ -100,17 +100,34 @@ async function uploadImageToCloudinary(file, userId) {
   payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
   payload.append('folder', `${CLOUDINARY_FOLDER}/${userId}`);
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-    method: 'POST',
-    body: payload,
-  });
+  try {
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: payload,
+    });
 
-  const data = await res.json();
-  if (!res.ok || !data?.secure_url) {
-    throw new Error(data?.error?.message || 'Failed to upload image to Cloudinary.');
+    const data = await res.json();
+    if (!res.ok || !data?.secure_url) {
+      throw new Error(data?.error?.message || 'Failed to upload image to Cloudinary.');
+    }
+    return data.secure_url;
+  } catch (err) {
+    if (err.message === 'Failed to fetch') {
+      throw new Error('Cloudinary is unreachable. Please check your internet connection or Cloudinary cloud name.');
+    }
+    throw err;
   }
+}
 
-  return data.secure_url;
+function isMissingColumnError(err) {
+  const msg = String(err?.message || "").toLowerCase();
+  const code = String(err?.code || "").toUpperCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    (msg.includes("column") && msg.includes("does not exist")) ||
+    (msg.includes("could not find") && msg.includes("column"))
+  );
 }
 
 export default function CreateProduct() {
@@ -127,21 +144,37 @@ export default function CreateProduct() {
     price: '',
     location: '',
     whatsapp: '',
+    quantity: 1,
   });
 
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [qtyAnimKey, setQtyAnimKey] = useState(0);
 
   // ── Page entrance animation ──
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
+  // ── Quantity helpers ──
+  const changeQty = (delta) => {
+    setFormData(prev => {
+      const next = Math.min(99, Math.max(1, prev.quantity + delta));
+      if (next !== prev.quantity) setQtyAnimKey(k => k + 1);
+      return { ...prev, quantity: next };
+    });
+  };
+  const setQty = (n) => {
+    setQtyAnimKey(k => k + 1);
+    setFormData(prev => ({ ...prev, quantity: n }));
+  };
+
   // ── Compute per-step completion ──
   const getStepDone = useCallback((step) => {
     if (step.field === 'images')   return images.length > 0;
-    if (step.field === 'condition') return true; // has default
+    if (step.field === 'condition') return true;
+    if (step.field === 'quantity') return formData.quantity >= 1;
     return !!formData[step.field]?.toString().trim();
   }, [formData, images]);
 
@@ -187,7 +220,7 @@ export default function CreateProduct() {
         uploadedImageUrls.push(imageUrl);
       }
       const rawPrice = formData.price.toString().replace(/,/g, '');
-      const { error: insertError } = await supabase.from('products').insert([{
+      const insertData = {
         user_id: user.id,
         name: formData.name,
         brand: formData.brand,
@@ -197,9 +230,20 @@ export default function CreateProduct() {
         price: rawPrice || '0',
         location: formData.location,
         whatsapp: formData.whatsapp,
+        quantity: formData.quantity,
         images: uploadedImageUrls,
         seller_name: user.user_metadata?.full_name || 'Anonymous Seller',
-      }]);
+      };
+
+      let { error: insertError } = await supabase.from('products').insert([insertData]);
+
+      if (insertError && isMissingColumnError(insertError)) {
+        // Fallback: retry without the 'quantity' column if it's missing from DB
+        const { quantity, ...fallbackData } = insertData;
+        const retry = await supabase.from('products').insert([fallbackData]);
+        insertError = retry.error;
+      }
+
       if (insertError) throw insertError;
       navigate('/products');
     } catch (err) {
@@ -218,13 +262,11 @@ export default function CreateProduct() {
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ── Entrance ── */
         @keyframes fadeSlideUp   { from{opacity:0;transform:translateY(28px)}  to{opacity:1;transform:translateY(0)} }
         @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes scaleIn       { from{opacity:0;transform:scale(0.94)}       to{opacity:1;transform:scale(1)}     }
         @keyframes fadeIn        { from{opacity:0}                              to{opacity:1}                        }
 
-        /* ── Progress ── */
         @keyframes progressFill  { from{width:0%} to{width:var(--target-width)} }
         @keyframes shimmerProg   { 0%{transform:translateX(-120%)} 100%{transform:translateX(320%)} }
         @keyframes stepPop       { 0%{transform:scale(0.7)} 60%{transform:scale(1.18)} 100%{transform:scale(1)} }
@@ -232,22 +274,21 @@ export default function CreateProduct() {
         @keyframes stepRipple    { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(2.4);opacity:0} }
         @keyframes pctBounce     { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
 
-        /* ── Image zone ── */
         @keyframes imgAppear     { from{opacity:0;transform:scale(0.8) rotate(-3deg)} to{opacity:1;transform:scale(1) rotate(0)} }
         @keyframes bounce        { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
         @keyframes uploadPulse   { 0%,100%{opacity:1} 50%{opacity:0.55} }
 
-        /* ── Input focus ring ── */
         @keyframes focusRing     { from{box-shadow:0 0 0 0 rgba(201,75,44,0.3)} to{box-shadow:0 0 0 5px rgba(201,75,44,0)} }
-
-        /* ── Section reveal ── */
         @keyframes sectionIn     { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-
-        /* ── Success tick ── */
         @keyframes tickDraw      { from{stroke-dashoffset:30} to{stroke-dashoffset:0} }
-
-        /* ── WhatsApp ping ── */
         @keyframes waPing        { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
+
+        /* Quantity number pop */
+        @keyframes qtyPop        { 0%{transform:scale(0.6) translateY(8px);opacity:0} 60%{transform:scale(1.2) translateY(-2px);opacity:1} 100%{transform:scale(1) translateY(0);opacity:1} }
+        @keyframes qtyGlow       { 0%,100%{text-shadow:none} 50%{text-shadow:0 0 18px rgba(201,75,44,0.5)} }
+
+        /* Stepper button ripple */
+        @keyframes btnPress      { 0%{transform:scale(1)} 40%{transform:scale(0.88)} 100%{transform:scale(1)} }
 
         ::-webkit-scrollbar        { width: 5px; }
         ::-webkit-scrollbar-track  { background: transparent; }
@@ -270,13 +311,26 @@ export default function CreateProduct() {
           background: ${C.successBg};
         }
         .field-select { appearance: none; cursor: pointer; }
-        .field-select:not([value=""]):not([value="Select a brand"]):not([value="Select category"]) {
-          border-color: ${C.primaryLight}; background: ${C.successBg};
-        }
+
         .img-thumb { animation: imgAppear 0.4s cubic-bezier(0.22,1,0.36,1) both; }
         .img-thumb:hover .remove-btn { opacity: 1 !important; transform: scale(1) !important; }
-        
-        /* Responsive styles */
+
+        .qty-stepper-btn {
+          width: 46px; height: 52px; border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: background 0.2s, color 0.2s;
+          flex-shrink: 0;
+        }
+        .qty-stepper-btn:not(:disabled):active { animation: btnPress 0.22s ease both; }
+        .qty-stepper-btn:disabled { cursor: not-allowed; }
+
+        .qty-pill {
+          padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+          cursor: pointer; transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+          font-family: 'Manrope', sans-serif;
+        }
+        .qty-pill:hover { transform: scale(1.06); }
+
         @media (max-width: 768px) {
           .create-header { padding-left: 16px !important; padding-right: 16px !important; }
           .create-title { font-size: 28px !important; }
@@ -288,17 +342,15 @@ export default function CreateProduct() {
       `}</style>
 
       {/* ── HEADER ── */}
-      <header style={{ 
-        background: "rgba(255,255,255,0.94)", 
-        backdropFilter: "blur(12px)", 
-        borderBottom: `1px solid ${C.border}`, 
-        position: "sticky", 
-        top: 0, 
-        zIndex: 50, 
-        boxShadow: "0 1px 20px rgba(0,0,0,0.05)", 
-        opacity: mounted ? 1 : 0, 
-        transform: mounted ? "translateY(0)" : "translateY(-100%)", 
-        transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" 
+      <header style={{
+        background: "rgba(255,255,255,0.94)",
+        backdropFilter: "blur(12px)",
+        borderBottom: `1px solid ${C.border}`,
+        position: "sticky", top: 0, zIndex: 50,
+        boxShadow: "0 1px 20px rgba(0,0,0,0.05)",
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(-100%)",
+        transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)"
       }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: C.primary }} onClick={() => navigate('/products')}>
@@ -307,10 +359,10 @@ export default function CreateProduct() {
             </svg>
             <span style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: "-0.5px" }}>Bag<span style={{ color: C.primary }}>Search</span></span>
           </div>
-          <button onClick={() => navigate('/seller-profile')} style={{ 
-            display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 10, 
-            border: "none", background: C.primary, color: "white", fontSize: 13, fontWeight: 700, 
-            cursor: "pointer", transition: "all 0.2s", boxShadow: `0 2px 8px ${C.primary}80` 
+          <button onClick={() => navigate('/seller-profile')} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 10,
+            border: "none", background: C.primary, color: "white", fontSize: 13, fontWeight: 700,
+            cursor: "pointer", transition: "all 0.2s", boxShadow: `0 2px 8px ${C.primary}80`
           }}
             onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = "none"; }}>
@@ -322,9 +374,9 @@ export default function CreateProduct() {
       <main style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 20px 80px" }} className="create-main">
 
         {/* Breadcrumb */}
-        <nav style={{ 
-          display: "flex", gap: 6, alignItems: "center", fontSize: 13, color: C.textMuted, marginBottom: 24, 
-          opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideDown 0.5s ease 0.1s both" : "none" 
+        <nav style={{
+          display: "flex", gap: 6, alignItems: "center", fontSize: 13, color: C.textMuted, marginBottom: 24,
+          opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideDown 0.5s ease 0.1s both" : "none"
         }}>
           <a href="#" onClick={e => { e.preventDefault(); navigate('/seller-profile'); }} style={{ color: C.primary, fontWeight: 700, textDecoration: "none" }}>Dashboard</a>
           <MS name="chevron_right" size={16} style={{ color: C.textFaint }} />
@@ -333,9 +385,9 @@ export default function CreateProduct() {
 
         {/* Page title */}
         <div style={{ marginBottom: 32, opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.15s both" : "none" }}>
-          <h1 style={{ 
-            fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: C.text, 
-            letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif", marginBottom: 8 
+          <h1 style={{
+            fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: C.text,
+            letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif", marginBottom: 8
           }} className="create-title">
             List Your Bag
           </h1>
@@ -345,18 +397,15 @@ export default function CreateProduct() {
         </div>
 
         {/* ── LIVE PROGRESS TRACKER ── */}
-        <div style={{ 
-          background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`, 
-          padding: "24px 24px 20px", marginBottom: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.06)", 
-          opacity: mounted ? 1 : 0, animation: mounted ? "scaleIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both" : "none", 
-          overflow: "hidden", position: "relative" 
+        <div style={{
+          background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
+          padding: "24px 24px 20px", marginBottom: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+          opacity: mounted ? 1 : 0, animation: mounted ? "scaleIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both" : "none",
+          overflow: "hidden", position: "relative"
         }}>
-          {/* BG shimmer on complete */}
           {progressPct === 100 && (
             <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C.primary}10 0%, ${C.primaryLight}15 100%)`, pointerEvents: "none", borderRadius: 20 }} />
           )}
-
-          {/* Header row */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: C.textMuted, marginBottom: 3 }}>Listing Progress</div>
@@ -368,7 +417,6 @@ export default function CreateProduct() {
             </div>
           </div>
 
-          {/* Progress bar */}
           <div style={{ height: 10, background: C.borderLight, borderRadius: 9999, overflow: "hidden", marginBottom: 20, position: "relative" }}>
             <div style={{
               height: "100%", background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})`,
@@ -383,13 +431,11 @@ export default function CreateProduct() {
             </div>
           </div>
 
-          {/* Step indicators — scrollable on mobile */}
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-            {STEPS.map((step, i) => {
+            {STEPS.map((step) => {
               const done = getStepDone(step);
               return (
                 <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0, minWidth: 56 }}>
-                  {/* Circle */}
                   <div style={{ position: "relative", width: 36, height: 36 }}>
                     {done && (
                       <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `2px solid ${C.primary}`, opacity: 0.4, animation: "stepRipple 1.8s ease-out infinite" }} />
@@ -422,10 +468,10 @@ export default function CreateProduct() {
 
         {/* Error */}
         {error && (
-          <div style={{ 
-            background: C.dangerBg, border: `1px solid ${C.danger}40`, color: C.danger, 
-            padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 600, marginBottom: 20, 
-            display: "flex", alignItems: "center", gap: 8, animation: "scaleIn 0.3s ease both" 
+          <div style={{
+            background: C.dangerBg, border: `1px solid ${C.danger}40`, color: C.danger,
+            padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 600, marginBottom: 20,
+            display: "flex", alignItems: "center", gap: 8, animation: "scaleIn 0.3s ease both"
           }}>
             <MS name="error" size={18} style={{ color: C.danger, flexShrink: 0 }} /> {error}
           </div>
@@ -448,13 +494,13 @@ export default function CreateProduct() {
                 transform: dragOver ? "scale(1.01)" : "none",
               }}>
               <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
-              <div style={{ 
-                width: 60, height: 60, borderRadius: "50%", 
-                background: images.length > 0 ? C.successBg : C.primaryPale, 
-                margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center", 
-                animation: dragOver ? "bounce 0.6s ease infinite" : images.length === 0 ? "uploadPulse 2s ease-in-out infinite" : "none" 
+              <div style={{
+                width: 60, height: 60, borderRadius: "50%",
+                background: images.length > 0 ? C.successBg : C.primaryPale,
+                margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center",
+                animation: dragOver ? "bounce 0.6s ease infinite" : images.length === 0 ? "uploadPulse 2s ease-in-out infinite" : "none"
               }}>
-                <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: images.length > 0 ? C.primary : C.primary }} />
+                <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: C.primary }} />
               </div>
               <p style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 5 }}>
                 {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add more?` : "Drag & drop or click to upload"}
@@ -465,25 +511,25 @@ export default function CreateProduct() {
             {images.length > 0 && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginTop: 16 }}>
                 {images.map((img, idx) => (
-                  <div key={idx} className="img-thumb" style={{ 
-                    aspectRatio: "1", borderRadius: 12, overflow: "hidden", position: "relative", 
-                    border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", 
-                    animationDelay: `${idx * 50}ms` 
+                  <div key={idx} className="img-thumb" style={{
+                    aspectRatio: "1", borderRadius: 12, overflow: "hidden", position: "relative",
+                    border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    animationDelay: `${idx * 50}ms`
                   }}>
                     <img src={img.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <button type="button" className="remove-btn" onClick={e => { e.stopPropagation(); removeImage(idx); }}
-                      style={{ 
-                        position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%", 
-                        border: "none", background: C.danger, color: "white", cursor: "pointer", 
-                        display: "flex", alignItems: "center", justifyContent: "center", 
-                        opacity: 0, transform: "scale(0.8)", transition: "all 0.2s" 
+                      style={{
+                        position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%",
+                        border: "none", background: C.danger, color: "white", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        opacity: 0, transform: "scale(0.8)", transition: "all 0.2s"
                       }}>
                       <MS name="close" size={14} />
                     </button>
-                    {idx === 0 && <span style={{ 
-                      position: "absolute", bottom: 4, left: 4, fontSize: 9, fontWeight: 800, 
-                      letterSpacing: "0.08em", textTransform: "uppercase", background: C.text, 
-                      color: "white", padding: "2px 6px", borderRadius: 4 
+                    {idx === 0 && <span style={{
+                      position: "absolute", bottom: 4, left: 4, fontSize: 9, fontWeight: 800,
+                      letterSpacing: "0.08em", textTransform: "uppercase", background: C.text,
+                      color: "white", padding: "2px 6px", borderRadius: 4
                     }}>Main</span>}
                   </div>
                 ))}
@@ -528,6 +574,113 @@ export default function CreateProduct() {
                 </div>
               </FieldGroup>
 
+              {/* ── QUANTITY STEPPER ── */}
+              <FieldGroup label="Quantity Available" icon="inventory_2" done={formData.quantity >= 1}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+                  {/* Main stepper control */}
+                  <div style={{
+                    display: "flex", alignItems: "stretch",
+                    border: `1.5px solid ${formData.quantity > 1 ? C.primaryLight : C.border}`,
+                    borderRadius: 14, overflow: "hidden", background: "white",
+                    transition: "border-color 0.3s, box-shadow 0.3s",
+                    boxShadow: formData.quantity > 1 ? `0 0 0 3px rgba(201,75,44,0.10)` : "none",
+                  }}>
+                    {/* Minus */}
+                    <button type="button" className="qty-stepper-btn"
+                      disabled={formData.quantity <= 1}
+                      onClick={() => changeQty(-1)}
+                      style={{
+                        background: formData.quantity <= 1 ? C.surfaceDim : C.primaryPale,
+                        color: formData.quantity <= 1 ? C.textFaint : C.primary,
+                        borderRight: `1px solid ${C.borderLight}`,
+                      }}
+                      onMouseEnter={e => { if (formData.quantity > 1) e.currentTarget.style.background = C.primaryBg; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = formData.quantity <= 1 ? C.surfaceDim : C.primaryPale; }}>
+                      <MS name="remove" size={20} />
+                    </button>
+
+                    {/* Number display */}
+                    <div style={{
+                      flex: 1, display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      padding: "8px 0", background: "white", minWidth: 70,
+                    }}>
+                      <span
+                        key={qtyAnimKey}
+                        style={{
+                          fontSize: 28, fontWeight: 900, color: formData.quantity > 1 ? C.primary : C.text,
+                          letterSpacing: "-0.05em", lineHeight: 1,
+                          animation: "qtyPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both",
+                          display: "block",
+                          transition: "color 0.3s",
+                        }}>
+                        {formData.quantity}
+                      </span>
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, color: C.textMuted,
+                        textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 2,
+                      }}>
+                        {formData.quantity === 1 ? "bag" : "bags"}
+                      </span>
+                    </div>
+
+                    {/* Plus */}
+                    <button type="button" className="qty-stepper-btn"
+                      disabled={formData.quantity >= 99}
+                      onClick={() => changeQty(1)}
+                      style={{
+                        background: formData.quantity >= 99 ? C.surfaceDim : C.primaryPale,
+                        color: formData.quantity >= 99 ? C.textFaint : C.primary,
+                        borderLeft: `1px solid ${C.borderLight}`,
+                      }}
+                      onMouseEnter={e => { if (formData.quantity < 99) e.currentTarget.style.background = C.primaryBg; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = formData.quantity >= 99 ? C.surfaceDim : C.primaryPale; }}>
+                      <MS name="add" size={20} />
+                    </button>
+                  </div>
+
+                  {/* Quick-select pills */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {[1, 2, 3, 5, 10].map(n => {
+                      const active = formData.quantity === n || (n === 10 && formData.quantity >= 10);
+                      return (
+                        <button key={n} type="button" className="qty-pill"
+                          onClick={() => setQty(n)}
+                          style={{
+                            border: `1.5px solid ${active ? C.primary : C.border}`,
+                            background: active ? C.primary : "white",
+                            color: active ? "white" : C.textMid,
+                            transform: active ? "scale(1.08)" : "scale(1)",
+                            boxShadow: active ? `0 3px 10px ${C.primary}50` : "none",
+                          }}
+                          onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = C.primaryLight; e.currentTarget.style.color = C.primary; }}}
+                          onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}}>
+                          {n === 10 ? '10+' : n}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Status badge — appears when qty > 1 */}
+                  {formData.quantity > 1 && (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "8px 13px", borderRadius: 10,
+                      background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
+                      animation: "scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both",
+                    }}>
+                      <MS name="inventory_2" size={15} style={{ color: C.primary, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>
+                        {formData.quantity >= 10
+                          ? `${formData.quantity} bags in stock — perfect for bulk buyers! 🎉`
+                          : `${formData.quantity} bags available — great selection!`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </FieldGroup>
+
             </div>
           </FormSection>
 
@@ -535,13 +688,12 @@ export default function CreateProduct() {
           <FormSection icon="payments" title="Pricing & Location" subtitle="Set your price in Naira and where you're selling from" delay={0.55} mounted={mounted}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
 
-              {/* ── Price in Naira ── */}
               <FieldGroup label="Price (₦)" icon="payments" done={!!formData.price}>
                 <div style={{ position: "relative" }}>
-                  <span style={{ 
-                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", 
-                    fontSize: 16, fontWeight: 800, color: formData.price ? C.primary : C.textMuted, 
-                    lineHeight: 1, transition: "color 0.25s", userSelect: "none" 
+                  <span style={{
+                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+                    fontSize: 16, fontWeight: 800, color: formData.price ? C.primary : C.textMuted,
+                    lineHeight: 1, transition: "color 0.25s", userSelect: "none"
                   }}>₦</span>
                   <input
                     name="price" value={formData.price ? formatNaira(formData.price) : ''} required
@@ -560,7 +712,6 @@ export default function CreateProduct() {
                 )}
               </FieldGroup>
 
-              {/* ── Location ── */}
               <FieldGroup label="Your Location" icon="location_on" done={!!formData.location}>
                 <div style={{ position: "relative" }}>
                   <select name="location" value={formData.location} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
@@ -576,10 +727,10 @@ export default function CreateProduct() {
                 {formData.location && (() => {
                   const loc = NIGERIAN_LOCATIONS.find(l => l.id === formData.location);
                   return loc ? (
-                    <div style={{ 
-                      marginTop: 8, display: "flex", alignItems: "center", gap: 7, 
-                      padding: "7px 12px", background: C.primaryPale, border: `1px solid ${C.primaryBorder}`, 
-                      borderRadius: 8, animation: "scaleIn 0.3s ease both" 
+                    <div style={{
+                      marginTop: 8, display: "flex", alignItems: "center", gap: 7,
+                      padding: "7px 12px", background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
+                      borderRadius: 8, animation: "scaleIn 0.3s ease both"
                     }}>
                       <span style={{ fontSize: 16 }}>{loc.emoji}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{loc.label}, {loc.state}</span>
@@ -595,14 +746,13 @@ export default function CreateProduct() {
           <FormSection icon="chat" title="WhatsApp Contact" subtitle="Buyers will reach you directly on WhatsApp" delay={0.65} mounted={mounted}>
             <FieldGroup label="Your WhatsApp Number" icon="chat" done={!!formData.whatsapp}>
               <div style={{ position: "relative" }}>
-                {/* Pulsing WA icon */}
-                <div style={{ 
-                  position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", 
-                  width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center" 
+                <div style={{
+                  position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                  width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  {formData.whatsapp && <div style={{ 
-                    position: "absolute", width: 22, height: 22, borderRadius: "50%", 
-                    background: `${C.primary}30`, animation: "waPing 1.8s ease-out infinite" 
+                  {formData.whatsapp && <div style={{
+                    position: "absolute", width: 22, height: 22, borderRadius: "50%",
+                    background: `${C.primary}30`, animation: "waPing 1.8s ease-out infinite"
                   }} />}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill={formData.whatsapp ? C.primary : C.textMuted} style={{ position: "relative", zIndex: 1, transition: "fill 0.3s" }}>
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -615,11 +765,11 @@ export default function CreateProduct() {
               </p>
               {formData.whatsapp && (
                 <a href={`https://wa.me/${formData.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                  style={{ 
-                    display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10, 
-                    padding: "7px 14px", borderRadius: 8, background: C.successBg, border: `1px solid ${C.primaryBorder}`, 
-                    color: C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none", 
-                    transition: "all 0.2s", animation: "scaleIn 0.3s ease both" 
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10,
+                    padding: "7px 14px", borderRadius: 8, background: C.successBg, border: `1px solid ${C.primaryBorder}`,
+                    color: C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none",
+                    transition: "all 0.2s", animation: "scaleIn 0.3s ease both"
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = C.primaryBg}
                   onMouseLeave={e => e.currentTarget.style.background = C.successBg}>
@@ -633,22 +783,21 @@ export default function CreateProduct() {
           {/* ── SECTION 5: Description ── */}
           <FormSection icon="description" title="Description" subtitle="Describe condition, history, and details" delay={0.75} mounted={mounted}>
             <FieldGroup label="Detailed Description" icon="description" done={!!formData.description}>
-              <div style={{ 
-                border: `1.5px solid ${formData.description ? C.primaryLight : C.border}`, 
-                borderRadius: 12, overflow: "hidden", transition: "border-color 0.25s, box-shadow 0.25s" 
+              <div style={{
+                border: `1.5px solid ${formData.description ? C.primaryLight : C.border}`,
+                borderRadius: 12, overflow: "hidden", transition: "border-color 0.25s, box-shadow 0.25s"
               }}
                 onFocusCapture={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.primary}20`; }}
                 onBlurCapture={e => { e.currentTarget.style.borderColor = formData.description ? C.primaryLight : C.border; e.currentTarget.style.boxShadow = "none"; }}>
-                {/* Mini toolbar */}
-                <div style={{ 
-                  display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", 
-                  background: C.surfaceDim, borderBottom: `1px solid ${C.border}` 
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
+                  background: C.surfaceDim, borderBottom: `1px solid ${C.border}`
                 }}>
                   {[["format_bold","Bold"],["format_italic","Italic"],["format_list_bulleted","List"]].map(([icon, label]) => (
-                    <button key={icon} type="button" title={label} style={{ 
-                      width: 28, height: 28, borderRadius: 6, border: "none", background: "transparent", 
-                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", 
-                      color: C.textMuted, transition: "all 0.18s" 
+                    <button key={icon} type="button" title={label} style={{
+                      width: 28, height: 28, borderRadius: 6, border: "none", background: "transparent",
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      color: C.textMuted, transition: "all 0.18s"
                     }}
                       onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.color = C.primary; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textMuted; }}>
@@ -658,10 +807,10 @@ export default function CreateProduct() {
                   <div style={{ marginLeft: "auto", fontSize: 10, color: C.textFaint, fontWeight: 700 }}>{formData.description.length}/1000</div>
                 </div>
                 <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
-                  style={{ 
-                    width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none", 
-                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65, 
-                    background: C.surface 
+                  style={{
+                    width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none",
+                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65,
+                    background: C.surface
                   }}
                   placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />
               </div>
@@ -669,16 +818,16 @@ export default function CreateProduct() {
           </FormSection>
 
           {/* ── SUBMIT FOOTER ── */}
-          <div style={{ 
-            marginTop: 28, background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`, 
-            padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)", 
-            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, 
-            opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.5s ease 0.85s both" : "none" 
+          <div style={{
+            marginTop: 28, background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
+            padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+            opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.5s ease 0.85s both" : "none"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ 
-                width: 36, height: 36, borderRadius: "50%", background: C.successBg, 
-                display: "flex", alignItems: "center", justifyContent: "center" 
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", background: C.successBg,
+                display: "flex", alignItems: "center", justifyContent: "center"
               }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill={C.primary}>
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -690,34 +839,34 @@ export default function CreateProduct() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button type="button" onClick={() => navigate('/seller-profile')} style={{ 
-                padding: "11px 20px", borderRadius: 12, border: `1px solid ${C.border}`, 
-                background: "white", color: C.textMuted, fontSize: 13, fontWeight: 700, 
-                cursor: "pointer", transition: "all 0.2s" 
+              <button type="button" onClick={() => navigate('/seller-profile')} style={{
+                padding: "11px 20px", borderRadius: 12, border: `1px solid ${C.border}`,
+                background: "white", color: C.textMuted, fontSize: 13, fontWeight: 700,
+                cursor: "pointer", transition: "all 0.2s"
               }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.color = C.primary; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
                 Cancel
               </button>
               <button type="submit" disabled={uploading}
-                style={{ 
-                  display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12, 
-                  border: "none", background: progressPct === 100 ? C.primary : C.primary, 
-                  color: "white", fontSize: 14, fontWeight: 800, 
-                  cursor: uploading ? "not-allowed" : "pointer", 
-                  transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)", 
-                  boxShadow: `0 4px 16px ${C.primary}80`, 
-                  opacity: uploading ? 0.7 : 1 
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12,
+                  border: "none", background: C.primary,
+                  color: "white", fontSize: 14, fontWeight: 800,
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+                  boxShadow: `0 4px 16px ${C.primary}80`,
+                  opacity: uploading ? 0.7 : 1
                 }}
-                onMouseEnter={e => { 
-                  if (!uploading) { 
-                    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; 
-                    e.currentTarget.style.boxShadow = `0 8px 24px ${C.primary}`; 
+                onMouseEnter={e => {
+                  if (!uploading) {
+                    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${C.primary}`;
                   }
                 }}
-                onMouseLeave={e => { 
-                  e.currentTarget.style.transform = "none"; 
-                  e.currentTarget.style.boxShadow = `0 4px 16px ${C.primary}80`; 
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "none";
+                  e.currentTarget.style.boxShadow = `0 4px 16px ${C.primary}80`;
                 }}>
                 {uploading ? (
                   <>
@@ -757,15 +906,14 @@ export default function CreateProduct() {
 /* ── Form Section wrapper ── */
 function FormSection({ icon, title, subtitle, delay, mounted, children }) {
   return (
-    <div style={{ 
-      background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`, 
-      overflow: "hidden", marginBottom: 20, boxShadow: "0 2px 16px rgba(0,0,0,0.04)", 
-      opacity: mounted ? 1 : 0, animation: mounted ? `sectionIn 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}s both` : "none" 
+    <div style={{
+      background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
+      overflow: "hidden", marginBottom: 20, boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+      opacity: mounted ? 1 : 0, animation: mounted ? `sectionIn 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}s both` : "none"
     }}>
-      {/* Section header */}
-      <div style={{ 
-        padding: "18px 24px", borderBottom: `1px solid ${C.borderLight}`, 
-        background: C.surfaceDim, display: "flex", alignItems: "center", gap: 12 
+      <div style={{
+        padding: "18px 24px", borderBottom: `1px solid ${C.borderLight}`,
+        background: C.surfaceDim, display: "flex", alignItems: "center", gap: 12
       }}>
         <div style={{ width: 36, height: 36, borderRadius: 10, background: C.primaryPale, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <MS name={icon} size={19} style={{ color: C.primary }} />

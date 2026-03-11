@@ -2,7 +2,7 @@ import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import logoImage from './images/a00b2158-82d4-4c37-8602-a33e18a7a9f2_removalai_preview.png';
+import LogoIcon from './components/Logo.jsx';
 
 // ─── Color Palette (warm orange/peach inspired by BagSearch) ────────────────────
 const C = {
@@ -139,15 +139,7 @@ const mockVendors = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const LogoIcon = ({ size = 26 }) => (
-  <span style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', flexShrink: 0 }}>
-    <img
-      src={logoImage}
-      alt="BagSearch logo"
-      style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transform: 'scale(1.45)', transformOrigin: 'center', filter: 'drop-shadow(0 3px 8px rgba(201,75,44,0.25))' }}
-    />
-  </span>
-);
+// Using shared LogoIcon component
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
 /* ─── AUTH GATE MODAL (copied from home.jsx for reuse) ─── */

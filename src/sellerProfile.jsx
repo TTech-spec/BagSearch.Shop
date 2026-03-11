@@ -64,7 +64,7 @@ function mapBuyerViewRow(row) {
   const img =
     row.product_image ||
     (Array.isArray(row.products?.images) ? row.products.images[0] : null) ||
-    (Array.isArray(row.product?.images) ? row.product.images[0] : null) ||
+    (Array.isArray(row.product?.images)  ? row.product.images[0]  : null) ||
     row.products?.image || row.product?.image ||
     'https://via.placeholder.com/96';
   const buyerName =
@@ -78,8 +78,8 @@ function mapBuyerViewRow(row) {
 }
 
 function isMissingColumnError(err) {
-  const msg = String(err?.message || '').toLowerCase();
-  const code = String(err?.code || '').toUpperCase();
+  const msg  = String(err?.message || '').toLowerCase();
+  const code = String(err?.code    || '').toUpperCase();
   return (
     code === '42703' ||
     code === 'PGRST204' ||
@@ -87,12 +87,6 @@ function isMissingColumnError(err) {
     (msg.includes('could not find') && msg.includes('column') && msg.includes('schema cache'))
   );
 }
-
-const navItems = [
-  { icon: 'dashboard',    label: 'Dashboard',   active: true  },
-  { icon: 'inventory_2',  label: 'My Listings', active: false },
-  { icon: 'receipt_long', label: 'Orders',      active: false },
-];
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
 const MS = ({ name, size = 22, style: s = {} }) => (
@@ -107,6 +101,17 @@ const WhatsAppIcon = ({ size = 20 }) => (
   </svg>
 );
 
+// ─── Sparkle SVG icon ─────────────────────────────────────────────────────────
+function SparkleIcon({ size = 16, color = C.primary, animated = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      style={{ animation: animated ? "sparklePulse 1s ease-in-out infinite" : "none", flexShrink: 0 }}>
+      <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
+        fill={color}/>
+    </svg>
+  );
+}
+
 // ─── Source badge ─────────────────────────────────────────────────────────────
 function SourceBadge({ source }) {
   const map = {
@@ -119,20 +124,6 @@ function SourceBadge({ source }) {
     <span style={{ display:"inline-flex", alignItems:"center", gap:5, fontSize:11, fontWeight:700, padding:"4px 10px", borderRadius:20, background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:"nowrap" }}>
       <MS name={s.icon} size={13}/> {s.label}
     </span>
-  );
-}
-
-// ─── Nav item ─────────────────────────────────────────────────────────────────
-function NavItem({ item, delay, ready, onClick }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <a href="#" onClick={e=>{e.preventDefault();onClick?.();}}
-      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, textDecoration:"none", background:item.active?C.primaryBg:hov?"rgba(255,255,255,0.05)":"transparent", color:item.active?C.primary:hov?C.textMuted:C.textMuted, transition:"all 0.2s", transform:hov&&!item.active?"translateX(3px)":"none", opacity:ready?1:0, animation:ready?`slideRight 0.4s cubic-bezier(0.22,1,0.36,1) ${delay}ms both`:"none" }}>
-      <MS name={item.icon} size={20}/>
-      <span style={{ fontSize:13, fontWeight:item.active?700:600 }}>{item.label}</span>
-      {item.active && <div style={{ marginLeft:"auto", width:6, height:6, borderRadius:"50%", background:C.primary }}/>}
-    </a>
   );
 }
 
@@ -245,10 +236,304 @@ function AnimatedHeading({ text, sub, ready, delay = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ─── EDIT PROFILE PANEL (new) ─────────────────────────────────────────────────
+// ─── AI ASSIST (Gemini) ───────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Float-label input
+const GEMINI_API_KEY = "AIzaSyB0_vtq0N7ilNze0dnUDiLBsDkDJ1vRgbo";
+
+// Try models in order — falls back if quota exceeded
+const GEMINI_MODELS = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.0-pro",
+];
+
+function useAIAssist() {
+  const [loading, setLoading] = useState(false);
+
+  const generate = async ({ prompt, onChunk, onDone, onError }) => {
+    setLoading(true);
+    let lastError = null;
+
+    for (const model of GEMINI_MODELS) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 800, temperature: 0.9 },
+          }),
+        });
+
+        const data = await res.json();
+
+        // If quota exceeded, try next model
+        if (!res.ok) {
+          const msg = data?.error?.message || "";
+          if (msg.toLowerCase().includes("quota") || res.status === 429 || res.status === 403) {
+            lastError = "quota";
+            continue;
+          }
+          throw new Error(msg || `API error ${res.status}`);
+        }
+
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        if (!text) throw new Error("Empty response — please try again.");
+
+        // Smooth word-by-word reveal
+        let displayed = "";
+        const words = text.split(" ");
+        for (let i = 0; i < words.length; i++) {
+          displayed += (i === 0 ? "" : " ") + words[i];
+          onChunk?.(displayed);
+          await new Promise(r => setTimeout(r, 24));
+        }
+        onDone?.(text);
+        setLoading(false);
+        return; // success — exit
+      } catch (e) {
+        lastError = e.message;
+        // Only retry on quota errors
+        if (!String(e.message).toLowerCase().includes("quota")) break;
+      }
+    }
+
+    // All models failed
+    const msg = lastError === "quota"
+      ? "Your Gemini API quota is exhausted. Please upgrade your plan at ai.google.dev or try again tomorrow."
+      : lastError || "AI error — please try again.";
+    onError?.(msg);
+    setLoading(false);
+  };
+
+  return { generate, loading };
+}
+
+// ─── AI Assist Modal (full redesign) ─────────────────────────────────────────
+function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegenerate, field }) {
+  const isError = result && result.startsWith("Error:");
+  const isQuota = result && result.toLowerCase().includes("quota");
+
+  const chips = {
+    brand_name:  [
+      { label:"Bold & Memorable", icon:"bolt"         },
+      { label:"Elegant & Luxury",  icon:"diamond"      },
+      { label:"Short & Punchy",    icon:"flash_on"     },
+      { label:"Lagos-inspired",    icon:"location_on"  },
+    ],
+    brand_story: [
+      { label:"Origin Story",        icon:"auto_stories"  },
+      { label:"Craftsmanship",       icon:"handyman"      },
+      { label:"Bold & Aspirational", icon:"trending_up"   },
+      { label:"Warm & Personal",     icon:"favorite"      },
+    ],
+  };
+
+  const currentChips = chips[field] || chips.brand_story;
+
+  if (!visible) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:400, background:"rgba(26,10,0,0.35)", backdropFilter:"blur(3px)", animation:"overlayFade 0.2s ease" }}/>
+
+      {/* Modal */}
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:401,
+        width:"min(480px, calc(100vw - 32px))", background:"white", borderRadius:24,
+        boxShadow:`0 32px 80px rgba(200,75,17,0.18), 0 8px 32px rgba(0,0,0,0.12)`,
+        overflow:"hidden", animation:"modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}>
+
+        {/* ── Header ── */}
+        <div style={{ background:`linear-gradient(135deg, #2d1200 0%, #1a0a00 100%)`, padding:"20px 22px 18px", position:"relative", overflow:"hidden" }}>
+          {/* Decorative orbs */}
+          <div style={{ position:"absolute", top:-30, right:-20, width:120, height:120, borderRadius:"50%", background:"rgba(200,75,17,0.15)", pointerEvents:"none" }}/>
+          <div style={{ position:"absolute", bottom:-20, left:60, width:80, height:80, borderRadius:"50%", background:"rgba(249,115,22,0.1)", pointerEvents:"none" }}/>
+
+          <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              {/* Animated gem icon */}
+              <div style={{ width:42, height:42, borderRadius:14, background:`linear-gradient(135deg,${C.primary},${C.accent})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 6px 20px rgba(200,75,17,0.5)`, flexShrink:0 }}>
+                <SparkleIcon size={20} color="white" animated={streaming}/>
+              </div>
+              <div>
+                <div style={{ fontSize:15, fontWeight:900, color:"#fff", letterSpacing:"-0.02em", fontFamily:"'DM Serif Display',serif" }}>
+                  AI Brand Assistant
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:3 }}>
+                  <div style={{ width:6, height:6, borderRadius:"50%", background: streaming ? C.primaryLight : "#22c55e", animation: streaming ? "pulse 1s ease-in-out infinite" : "none" }}/>
+                  <span style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase" }}>
+                    {streaming ? "Generating…" : "Powered by Gemini"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button onClick={onClose}
+              style={{ width:32, height:32, borderRadius:10, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(255,255,255,0.6)", transition:"all 0.2s", flexShrink:0 }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.15)";e.currentTarget.style.color="#fff";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.color="rgba(255,255,255,0.6)";}}>
+              <MS name="close" size={17}/>
+            </button>
+          </div>
+
+          {/* Progress bar when streaming */}
+          {streaming && (
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:2, background:"rgba(255,255,255,0.08)" }}>
+              <div style={{ height:"100%", background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`, animation:"progressPulse 1.5s ease-in-out infinite", borderRadius:2 }}/>
+            </div>
+          )}
+        </div>
+
+        {/* ── Body ── */}
+        <div style={{ padding:"20px 22px" }}>
+
+          {/* Style chips — shown when idle (no result yet) */}
+          {!streaming && !result && (
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                <div style={{ width:1, height:16, background:C.primaryBorder }}/>
+                <p style={{ fontSize:10, fontWeight:800, color:C.textMuted, letterSpacing:"0.12em", textTransform:"uppercase" }}>
+                  {field === "brand_name" ? "Pick a naming style" : "Pick a story style"}
+                </p>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9 }}>
+                {currentChips.map((chip, i) => (
+                  <button key={i} onClick={() => onRegenerate(chip.label)}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px", borderRadius:14, border:`1.5px solid ${C.cardBorder}`, background:C.surface, cursor:"pointer", fontFamily:"'Manrope',sans-serif", transition:"all 0.22s cubic-bezier(0.22,1,0.36,1)", textAlign:"left" }}
+                    onMouseEnter={e=>{e.currentTarget.style.border=`1.5px solid ${C.primary}`;e.currentTarget.style.background=C.primaryPale;e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 6px 20px rgba(200,75,17,0.12)`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.border=`1.5px solid ${C.cardBorder}`;e.currentTarget.style.background=C.surface;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+                    <div style={{ width:30, height:30, borderRadius:9, background:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <MS name={chip.icon} size={15} style={{ color:C.primary }}/>
+                    </div>
+                    <span style={{ fontSize:12, fontWeight:700, color:C.text, lineHeight:1.3 }}>{chip.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize:11, color:C.textFaint, fontWeight:500, marginTop:14, textAlign:"center" }}>
+                Click a style above to generate with AI ✨
+              </p>
+            </div>
+          )}
+
+          {/* Loading skeleton while streaming */}
+          {streaming && !result && (
+            <div style={{ padding:"6px 0" }}>
+              {[100, 85, 70].map((w, i) => (
+                <div key={i} style={{ height:14, borderRadius:8, background:C.borderLight, marginBottom:10, width:`${w}%`, animation:`skeletonPulse 1.5s ease-in-out ${i*200}ms infinite` }}/>
+              ))}
+            </div>
+          )}
+
+          {/* Result / error display */}
+          {result && (
+            <div>
+              {isError || isQuota ? (
+                /* ── Error state ── */
+                <div style={{ borderRadius:14, border:`1.5px solid #fecaca`, background:"#fff5f5", padding:"16px 18px" }}>
+                  <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom: isQuota ? 12 : 0 }}>
+                    <div style={{ width:32, height:32, borderRadius:10, background:"#fee2e2", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                      <MS name="error_outline" size={17} style={{ color:C.danger }}/>
+                    </div>
+                    <div>
+                      <p style={{ fontSize:12, fontWeight:800, color:C.danger, marginBottom:4 }}>
+                        {isQuota ? "Quota Exceeded" : "Generation Failed"}
+                      </p>
+                      <p style={{ fontSize:11, color:"#7f1d1d", fontWeight:500, lineHeight:1.6 }}>
+                        {isQuota
+                          ? "Your Gemini free-tier limit is reached. Upgrade your plan at ai.google.dev to continue using AI features."
+                          : result.replace("Error: ", "")}
+                      </p>
+                    </div>
+                  </div>
+                  {isQuota && (
+                    <a href="https://ai.google.dev/gemini-api/docs/rate-limits" target="_blank" rel="noopener noreferrer"
+                      style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:4, padding:"7px 14px", borderRadius:9, background:C.danger, color:"white", fontSize:11, fontWeight:700, textDecoration:"none", transition:"opacity 0.2s" }}
+                      onMouseEnter={e=>e.currentTarget.style.opacity="0.85"}
+                      onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+                      <MS name="open_in_new" size={13}/> Upgrade Plan
+                    </a>
+                  )}
+                </div>
+              ) : (
+                /* ── Success result ── */
+                <div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                    <div style={{ width:1, height:16, background:C.primaryBorder }}/>
+                    <p style={{ fontSize:10, fontWeight:800, color:C.textMuted, letterSpacing:"0.12em", textTransform:"uppercase" }}>
+                      AI Suggestion
+                    </p>
+                    {!streaming && (
+                      <span style={{ marginLeft:"auto", display:"inline-flex", alignItems:"center", gap:4, fontSize:10, fontWeight:700, color:C.success, background:C.successBg, padding:"3px 9px", borderRadius:20 }}>
+                        <MS name="check_circle" size={12}/> Ready
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ background:`linear-gradient(135deg,${C.primaryPale},${C.surfaceDim})`, borderRadius:14, border:`1.5px solid ${C.primaryBorder}`, padding:"16px 18px", marginBottom:14, minHeight:56, fontSize:13, fontWeight:600, color:C.text, lineHeight:1.75, position:"relative" }}>
+                    {/* Decorative quote mark */}
+                    <span style={{ position:"absolute", top:10, left:14, fontSize:32, color:C.primaryBorder, fontFamily:"Georgia,serif", lineHeight:1, pointerEvents:"none", userSelect:"none" }}>"</span>
+                    <span style={{ paddingLeft:18, display:"block" }}>
+                      {result}
+                      {streaming && (
+                        <span style={{ display:"inline-block", width:2, height:"1em", background:C.primary, marginLeft:2, animation:"cursorBlink 0.65s step-end infinite", verticalAlign:"text-bottom", borderRadius:1 }}/>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer actions ── */}
+        {((result && !isError && !isQuota) || streaming) && (
+          <div style={{ padding:"0 22px 20px", display:"flex", gap:9, justifyContent:"flex-end", flexWrap:"wrap" }}>
+            {!streaming && (
+              <button onClick={() => onRegenerate(null)}
+                style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", borderRadius:12, border:`1.5px solid ${C.primaryBorder}`, background:"white", color:C.textMid, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Manrope',sans-serif", transition:"all 0.2s" }}
+                onMouseEnter={e=>{e.currentTarget.style.background=C.primaryPale;e.currentTarget.style.borderColor=C.primary;e.currentTarget.style.color=C.primary;}}
+                onMouseLeave={e=>{e.currentTarget.style.background="white";e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.textMid;}}>
+                <MS name="refresh" size={15}/> Try Again
+              </button>
+            )}
+            {!streaming && (
+              <button onClick={onAccept}
+                style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 22px", borderRadius:12, border:"none", background:`linear-gradient(135deg,${C.primary} 0%,${C.accent} 100%)`, color:"white", fontSize:12, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", boxShadow:`0 6px 18px rgba(200,75,17,0.35)`, transition:"all 0.22s cubic-bezier(0.22,1,0.36,1)", position:"relative", overflow:"hidden" }}
+                onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 10px 28px rgba(200,75,17,0.45)`;}}
+                onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 6px 18px rgba(200,75,17,0.35)`;}}>
+                <div style={{ position:"absolute", top:0, bottom:0, width:40, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)", animation:"scanLine 2s ease-in-out infinite", pointerEvents:"none" }}/>
+                <MS name="check" size={15}/> Use This
+              </button>
+            )}
+            {streaming && (
+              <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 18px", borderRadius:12, background:C.primaryBg, border:`1.5px solid ${C.primaryBorder}` }}>
+                <div style={{ width:14, height:14, border:`2px solid ${C.primaryBorder}`, borderTopColor:C.primary, borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/>
+                <span style={{ fontSize:12, fontWeight:700, color:C.textMid }}>Writing your copy…</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Close row for error state */}
+        {(isError || isQuota) && (
+          <div style={{ padding:"0 22px 20px", display:"flex", justifyContent:"flex-end" }}>
+            <button onClick={onClose}
+              style={{ padding:"10px 22px", borderRadius:12, border:`1.5px solid ${C.border}`, background:"white", color:C.textMid, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Manrope',sans-serif" }}>
+              Close
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ─── EDIT PROFILE COMPONENTS ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Plain float-label input (personal info)
 function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint, disabled }) {
   const [focused, setFocused] = useState(false);
   const has = value && value.length > 0;
@@ -274,32 +559,156 @@ function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint
   );
 }
 
-// Brand story textarea
-function BrandStoryBox({ value, onChange }) {
-  const [focused, setFocused] = useState(false);
-  const max = 400;
-  const pct = Math.min((value.length/max)*100,100);
-  const circ = 2*Math.PI*13;
+// Float-label input WITH ✨ AI sparkle button — used for Brand Name
+function FloatInputAI({ label, value, onChange, icon, iconColor, hint }) {
+  const [focused,   setFocused]   = useState(false);
+  const [aiOpen,    setAIOpen]    = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [aiResult,  setAIResult]  = useState("");
+  const { generate } = useAIAssist();
+  const wrapRef = useRef(null);
+  const has = value && value.length > 0;
+
+  useEffect(() => {
+    const h = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setAIOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const handleGenerate = async (stylePref) => {
+    setStreaming(true);
+    setAIResult("");
+    await generate({
+      prompt: `Generate a short, catchy bag brand name for a Nigerian seller.
+Style: ${stylePref || "bold and memorable"}.
+${value ? `Current name for reference: "${value}"` : ""}
+Rules: 1-3 words max. Premium-sounding. Relevant to handbags/fashion. Return ONLY the brand name — no quotes, no explanation.`,
+      onChunk: (t) => setAIResult(t),
+      onDone:  (t) => { setAIResult(t.trim()); setStreaming(false); },
+      onError: (e) => { setAIResult("Error: " + e); setStreaming(false); },
+    });
+  };
+
+  const handleAccept = () => {
+    onChange({ target: { value: aiResult.trim() } });
+    setAIOpen(false);
+    setAIResult("");
+  };
+
   return (
-    <div style={{ border:`2px solid ${focused?C.primary:value.length>0?C.heroDark:C.cardBorder}`, borderRadius:16, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 8px 32px rgba(200,75,17,0.1)`:"none" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8, padding:"12px 16px 0" }}>
-        <div style={{ width:26, height:26, borderRadius:8, background:focused?C.primary:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>
-          <MS name="auto_awesome" size={13} style={{ color:focused?"#fff":C.primary }}/>
+    <div ref={wrapRef} style={{ position:"relative" }}>
+      <div style={{ display:"flex", alignItems:"center", border:`2px solid ${focused?C.primary:has?C.heroDark:C.cardBorder}`, borderRadius:14, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 6px 24px rgba(200,75,17,0.1)`:"none" }}>
+        {icon && (
+          <div style={{ paddingLeft:14, display:"flex", alignItems:"center", transform:focused?"scale(1.15)":"scale(1)", transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <MS name={icon} size={16} style={{ color:focused?C.primary:iconColor||C.textFaint }}/>
+          </div>
+        )}
+        <div style={{ flex:1, position:"relative", paddingTop:20, paddingBottom:8, paddingLeft:icon?10:14, paddingRight:10 }}>
+          <label style={{ position:"absolute", top:focused||has?5:"50%", transform:focused||has?"none":"translateY(-50%)", fontSize:focused||has?9:13, fontWeight:focused||has?800:500, color:focused?C.primary:C.textFaint, letterSpacing:focused||has?"0.12em":"0", textTransform:focused||has?"uppercase":"none", transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", pointerEvents:"none", fontFamily:"'Manrope',sans-serif" }}>
+            {label}
+          </label>
+          <input value={value} onChange={onChange}
+            onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+            style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:13, fontWeight:600, color:C.text, fontFamily:"'Manrope',sans-serif", marginTop:2 }}/>
         </div>
-        <span style={{ fontSize:10, fontWeight:800, color:focused?C.primary:C.textFaint, letterSpacing:"0.12em", textTransform:"uppercase", transition:"color 0.3s" }}>Brand Story</span>
+        {/* ✨ AI sparkle button */}
+        <button
+          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
+          title="AI Brand Name Ideas (Gemini)"
+          style={{ marginRight:10, width:32, height:32, borderRadius:10, border:"none", background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryBg, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.35)`:"none", transform:aiOpen?"scale(1.1)":"scale(1)", flexShrink:0 }}
+          onMouseEnter={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBorder;e.currentTarget.style.transform="scale(1.08)";} }}
+          onMouseLeave={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.transform="scale(1)";} }}>
+          <SparkleIcon size={15} color={aiOpen?"white":C.primary} animated={streaming}/>
+        </button>
       </div>
-      <textarea value={value} onChange={e=>onChange(e.target.value.slice(0,max))}
-        onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
-        placeholder="Tell buyers about your bag brand — your origin story, what makes your pieces special, the vibe you bring to every collection…"
-        rows={4}
-        style={{ width:"100%", border:"none", outline:"none", resize:"none", background:"transparent", padding:"10px 16px 0", fontSize:12, fontWeight:500, color:C.text, lineHeight:1.7, fontFamily:"'Manrope',sans-serif" }}/>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"flex-end", padding:"4px 12px 10px", gap:7 }}>
-        <span style={{ fontSize:10, color:C.textFaint, fontWeight:600 }}>{value.length}/{max}</span>
-        <svg width="30" height="30" viewBox="0 0 30 30" style={{ transform:"rotate(-90deg)" }}>
-          <circle cx="15" cy="15" r="13" fill="none" stroke={C.borderLight} strokeWidth="2.5"/>
-          <circle cx="15" cy="15" r="13" fill="none" stroke={pct>=100?C.danger:pct>75?C.accent:C.primary} strokeWidth="2.5" strokeDasharray={circ} strokeDashoffset={circ-(circ*pct)/100} strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.4s ease,stroke 0.3s" }}/>
-        </svg>
+      {hint && <p style={{ fontSize:10, color:C.textFaint, fontWeight:500, marginTop:4, paddingLeft:4 }}>{hint}</p>}
+      <AIAssistBubble visible={aiOpen} field="brand_name" streaming={streaming} result={aiResult}
+        onClose={()=>setAIOpen(false)} onAccept={handleAccept} onRegenerate={handleGenerate}/>
+    </div>
+  );
+}
+
+// Brand story textarea WITH ✨ AI Assist pill
+function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
+  const [focused,   setFocused]   = useState(false);
+  const [aiOpen,    setAIOpen]    = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [aiResult,  setAIResult]  = useState("");
+  const { generate } = useAIAssist();
+  const wrapRef = useRef(null);
+  const max  = 400;
+  const pct  = Math.min((value.length / max) * 100, 100);
+  const circ = 2 * Math.PI * 13;
+
+  useEffect(() => {
+    const h = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setAIOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const handleGenerate = async (stylePref) => {
+    setStreaming(true);
+    setAIResult("");
+    const catLabels = (bagCategories || []).map(id => BAG_CATEGORIES.find(c => c.id === id)?.label).filter(Boolean).join(", ");
+    await generate({
+      prompt: `Write a compelling brand story for a bag seller on BagSearch marketplace.
+Seller: ${sellerName || "a Nigerian bag seller"}
+Categories: ${catLabels || "luxury & designer bags"}
+Style: ${stylePref || "warm, authentic, and aspirational"}
+${value ? `Existing story to improve: "${value}"` : ""}
+Requirements: 2-4 sentences, max 380 characters, first person, evokes trust and quality, feels human not corporate.
+Return ONLY the brand story text — no quotes, no label, no explanation.`,
+      onChunk: (t) => setAIResult(t),
+      onDone:  (t) => { setAIResult(t.trim().slice(0, max)); setStreaming(false); },
+      onError: (e) => { setAIResult("Error: " + e); setStreaming(false); },
+    });
+  };
+
+  const handleAccept = () => {
+    onChange(aiResult.trim().slice(0, max));
+    setAIOpen(false);
+    setAIResult("");
+  };
+
+  return (
+    <div ref={wrapRef} style={{ position:"relative" }}>
+      <div style={{ border:`2px solid ${focused?C.primary:value.length>0?C.heroDark:C.cardBorder}`, borderRadius:16, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 8px 32px rgba(200,75,17,0.1)`:"none" }}>
+        {/* Top bar */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px 0" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ width:26, height:26, borderRadius:8, background:focused?C.primary:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>
+              <MS name="auto_awesome" size={13} style={{ color:focused?"#fff":C.primary }}/>
+            </div>
+            <span style={{ fontSize:10, fontWeight:800, color:focused?C.primary:C.textFaint, letterSpacing:"0.12em", textTransform:"uppercase", transition:"color 0.3s" }}>Brand Story</span>
+          </div>
+          {/* ✨ AI Assist pill button */}
+          <button
+            onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
+            style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${aiOpen?C.primary:C.primaryBorder}`, background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryPale, color:aiOpen?"white":C.primary, fontSize:10, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", letterSpacing:"0.06em", transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.3)`:"none" }}
+            onMouseEnter={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primary;} }}
+            onMouseLeave={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryPale;e.currentTarget.style.borderColor=C.primaryBorder;} }}>
+            <SparkleIcon size={11} color={aiOpen?"white":C.primary} animated={streaming}/>
+            {streaming ? "Writing…" : "AI Assist"}
+          </button>
+        </div>
+
+        <textarea value={value} onChange={e=>onChange(e.target.value.slice(0,max))}
+          onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+          placeholder="Tell buyers about your bag brand — your origin story, what makes your pieces special, the vibe you bring to every collection…"
+          rows={4}
+          style={{ width:"100%", border:"none", outline:"none", resize:"none", background:"transparent", padding:"10px 16px 0", fontSize:12, fontWeight:500, color:C.text, lineHeight:1.7, fontFamily:"'Manrope',sans-serif" }}/>
+
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"flex-end", padding:"4px 12px 10px", gap:7 }}>
+          <span style={{ fontSize:10, color:C.textFaint, fontWeight:600 }}>{value.length}/{max}</span>
+          <svg width="30" height="30" viewBox="0 0 30 30" style={{ transform:"rotate(-90deg)" }}>
+            <circle cx="15" cy="15" r="13" fill="none" stroke={C.borderLight} strokeWidth="2.5"/>
+            <circle cx="15" cy="15" r="13" fill="none" stroke={pct>=100?C.danger:pct>75?C.accent:C.primary} strokeWidth="2.5" strokeDasharray={circ} strokeDashoffset={circ-(circ*pct)/100} strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.4s ease,stroke 0.3s" }}/>
+          </svg>
+        </div>
       </div>
+
+      <AIAssistBubble visible={aiOpen} field="brand_story" streaming={streaming} result={aiResult}
+        onClose={()=>setAIOpen(false)} onAccept={handleAccept} onRegenerate={handleGenerate}/>
     </div>
   );
 }
@@ -332,9 +741,9 @@ function SaveToast({ message, type, visible }) {
   );
 }
 
-// ─── The Edit Profile Panel ───────────────────────────────────────────────────
+// ─── Edit Profile Panel ───────────────────────────────────────────────────────
 function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
-  const [form, setForm] = useState({ full_name:'', email:'', phone:'', brand_name:'', brand_story:'' });
+  const [form,       setForm]       = useState({ full_name:'', email:'', phone:'', brand_name:'', brand_story:'' });
   const [categories, setCategories] = useState([]);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
@@ -360,36 +769,25 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
 
   const showToast = (msg, type='success') => {
     setToast({ visible:true, message:msg, type });
-    setTimeout(()=>setToast(t=>({...t,visible:false})),3000);
+    setTimeout(()=>setToast(t=>({...t,visible:false})), 3000);
   };
 
   const f = (field) => (e) => setForm(prev=>({...prev,[field]:typeof e==='string'?e:e.target.value}));
   const toggleCat = (id) => setCategories(prev=>prev.includes(id)?prev.filter(c=>c!==id):[...prev,id]);
 
   const handleSave = async () => {
-    if (!form.full_name.trim()) { showToast('Name is required','error'); return; }
+    if (!form.full_name.trim())                           { showToast('Name is required','error'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { showToast('Invalid email address','error'); return; }
-    if (categories.length===0) { showToast('Pick at least one bag category','error'); return; }
+    if (categories.length===0)                            { showToast('Pick at least one bag category','error'); return; }
     setSaving(true);
     try {
-      const baseUpdates = {
-        full_name: form.full_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-      };
-      const fullUpdates = {
-        ...baseUpdates,
-        brand_name: form.brand_name.trim(),
-        brand_story: form.brand_story.trim(),
-        bag_categories: categories,
-      };
-
+      const baseUpdates = { full_name:form.full_name.trim(), email:form.email.trim(), phone:form.phone.trim() };
+      const fullUpdates = { ...baseUpdates, brand_name:form.brand_name.trim(), brand_story:form.brand_story.trim(), bag_categories:categories };
       let updates = fullUpdates;
       let { error } = await supabase.from('users').update(fullUpdates).eq('user_id', userId);
       if (error && isMissingColumnError(error)) {
         const fallback = await supabase.from('users').update(baseUpdates).eq('user_id', userId);
-        error = fallback.error;
-        updates = baseUpdates;
+        error = fallback.error; updates = baseUpdates;
       }
       if (error) throw error;
       const { data:{ user:authUser } } = await supabase.auth.getUser();
@@ -397,18 +795,12 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       await supabase.auth.updateUser({ data:{ full_name:form.full_name } });
       setSaved(true);
       showToast('Profile saved successfully! 🎉','success');
-      onSaved?.({
-        ...updates,
-        brand_name: updates.brand_name ?? '',
-        brand_story: updates.brand_story ?? '',
-        bag_categories: updates.bag_categories ?? [],
-      });
-      setTimeout(()=>setSaved(false),2800);
+      onSaved?.({ ...updates, brand_name:updates.brand_name??'', brand_story:updates.brand_story??'', bag_categories:updates.bag_categories??[] });
+      setTimeout(()=>setSaved(false), 2800);
     } catch(e) { showToast(e.message||'Save failed','error'); }
     finally { setSaving(false); }
   };
 
-  // Section card wrapper
   const SCard = ({ children, visible, delay=0, extra={} }) => (
     <div style={{ background:"rgba(255,255,255,0.95)", backdropFilter:"blur(12px)", border:`1.5px solid ${C.cardBorder}`, borderRadius:20, padding:"28px", marginBottom:16, boxShadow:`0 6px 32px rgba(200,75,17,0.06)`, opacity:visible?1:0, transform:visible?"none":"translateY(24px)", transition:`opacity 0.55s ease ${delay}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms`, ...extra }}>
       {children}
@@ -429,46 +821,60 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
 
   return (
     <div style={{ position:"relative" }}>
-      {/* Animated peach banner at top of edit section */}
+      {/* Hero banner */}
       <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16, background:`linear-gradient(135deg,${C.hero} 0%,${C.heroDark} 55%,#f0a882 100%)`, padding:"28px 32px", boxShadow:`0 10px 48px rgba(200,75,17,0.14)`, position:"relative", opacity:panelIn?1:0, transform:panelIn?"translateY(0)":"translateY(20px)", transition:"opacity 0.6s ease,transform 0.6s cubic-bezier(0.22,1,0.36,1)" }}>
-        {/* BG lines */}
         {[14,32,50,70].map(p=><div key={p} style={{ position:"absolute", top:0, bottom:0, left:`${p}%`, width:1, background:"rgba(255,255,255,0.1)", pointerEvents:"none" }}/>)}
         <div style={{ position:"absolute", top:-40, right:120, width:200, height:200, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.12)", pointerEvents:"none" }}/>
-        {/* scan shimmer */}
         <div style={{ position:"absolute", top:0, bottom:0, width:60, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)", animation:"scanLine 3s ease-in-out infinite", pointerEvents:"none" }}/>
-
         <div style={{ position:"relative", zIndex:2 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"3px 10px", borderRadius:20, background:"rgba(255,255,255,0.28)", backdropFilter:"blur(8px)", marginBottom:10 }}>
-            <MS name="edit" size={11} style={{ color:C.primary }}/>
-            <span style={{ fontSize:9, fontWeight:800, color:C.primary, letterSpacing:"0.14em", textTransform:"uppercase" }}>Edit Profile</span>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10, flexWrap:"wrap" }}>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"3px 10px", borderRadius:20, background:"rgba(255,255,255,0.28)", backdropFilter:"blur(8px)" }}>
+              <MS name="edit" size={11} style={{ color:C.primary }}/>
+              <span style={{ fontSize:9, fontWeight:800, color:C.primary, letterSpacing:"0.14em", textTransform:"uppercase" }}>Edit Profile</span>
+            </div>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"3px 10px", borderRadius:20, background:"rgba(255,255,255,0.28)", backdropFilter:"blur(8px)" }}>
+              <SparkleIcon size={10} color={C.textDark}/>
+              <span style={{ fontSize:9, fontWeight:800, color:C.textDark, letterSpacing:"0.14em", textTransform:"uppercase" }}>Gemini AI</span>
+            </div>
           </div>
           <h3 style={{ fontSize:"clamp(1.3rem,3vw,1.8rem)", fontWeight:900, color:C.textDark, letterSpacing:"-0.04em", fontFamily:"'DM Serif Display',serif", lineHeight:1.1, marginBottom:8 }}>
             Shape How Buyers<br/><em style={{ fontStyle:"italic", color:C.primary }}>See Your Brand.</em>
           </h3>
           <p style={{ fontSize:12, color:C.textMid, fontWeight:500 }}>
-            {categories.length>0
-              ? categories.map(id=>BAG_CATEGORIES.find(c=>c.id===id)?.emoji).join(' ')
-              : 'Pick your categories below ↓'}
+            {categories.length>0 ? categories.map(id=>BAG_CATEGORIES.find(c=>c.id===id)?.emoji).join(' ') : 'Pick your categories below ↓'}
+            {" · "}<span style={{ opacity:0.7 }}>Tap ✨ for AI suggestions</span>
           </p>
         </div>
       </div>
 
-      {/* Section 1 — Identity */}
+      {/* Section 1 — Personal Info */}
       <SCard visible={sec1In}>
         <SHead icon="person" title="Personal Info" subtitle="Your identity on BagSearch"/>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
-          <FloatInput label="Full Name"    value={form.full_name} onChange={f('full_name')} icon="badge"       iconColor={C.primary}/>
-          <FloatInput label="Email"        value={form.email}     onChange={f('email')}     icon="mail"        iconColor={C.accent}  type="email"/>
-          <FloatInput label="Phone"        value={form.phone}     onChange={f('phone')}     icon="phone"       iconColor={C.success} type="tel" hint="Include country code e.g. +234"/>
+          <FloatInput label="Full Name" value={form.full_name} onChange={f('full_name')} icon="badge"  iconColor={C.primary}/>
+          <FloatInput label="Email"     value={form.email}     onChange={f('email')}     icon="mail"   iconColor={C.accent} type="email"/>
+          <FloatInput label="Phone"     value={form.phone}     onChange={f('phone')}     icon="phone"  iconColor={C.success} type="tel" hint="Include country code e.g. +234"/>
         </div>
       </SCard>
 
-      {/* Section 2 — Brand */}
+      {/* Section 2 — Brand Identity with AI */}
       <SCard visible={sec2In}>
-        <SHead icon="storefront" title="Brand Identity" subtitle="Make your brand unforgettable" color={C.accent}/>
+        <SHead icon="storefront" title="Brand Identity" subtitle="Make your brand unforgettable — tap ✨ for Gemini AI help" color={C.accent}/>
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-          <FloatInput label="Brand Name" value={form.brand_name} onChange={f('brand_name')} icon="shopping_bag" iconColor={C.primary} hint="Your store name e.g. Adé Bags Lagos"/>
-          <BrandStoryBox value={form.brand_story} onChange={f('brand_story')}/>
+          <FloatInputAI
+            label="Brand Name"
+            value={form.brand_name}
+            onChange={f('brand_name')}
+            icon="shopping_bag"
+            iconColor={C.primary}
+            hint="Your store name e.g. Adé Bags Lagos — tap ✨ for AI name ideas"
+          />
+          <BrandStoryBoxAI
+            value={form.brand_story}
+            onChange={(v) => setForm(prev=>({...prev, brand_story:v}))}
+            sellerName={form.brand_name || form.full_name}
+            bagCategories={categories}
+          />
         </div>
       </SCard>
 
@@ -488,7 +894,7 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
         </div>
         {categories.length===0 && (
           <div style={{ marginTop:14, padding:"10px 14px", borderRadius:10, background:C.primaryBg, border:`1.5px dashed ${C.heroDark}`, display:"flex", alignItems:"center", gap:8 }}>
-            <MS name="sell" size={13} style={{ color:C.textFaint }}/> 
+            <MS name="sell" size={13} style={{ color:C.textFaint }}/>
             <span style={{ fontSize:10, color:C.textMuted, fontWeight:500 }}>Pick at least one category so buyers can discover your listings</span>
           </div>
         )}
@@ -498,8 +904,8 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       <div style={{ display:"flex", justifyContent:"flex-end", gap:12, opacity:sec3In?1:0, transition:"opacity 0.5s ease 300ms" }}>
         <button onClick={handleSave} disabled={saving}
           style={{ display:"flex", alignItems:"center", gap:10, padding:"14px 40px", borderRadius:16, border:"none", background:saved?`linear-gradient(135deg,${C.success},#15803d)`:`linear-gradient(135deg,${C.primary} 0%,${C.accent} 50%,${C.primaryLight} 100%)`, color:"#fff", fontSize:14, fontWeight:900, cursor:saving?"default":"pointer", fontFamily:"'DM Serif Display',serif", letterSpacing:"-0.02em", boxShadow:`0 8px 36px rgba(200,75,17,0.4)`, transition:"all 0.4s cubic-bezier(0.22,1,0.36,1)", position:"relative", overflow:"hidden" }}
-          onMouseEnter={e=>{if(!saving){e.currentTarget.style.transform="translateY(-4px) scale(1.03)";e.currentTarget.style.boxShadow=`0 16px 50px rgba(200,75,17,0.52)`;} }}
-          onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 8px 36px rgba(200,75,17,0.4)`;} }>
+          onMouseEnter={e=>{if(!saving){e.currentTarget.style.transform="translateY(-4px) scale(1.03)";e.currentTarget.style.boxShadow=`0 16px 50px rgba(200,75,17,0.52)`;}}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 8px 36px rgba(200,75,17,0.4)`;}}>
           <div style={{ position:"absolute", top:0, bottom:0, width:60, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)", animation:"scanLine 2s ease-in-out infinite", pointerEvents:"none" }}/>
           <MS name={saving?"hourglass_empty":saved?"check_circle":"save"} size={17} style={{ color:"#fff", animation:saving?"spin 0.8s linear infinite":"none" }}/>
           {saving?"Saving…":saved?"Profile Saved!":"Save My Profile"}
@@ -518,34 +924,34 @@ export default function SellerProfile() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  const [seller,             setSeller]             = useState(null);
-  const [loading,            setLoading]            = useState(true);
-  const [error,              setError]              = useState(null);
-  const [mobileSidebarOpen,  setMobileSidebarOpen]  = useState(false);
-  const [activeTab,          setActiveTab]          = useState('dashboard'); // 'dashboard' | 'edit'
+  const [seller,            setSeller]            = useState(null);
+  const [loading,           setLoading]           = useState(true);
+  const [error,             setError]             = useState(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [activeTab,         setActiveTab]         = useState('dashboard');
 
   const [activeListingsCount, setActiveListingsCount] = useState(0);
   const [totalViewsCount,     setTotalViewsCount]     = useState(0);
   const [buyerViews,          setBuyerViews]          = useState([]);
   const [metricsLoading,      setMetricsLoading]      = useState(true);
 
-  const [sidebarIn,  setSidebarIn]  = useState(false);
-  const [headerIn,   setHeaderIn]   = useState(false);
-  const [headingIn,  setHeadingIn]  = useState(false);
-  const [statsIn,    setStatsIn]    = useState(false);
-  const [tableIn,    setTableIn]    = useState(false);
-  const [bannerIn,   setBannerIn]   = useState(false);
-  const [tabIn,      setTabIn]      = useState(false);
-  const [editPanelIn,setEditPanelIn]= useState(false);
+  const [sidebarIn,   setSidebarIn]   = useState(false);
+  const [headerIn,    setHeaderIn]    = useState(false);
+  const [headingIn,   setHeadingIn]   = useState(false);
+  const [statsIn,     setStatsIn]     = useState(false);
+  const [tableIn,     setTableIn]     = useState(false);
+  const [bannerIn,    setBannerIn]    = useState(false);
+  const [tabIn,       setTabIn]       = useState(false);
+  const [editPanelIn, setEditPanelIn] = useState(false);
 
   useEffect(()=>{
     setTimeout(()=>setSidebarIn(true),  60);
-    setTimeout(()=>setHeaderIn(true),   120);
-    setTimeout(()=>setHeadingIn(true),  260);
-    setTimeout(()=>setStatsIn(true),    380);
-    setTimeout(()=>setTableIn(true),    520);
-    setTimeout(()=>setBannerIn(true),   660);
-    setTimeout(()=>setTabIn(true),      200);
+    setTimeout(()=>setHeaderIn(true),  120);
+    setTimeout(()=>setHeadingIn(true), 260);
+    setTimeout(()=>setStatsIn(true),   380);
+    setTimeout(()=>setTableIn(true),   520);
+    setTimeout(()=>setBannerIn(true),  660);
+    setTimeout(()=>setTabIn(true),     200);
   },[]);
 
   useEffect(()=>{
@@ -555,8 +961,7 @@ export default function SellerProfile() {
         let { data, error:e } = await supabase.from('users').select('full_name,email,phone,brand_name,brand_story,bag_categories').eq('user_id',user.id).maybeSingle();
         if (e && isMissingColumnError(e)) {
           const fallback = await supabase.from('users').select('full_name,email,phone').eq('user_id',user.id).maybeSingle();
-          data = fallback.data;
-          e = fallback.error;
+          data = fallback.data; e = fallback.error;
         }
         if (e) throw e;
         setSeller({ name:data?.full_name||user.user_metadata?.full_name||'Seller', email:data?.email||user.email||'N/A', phone:data?.phone||user.user_metadata?.phone||'N/A', brand_name:data?.brand_name||'', brand_story:data?.brand_story||'', bag_categories:data?.bag_categories||[], avatar:null });
@@ -571,66 +976,25 @@ export default function SellerProfile() {
       try {
         if (!user) return;
         setMetricsLoading(true);
-        const byUser = await supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
+        const byUser = await supabase.from('products').select('*').eq('user_id',user.id).order('created_at',{ ascending:false });
         let rows = byUser.data || [];
         let queryError = byUser.error;
-
-        const shouldTrySellerId =
-          rows.length === 0 || (queryError && isMissingColumnError(queryError));
-
-        if (shouldTrySellerId) {
-          const bySeller = await supabase
-            .from('products')
-            .select('*')
-            .eq('seller_id', user.id)
-            .order('created_at', { ascending: false });
-
-          if (!bySeller.error) {
-            rows = bySeller.data || [];
-            queryError = null;
-          } else if (!queryError || isMissingColumnError(queryError)) {
-            queryError = bySeller.error;
-          }
+        if (rows.length===0 || (queryError && isMissingColumnError(queryError))) {
+          const bySeller = await supabase.from('products').select('*').eq('seller_id',user.id).order('created_at',{ ascending:false });
+          if (!bySeller.error){ rows = bySeller.data||[]; queryError = null; }
+          else if (!queryError || isMissingColumnError(queryError)) queryError = bySeller.error;
         }
-
-        if (queryError && rows.length === 0 && !isMissingColumnError(queryError)) {
-          throw queryError;
-        }
-
-        const getStatus = (row) => {
-          const normalized = String(row?.status || '').toLowerCase();
-          return ['active', 'pending', 'inactive'].includes(normalized) ? normalized : 'active';
-        };
-
-        const activeCount = rows.filter((p) => getStatus(p) === 'active').length;
-        const productIds = rows.map((p) => p.id).filter(Boolean);
-
-        setActiveListingsCount(activeCount);
-
-        if (!productIds.length) {
-          setTotalViewsCount(0);
-          setBuyerViews([]);
-          return;
-        }
-
+        if (queryError && rows.length===0 && !isMissingColumnError(queryError)) throw queryError;
+        const getStatus = (row) => { const n=String(row?.status||'').toLowerCase(); return ['active','pending','inactive'].includes(n)?n:'active'; };
+        setActiveListingsCount(rows.filter(p=>getStatus(p)==='active').length);
+        const productIds = rows.map(p=>p.id).filter(Boolean);
+        if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
         const { data:vd, count:vc, error:ve } = await supabase
           .from('product_views')
-          .select(`id,viewed_at,source,products:product_id(id,name,sku,images),users:buyer_id(full_name,email)`, { count:'exact' })
-          .in('product_id', productIds)
-          .order('viewed_at', { ascending:false })
-          .limit(20);
-
-        if (!ve) {
-          setTotalViewsCount(vc || 0);
-          setBuyerViews((vd || []).map(mapBuyerViewRow));
-        } else {
-          setTotalViewsCount(rows.reduce((a, p) => a + (Number(p.views_count) || 0), 0));
-        }
+          .select(`id,viewed_at,source,products:product_id(id,name,sku,images),users:buyer_id(full_name,email)`,{ count:'exact' })
+          .in('product_id',productIds).order('viewed_at',{ ascending:false }).limit(20);
+        if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
+        else { setTotalViewsCount(rows.reduce((a,p)=>a+(Number(p.views_count)||0),0)); }
       } catch(e){ console.error(e); }
       finally { setMetricsLoading(false); }
     }
@@ -638,20 +1002,16 @@ export default function SellerProfile() {
   },[user]);
 
   const stats = useMemo(()=>[
-    { icon:'payments',        label:'Total Revenue',     value:'—',                                              badge:'—',  accent:C.primary,     glow:'rgba(200,75,17,0.15)' },
-    { icon:'shopping_basket', label:'Active Listings',   value:metricsLoading?'…':String(activeListingsCount),  badge:'',   accent:'#f97316',      glow:'rgba(249,115,22,0.12)' },
-    { icon:'chat',            label:'Inquiries',         value:'—',                                              badge:'',   accent:'#22c55e',      glow:'rgba(34,197,94,0.12)' },
-    { icon:'visibility',      label:'Total Views',       value:metricsLoading?'…':String(totalViewsCount),      badge:'',   accent:'#a78bfa',      glow:'rgba(167,139,250,0.12)' },
+    { icon:'payments',        label:'Total Revenue',   value:'—',                                             badge:'—', accent:C.primary,   glow:'rgba(200,75,17,0.15)' },
+    { icon:'shopping_basket', label:'Active Listings', value:metricsLoading?'…':String(activeListingsCount), badge:'',  accent:'#f97316',    glow:'rgba(249,115,22,0.12)' },
+    { icon:'chat',            label:'Inquiries',       value:'—',                                             badge:'',  accent:'#22c55e',    glow:'rgba(34,197,94,0.12)' },
+    { icon:'visibility',      label:'Total Views',     value:metricsLoading?'…':String(totalViewsCount),     badge:'',  accent:'#a78bfa',    glow:'rgba(167,139,250,0.12)' },
   ],[metricsLoading,activeListingsCount,totalViewsCount]);
 
-  // Switch tab with animation
   const switchTab = (tab) => {
     if (tab===activeTab) return;
     setActiveTab(tab);
-    if (tab==='edit'){
-      setEditPanelIn(false);
-      setTimeout(()=>setEditPanelIn(true),80);
-    }
+    if (tab==='edit'){ setEditPanelIn(false); setTimeout(()=>setEditPanelIn(true),80); }
   };
 
   if (loading) return (
@@ -682,20 +1042,24 @@ export default function SellerProfile() {
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-        @keyframes slideRight  {from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes fadeUp      {from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)}}
-        @keyframes rowSlide    {from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes cardSlideUp {from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
-        @keyframes pulse       {0%,100%{opacity:1}50%{opacity:0.5}}
-        @keyframes eyePing     {0%{transform:scale(1);opacity:0.6}100%{transform:scale(2.2);opacity:0}}
-        @keyframes eyeBounce   {0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-5px) scale(1.08)}}
-        @keyframes spin        {to{transform:rotate(360deg)}}
-        @keyframes scanLine    {from{transform:translateX(-100%)}to{transform:translateX(300%)}}
-        @keyframes popIn       {from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
-        @keyframes overlayFade {from{opacity:0}to{opacity:1}}
-        @keyframes tabSlideIn  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes floatOrb    {0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-        @keyframes shimmerBar  {0%{background-position:-400px 0}100%{background-position:400px 0}}
+        @keyframes slideRight   {from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes fadeUp       {from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)}}
+        @keyframes rowSlide     {from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes cardSlideUp  {from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse        {0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes eyePing      {0%{transform:scale(1);opacity:0.6}100%{transform:scale(2.2);opacity:0}}
+        @keyframes eyeBounce    {0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-5px) scale(1.08)}}
+        @keyframes spin         {to{transform:rotate(360deg)}}
+        @keyframes scanLine     {from{transform:translateX(-100%)}to{transform:translateX(300%)}}
+        @keyframes popIn        {from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+        @keyframes overlayFade  {from{opacity:0}to{opacity:1}}
+        @keyframes tabSlideIn   {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes bubbleIn       {from{opacity:0;transform:translateY(-8px) scale(0.97)}to{opacity:1;transform:none}}
+        @keyframes modalPop       {from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes sparklePulse   {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:0.6}}
+        @keyframes cursorBlink    {0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes progressPulse  {0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
+        @keyframes skeletonPulse  {0%,100%{opacity:0.4}50%{opacity:0.9}}
 
         .sidebar-desktop{display:flex!important}
         .sidebar-mobile-overlay{display:none!important}
@@ -719,7 +1083,6 @@ export default function SellerProfile() {
           .page-padding{padding:20px 16px 64px!important}
           .header-inner{padding:0 16px!important}
         }
-
         textarea::placeholder{color:${C.textFaint};font-family:'Manrope',sans-serif}
         ::-webkit-scrollbar{width:5px}
         ::-webkit-scrollbar-track{background:transparent}
@@ -785,7 +1148,7 @@ export default function SellerProfile() {
         {/* Content */}
         <div className="page-padding" style={{ padding:"36px 32px 64px", flex:1 }}>
 
-          {/* Page heading + tab switcher */}
+          {/* Page heading + tabs */}
           <div style={{ marginBottom:28, opacity:headingIn?1:0, transform:headingIn?"none":"translateY(16px)", transition:"opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:16, marginBottom:20 }}>
               <div>
@@ -796,12 +1159,11 @@ export default function SellerProfile() {
                   {activeTab==='edit' ? 'Shape how buyers discover and trust your brand.' : 'Monitor your performance and handle customer inquiries.'}
                 </p>
               </div>
-
               {/* Tab pills */}
               <div style={{ display:"flex", gap:8, padding:"5px", borderRadius:14, background:C.surfaceDim, border:`1px solid ${C.borderLight}`, opacity:tabIn?1:0, transition:"opacity 0.4s ease" }}>
                 {[
-                  { key:'dashboard', icon:'dashboard',  label:'Dashboard'     },
-                  { key:'edit',      icon:'edit',        label:'Edit Profile'  },
+                  { key:'dashboard', icon:'dashboard', label:'Dashboard'    },
+                  { key:'edit',      icon:'edit',      label:'Edit Profile' },
                 ].map(t=>(
                   <button key={t.key} onClick={()=>switchTab(t.key)}
                     style={{ display:"flex", alignItems:"center", gap:7, padding:"8px 16px", borderRadius:10, border:"none", cursor:"pointer", fontFamily:"inherit", fontSize:12, fontWeight:activeTab===t.key?800:600, transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", background:activeTab===t.key?C.primary:"transparent", color:activeTab===t.key?"#fff":C.textMuted, boxShadow:activeTab===t.key?`0 4px 16px rgba(200,75,17,0.3)`:"none", transform:activeTab===t.key?"scale(1.02)":"scale(1)" }}>
@@ -819,12 +1181,10 @@ export default function SellerProfile() {
           {/* ── DASHBOARD TAB ── */}
           {activeTab==='dashboard' && (
             <div style={{ animation:"tabSlideIn 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-              {/* Stats */}
               <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:18, marginBottom:32, opacity:statsIn?1:0, transform:statsIn?"none":"translateY(20px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
                 {stats.map((stat,i)=><StatCard key={stat.label} stat={stat} delay={i*70} ready={statsIn}/>)}
               </div>
 
-              {/* Buyer views */}
               <div style={{ opacity:tableIn?1:0, transform:tableIn?"none":"translateY(24px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -903,16 +1263,16 @@ export default function SellerProfile() {
 // ─── Sidebar contents ─────────────────────────────────────────────────────────
 function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, switchTab, onNav }) {
   const extNavItems = [
-    { icon:'home',         label:'Home',         key:'home'      },
-    { icon:'dashboard',    label:'Dashboard',    key:'dashboard' },
-    { icon:'inventory_2',  label:'My Listings',  key:'listings'  },
-    { icon:'edit',         label:'Edit Profile', key:'edit',  badge:true },
+    { icon:'home',        label:'Home',         key:'home'              },
+    { icon:'dashboard',   label:'Dashboard',    key:'dashboard'         },
+    { icon:'inventory_2', label:'My Listings',  key:'listings'          },
+    { icon:'edit',        label:'Edit Profile', key:'edit', badge:true  },
   ];
 
   const handleClick = (item) => {
-    if (item.key==='home') navigate('/products');
-    if (item.key==='dashboard' || item.key==='edit') { switchTab?.(item.key==='listings'?'dashboard':item.key); }
-    if (item.key==='listings') navigate('/seller-listing');
+    if (item.key==='home')                          navigate('/products');
+    if (item.key==='dashboard'||item.key==='edit')  switchTab?.(item.key);
+    if (item.key==='listings')                      navigate('/seller-listing');
     onNav?.();
   };
 
@@ -932,7 +1292,7 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
 
       <nav style={{ flex:1, padding:"16px 12px", display:"flex", flexDirection:"column", gap:4 }}>
         {extNavItems.map((item,i)=>{
-          const isActive = item.key===activeTab || (item.key==='dashboard' && activeTab==='dashboard');
+          const isActive = item.key===activeTab;
           return (
             <a key={item.key} href="#" onClick={e=>{e.preventDefault();handleClick(item);}}
               style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, textDecoration:"none", background:isActive?C.primaryBg:"transparent", color:isActive?C.primary:C.textMuted, transition:"all 0.2s", opacity:sidebarIn?1:0, animation:sidebarIn?`slideRight 0.4s cubic-bezier(0.22,1,0.36,1) ${i*60}ms both`:"none" }}
@@ -963,5 +1323,3 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     </>
   );
 }
-
-

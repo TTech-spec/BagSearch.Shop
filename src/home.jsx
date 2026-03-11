@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
-import logoImage from "./images/logo.jpg";
+import LogoIcon from "./components/Logo.jsx";
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search"];
@@ -17,7 +17,7 @@ const HERO_SLIDES = [
   { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4I73hqMmV64iEPGtSEJ3mNAbQtvPBqQQ22x1JA6F2E-E4U0-SmUat1vO0Z0c7l1142DjBBzcn-afis9xsHhMBa7rnrhdTWhV7aq8FUXyZDIlxADoYFJcdrsprs-bYJQOcAqih5olePRiw0nJPBPNpLCL32-aAsv9zAtqbGV6bFBMK5ypVAi4i0E2wq4chZKL5jOOJyPh6HoEXvJKPkNeXbHs-Kqqip9Cgq3VAIn0gqtoVtmGQwzvnFhaifm9ecmgYdWkGPqlRExE", badge: "Shop Bags with Your Camera.", title: "Shop Bags", subtitle: "with Your Camera.", desc: "Point, shoot, discover.", accent: "#C94B2C" },
   { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8", badge: "Snap. Shop. Buy in Seconds.", title: "Snap. Shop.", subtitle: "Buy in Seconds.", desc: "Snap, chat, checkout.", accent: "#C94B2C" },
   { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E", badge: "Find Any Bag. Upload a Photo.", title: "Find Any Bag.", subtitle: "Upload a Photo.", desc: "AI matches in seconds.", accent: "#E06040" },
-  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks", badge: "New Season", title: "Emerald", subtitle: "Suede Collection", desc: "Avant-garde meets timeless.", accent: "#C94B2C" },
+  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks", badge: "New Season", title: "See It.", subtitle: "Message It. Get It.", desc: "Avant-garde meets timeless.", accent: "#C94B2C" },
 ];
 
 const CATEGORIES = [
@@ -42,9 +42,7 @@ const BLOG_FALLBACK = [
   { id: "6", title: "Visual Search: The Future of Shopping", desc: "You see a bag on Instagram. You want it. Visual AI makes that journey from desire to checkout a matter of seconds.", img: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&auto=format&fit=crop&q=80", source: "BagSearch Tech", date: "2024-11-05", cat: "Technology" },
 ];
 
-const LogoIcon = ({ size = 26 }) => (
-  <img src={logoImage} alt="BagSearch logo" style={{ width: size, height: size, objectFit: "contain", display: "block" }} />
-);
+// Using shared LogoIcon from components/Logo.jsx
 
 const Icon = ({ name, size = 22 }) => (
   <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", wordWrap: "normal", whiteSpace: "nowrap", direction: "ltr" }}>{name}</span>
@@ -667,7 +665,7 @@ export default function LuxeBag() {
 
   const handleProfileClick = () => {
     if (!user) { setAuthGateOpen(true); return; }
-    navigate(user?.user_metadata?.role === "seller" ? "/seller-profile" : "/profile");
+    navigate("/products");
   };
 
   useEffect(() => {
