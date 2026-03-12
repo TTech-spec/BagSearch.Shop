@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
+import { supabase } from './services/api';
+import { AuthContext } from './context/AuthContext';
 
 // ─── BagSearch-inspired Color Palette ───────────────────────────────────────────
 const C = {
@@ -24,8 +26,8 @@ const C = {
   textFaint:    '#c4957a',
 };
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const product = {
+// ─── Mock Product Data ───────────────────────────────────────────────────────
+const mockProduct = {
   id: 1,
   name: "The Midnight Satchel",
   brand: "Luxury Bags Co.",
@@ -134,9 +136,14 @@ function NetworkLoader({ onRetry }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ProductDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [cartAdded, setCartAdded] = useState(false);
@@ -146,11 +153,106 @@ export default function ProductDetail() {
   const [networkError, setNetworkError] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [imgZoom, setImgZoom] = useState(false);
+  const viewLoggedRef = useRef(null);
 
-  // simulate page entry animation
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (!product?.id || product.isMock) return;
+    if (viewLoggedRef.current === product.id) return;
+    viewLoggedRef.current = product.id;
+
+    const logView = async () => {
+      try {
+        await supabase.from('product_views').insert({
+          product_id: product.id,
+          buyer_id: user?.id || null,
+          buyer_name: user?.user_metadata?.full_name || user?.email || null,
+          buyer_email: user?.email || null,
+          source: 'product_detail',
+        }, { returning: 'minimal' });
+      } catch (err) {
+        console.error('Failed to log product view', err);
+      }
+    };
+
+    logView();
+  }, [product?.id, product?.isMock, user?.id, user?.user_metadata?.full_name, user?.email]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      // Check if it's a mock product ID
+      if (id && (id === '1' || id === '2' || id === '3' || id === '4' || id === '5')) {
+        const mock = [mockProduct, ...similarProducts].find(p => p.id.toString() === id);
+        if (mock) {
+          // Adapt mock to the expected structure if needed
+          const adaptedMock = {
+            ...mock,
+            images: mock.images || [mock.src],
+            originalPrice: mock.originalPrice || `$${(parseFloat(mock.price.replace('$', '').replace(',', '')) * 1.2).toLocaleString()}`,
+            sellerPhone: mock.sellerPhone || "2348147061837",
+            sellerLocation: mock.sellerLocation || "Lagos, Nigeria",
+            rating: mock.rating || 4.5,
+            reviews: mock.reviews || 10,
+            colors: mock.colors || ["#c84b11", "#f97316"],
+            sizes: mock.sizes || ["S", "M", "L"],
+            quantity: mock.quantity || 10,
+            isMock: true,
+          };
+          setProduct(adaptedMock);
+          setSelectedColor(adaptedMock.colors[0]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+          const fmt = {
+            id: data.id,
+            name: data.name,
+            brand: data.brand,
+            seller: data.seller_name || 'Anonymous Seller',
+            sellerPhone: data.whatsapp || "2348147061837",
+          sellerLocation: data.location || "Lagos, Nigeria",
+          sellerVerified: true,
+          sellerJoined: "2023",
+          sub: `${data.brand} • ${data.condition}`,
+          description: data.description || "No description provided.",
+          price: `$${parseFloat(data.price).toLocaleString()}`,
+          originalPrice: `$${(parseFloat(data.price) * 1.15).toLocaleString()}`,
+          quantity: data.quantity || 0,
+          lowStock: (data.quantity || 0) < 5,
+          rating: 4.8,
+          reviews: 24,
+            colors: data.colors || ["#c84b11", "#f97316"],
+            sizes: ["S", "M", "L"],
+            category: data.category || "General",
+            images: data.images?.length > 0 ? data.images : ['https://via.placeholder.com/600']
+          };
+          fmt.isMock = false;
+        setProduct(fmt);
+        setSelectedColor(fmt.colors[0]);
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      setNetworkError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const t = setTimeout(() => setPageLoaded(true), 80);
-    // detect offline
     const goOffline = () => setNetworkError(true);
     const goOnline = () => setNetworkError(false);
     window.addEventListener('offline', goOffline);
@@ -159,16 +261,41 @@ export default function ProductDetail() {
     return () => { clearTimeout(t); window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
   }, []);
 
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.primaryPale }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', border: `3px solid ${C.borderLight}`, borderTopColor: C.primary, animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.primaryPale, gap: 20 }}>
+        <h2 style={{ color: C.text }}>Product not found</h2>
+        <button onClick={() => navigate('/products')} style={{ padding: '10px 20px', background: C.primary, color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Back to Products</button>
+      </div>
+    );
+  }
+
   const handleAddToCart = () => {
     setCartAdded(true);
     setCartCount(c => c + quantity);
     setTimeout(() => setCartAdded(false), 2200);
   };
 
+  const parsePrice = (p) => {
+    if (!p) return 0;
+    return parseFloat(p.toString().replace(/[^0-9.]/g, ''));
+  };
+
   const whatsappMsg = encodeURIComponent(`Hi! I'm interested in the *${product.name}* by ${product.brand} listed at ${product.price}. Is it still available?`);
   const whatsappUrl = `https://wa.me/${product.sellerPhone}?text=${whatsappMsg}`;
 
-  const discount = Math.round((1 - 2450 / 2900) * 100);
+  const currentPrice = parsePrice(product.price);
+  const originalPrice = parsePrice(product.originalPrice);
+  const discount = originalPrice > 0 ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
   const openCartInProducts = () => navigate('/products', { state: { openCart: true } });
 
   return (
@@ -317,22 +444,6 @@ export default function ProductDetail() {
 
           {/* Desktop nav */}
           <nav style={{ display:'flex', alignItems:'center', gap:8 }}>
-            {/* Search */}
-            <button className="desktop-only" style={{
-              display:'flex', alignItems:'center', gap:8,
-              padding:'8px 16px', borderRadius:100,
-              border:'none',
-              background:'transparent', cursor:'pointer', color:C.textMuted,
-              fontSize:12, fontWeight:600,
-              transition:'all 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.color=C.primary; }}
-              onMouseLeave={e => { e.currentTarget.style.color=C.textMuted; }}
-            >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35"/></svg>
-              Search
-            </button>
-
             {/* Cart */}
             <button style={{ position:'relative', padding:10, borderRadius:12, border:`1.5px solid ${C.border}`, background:C.surfaceDim, cursor:'pointer', color:C.textMid, transition:'all 0.2s' }}
               onClick={openCartInProducts}
@@ -583,7 +694,7 @@ export default function ProductDetail() {
                   <span style={{ fontSize:16, color:C.textFaint, textDecoration:'line-through' }}>{product.originalPrice}</span>
                 </div>
                 <p style={{ fontSize:11, color:C.textMuted, marginTop:2 }}>
-                  You save <strong style={{ color:C.success }}>$450</strong> on this item
+                  You save <strong style={{ color:C.success }}>${(originalPrice - currentPrice).toLocaleString()}</strong> on this item
                 </p>
               </div>
               {/* Stock progress */}
@@ -597,7 +708,25 @@ export default function ProductDetail() {
             </div>
 
             {/* Description */}
-            <p className="fade-in-d3" style={{ color:C.textMuted, fontSize:13.5, lineHeight:1.7 }}>{product.description}</p>
+            <div className="fade-in-d3">
+              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.12em', textTransform:'uppercase', color:C.textFaint, marginBottom:10 }}>About the Product</p>
+              <p style={{ color:C.textMid, fontSize:14.5, lineHeight:1.75, fontWeight: 500 }}>{product.description}</p>
+            </div>
+
+            {/* Seller Info */}
+            <div className="fade-in-d3" style={{ padding: '16px', background: C.surfaceDim, borderRadius: '16px', border: `1.5px solid ${C.borderLight}` }}>
+              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.12em', textTransform:'uppercase', color:C.textFaint, marginBottom:12 }}>Seller Information</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.primaryBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>👤</div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{product.seller}</p>
+                  <p style={{ fontSize: 12, color: C.textMuted, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    {product.sellerLocation}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* Colors */}
             <div className="fade-in-d3">
@@ -873,4 +1002,3 @@ export default function ProductDetail() {
     </div>
   );
 }
-

@@ -138,6 +138,13 @@ const mockVendors = [
   {id:'vendor-5',name:'Elite Accessories',avatar:'💎',location:'abuja',rating:4.6,reviews:156,views:7340,products:19,joined:'Oct 2021',specialty:'Evening & Clutches',badge:'Top Rated',description:'Specialising in high-end evening bags and clutches for events, galas and corporate functions in Abuja.',tags:['Evening','Clutch','Formal'],colors:['#9a3412','#c84b11']},
 ];
 
+const CURRENCY_SYMBOL = '₦';
+const FREE_DELIVERY_THRESHOLD = 2000;
+const formatCurrency = (value, options = {}) => {
+  const normalized = Number(value ?? 0);
+  return `${CURRENCY_SYMBOL}${normalized.toLocaleString(undefined, { maximumFractionDigits: 0, ...options })}`;
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 // Using shared LogoIcon component
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
@@ -297,7 +304,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
         <div style={{display:'flex',gap:5,marginBottom:12}}>{product.colors.map((col,i)=>(<span key={i} style={{width:16,height:16,borderRadius:'50%',background:col,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*30}ms`}}/>))}</div>
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:12}}>
           <div><p style={{fontSize:10,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Stock</p><p style={{fontSize:13,fontWeight:700,color:C.textMid}}>{product.quantity} units</p></div>
-          <p style={{fontSize:21,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s'}}>${product.price.toLocaleString()}</p>
+          <p style={{fontSize:21,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s'}}>{formatCurrency(product.price)}</p>
         </div>
         <div style={{display:'flex',gap:7}}>
           <button onClick={handleCart} style={{flex:1,padding:'10px 0',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:12,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
@@ -380,7 +387,7 @@ function CartItem({item,onUpdateQty,onRemove,index}){
             <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}} onMouseEnter={e=>e.currentTarget.style.background=C.primaryBg} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>+</button>
           </div>
           <div style={{textAlign:'right'}}>
-            <div style={{fontSize:16,fontWeight:900,color:C.primary}}>${(item.price*item.qty).toLocaleString()}</div>
+            <div style={{fontSize:16,fontWeight:900,color:C.primary}}>{formatCurrency(item.price*item.qty)}</div>
             <button onClick={handleRemove} style={{fontSize:10,color:C.danger,fontWeight:700,background:'none',border:'none',cursor:'pointer',padding:'2px 0'}}>Remove</button>
           </div>
         </div>
@@ -407,7 +414,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
   const[checkingOut,setCheckingOut]=useState(false);const[checked,setChecked]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
-  const delivery=total>=2000?0:15;const tax=total*0.075;const grand=total+delivery+tax;
+    const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;const tax=total*0.075;const grand=total+delivery+tax;
   const handleCheckout=()=>{setCheckingOut(true);setTimeout(()=>{setCheckingOut(false);setChecked(true);},1800);setTimeout(()=>{setChecked(false);onClose();},3500);};
   return(
     <>
@@ -422,20 +429,20 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
                 <div style={{width:50,height:50,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px rgba(200,75,17,0.4)',fontSize:20}}>🛍️</div>
-                <div>
-                  <h2 style={{fontSize:21,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h2>
-                  <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · $${total.toLocaleString()} subtotal`:''}</p>
+                  <div>
+                    <h2 style={{fontSize:21,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h2>
+                    <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · ${formatCurrency(total)} subtotal`:''}</p>
+                  </div>
                 </div>
-              </div>
               <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,color:C.primary,transition:'all 0.2s',flexShrink:0}}
                 onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>✕</button>
             </div>
             {/* Delivery progress */}
-            {total>0&&total<2000&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add ${(2000-total).toLocaleString()} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/2000)*100)}%</span></div>
-              <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/2000)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease',boxShadow:'0 0 10px rgba(200,75,17,0.5)'}}/></div>
+              {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
+              <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease',boxShadow:'0 0 10px rgba(200,75,17,0.5)'}}/></div>
             </div>}
-            {total>=2000&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8}}>
+            {total>=FREE_DELIVERY_THRESHOLD&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8}}>
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#15803d"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
               <span style={{fontSize:12,color:'#15803d',fontWeight:800}}>🎉 FREE delivery unlocked!</span>
             </div>}
@@ -459,13 +466,13 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
-              {[{l:'Subtotal',v:`$${total.toLocaleString()}`},{l:'Delivery',v:delivery===0?'FREE ✨':`$${delivery}`,g:delivery===0},{l:'Tax (7.5%)',v:`$${tax.toFixed(0)}`}].map(r=>(
+              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Delivery',v:delivery===0?'FREE ✨':formatCurrency(delivery),g:delivery===0},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
                 <div key={r.l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.textMuted,fontWeight:500}}>{r.l}</span><span style={{fontSize:13,fontWeight:700,color:r.g?'#15803d':C.text}}>{r.v}</span></div>
               ))}
               <div style={{height:1,background:C.border,margin:'11px 0'}}/>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <span style={{fontSize:16,fontWeight:900,color:C.text}}>Total</span>
-                <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>${grand.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</span>
+                <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
               </div>
             </div>
             {/* Promo */}
@@ -475,8 +482,8 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
             </div>
             <button onClick={handleCheckout} style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:checked?'linear-gradient(135deg,#15803d,#16a34a)':checkingOut?'linear-gradient(135deg,#c84b11,#ea580c)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:900,fontSize:15,letterSpacing:'-0.01em',transition:'all 0.5s cubic-bezier(0.34,1.2,0.64,1)',boxShadow:checked?'0 8px 28px rgba(22,163,74,0.4)':'0 8px 28px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,transform:checkingOut?'scale(0.97)':'scale(1)'}}>
               {checked?<><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Order Placed! 🎉</>
-              :checkingOut?<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>
-              :<>Place Order · ${grand.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"/></svg></>}
+                :checkingOut?<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>
+              :<>Place Order · {formatCurrency(grand)} <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"/></svg></>}
             </button>
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:0,marginTop:14}}>
               {[{i:'🔒',l:'Secure'},{i:'🚚',l:'Fast Delivery'},{i:'↩️',l:'Easy Returns'}].map((b,idx)=>(
@@ -508,16 +515,63 @@ export default function Product(){
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
 
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
-  useEffect(()=>{fetchProducts();},[]);
+  const mapCategory = useCallback((dbCat) => {
+    if (!dbCat) return 'all';
+    const c = dbCat.toLowerCase();
+    if (c.includes('tote')) return 'tote';
+    if (c.includes('clutch')) return 'clutch';
+    if (c.includes('crossbody')) return 'crossbody';
+    if (c.includes('backpack')) return 'backpack';
+    if (c.includes('satchel')) return 'satchel';
+    if (c.includes('evening')) return 'evening';
+    if (c.includes('mini')) return 'mini';
+    if (c.includes('handbag') || c.includes('shoulder')) return 'satchel'; // Default fallback
+    return 'all';
+  }, []);
 
-  const fetchProducts=async()=>{try{const{data,error}=await supabase.from('products').select('*').order('created_at',{ascending:false});if(error)throw error;if(data&&data.length>0){const fmt=data.map(p=>({id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:'db',sub:`${p.brand}•${p.condition}`,price:parseFloat(p.price),quantity:1,lowStock:false,category:p.category||'all',location:p.location||'all',colors:[],src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400'}));const combined=[...fmt,...mockProducts];setAllProducts(combined);setDisplayedProducts(combined);}}catch(err){console.error(err);}};
+  const fetchProducts = useCallback(async (locationId = 'all') => {
+    try {
+      let query = supabase.from('products').select('*');
+      if (locationId && locationId !== 'all') query = query.eq('location', locationId);
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw error;
+      const fmt = (data || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        seller: p.seller_name || 'Anonymous Seller',
+        sellerId: 'db',
+        sub: `${p.brand} • ${p.condition}`,
+        price: parseFloat(p.price),
+        quantity: p.quantity || 0,
+        lowStock: (p.quantity || 0) < 5,
+        category: mapCategory(p.category),
+        location: p.location || 'all',
+        colors: p.colors || ["#c84b11", "#f97316"],
+        src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
+      }));
+      return [...fmt, ...mockProducts];
+    } catch (err) {
+      console.error('Failed to load products', err);
+      return [...mockProducts];
+    }
+  }, [mapCategory]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchProducts().then(combined => {
+      if (!isMounted) return;
+      setAllProducts(combined);
+      setDisplayedProducts(combined);
+    });
+    return () => { isMounted = false; };
+  }, [fetchProducts]);
 
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
 
   const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
   const handleCategoryChange=id=>{setActiveCategory(id);setDisplayedProducts(applyFilters(searchQuery,id,selectedLocation,allProducts));setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
-  const handleLocationChange=loc=>{setSelectedLocation(loc);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,allProducts));setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);};
-  const handleClearSearch=()=>{setDisplayedProducts(allProducts);setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');setSelectedLocation(NIGERIAN_LOCATIONS[0]);setSelectedVendor(null);setResultsKey(k=>k+1);};
+  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,combined));};
+  const handleClearSearch=async ()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);};
   const handleImageUpload=e=>{const f=e.target.files[0];if(!f)return;setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setDisplayedProducts(allProducts);setResultsKey(k=>k+1);e.target.value='';};
   const handleVendorSearch=q=>{setVendorSearch(q);setFilteredVendors(mockVendors.filter(v=>v.name.toLowerCase().includes(q.toLowerCase())||v.specialty.toLowerCase().includes(q.toLowerCase())||v.tags.some(t=>t.toLowerCase().includes(q.toLowerCase()))));};
   const handleViewVendorProducts = (vendor) => {
@@ -745,4 +799,3 @@ export default function Product(){
     </div>
   );
 } 
-
