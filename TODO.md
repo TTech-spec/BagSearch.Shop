@@ -1,16 +1,1 @@
-# Navigation Fixes TODO
-
-## Issues to Fix:
-1. home.jsx buttons navigate to Product.jsx instead of Login.jsx when user is logged in
-2. Product.jsx profile button doesn't navigate to userProfile.jsx properly
-
-## Plan:
-
-- [ ] **luxe/src/home.jsx** - Change all navigate("/login") to navigate("/login?force=true") so login page always shows regardless of auth state
-- [ ] **luxe/src/userProfile.jsx** - Change navigate('/home') to navigate('/') since /home route doesn't exist
-- [ ] **luxe/src/Product.jsx** - Verify profile navigation works correctly
-
-## Implementation Steps:
-1. Edit home.jsx - replace all navigate("/login") with navigate("/login?force=true")
-2. Edit userProfile.jsx - fix navigate('/home') to navigate('/')
-3. Test the navigation flow
+# Visual Search Pinecone Fix - TODO&#10;&#10;**Progress: 3/6 ✅ Product.jsx UX fixed**&#10;&#10;## [x] 1. Analyze Pinecone Index&#10;## [x] 2. Fix pinecone.js generateImageEmbedding&#10;## [x] 3. Edit Product.jsx error handling&#10;&#10;## [ ] 4. Upsert test products to Pinecone&#10;- Generate image embeddings for mock/real products&#10;&#10;## [ ] 5. Test visual search&#10;- Go to http://localhost:5173/products &#10;- Upload bag image via camera icon&#10;- Verify NO 422 error, see results or fallback&#10;&#10;## [ ] 6. Deploy&#10;- vercel --prod&#10;&#10;**Server running: Test now at localhost:5173/products**

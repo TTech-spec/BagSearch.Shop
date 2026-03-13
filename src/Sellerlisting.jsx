@@ -62,14 +62,23 @@ function prettyLocation(raw) {
   return String(raw).replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function isMissingColumnError(err) {
-  const msg = String(err?.message || "").toLowerCase();
+function getMissingColumn(err) {
+  const msg = String(err?.message || "");
   const code = String(err?.code || "").toUpperCase();
-  return (
-    code === "42703" || code === "PGRST204" ||
-    (msg.includes("column") && msg.includes("does not exist")) ||
-    (msg.includes("could not find") && msg.includes("column"))
-  );
+  if (code === "42703" || code === "PGRST204") {
+    const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i);
+    return match ? match[1] : null;
+  }
+  const lower = msg.toLowerCase();
+  if (lower.includes("column") && (lower.includes("does not exist") || lower.includes("could not find"))) {
+    const match = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?/i);
+    return match ? match[1] : null;
+  }
+  return null;
+}
+
+function isMissingColumnError(err) {
+  return Boolean(getMissingColumn(err));
 }
 
 function getImageList(value) {
@@ -226,22 +235,55 @@ function EditDrawer({ listing, onClose, onSaved }) {
     setSaving(true); setError(null);
     try {
       const rawPrice = String(form.price).replace(/,/g, "");
-      const { error: updateError } = await supabase
-        .from("products")
-        .update({
-          name: form.name,
-          brand: form.brand,
-          category: form.category,
-          condition: form.condition,
-          price: rawPrice,
-          location: form.location,
-          whatsapp: form.whatsapp,
-          description: form.description,
-          status: form.status,
-          quantity: Number(form.quantity),
-        })
-        .eq("id", listing.id);
+      const baseUpdates = {
+        name: form.name,
+        brand: form.brand,
+        category: form.category,
+        condition: form.condition,
+        price: rawPrice,
+        location: form.location,
+        whatsapp: form.whatsapp,
+        description: form.description,
+      };
+      const optionalUpdates = {
+        quantity: Number(form.quantity),
+        status: form.status,
+      };
+
+      const performUpdate = async (skipKeys = []) => {
+        const payload = { ...baseUpdates };
+        Object.entries(optionalUpdates).forEach(([key, value]) => {
+          if (!skipKeys.includes(key)) payload[key] = value;
+        });
+        const { error } = await supabase.from("products").update(payload).eq("id", listing.id);
+        return { payload, error };
+      };
+
+      let updateError = null;
+      let payloadResult = null;
+      const triedSkips = new Set();
+      const orderedKeys = Object.keys(optionalUpdates);
+      for (let attempt = 0; attempt <= orderedKeys.length; attempt++) {
+        const skipKeys = Array.from(triedSkips);
+        const result = await performUpdate(skipKeys);
+        updateError = result.error;
+        payloadResult = result.payload;
+        if (!updateError) break;
+        if (!isMissingColumnError(updateError)) break;
+        const missingCol = getMissingColumn(updateError);
+        if (missingCol && orderedKeys.includes(missingCol) && !triedSkips.has(missingCol)) {
+          triedSkips.add(missingCol);
+          continue;
+        }
+        if (attempt < orderedKeys.length) {
+          triedSkips.add(orderedKeys[attempt]);
+          continue;
+        }
+        break;
+      }
+
       if (updateError) throw updateError;
+
       setSaved(true);
       setTimeout(() => {
         onSaved({
@@ -255,8 +297,8 @@ function EditDrawer({ listing, onClose, onSaved }) {
           location: prettyLocation(form.location),
           whatsapp: form.whatsapp,
           description: form.description,
-          status: form.status,
-          quantity: Number(form.quantity),
+          status: payloadResult.status ?? listing.status,
+          quantity: payloadResult.quantity ?? listing.quantity,
         });
         handleClose();
       }, 900);

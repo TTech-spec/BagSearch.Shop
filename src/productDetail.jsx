@@ -171,6 +171,7 @@ export default function ProductDetail() {
           buyer_id: user?.id || null,
           buyer_name: user?.user_metadata?.full_name || user?.email || null,
           buyer_email: user?.email || null,
+          buyer_phone: user?.user_metadata?.phone || user?.phone || null,
           source: 'product_detail',
         }, { returning: 'minimal' });
       } catch (err) {

@@ -1,6 +1,7 @@
 import { useState, useContext, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
+import { generateImageEmbedding, upsertToPinecone } from './services/pinecone';
 import { AuthContext } from './context/AuthContext';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
@@ -235,16 +236,54 @@ export default function CreateProduct() {
         seller_name: user.user_metadata?.full_name || 'Anonymous Seller',
       };
 
-      let { error: insertError } = await supabase.from('products').insert([insertData]);
+      let { data: insertedData, error: insertError } = await supabase.from('products').insert([insertData]).select();
 
       if (insertError && isMissingColumnError(insertError)) {
         // Fallback: retry without the 'quantity' column if it's missing from DB
         const { quantity, ...fallbackData } = insertData;
-        const retry = await supabase.from('products').insert([fallbackData]);
+        const retry = await supabase.from('products').insert([fallbackData]).select();
         insertError = retry.error;
+        insertedData = retry.data;
       }
 
       if (insertError) throw insertError;
+      
+      // ─── PINECONE INDEXING ───
+      // Index the product image in Pinecone for visual search
+      try {
+        if (insertedData && insertedData[0] && images.length > 0) {
+          const productId = insertedData[0].id;
+          const firstImage = images[0].file;
+          
+          // 1. Convert to base64
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(firstImage);
+          });
+          const b64 = await base64Promise;
+          
+          // 2. Generate embedding
+          const vector = await generateImageEmbedding(b64);
+          
+          // 3. Upsert to Pinecone
+          await upsertToPinecone(productId, vector, {
+            name: insertData.name,
+            brand: insertData.brand,
+            price: insertData.price,
+            location: insertData.location,
+            category: insertData.category,
+            image: uploadedImageUrls[0]
+          });
+          
+          console.log('Product indexed in Pinecone successfully');
+        }
+      } catch (pineconeErr) {
+        // We don't want to fail the whole product creation if Pinecone fails, 
+        // but we should log it.
+        console.error('Pinecone Indexing Failed:', pineconeErr);
+      }
+
       navigate('/products');
     } catch (err) {
       console.error('Error creating product:', err);

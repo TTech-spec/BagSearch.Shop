@@ -70,9 +70,10 @@ function mapBuyerViewRow(row) {
   const buyerName =
     row.buyer_name || row.users?.full_name || row.buyer?.full_name ||
     row.buyer_full_name || row.buyer_email || row.users?.email || 'Buyer';
+  const buyerPhone = row.buyer_phone || row.users?.phone || row.buyer?.phone || row.phone || '';
   return {
     id: row.id, bag: productName, sku: productSku, img,
-    buyer: buyerName, source: row.source || row.view_source || 'direct',
+    buyer: buyerName, phone: buyerPhone, source: row.source || row.view_source || 'direct',
     time: formatRelativeTime(row.viewed_at || row.created_at), replied: false,
   };
 }
@@ -167,14 +168,16 @@ function InquiryRow({ row, index, ready }) {
           <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
             <MS name="check_circle" size={16}/> Replied
           </span>
-        ) : (
-          <a href={`https://wa.me/2348147061837?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+        ) : row.phone ? (
+          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
-            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.primary, color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s", boxShadow:`0 2px 8px rgba(200,75,17,0.3)` }}
-            onMouseEnter={e=>{e.currentTarget.style.background=C.accent;e.currentTarget.style.transform="translateY(-1px)";}}
-            onMouseLeave={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.transform="none";}}>
-            <MS name="chat" size={15}/> Chat on WhatsApp
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s", boxShadow:`0 2px 8px rgba(37,211,102,0.3)` }}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow=`0 4px 12px rgba(37,211,102,0.4)`;}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 2px 8px rgba(37,211,102,0.3)`;}}>
+            <WhatsAppIcon size={16}/> Chat on WhatsApp
           </a>
+        ) : (
+          <span style={{ fontSize:11, color:C.textFaint, fontWeight:600 }}>No phone available</span>
         )}
       </div>
     </div>
@@ -204,14 +207,16 @@ function InquiryCard({ row, index, ready }) {
           <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
             <MS name="check_circle" size={16}/> Replied
           </span>
-        ) : (
-          <a href={`https://wa.me/2348147061837?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+        ) : row.phone ? (
+          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
-            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.primary, color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s" }}
-            onMouseEnter={e=>e.currentTarget.style.background=C.accent}
-            onMouseLeave={e=>e.currentTarget.style.background=C.primary}>
-            <MS name="chat" size={15}/> Chat on WhatsApp
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s" }}
+            onMouseEnter={e=>e.currentTarget.style.background="#22c35e"}
+            onMouseLeave={e=>e.currentTarget.style.background="#25D366"}>
+            <WhatsAppIcon size={15}/> Chat on WhatsApp
           </a>
+        ) : (
+          <span style={{ fontSize:11, color:C.textFaint, fontWeight:600 }}>No phone</span>
         )}
       </div>
     </div>
@@ -241,7 +246,6 @@ function AnimatedHeading({ text, sub, ready, delay = 0 }) {
 
 const GEMINI_API_KEY = "AIzaSyB0_vtq0N7ilNze0dnUDiLBsDkDJ1vRgbo";
 
-// Try models in order — falls back if quota exceeded
 const GEMINI_MODELS = [
   "gemini-1.5-flash",
   "gemini-1.5-flash-8b",
@@ -269,7 +273,6 @@ function useAIAssist() {
 
         const data = await res.json();
 
-        // If quota exceeded, try next model
         if (!res.ok) {
           const msg = data?.error?.message || "";
           if (msg.toLowerCase().includes("quota") || res.status === 429 || res.status === 403) {
@@ -282,7 +285,6 @@ function useAIAssist() {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
         if (!text) throw new Error("Empty response — please try again.");
 
-        // Smooth word-by-word reveal
         let displayed = "";
         const words = text.split(" ");
         for (let i = 0; i < words.length; i++) {
@@ -292,15 +294,13 @@ function useAIAssist() {
         }
         onDone?.(text);
         setLoading(false);
-        return; // success — exit
+        return;
       } catch (e) {
         lastError = e.message;
-        // Only retry on quota errors
         if (!String(e.message).toLowerCase().includes("quota")) break;
       }
     }
 
-    // All models failed
     const msg = lastError === "quota"
       ? "Your Gemini API quota is exhausted. Please upgrade your plan at ai.google.dev or try again tomorrow."
       : lastError || "AI error — please try again.";
@@ -311,7 +311,7 @@ function useAIAssist() {
   return { generate, loading };
 }
 
-// ─── AI Assist Modal (full redesign) ─────────────────────────────────────────
+// ─── AI Assist Modal ──────────────────────────────────────────────────────────
 function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegenerate, field }) {
   const isError = result && result.startsWith("Error:");
   const isQuota = result && result.toLowerCase().includes("quota");
@@ -337,24 +337,18 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
 
   return (
     <>
-      {/* Backdrop */}
       <div onClick={onClose} style={{ position:"fixed", inset:0, zIndex:400, background:"rgba(26,10,0,0.35)", backdropFilter:"blur(3px)", animation:"overlayFade 0.2s ease" }}/>
-
-      {/* Modal */}
       <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", zIndex:401,
         width:"min(480px, calc(100vw - 32px))", background:"white", borderRadius:24,
         boxShadow:`0 32px 80px rgba(200,75,17,0.18), 0 8px 32px rgba(0,0,0,0.12)`,
         overflow:"hidden", animation:"modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}>
 
-        {/* ── Header ── */}
         <div style={{ background:`linear-gradient(135deg, #2d1200 0%, #1a0a00 100%)`, padding:"20px 22px 18px", position:"relative", overflow:"hidden" }}>
-          {/* Decorative orbs */}
           <div style={{ position:"absolute", top:-30, right:-20, width:120, height:120, borderRadius:"50%", background:"rgba(200,75,17,0.15)", pointerEvents:"none" }}/>
           <div style={{ position:"absolute", bottom:-20, left:60, width:80, height:80, borderRadius:"50%", background:"rgba(249,115,22,0.1)", pointerEvents:"none" }}/>
 
           <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-              {/* Animated gem icon */}
               <div style={{ width:42, height:42, borderRadius:14, background:`linear-gradient(135deg,${C.primary},${C.accent})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 6px 20px rgba(200,75,17,0.5)`, flexShrink:0 }}>
                 <SparkleIcon size={20} color="white" animated={streaming}/>
               </div>
@@ -378,7 +372,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
             </button>
           </div>
 
-          {/* Progress bar when streaming */}
           {streaming && (
             <div style={{ position:"absolute", bottom:0, left:0, right:0, height:2, background:"rgba(255,255,255,0.08)" }}>
               <div style={{ height:"100%", background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`, animation:"progressPulse 1.5s ease-in-out infinite", borderRadius:2 }}/>
@@ -386,10 +379,7 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
           )}
         </div>
 
-        {/* ── Body ── */}
         <div style={{ padding:"20px 22px" }}>
-
-          {/* Style chips — shown when idle (no result yet) */}
           {!streaming && !result && (
             <div>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
@@ -417,7 +407,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
             </div>
           )}
 
-          {/* Loading skeleton while streaming */}
           {streaming && !result && (
             <div style={{ padding:"6px 0" }}>
               {[100, 85, 70].map((w, i) => (
@@ -426,11 +415,9 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
             </div>
           )}
 
-          {/* Result / error display */}
           {result && (
             <div>
               {isError || isQuota ? (
-                /* ── Error state ── */
                 <div style={{ borderRadius:14, border:`1.5px solid #fecaca`, background:"#fff5f5", padding:"16px 18px" }}>
                   <div style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom: isQuota ? 12 : 0 }}>
                     <div style={{ width:32, height:32, borderRadius:10, background:"#fee2e2", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
@@ -457,7 +444,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
                   )}
                 </div>
               ) : (
-                /* ── Success result ── */
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
                     <div style={{ width:1, height:16, background:C.primaryBorder }}/>
@@ -471,7 +457,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
                     )}
                   </div>
                   <div style={{ background:`linear-gradient(135deg,${C.primaryPale},${C.surfaceDim})`, borderRadius:14, border:`1.5px solid ${C.primaryBorder}`, padding:"16px 18px", marginBottom:14, minHeight:56, fontSize:13, fontWeight:600, color:C.text, lineHeight:1.75, position:"relative" }}>
-                    {/* Decorative quote mark */}
                     <span style={{ position:"absolute", top:10, left:14, fontSize:32, color:C.primaryBorder, fontFamily:"Georgia,serif", lineHeight:1, pointerEvents:"none", userSelect:"none" }}>"</span>
                     <span style={{ paddingLeft:18, display:"block" }}>
                       {result}
@@ -486,7 +471,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
           )}
         </div>
 
-        {/* ── Footer actions ── */}
         {((result && !isError && !isQuota) || streaming) && (
           <div style={{ padding:"0 22px 20px", display:"flex", gap:9, justifyContent:"flex-end", flexWrap:"wrap" }}>
             {!streaming && (
@@ -515,7 +499,6 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
           </div>
         )}
 
-        {/* Close row for error state */}
         {(isError || isQuota) && (
           <div style={{ padding:"0 22px 20px", display:"flex", justifyContent:"flex-end" }}>
             <button onClick={onClose}
@@ -530,10 +513,239 @@ function AIAssistBubble({ visible, onClose, streaming, result, onAccept, onRegen
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ─── DELETE ACCOUNT MODAL ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) {
+  const [confirmText, setConfirmText] = useState('');
+  const [shake,       setShake]       = useState(false);
+  const isValid = confirmText.trim().toUpperCase() === 'DELETE';
+
+  useEffect(() => {
+    if (!visible) setConfirmText('');
+  }, [visible]);
+
+  const handleInput = (e) => {
+    setConfirmText(e.target.value);
+    if (e.target.value.length >= 5 && e.target.value.trim().toUpperCase() !== 'DELETE') {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+
+  if (!visible) return null;
+
+  const warnings = [
+    {
+      icon: 'inventory_2',
+      text: <><strong style={{color:'#dc2626',fontWeight:800}}>All your listings will be deleted</strong> — every product, photo, and price permanently removed from BagSearch.</>,
+    },
+    {
+      icon: 'chat',
+      text: <><strong style={{color:'#dc2626',fontWeight:800}}>Your buyer inquiries and messages</strong> will be erased with no way to recover them.</>,
+    },
+    {
+      icon: 'storefront',
+      text: <><strong style={{color:'#dc2626',fontWeight:800}}>Your seller profile, brand story, and stats</strong> will be gone forever.</>,
+    },
+    {
+      icon: 'block',
+      text: <><strong style={{color:'#dc2626',fontWeight:800}}>Your account cannot be restored.</strong> You will need to create a brand-new account to sell on BagSearch again.</>,
+      isX: true,
+    },
+  ];
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={!deleting && !deleted ? onClose : undefined}
+        style={{ position:'fixed', inset:0, zIndex:600, background:'rgba(10,0,0,0.65)', backdropFilter:'blur(5px)', animation:'overlayFade 0.25s ease' }}
+      />
+
+      {/* Modal */}
+      <div style={{
+        position:'fixed', top:'50%', left:'50%',
+        transform:'translate(-50%,-50%)',
+        zIndex:601,
+        width:'min(460px, calc(100vw - 32px))',
+        background:'white', borderRadius:24,
+        boxShadow:'0 40px 100px rgba(0,0,0,0.25), 0 8px 24px rgba(220,38,38,0.12)',
+        overflow:'hidden',
+        animation: shake
+          ? 'deleteShakeX 0.5s ease'
+          : 'deleteModalPop 0.4s cubic-bezier(0.34,1.28,0.64,1) both',
+      }}>
+
+        {/* ── Header ── */}
+        <div style={{ background:'linear-gradient(135deg,#1a0000 0%,#2d0808 100%)', padding:'28px 28px 24px', position:'relative', overflow:'hidden' }}>
+          {/* Orbs */}
+          <div style={{ position:'absolute', top:-40, right:-20, width:150, height:150, borderRadius:'50%', background:'rgba(220,38,38,0.12)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', bottom:-30, left:30, width:100, height:100, borderRadius:'50%', background:'rgba(220,38,38,0.07)', pointerEvents:'none' }}/>
+          {/* Scan line */}
+          <div style={{ position:'absolute', top:0, bottom:0, width:60, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)', animation:'scanLine 3s ease-in-out infinite', pointerEvents:'none' }}/>
+
+          <div style={{ position:'relative', zIndex:2 }}>
+            {/* Icon */}
+            <div style={{ width:54, height:54, borderRadius:16, background:'rgba(220,38,38,0.18)', border:'1.5px solid rgba(220,38,38,0.35)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:18, animation:'deleteIconSpin 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.1s both' }}>
+              <MS name="delete_forever" size={28} style={{ color:'#ef4444' }}/>
+            </div>
+
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontSize:20, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', marginBottom:5, fontFamily:"'DM Serif Display',serif" }}>
+                  Delete Your Account
+                </div>
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', fontWeight:500 }}>
+                  This action is permanent and cannot be undone
+                </div>
+              </div>
+              {!deleting && !deleted && (
+                <button onClick={onClose}
+                  style={{ width:32, height:32, borderRadius:10, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.5)', transition:'all 0.2s', flexShrink:0 }}
+                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.15)';e.currentTarget.style.color='#fff';}}
+                  onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';e.currentTarget.style.color='rgba(255,255,255,0.5)';}}>
+                  <MS name="close" size={17}/>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Success state ── */}
+        {deleted ? (
+          <div style={{ padding:'40px 28px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', animation:'fadeUp 0.4s ease' }}>
+            <div style={{ width:64, height:64, borderRadius:'50%', background:'#dcfce7', border:'2px solid #86efac', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12l5 5 11-11" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ strokeDasharray:60, strokeDashoffset:60, animation:'deleteCheckDraw 0.6s ease 0.1s forwards' }}/>
+              </svg>
+            </div>
+            <div style={{ fontSize:16, fontWeight:800, color:C.text, marginBottom:6 }}>Account Deleted</div>
+            <div style={{ fontSize:12, color:C.textMuted, fontWeight:500, lineHeight:1.6, maxWidth:280 }}>
+              Your account and all associated data have been permanently removed. Redirecting you now…
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ── Body ── */}
+            <div style={{ padding:'22px 28px' }}>
+              {/* Warning list */}
+              <div style={{ background:'#fff5f5', border:'1.5px solid #fecaca', borderRadius:14, padding:'14px 16px', marginBottom:20 }}>
+                {warnings.map((w, i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 0', borderBottom: i < warnings.length - 1 ? '1px solid #fee2e2' : 'none', opacity:0, animation:`fadeUp 0.4s ease ${80 + i*80}ms both` }}>
+                    <div style={{ width:24, height:24, borderRadius:'50%', background: w.isX ? '#dc2626' : '#fecaca', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+                      <MS name={w.icon} size={13} style={{ color: w.isX ? 'white' : '#dc2626' }}/>
+                    </div>
+                    <div style={{ fontSize:12, color:'#7f1d1d', fontWeight:600, lineHeight:1.65 }}>{w.text}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Confirm input */}
+              <div>
+                <label style={{ display:'block', fontSize:10, fontWeight:800, color:C.textMuted, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:8 }}>
+                  Type <span style={{ color:C.danger, fontWeight:900 }}>DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={handleInput}
+                  placeholder="DELETE"
+                  autoComplete="off"
+                  disabled={deleting}
+                  style={{
+                    width:'100%', padding:'12px 14px', borderRadius:10,
+                    border:`2px solid ${isValid ? '#dc2626' : C.cardBorder}`,
+                    background: isValid ? '#fff5f5' : C.surfaceDim,
+                    fontSize:14, fontWeight:700, color:C.text,
+                    fontFamily:"'Manrope',monospace", outline:'none',
+                    transition:'all 0.25s',
+                    boxShadow: isValid ? '0 0 0 4px rgba(220,38,38,0.08)' : 'none',
+                    letterSpacing:'0.08em',
+                  }}
+                />
+                {confirmText.length > 0 && !isValid && (
+                  <p style={{ fontSize:10, color:C.danger, fontWeight:600, marginTop:5, paddingLeft:2, opacity:0, animation:'fadeUp 0.25s ease both' }}>
+                    Please type DELETE exactly to proceed
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* ── Footer ── */}
+            <div style={{ padding:'0 28px 24px', display:'flex', gap:10 }}>
+              <button
+                onClick={onClose}
+                disabled={deleting}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:`1.5px solid ${C.border}`, background:'white', fontSize:13, fontWeight:700, color:C.textMid, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily:"'Manrope',sans-serif", transition:'all 0.2s', opacity: deleting ? 0.5 : 1 }}
+                onMouseEnter={e=>{if(!deleting){e.currentTarget.style.background=C.primaryPale;e.currentTarget.style.borderColor=C.primaryBorder;}}}
+                onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.borderColor=C.border;}}>
+                Cancel
+              </button>
+
+              <button
+                onClick={() => isValid && !deleting && onConfirm()}
+                disabled={!isValid || deleting}
+                style={{
+                  flex:2, padding:'12px', borderRadius:12, border:'none',
+                  background: isValid && !deleting
+                    ? 'linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)'
+                    : '#fca5a5',
+                  fontSize:13, fontWeight:800, color:'white',
+                  cursor: isValid && !deleting ? 'pointer' : 'not-allowed',
+                  fontFamily:"'Manrope',sans-serif",
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                  boxShadow: isValid && !deleting ? '0 6px 20px rgba(220,38,38,0.35)' : 'none',
+                  transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',
+                  position:'relative', overflow:'hidden',
+                }}
+                onMouseEnter={e=>{if(isValid&&!deleting){e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 10px 28px rgba(220,38,38,0.48)";}}}
+                onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=isValid&&!deleting?"0 6px 20px rgba(220,38,38,0.35)":"none";}}>
+                {isValid && !deleting && (
+                  <div style={{ position:'absolute', top:0, bottom:0, width:50, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', animation:'scanLine 2s ease-in-out infinite', pointerEvents:'none' }}/>
+                )}
+                <MS
+                  name={deleting ? 'hourglass_empty' : 'delete_forever'}
+                  size={16}
+                  style={{ animation: deleting ? 'spin 0.8s linear infinite' : 'none' }}
+                />
+                {deleting ? 'Deleting account…' : 'Permanently Delete'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes deleteShakeX {
+          0%,100%{transform:translate(-50%,-50%)}
+          15%{transform:translate(calc(-50% - 7px),-50%)}
+          30%{transform:translate(calc(-50% + 6px),-50%)}
+          45%{transform:translate(calc(-50% - 4px),-50%)}
+          60%{transform:translate(calc(-50% + 3px),-50%)}
+          75%{transform:translate(calc(-50% - 2px),-50%)}
+        }
+        @keyframes deleteModalPop {
+          from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}
+          to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+        }
+        @keyframes deleteIconSpin {
+          from{opacity:0;transform:rotate(-90deg) scale(0.5)}
+          to{opacity:1;transform:rotate(0deg) scale(1)}
+        }
+        @keyframes deleteCheckDraw {
+          from{stroke-dashoffset:60}
+          to{stroke-dashoffset:0}
+        }
+      `}</style>
+    </>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ─── EDIT PROFILE COMPONENTS ──────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Plain float-label input (personal info)
 function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint, disabled }) {
   const [focused, setFocused] = useState(false);
   const has = value && value.length > 0;
@@ -559,7 +771,6 @@ function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint
   );
 }
 
-// Float-label input WITH ✨ AI sparkle button — used for Brand Name
 function FloatInputAI({ label, value, onChange, icon, iconColor, hint }) {
   const [focused,   setFocused]   = useState(false);
   const [aiOpen,    setAIOpen]    = useState(false);
@@ -611,7 +822,6 @@ Rules: 1-3 words max. Premium-sounding. Relevant to handbags/fashion. Return ONL
             onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
             style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:13, fontWeight:600, color:C.text, fontFamily:"'Manrope',sans-serif", marginTop:2 }}/>
         </div>
-        {/* ✨ AI sparkle button */}
         <button
           onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
           title="AI Brand Name Ideas (Gemini)"
@@ -628,7 +838,6 @@ Rules: 1-3 words max. Premium-sounding. Relevant to handbags/fashion. Return ONL
   );
 }
 
-// Brand story textarea WITH ✨ AI Assist pill
 function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
   const [focused,   setFocused]   = useState(false);
   const [aiOpen,    setAIOpen]    = useState(false);
@@ -673,7 +882,6 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
   return (
     <div ref={wrapRef} style={{ position:"relative" }}>
       <div style={{ border:`2px solid ${focused?C.primary:value.length>0?C.heroDark:C.cardBorder}`, borderRadius:16, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 8px 32px rgba(200,75,17,0.1)`:"none" }}>
-        {/* Top bar */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px 0" }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
             <div style={{ width:26, height:26, borderRadius:8, background:focused?C.primary:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>
@@ -681,7 +889,6 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
             </div>
             <span style={{ fontSize:10, fontWeight:800, color:focused?C.primary:C.textFaint, letterSpacing:"0.12em", textTransform:"uppercase", transition:"color 0.3s" }}>Brand Story</span>
           </div>
-          {/* ✨ AI Assist pill button */}
           <button
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
             style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${aiOpen?C.primary:C.primaryBorder}`, background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryPale, color:aiOpen?"white":C.primary, fontSize:10, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", letterSpacing:"0.06em", transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.3)`:"none" }}
@@ -713,7 +920,6 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
   );
 }
 
-// Category chip
 function CatChip({ cat, selected, onClick, index, visible }) {
   const [hov, setHov] = useState(false);
   return (
@@ -731,7 +937,6 @@ function CatChip({ cat, selected, onClick, index, visible }) {
   );
 }
 
-// Inline save toast
 function SaveToast({ message, type, visible }) {
   return (
     <div style={{ position:"fixed", bottom:32, left:"50%", transform:`translateX(-50%) translateY(${visible?0:80}px)`, opacity:visible?1:0, transition:"all 0.45s cubic-bezier(0.22,1,0.36,1)", zIndex:9999, pointerEvents:"none", display:"flex", alignItems:"center", gap:10, padding:"12px 26px", borderRadius:50, background:type==="success"?`linear-gradient(135deg,${C.success},#15803d)`:`linear-gradient(135deg,${C.danger},#b91c1c)`, color:"#fff", fontSize:13, fontWeight:700, fontFamily:"'Manrope',sans-serif", boxShadow:"0 12px 40px rgba(0,0,0,0.22)" }}>
@@ -847,7 +1052,6 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
         </div>
       </div>
 
-      {/* Section 1 — Personal Info */}
       <SCard visible={sec1In}>
         <SHead icon="person" title="Personal Info" subtitle="Your identity on BagSearch"/>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
@@ -857,7 +1061,6 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
         </div>
       </SCard>
 
-      {/* Section 2 — Brand Identity with AI */}
       <SCard visible={sec2In}>
         <SHead icon="storefront" title="Brand Identity" subtitle="Make your brand unforgettable — tap ✨ for Gemini AI help" color={C.accent}/>
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
@@ -878,7 +1081,6 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
         </div>
       </SCard>
 
-      {/* Section 3 — Categories */}
       <SCard visible={sec3In}>
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:8 }}>
           <SHead icon="sell" title="Bag Categories" subtitle="Select all that apply" color={C.primaryLight}/>
@@ -900,7 +1102,6 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
         )}
       </SCard>
 
-      {/* Save button */}
       <div style={{ display:"flex", justifyContent:"flex-end", gap:12, opacity:sec3In?1:0, transition:"opacity 0.5s ease 300ms" }}>
         <button onClick={handleSave} disabled={saving}
           style={{ display:"flex", alignItems:"center", gap:10, padding:"14px 40px", borderRadius:16, border:"none", background:saved?`linear-gradient(135deg,${C.success},#15803d)`:`linear-gradient(135deg,${C.primary} 0%,${C.accent} 50%,${C.primaryLight} 100%)`, color:"#fff", fontSize:14, fontWeight:900, cursor:saving?"default":"pointer", fontFamily:"'DM Serif Display',serif", letterSpacing:"-0.02em", boxShadow:`0 8px 36px rgba(200,75,17,0.4)`, transition:"all 0.4s cubic-bezier(0.22,1,0.36,1)", position:"relative", overflow:"hidden" }}
@@ -943,6 +1144,11 @@ export default function SellerProfile() {
   const [bannerIn,    setBannerIn]    = useState(false);
   const [tabIn,       setTabIn]       = useState(false);
   const [editPanelIn, setEditPanelIn] = useState(false);
+
+  // ── Delete account state ──
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting,        setDeleting]        = useState(false);
+  const [deleted,         setDeleted]         = useState(false);
 
   useEffect(()=>{
     setTimeout(()=>setSidebarIn(true),  60);
@@ -991,7 +1197,7 @@ export default function SellerProfile() {
         if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
         const { data:vd, count:vc, error:ve } = await supabase
           .from('product_views')
-          .select(`id,viewed_at,source,products:product_id(id,name,sku,images),users:buyer_id(full_name,email)`,{ count:'exact' })
+          .select(`id,viewed_at,source,buyer_name,buyer_phone,products:product_id(id,name,sku,images),users:buyer_id(full_name,email,phone)`,{ count:'exact' })
           .in('product_id',productIds).order('viewed_at',{ ascending:false }).limit(20);
         if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
         else { setTotalViewsCount(rows.reduce((a,p)=>a+(Number(p.views_count)||0),0)); }
@@ -1000,6 +1206,35 @@ export default function SellerProfile() {
     }
     loadMetrics();
   },[user]);
+
+  // ── Delete account handler ──
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      // Delete all seller data in order
+      if (user?.id) {
+        // Delete product views for this seller's products
+        const { data: products } = await supabase.from('products').select('id').eq('user_id', user.id);
+        if (products?.length) {
+          const ids = products.map(p => p.id);
+          await supabase.from('product_views').delete().in('product_id', ids);
+        }
+        // Delete seller's products
+        await supabase.from('products').delete().eq('user_id', user.id);
+        // Delete user profile row
+        await supabase.from('users').delete().eq('user_id', user.id);
+      }
+      // Sign out & show success state
+      setDeleted(true);
+      setTimeout(async () => {
+        await supabase.auth.signOut();
+        navigate('/');
+      }, 2200);
+    } catch (e) {
+      console.error('Delete account error:', e);
+      setDeleting(false);
+    }
+  };
 
   const stats = useMemo(()=>[
     { icon:'payments',        label:'Total Revenue',   value:'—',                                             badge:'—', accent:C.primary,   glow:'rgba(200,75,17,0.15)' },
@@ -1054,12 +1289,22 @@ export default function SellerProfile() {
         @keyframes popIn        {from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
         @keyframes overlayFade  {from{opacity:0}to{opacity:1}}
         @keyframes tabSlideIn   {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes bubbleIn       {from{opacity:0;transform:translateY(-8px) scale(0.97)}to{opacity:1;transform:none}}
-        @keyframes modalPop       {from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes sparklePulse   {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:0.6}}
-        @keyframes cursorBlink    {0%,100%{opacity:1}50%{opacity:0}}
-        @keyframes progressPulse  {0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
-        @keyframes skeletonPulse  {0%,100%{opacity:0.4}50%{opacity:0.9}}
+        @keyframes modalPop     {from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes sparklePulse {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:0.6}}
+        @keyframes cursorBlink  {0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes progressPulse{0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
+        @keyframes skeletonPulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
+        @keyframes deleteShakeX {
+          0%,100%{transform:translate(-50%,-50%)}
+          15%{transform:translate(calc(-50% - 7px),-50%)}
+          30%{transform:translate(calc(-50% + 6px),-50%)}
+          45%{transform:translate(calc(-50% - 4px),-50%)}
+          60%{transform:translate(calc(-50% + 3px),-50%)}
+          75%{transform:translate(calc(-50% - 2px),-50%)}
+        }
+        @keyframes deleteModalPop{from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes deleteIconSpin{from{opacity:0;transform:rotate(-90deg) scale(0.5)}to{opacity:1;transform:rotate(0deg) scale(1)}}
+        @keyframes deleteCheckDraw{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
 
         .sidebar-desktop{display:flex!important}
         .sidebar-mobile-overlay{display:none!important}
@@ -1091,7 +1336,15 @@ export default function SellerProfile() {
 
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="sidebar-desktop" style={{ width:240, background:C.text, borderRight:"1px solid rgba(255,255,255,0.06)", position:"fixed", height:"100%", flexDirection:"column", zIndex:20, opacity:sidebarIn?1:0, transform:sidebarIn?"translateX(0)":"translateX(-100%)", transition:"opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
-        <SidebarContents initials={initials} seller={seller} sidebarIn={sidebarIn} navigate={navigate} activeTab={activeTab} switchTab={switchTab}/>
+        <SidebarContents
+          initials={initials}
+          seller={seller}
+          sidebarIn={sidebarIn}
+          navigate={navigate}
+          activeTab={activeTab}
+          switchTab={switchTab}
+          onDeleteClick={() => setDeleteModalOpen(true)}
+        />
       </aside>
 
       {/* ── MOBILE SIDEBAR ── */}
@@ -1099,7 +1352,16 @@ export default function SellerProfile() {
         {mobileSidebarOpen && <div onClick={()=>setMobileSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:40, animation:"overlayFade 0.25s ease both" }}/>}
         <aside style={{ width:260, background:C.text, position:"fixed", top:0, left:0, height:"100%", display:"flex", flexDirection:"column", zIndex:50, transform:mobileSidebarOpen?"translateX(0)":"translateX(-100%)", transition:"transform 0.32s cubic-bezier(0.4,0,0.2,1)", boxShadow:"8px 0 32px rgba(0,0,0,0.3)" }}>
           <button onClick={()=>setMobileSidebarOpen(false)} style={{ position:"absolute", top:16, right:16, width:32, height:32, borderRadius:"50%", border:"none", background:"rgba(255,255,255,0.08)", color:C.textMuted, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>✕</button>
-          <SidebarContents initials={initials} seller={seller} sidebarIn={mobileSidebarOpen} navigate={navigate} activeTab={activeTab} switchTab={(t)=>{switchTab(t);setMobileSidebarOpen(false);}} onNav={()=>setMobileSidebarOpen(false)}/>
+          <SidebarContents
+            initials={initials}
+            seller={seller}
+            sidebarIn={mobileSidebarOpen}
+            navigate={navigate}
+            activeTab={activeTab}
+            switchTab={(t)=>{switchTab(t);setMobileSidebarOpen(false);}}
+            onNav={()=>setMobileSidebarOpen(false)}
+            onDeleteClick={() => { setMobileSidebarOpen(false); setDeleteModalOpen(true); }}
+          />
         </aside>
       </div>
 
@@ -1256,12 +1518,21 @@ export default function SellerProfile() {
           )}
         </div>
       </main>
+
+      {/* ── DELETE ACCOUNT MODAL ── */}
+      <DeleteAccountModal
+        visible={deleteModalOpen}
+        onClose={() => { if (!deleting && !deleted) { setDeleteModalOpen(false); setDeleted(false); } }}
+        onConfirm={handleDeleteAccount}
+        deleting={deleting}
+        deleted={deleted}
+      />
     </div>
   );
 }
 
 // ─── Sidebar contents ─────────────────────────────────────────────────────────
-function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, switchTab, onNav }) {
+function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, switchTab, onNav, onDeleteClick }) {
   const extNavItems = [
     { icon:'home',        label:'Home',         key:'home'              },
     { icon:'dashboard',   label:'Dashboard',    key:'dashboard'         },
@@ -1308,6 +1579,7 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
       </nav>
 
       <div style={{ padding:"16px 14px 20px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+        {/* User info */}
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
           <div style={{ width:36, height:36, borderRadius:"50%", background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"white", flexShrink:0 }}>{initials}</div>
           <div style={{ minWidth:0 }}>
@@ -1315,10 +1587,41 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
             <div style={{ fontSize:9, fontWeight:800, color:C.primary, letterSpacing:"0.15em", textTransform:"uppercase" }}>Pro Seller</div>
           </div>
         </div>
-        <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+
+        {/* Contact info */}
+        <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="mail" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{seller?.email}</span></div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="phone" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted }}>{seller?.phone}</span></div>
         </div>
+
+        {/* ── Delete Account Button ── */}
+        <button
+          onClick={onDeleteClick}
+          style={{
+            width:'100%', display:'flex', alignItems:'center', gap:8,
+            padding:'9px 12px', borderRadius:10,
+            border:'1.5px solid rgba(220,38,38,0.22)',
+            background:'rgba(220,38,38,0.06)',
+            color:'#ef4444', fontSize:12, fontWeight:700,
+            cursor:'pointer', fontFamily:"'Manrope',sans-serif",
+            transition:'all 0.25s cubic-bezier(0.22,1,0.36,1)',
+          }}
+          onMouseEnter={e=>{
+            e.currentTarget.style.background='rgba(220,38,38,0.14)';
+            e.currentTarget.style.borderColor='rgba(220,38,38,0.4)';
+            e.currentTarget.style.transform='translateY(-1px)';
+            e.currentTarget.style.boxShadow='0 4px 14px rgba(220,38,38,0.15)';
+          }}
+          onMouseLeave={e=>{
+            e.currentTarget.style.background='rgba(220,38,38,0.06)';
+            e.currentTarget.style.borderColor='rgba(220,38,38,0.22)';
+            e.currentTarget.style.transform='none';
+            e.currentTarget.style.boxShadow='none';
+          }}>
+          <MS name="delete_forever" size={16} style={{ color:'#ef4444' }}/>
+          <span style={{ flex:1, textAlign:'left' }}>Delete Account</span>
+          <MS name="chevron_right" size={14} style={{ color:'rgba(239,68,68,0.5)' }}/>
+        </button>
       </div>
     </>
   );

@@ -584,6 +584,12 @@ const LoginPage = () => {
       const userId = data.user.id;
       const { data: profile, error: profileError } = await supabase
         .from('users').select('role').eq('user_id', userId).single();
+      
+      if (profile && profile.role && profile.role !== role) {
+        await supabase.auth.signOut();
+        throw new Error(`Invalid details. Please toggle to the role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`);
+      }
+
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching user profile:', profileError);
       }
