@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { deleteFromPinecone } from './services/pinecone';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
@@ -1211,20 +1212,37 @@ export default function SellerProfile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      // Delete all seller data in order
-      if (user?.id) {
-        // Delete product views for this seller's products
-        const { data: products } = await supabase.from('products').select('id').eq('user_id', user.id);
-        if (products?.length) {
-          const ids = products.map(p => p.id);
-          await supabase.from('product_views').delete().in('product_id', ids);
-        }
-        // Delete seller's products
-        await supabase.from('products').delete().eq('user_id', user.id);
-        // Delete user profile row
-        await supabase.from('users').delete().eq('user_id', user.id);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('Not authenticated');
+      const userId = authUser.id;
+
+      // 1. Delete seller products and related data
+      const { data: products } = await supabase
+        .from('products')
+        .select('id')
+        .or(`user_id.eq.${userId},seller_id.eq.${userId}`);
+
+      if (products && products.length > 0) {
+        const productIds = products.map(p => p.id);
+        
+        // Delete from Pinecone
+        await deleteFromPinecone(productIds);
+        
+        // Delete product views
+        await supabase.from('product_views').delete().in('product_id', productIds);
+        
+        // Delete products
+        await supabase.from('products').delete().or(`user_id.eq.${userId},seller_id.eq.${userId}`);
       }
-      // Sign out & show success state
+
+      // 2. Delete common user data
+      await Promise.all([
+        supabase.from('search_history').delete().eq('user_id', userId),
+        supabase.from('saved_items').delete().eq('user_id', userId),
+        supabase.from('orders').delete().eq('user_id', userId),
+        supabase.from('users').delete().eq('user_id', userId),
+      ]);
+
       setDeleted(true);
       setTimeout(async () => {
         await supabase.auth.signOut();

@@ -147,10 +147,52 @@ const formatCurrency = (value, options = {}) => {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-// Using shared LogoIcon component
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
-/* ─── AUTH GATE MODAL (copied from home.jsx for reuse) ─── */
+// ─── Typewriter Hook ──────────────────────────────────────────────────────────
+function useTypewriter(phrases, { typeSpeed = 80, deleteSpeed = 45, pauseMs = 1800, startDelay = 600 } = {}) {
+  const [displayed, setDisplayed] = useState('');
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), startDelay);
+    return () => clearTimeout(t);
+  }, [startDelay]);
+
+  useEffect(() => {
+    if (!started) return;
+    const current = phrases[phraseIdx];
+    if (!deleting && charIdx < current.length) {
+      const t = setTimeout(() => {
+        setDisplayed(current.slice(0, charIdx + 1));
+        setCharIdx(c => c + 1);
+      }, typeSpeed + Math.random() * 30);
+      return () => clearTimeout(t);
+    }
+    if (!deleting && charIdx === current.length) {
+      const t = setTimeout(() => setDeleting(true), pauseMs);
+      return () => clearTimeout(t);
+    }
+    if (deleting && charIdx > 0) {
+      const t = setTimeout(() => {
+        setDisplayed(current.slice(0, charIdx - 1));
+        setCharIdx(c => c - 1);
+      }, deleteSpeed);
+      return () => clearTimeout(t);
+    }
+    if (deleting && charIdx === 0) {
+      setDeleting(false);
+      setPhraseIdx(i => (i + 1) % phrases.length);
+    }
+  }, [started, charIdx, deleting, phraseIdx, phrases, typeSpeed, deleteSpeed, pauseMs]);
+
+  return displayed;
+}
+
+/* ─── AUTH GATE MODAL ─── */
 function AuthGateModal({ open, onClose, navigate }) {
   const [phase, setPhase] = useState(0);
 
@@ -183,21 +225,17 @@ function AuthGateModal({ open, onClose, navigate }) {
         transition: "opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)",
       }}>
         <div style={{ height: 6, background: "linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
-
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", border: "1px solid #E8D5CC", background: "#FFF5F2", color: "#999", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; e.currentTarget.style.color = "#C94B2C"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; e.currentTarget.style.color = "#999"; }}>
           <Icon name="close" size={15} />
         </button>
-
         <div style={{ padding: "36px 36px 32px", textAlign: "center" }}>
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "#C94B2C", animation: visible ? "authFloat 3s ease-in-out infinite" : "none" }}>
             <Icon name="lock" size={28} />
           </div>
-
           <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.04em", marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>Members Only</h2>
           <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, marginBottom: 28 }}>Sign in to unlock visual search, wishlists & more.</p>
-
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
             {[{ icon: "image_search", label: "Visual Search" }, { icon: "favorite", label: "Wishlist" }, { icon: "notifications", label: "Alerts" }].map(({ icon, label }) => (
               <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 9999, background: "#F9DDD0", fontSize: 10, fontWeight: 700, color: "#C94B2C", letterSpacing: "0.06em" }}>
@@ -205,7 +243,6 @@ function AuthGateModal({ open, onClose, navigate }) {
               </span>
             ))}
           </div>
-
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <button onClick={() => { onClose(); navigate("/register"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 14, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 6px 20px rgba(201,75,44,0.35)", transition: "all 0.25s" }}
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 30px rgba(201,75,44,0.45)"; }}
@@ -219,15 +256,12 @@ function AuthGateModal({ open, onClose, navigate }) {
             </button>
           </div>
         </div>
-
         <div style={{ padding: "12px 36px", borderTop: "1px solid #F5EAE5", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#FDFAFA" }}>
           <div style={{ color: "#C94B2C" }}><LogoIcon /></div>
           <span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.02em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
         </div>
       </div>
-      <style>{`
-        @keyframes authFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-      `}</style>
+      <style>{`@keyframes authFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }`}</style>
     </div>
   );
 }
@@ -263,8 +297,7 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
               <span style={{fontSize:18}}>{loc.emoji}</span>
               <div style={{flex:1}}><div style={{fontSize:14,fontWeight:isSel?800:600,color:isSel?C.primary:C.text}}>{loc.name}</div>{loc.state&&<div style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{loc.state} State</div>}</div>
               {isSel&&<div style={{width:20,height:20,borderRadius:'50%',background:C.primary,display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="10" height="10" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div>}
-            </button>);
-          })}
+            </button>);})}
         </div>))}
       </div>
     </div></>);
@@ -323,7 +356,164 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   );
 }
 
-// ─── Vendor Card (no verified badge, no followers) ────────────────────────────
+// ─── Compact Product Card (for listing sections) ──────────────────────────────
+function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor }) {
+  const [hov, setHov] = useState(false);
+  const [added, setAdded] = useState(false);
+  const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
+  return (
+    <div onClick={() => navigate(`/products/${product.id}`)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ background: 'white', borderRadius: 16, overflow: 'hidden', border: `1.5px solid ${hov ? C.primaryBorder : C.borderLight}`, cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)', boxShadow: hov ? `0 16px 40px rgba(200,75,17,0.13)` : '0 2px 8px rgba(0,0,0,0.04)', transform: hov ? 'translateY(-4px)' : 'none', flexShrink: 0, width: 200 }}>
+      <div style={{ position: 'relative', overflow: 'hidden', height: 150, background: C.primaryBg }}>
+        <img src={product.src} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.5s ease', transform: hov ? 'scale(1.08)' : 'scale(1)' }} />
+        {badge && <span style={{ position: 'absolute', top: 8, left: 8, background: badgeColor || C.primary, color: 'white', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 20 }}>{badge}</span>}
+      </div>
+      <div style={{ padding: '11px 12px' }}>
+        <p style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</p>
+        <p style={{ fontSize: 10, color: C.textFaint, marginBottom: 8, fontWeight: 500 }}>{product.seller}</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 15, fontWeight: 900, color: C.primary }}>{formatCurrency(product.price)}</span>
+          <button onClick={handleCart} style={{ width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer', background: added ? '#16a34a' : C.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', transform: added ? 'scale(0.9)' : 'scale(1)' }}>
+            {added ? <svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              : <svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Horizontal Scroll Section ────────────────────────────────────────────────
+function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
+  const scrollRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const [ref, vis] = useScrollReveal(0.05);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 10);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 430, behavior: 'smooth' });
+  };
+
+  return (
+    <div ref={ref} style={{ marginBottom: 48, opacity: vis ? 1 : 0, transform: vis ? 'translateY(0)' : 'translateY(32px)', transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
+      {/* Section header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: accentBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: `1.5px solid ${accentColor}33` }}>{icon}</div>
+          <div>
+            <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text, letterSpacing: '-0.03em', marginBottom: 1 }}>{title}</h3>
+            <p style={{ fontSize: 12, color: C.textFaint, fontWeight: 500 }}>{subtitle}</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {[{ dir: -1, can: canLeft }, { dir: 1, can: canRight }].map(({ dir, can }) => (
+            <button key={dir} onClick={() => scroll(dir)} style={{ width: 34, height: 34, borderRadius: '50%', border: `1.5px solid ${can ? accentColor : C.border}`, background: can ? accentBg : 'white', color: can ? accentColor : C.textFaint, cursor: can ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', opacity: can ? 1 : 0.4 }}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d={dir === -1 ? 'M15.75 19.5L8.25 12l7.5-7.5' : 'M8.25 4.5l7.5 7.5-7.5 7.5'} /></svg>
+            </button>
+          ))}
+          <button onClick={onSeeAll} style={{ fontSize: 12, fontWeight: 800, color: accentColor, background: accentBg, border: `1.5px solid ${accentColor}33`, padding: '7px 14px', borderRadius: 20, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { e.currentTarget.style.background = accentColor; e.currentTarget.style.color = 'white'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = accentBg; e.currentTarget.style.color = accentColor; }}>
+            See All →
+          </button>
+        </div>
+      </div>
+      {/* Scroll track */}
+      <div ref={scrollRef} onScroll={checkScroll} style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8, paddingTop: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="hide-scrollbar">
+        {products.map((p, i) => (
+          <CompactProductCard key={p.id} product={p} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} badge={badge} badgeColor={badgeColor} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Deal of the Day ──────────────────────────────────────────────────────────
+function DealOfTheDay({ product, navigate, onAddToCart, isAuthed, onRequireAuth }) {
+  const [ref, vis] = useScrollReveal(0.05);
+  const [hov, setHov] = useState(false);
+  const [added, setAdded] = useState(false);
+  // countdown to midnight
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const midnight = new Date(); midnight.setHours(24, 0, 0, 0);
+      const diff = Math.max(0, Math.floor((midnight - now) / 1000));
+      setTimeLeft({ h: Math.floor(diff / 3600), m: Math.floor((diff % 3600) / 60), s: diff % 60 });
+    };
+    tick(); const iv = setInterval(tick, 1000); return () => clearInterval(iv);
+  }, []);
+  const pad = n => String(n).padStart(2, '0');
+  const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
+  if (!product) return null;
+  return (
+    <div ref={ref} style={{ marginBottom: 48, opacity: vis ? 1 : 0, transform: vis ? 'translateY(0)' : 'translateY(32px)', transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1.5px solid #fecaca' }}>🔥</div>
+        <div>
+          <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text, letterSpacing: '-0.03em', marginBottom: 1 }}>Deal of the Day</h3>
+          <p style={{ fontSize: 12, color: C.textFaint, fontWeight: 500 }}>Exclusive limited-time offer — don't miss out</p>
+        </div>
+        {/* Countdown */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: C.danger, fontWeight: 700 }}>Ends in</span>
+          {[timeLeft.h, timeLeft.m, timeLeft.s].map((v, i) => (
+            <span key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ background: C.danger, color: 'white', fontWeight: 900, fontSize: 14, borderRadius: 7, padding: '4px 8px', minWidth: 34, textAlign: 'center', letterSpacing: '-0.02em', boxShadow: '0 2px 8px rgba(220,38,38,0.3)', fontVariantNumeric: 'tabular-nums' }}>{pad(v)}</span>
+              {i < 2 && <span style={{ fontSize: 14, fontWeight: 900, color: C.danger, margin: '0 2px', lineHeight: 1 }}>:</span>}
+            </span>
+          ))}
+        </div>
+      </div>
+      {/* Card */}
+      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+        style={{ background: 'linear-gradient(135deg, #fff5f2 0%, #fff 60%)', border: `2px solid ${hov ? C.primary : '#fcd4be'}`, borderRadius: 22, overflow: 'hidden', display: 'flex', gap: 0, boxShadow: hov ? '0 24px 60px rgba(200,75,17,0.14)' : '0 6px 24px rgba(200,75,17,0.08)', transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)', cursor: 'pointer' }}
+        onClick={() => navigate(`/products/${product.id}`)}>
+        <div style={{ width: '42%', minWidth: 180, position: 'relative', overflow: 'hidden', background: C.primaryBg }}>
+          <img src={product.src} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease', transform: hov ? 'scale(1.06)' : 'scale(1)', minHeight: 220 }} />
+          <div style={{ position: 'absolute', top: 14, left: 14, background: '#dc2626', color: 'white', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20, letterSpacing: '0.05em', boxShadow: '0 3px 10px rgba(220,38,38,0.4)', animation: 'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
+        </div>
+        <div style={{ flex: 1, padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.primary, marginBottom: 8 }}>{product.seller}</p>
+          <h4 style={{ fontSize: 'clamp(1.2rem, 2.5vw, 1.7rem)', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 10 }}>{product.name}</h4>
+          <p style={{ fontSize: 13, color: C.textMuted, fontWeight: 500, lineHeight: 1.6, marginBottom: 18 }}>{product.sub}</p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 22 }}>
+            <span style={{ fontSize: 32, fontWeight: 900, color: C.primary, letterSpacing: '-0.04em' }}>{formatCurrency(product.price)}</span>
+            <span style={{ fontSize: 18, color: C.textFaint, textDecoration: 'line-through', fontWeight: 600 }}>{formatCurrency(Math.round(product.price * 1.3))}</span>
+            <span style={{ background: '#fef2f2', color: C.danger, fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 20, border: '1px solid #fecaca' }}>-23% OFF</span>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={handleCart} style={{ flex: 1, maxWidth: 200, padding: '13px 0', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13, background: added ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#c84b11,#f97316)', color: 'white', transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: added ? '0 4px 16px rgba(22,163,74,0.4)' : '0 6px 20px rgba(200,75,17,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+              {added ? <><svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>Added!</> : <>🛍️ Grab This Deal</>}
+            </button>
+            <a href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20the%20deal%20for%20${encodeURIComponent(product.name)}`} target="_blank" rel="noopener noreferrer"
+              onClick={e => { if (!isAuthed) { e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
+              style={{ width: 46, borderRadius: 12, background: C.successBg, color: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.25s', textDecoration: 'none', flexShrink: 0 }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#22c55e'; e.currentTarget.style.color = 'white'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.successBg; e.currentTarget.style.color = C.success; }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+            </a>
+          </div>
+          <p style={{ marginTop: 12, fontSize: 11, color: C.textFaint, fontWeight: 600 }}>⚡ Only {product.quantity} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Vendor Card ──────────────────────────────────────────────────────────────
 function VendorCard({vendor,index,onViewProducts}){
   const[hov,setHov]=useState(false);const[ref,setRef]=useState(null);const[vis,setVis]=useState(false);
   useEffect(()=>{if(!ref)return;const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVis(true);o.disconnect();}},{threshold:0.08});o.observe(ref);return()=>o.disconnect();},[ref]);
@@ -410,37 +600,34 @@ function CartBadge({count,onClick}){
   );
 }
 
-// ─── CART PAGE (slides in from right, full UI) ────────────────────────────────
+// ─── CART PAGE ────────────────────────────────────────────────────────────────
 function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
   const[checkingOut,setCheckingOut]=useState(false);const[checked,setChecked]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
-    const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;const tax=total*0.075;const grand=total+delivery+tax;
+  const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;const tax=total*0.075;const grand=total+delivery+tax;
   const handleCheckout=()=>{setCheckingOut(true);setTimeout(()=>{setCheckingOut(false);setChecked(true);},1800);setTimeout(()=>{setChecked(false);onClose();},3500);};
   return(
     <>
       <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.55)',zIndex:300,backdropFilter:'blur(6px)',animation:'fadeIn 0.3s ease both'}}/>
       <div style={{position:'fixed',inset:0,zIndex:301,display:'flex',alignItems:'stretch',justifyContent:'flex-end'}}>
         <div style={{width:'min(520px,100vw)',background:`linear-gradient(180deg,${C.primaryPale} 0%,white 30%)`,display:'flex',flexDirection:'column',animation:'slideInRight 0.45s cubic-bezier(0.34,1.2,0.64,1) both',boxShadow:'-24px 0 80px rgba(200,75,17,0.15)',overflowY:'hidden'}}>
-          {/* Top bar */}
           <div style={{height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#f97316,#c84b11)',backgroundSize:'200% auto',animation:'meshFlow 3s ease-in-out infinite',flexShrink:0}}/>
-          {/* Header */}
           <div style={{background:C.primaryBg,padding:'26px 26px 22px',borderBottom:`1px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',flexShrink:0}}>
             <div style={{position:'absolute',right:-30,top:-30,width:160,height:160,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
                 <div style={{width:50,height:50,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px rgba(200,75,17,0.4)',fontSize:20}}>🛍️</div>
-                  <div>
-                    <h2 style={{fontSize:21,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h2>
-                    <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · ${formatCurrency(total)} subtotal`:''}</p>
-                  </div>
+                <div>
+                  <h2 style={{fontSize:21,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h2>
+                  <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · ${formatCurrency(total)} subtotal`:''}</p>
                 </div>
+              </div>
               <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,color:C.primary,transition:'all 0.2s',flexShrink:0}}
                 onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>✕</button>
             </div>
-            {/* Delivery progress */}
-              {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
+            {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
               <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease',boxShadow:'0 0 10px rgba(200,75,17,0.5)'}}/></div>
             </div>}
             {total>=FREE_DELIVERY_THRESHOLD&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8}}>
@@ -448,7 +635,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
               <span style={{fontSize:12,color:'#15803d',fontWeight:800}}>🎉 FREE delivery unlocked!</span>
             </div>}
           </div>
-          {/* Items list */}
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:60,paddingTop:40}}>
@@ -463,7 +649,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
               </div>
             )}
           </div>
-          {/* Footer */}
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
@@ -476,7 +661,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
                 <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
               </div>
             </div>
-            {/* Promo */}
             <div style={{display:'flex',gap:8,marginBottom:14}}>
               <input placeholder="Promo code…" style={{flex:1,padding:'10px 13px',borderRadius:12,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:13,color:C.text,fontFamily:'inherit',fontWeight:500,outline:'none'}} onFocus={e=>e.currentTarget.style.borderColor=C.primaryBorder} onBlur={e=>e.currentTarget.style.borderColor=C.border}/>
               <button style={{padding:'10px 16px',borderRadius:12,border:`1.5px solid ${C.primaryBorder}`,background:C.primaryBg,color:C.primary,fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.2s',whiteSpace:'nowrap'}} onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>Apply</button>
@@ -516,7 +700,12 @@ export default function Product(){
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
 
+  // ─── Typewriter for hero ───
+  const HERO_PHRASES = ['Perfect Bag', 'Dream Clutch', 'Ideal Tote', 'Luxury Satchel', 'Everyday Crossbody'];
+  const typedWord = useTypewriter(HERO_PHRASES, { typeSpeed: 85, deleteSpeed: 50, pauseMs: 2000, startDelay: 900 });
+
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
+
   const mapCategory = useCallback((dbCat) => {
     if (!dbCat) return 'all';
     const c = dbCat.toLowerCase();
@@ -527,7 +716,7 @@ export default function Product(){
     if (c.includes('satchel')) return 'satchel';
     if (c.includes('evening')) return 'evening';
     if (c.includes('mini')) return 'mini';
-    if (c.includes('handbag') || c.includes('shoulder')) return 'satchel'; // Default fallback
+    if (c.includes('handbag') || c.includes('shoulder')) return 'satchel';
     return 'all';
   }, []);
 
@@ -538,16 +727,9 @@ export default function Product(){
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       const fmt = (data || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        seller: p.seller_name || 'Anonymous Seller',
-        sellerId: 'db',
-        sub: `${p.brand} • ${p.condition}`,
-        price: parseFloat(p.price),
-        quantity: p.quantity || 0,
-        lowStock: (p.quantity || 0) < 5,
-        category: mapCategory(p.category),
-        location: p.location || 'all',
+        id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: 'db',
+        sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity || 0,
+        lowStock: (p.quantity || 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
         colors: p.colors || ["#c84b11", "#f97316"],
         src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
       }));
@@ -577,36 +759,22 @@ export default function Product(){
   const handleImageUpload=async e=>{
     const f=e.target.files[0];
     if(!f)return;
-    
     setUploadedImage(URL.createObjectURL(f));
     setIsFiltered(true);
     setVisualSearching(true);
     setResultsKey(k=>k+1);
-    
     try {
-      // 1. Convert to base64  
-      const embedding = await generateImageEmbedding(f); // Pass File directly
-      console.log('📸 Image converted to base64, generating embedding...');
-      
-      // 2. Generate embedding (now with fallback)
-      const vector = await generateImageEmbedding(b64);
-      console.log('✅ Embedding generated:', vector.length, 'dimensions');
-      
-      // 3. Query Pinecone
+      const embedding = await generateImageEmbedding(f);
+      const vector = await generateImageEmbedding(embedding);
       const matches = await queryPinecone(vector);
-      console.log('🔍 Pinecone matches:', matches.length);
-      
       if (matches && matches.length > 0) {
         const matchIds = matches.map(m => m.id);
-        // Filter allProducts by Pinecone matches (Supabase + mock)
         const filtered = allProducts.filter(p => matchIds.includes(String(p.id)));
-        // Sort by Pinecone score
         const sorted = matchIds.map(id => {
           const product = filtered.find(p => String(p.id) === id);
           const match = matches.find(m => m.id === id);
           return product ? {...product, score: match?.score || 0} : null;
         }).filter(Boolean).sort((a,b) => b.score - a.score);
-        
         setDisplayedProducts(sorted);
         setFloatMsg({ text: `Found ${sorted.length} similar bags! 🎉`, type: 'success' });
       } else {
@@ -615,10 +783,7 @@ export default function Product(){
       }
     } catch (err) {
       console.error('Visual search failed:', err);
-      const msg = err.message.includes('422') ? 'Pinecone index mismatch. Using text search fallback.' : 
-                  err.message.includes('embedding') ? 'Image analysis failed. Try clearer bag photos.' :
-                  'Visual search temporarily unavailable.';
-      setFloatMsg({ text: msg, type: 'danger' });
+      setFloatMsg({ text: 'Visual search temporarily unavailable.', type: 'danger' });
       setDisplayedProducts([]);
     } finally {
       setVisualSearching(false);
@@ -626,19 +791,14 @@ export default function Product(){
     }
   };
   const handleVendorSearch=q=>{setVendorSearch(q);setFilteredVendors(mockVendors.filter(v=>v.name.toLowerCase().includes(q.toLowerCase())||v.specialty.toLowerCase().includes(q.toLowerCase())||v.tags.some(t=>t.toLowerCase().includes(q.toLowerCase()))));};
-  const handleViewVendorProducts = (vendor) => {
-    navigate('/seller-products', { state: { vendor } });
-  };
-  const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg(`${product.name} added!`);setTimeout(()=>setFloatMsg(null),2200);};
+  const handleViewVendorProducts = (vendor) => { navigate('/seller-products', { state: { vendor } }); };
+  const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({ text: `${product.name} added!`, type: 'success' });setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
   const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
   const handleProfileClick=()=>{
-  if(!user){
-    setAuthGateOpen(true);
-    return;
-  }
-  navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');
-};
+    if(!user){ setAuthGateOpen(true); return; }
+    navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');
+  };
   useEffect(()=>{
     if(location.state?.openCart){
       setCartOpen(true);
@@ -648,6 +808,12 @@ export default function Product(){
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const getCategoryCount=id=>id==='all'?allProducts.length:allProducts.filter(p=>p.category===id).length;
   const categoriesWithCounts=CATEGORIES.map(c=>({...c,count:getCategoryCount(c.id)}));
+
+  // Derived listing sections
+  const featuredProducts = allProducts.slice(0, 8);
+  const newArrivals = [...allProducts].reverse().slice(0, 8);
+  const topDeals = allProducts.filter(p => p.price < 2000).slice(0, 8);
+  const dealProduct = allProducts.find(p => p.lowStock) || allProducts[0];
 
   return(
     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif"}}>
@@ -667,6 +833,10 @@ export default function Product(){
         @keyframes meshFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.88)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes slideInPreview{from{opacity:0;transform:translateY(-10px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes twCursor{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes twWordIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .hide-scrollbar::-webkit-scrollbar{height:0;width:0;display:none;}
+        .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
         .cat-track::-webkit-scrollbar{height:0;}.cat-track{-ms-overflow-style:none;scrollbar-width:none;}
         @media(max-width:768px){.desk-act{display:none!important;}.mob-menu{display:flex!important;}}
       `}</style>
@@ -677,9 +847,7 @@ export default function Product(){
       </div>}
 
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)}/>}
-
-{/* Auth gate modal for unauthenticated actions */}
-<AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate} />
+      <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate} />
 
       {/* HEADER */}
       <header style={{position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.97)',backdropFilter:'blur(16px)',borderBottom:`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease,transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:`0 1px 20px rgba(200,75,17,0.07)`}}>
@@ -721,7 +889,8 @@ export default function Product(){
               </div>
             )}
           </div>
-        </div>      </header>
+        </div>
+      </header>
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
@@ -751,14 +920,20 @@ export default function Product(){
       {/* MAIN */}
       <div style={{maxWidth:1280,margin:'0 auto',padding:'36px 20px 80px',opacity:pageLoading?0:1,transition:'opacity 0.5s ease'}}>
 
-        {/* Hero banner */}
+        {/* ── Hero banner with TYPEWRITER ── */}
         <div style={{marginBottom:30,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
           <div style={{background:C.primaryBg,borderRadius:24,padding:'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
             <div style={{position:'absolute',right:-40,top:-40,width:200,height:200,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
             <div style={{position:'absolute',right:80,bottom:-30,width:130,height:130,borderRadius:'50%',background:'rgba(249,115,22,0.06)',filter:'blur(14px)'}}/>
             <div style={{position:'relative'}}>
-              <h1 style={{fontSize:'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.1,marginBottom:10}}>
-                Find Your <span style={{color:C.primary}}>Perfect Bag</span>
+              {/* ── TYPEWRITER H1 ── */}
+              <h1 style={{fontSize:'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.2,marginBottom:10}}>
+                Find Your{' '}
+                <br style={{display:'none'}} />
+                <span style={{color:C.primary,display:'inline-flex',alignItems:'baseline',gap:0,minWidth:'10ch',position:'relative'}}>
+                  <span key={typedWord} style={{animation:'twWordIn 0.15s ease both'}}>{typedWord}</span>
+                  <span style={{display:'inline-block',width:'2px',height:'1em',background:C.primary,marginLeft:2,verticalAlign:'middle',animation:'twCursor 0.9s step-end infinite',borderRadius:1,flexShrink:0}}/>
+                </span>
               </h1>
               <p style={{color:C.textMuted,fontSize:15,fontWeight:500,lineHeight:1.6,maxWidth:380}}>Search bags or browse vendors — discover luxury across Nigeria</p>
               {selectedLocation.id!=='all'&&<span style={{display:'inline-flex',alignItems:'center',gap:5,marginTop:10,fontSize:12,fontWeight:700,background:'white',color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,animation:'scaleIn 0.3s ease both'}}>{selectedLocation.emoji} {selectedLocation.name}</span>}
@@ -815,6 +990,8 @@ export default function Product(){
               {(()=>{const idx=CATEGORIES.findIndex(c=>c.id===activeCategory);const cat=CATEGORIES[idx];return <div style={{position:'absolute',left:`${(idx/CATEGORIES.length)*100}%`,width:`${100/CATEGORIES.length}%`,height:'100%',background:cat?.color||C.primary,borderRadius:2,transition:'left 0.4s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:`0 0 8px ${cat?.color||C.primary}88`}}/>;})()}
             </div>
           </div>
+
+          {/* All Bags grid */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
             <div><h2 style={{fontSize:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2><p style={{fontSize:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p></div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
@@ -824,6 +1001,7 @@ export default function Product(){
               {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
+
           <div style={{position:'relative',minHeight:visualSearching?'300px':'auto'}}>
             {visualSearching && (
               <div style={{position:'absolute',inset:0,zIndex:10,background:'rgba(255,255,255,0.7)',backdropFilter:'blur(4px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderRadius:20,animation:'fadeIn 0.3s ease both'}}>
@@ -836,6 +1014,91 @@ export default function Product(){
               ?<div key={resultsKey} style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:20}}>{displayedProducts.map((p,i)=>(<ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} />))}</div>
               :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><div style={{fontSize:56,marginBottom:16}}>🔍</div><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No bags found</h3><p style={{color:C.textMuted,marginBottom:24,fontSize:14}}>Try adjusting your search or browse all bags</p><button onClick={handleClearSearch} style={{padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,boxShadow:'0 6px 20px rgba(200,75,17,0.38)'}}>View All Bags</button></div>}
           </div>
+
+          {/* ── NEW LISTING SECTIONS (only shown when not filtered) ── */}
+          {!isFiltered && displayedProducts.length > 0 && (
+            <div style={{ marginTop: 60, borderTop: `1px solid ${C.borderLight}`, paddingTop: 52 }}>
+
+              {/* Deal of the Day */}
+              <DealOfTheDay
+                product={dealProduct}
+                navigate={navigate}
+                onAddToCart={handleAddToCart}
+                isAuthed={!!user}
+                onRequireAuth={() => setAuthGateOpen(true)}
+              />
+
+              {/* Featured Picks */}
+              <HorizontalSection
+                title="Featured Picks"
+                subtitle="Handpicked by our style team just for you"
+                icon="⭐"
+                accentColor={C.primary}
+                accentBg={C.primaryBg}
+                products={featuredProducts}
+                navigate={navigate}
+                onAddToCart={handleAddToCart}
+                isAuthed={!!user}
+                onRequireAuth={() => setAuthGateOpen(true)}
+                badge="Featured"
+                badgeColor={C.primary}
+                onSeeAll={() => handleCategoryChange('all')}
+              />
+
+              {/* New Arrivals */}
+              <HorizontalSection
+                title="New Arrivals"
+                subtitle="Fresh styles added to our collection"
+                icon="✨"
+                accentColor="#be185d"
+                accentBg="#fdf2f8"
+                products={newArrivals}
+                navigate={navigate}
+                onAddToCart={handleAddToCart}
+                isAuthed={!!user}
+                onRequireAuth={() => setAuthGateOpen(true)}
+                badge="New"
+                badgeColor="#be185d"
+                onSeeAll={() => handleCategoryChange('all')}
+              />
+
+              {/* Under Budget */}
+              {topDeals.length > 0 && (
+                <HorizontalSection
+                  title="Under ₦2,000"
+                  subtitle="Amazing bags that won't break the bank"
+                  icon="💸"
+                  accentColor="#15803d"
+                  accentBg="#dcfce7"
+                  products={topDeals}
+                  navigate={navigate}
+                  onAddToCart={handleAddToCart}
+                  isAuthed={!!user}
+                  onRequireAuth={() => setAuthGateOpen(true)}
+                  badge="Budget Pick"
+                  badgeColor="#15803d"
+                  onSeeAll={() => { handleCategoryChange('all'); }}
+                />
+              )}
+
+              {/* Mini Promo Banner */}
+              <div style={{ borderRadius: 20, background: 'linear-gradient(135deg, #1a0a00 0%, #4a1a06 60%, #c84b11 100%)', padding: '32px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 48, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.08, backgroundImage: 'radial-gradient(circle at 25% 50%, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                <div style={{ position: 'absolute', right: -60, top: -60, width: 260, height: 260, borderRadius: '50%', background: 'rgba(249,115,22,0.15)', filter: 'blur(40px)' }} />
+                <div style={{ position: 'relative' }}>
+                  <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>Exclusive Offer</p>
+                  <h3 style={{ fontSize: 'clamp(1.3rem,3vw,1.9rem)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 10 }}>Sell Your Bags on BagSearch<br /><span style={{ color: '#f97316' }}>Reach 10,000+ Buyers</span></h3>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 500, maxWidth: 360 }}>Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on first 30 days.</p>
+                </div>
+                <button onClick={() => navigate('/register')} style={{ position: 'relative', padding: '14px 28px', background: 'linear-gradient(135deg, #f97316, #c84b11)', color: 'white', border: 'none', borderRadius: 14, fontWeight: 900, fontSize: 14, cursor: 'pointer', boxShadow: '0 8px 28px rgba(200,75,17,0.5)', transition: 'all 0.3s', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 14px 36px rgba(200,75,17,0.6)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(200,75,17,0.5)'; }}>
+                  Start Selling Free →
+                </button>
+              </div>
+
+            </div>
+          )}
         </>}
 
         {/* VENDORS TAB */}
@@ -860,4 +1123,4 @@ export default function Product(){
       </div>
     </div>
   );
-} 
+}

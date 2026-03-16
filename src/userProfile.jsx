@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Calendar, History, AlertCircle, ArrowLeft, Upload, Check, X, Pencil, Loader } from 'lucide-react';
 import { supabase } from './services/api';
+import { deleteFromPinecone } from './services/pinecone';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const C = {
@@ -592,16 +593,36 @@ function UserProfile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      const userId = user.id;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('Not authenticated');
+      const userId = authUser.id;
 
+      // 1. If user is a seller, delete their products and related data
+      const { data: products } = await supabase
+        .from('products')
+        .select('id')
+        .or(`user_id.eq.${userId},seller_id.eq.${userId}`);
+
+      if (products && products.length > 0) {
+        const productIds = products.map(p => p.id);
+        
+        // Delete from Pinecone
+        await deleteFromPinecone(productIds);
+        
+        // Delete product views
+        await supabase.from('product_views').delete().in('product_id', productIds);
+        
+        // Delete products
+        await supabase.from('products').delete().or(`user_id.eq.${userId},seller_id.eq.${userId}`);
+      }
+
+      // 2. Delete common user data
       await Promise.all([
         supabase.from('search_history').delete().eq('user_id', userId),
         supabase.from('saved_items').delete().eq('user_id', userId),
         supabase.from('orders').delete().eq('user_id', userId),
+        supabase.from('users').delete().eq('user_id', userId),
       ]);
-      await supabase.from('users').delete().eq('user_id', userId);
 
       setDeleted(true);
       setTimeout(async () => {

@@ -7,6 +7,10 @@ const PINECONE_INDEX_HOST = 'https://luxe-index-92v2zjt.svc.us-east-1-aws.pineco
 const PINECONE_INFERENCE_URL = 'https://api.pinecone.io/embed';
 const PINECONE_API_VERSION = '2024-07';
 
+// IMAGGA API DETAILS
+const IMAGGA_AUTH = 'Basic YWNjX2QyMTI3NTliZTg4MWQxMzo1ZThkYzdiNWYxNzBjNmY1NjM1MjdiYTk3NWU1MDlkMA==';
+const IMAGGA_URL = 'https://api.imagga.com/v2/tags';
+
 /**
  * Helper to convert file to base64
  */
@@ -20,65 +24,42 @@ export const fileToBase64 = (file) => {
 };
 
 /**
- * Canvas-based image analysis: dominant color, shape → text description
- * @param {File} imageFile 
- * @returns {Promise<string>} - "black rectangular leather handbag"
+ * Image analysis using Imagga Tagging API
+ * @param {File|string} imageInput - File object or base64 string
+ * @returns {Promise<string>} - tags combined into a description
  */
-const analyzeImageForText = async (imageFile) => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      // 1. Dominant color
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const colors = getDominantColor(imageData.data);
-      const colorName = rgbToName(colors[0], colors[1], colors[2]);
-      
-      // 2. Shape/aspect
-      const aspect = img.width / img.height;
-      const shape = aspect > 1.2 ? 'tote' : aspect < 0.8 ? 'clutch' : 'crossbody';
-      
-      // 3. Description (optimized for bag search)
-      const desc = `${colorName} ${shape} bag`;
-      resolve(desc);
-    };
-    
-    img.src = URL.createObjectURL(imageFile);
-  });
-};
-
-/**
- * Get dominant RGB from image data
- */
-const getDominantColor = (data) => {
-  const colorCount = {};
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    const key = `${Math.round(r/32)*32},${Math.round(g/32)*32},${Math.round(b/32)*32}`;
-    colorCount[key] = (colorCount[key] || 0) + 1;
-  }
+const analyzeImageWithImagga = async (imageInput) => {
+  const formData = new FormData();
   
-  const [[r,g,b], count] = Object.entries(colorCount).reduce((a, [key, count]) => count > a[1] ? [key.split(',').map(Number), count] : a, [[0,0,0], 0]);
-  return [r,g,b];
-};
+  try {
+    if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
+      // Convert base64 to Blob for Imagga
+      const res = await fetch(imageInput);
+      const blob = await res.blob();
+      formData.append('image', blob, 'image.jpg');
+    } else {
+      formData.append('image', imageInput);
+    }
 
-/**
- * Simple RGB → color name
- */
-const rgbToName = (r, g, b) => {
-  if (r > 200 && g > 200 && b > 200) return 'white';
-  if (r > 100 && g < 50 && b < 50) return 'red';
-  if (r > 100 && g > 100 && b < 50) return 'orange';
-  if (r < 50 && g > 100 && b < 50) return 'green';
-  if (r < 50 && g < 50 && b > 100) return 'blue';
-  if (r < 80 && g < 80 && b < 80) return 'black';
-  return 'brown';
+    const response = await axios.post(IMAGGA_URL, formData, {
+      headers: {
+        'Authorization': IMAGGA_AUTH
+      }
+    });
+
+    if (response.data && response.data.result && response.data.result.tags) {
+      // Get top 5 tags to form a description
+      const tags = response.data.result.tags
+        .slice(0, 5)
+        .map(t => t.tag.en)
+        .join(' ');
+      return tags;
+    }
+    throw new Error('Imagga response parse failed');
+  } catch (error) {
+    console.error('Imagga Tagging Error:', error.response?.data || error.message);
+    return "luxury bag"; // generic fallback
+  }
 };
 
 /**
@@ -112,13 +93,13 @@ const generateTextEmbedding = async (text) => {
 };
 
 /**
- * Visual search entry: Image → analysis → embedding
+ * Visual search entry: Image -> analysis -> embedding
  * @param {File} imageFile - User uploaded image
  */
 export const generateImageEmbedding = async (imageFile) => {
-  console.log('👜 Visual search: analyzing image...');
-  const desc = await analyzeImageForText(imageFile);
-  console.log('🎨 Analysis:', desc);
+  console.log('👜 Visual search: analyzing image with Imagga...');
+  const desc = await analyzeImageWithImagga(imageFile);
+  console.log('🎨 Imagga Tags:', desc);
   return await generateTextEmbedding(desc);
 };
 
@@ -146,6 +127,29 @@ export const queryPinecone = async (vector) => {
   } catch (error) {
     console.error('Pinecone Query Error:', error.response?.data || error.message);
     return [];
+  }
+};
+
+/**
+ * Delete vectors from Pinecone
+ * @param {string[]} ids - Array of product IDs to delete
+ */
+export const deleteFromPinecone = async (ids) => {
+  if (!ids || ids.length === 0) return;
+  try {
+    await axios.post(
+      `${PINECONE_INDEX_HOST}/vectors/delete`,
+      { ids: ids.map(id => String(id)) },
+      {
+        headers: {
+          'Api-Key': PINECONE_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log('✅ Deleted from Pinecone:', ids);
+  } catch (error) {
+    console.error('Pinecone Delete Error:', error.response?.data || error.message);
   }
 };
 

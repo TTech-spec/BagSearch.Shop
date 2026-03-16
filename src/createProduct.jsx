@@ -255,16 +255,8 @@ export default function CreateProduct() {
           const productId = insertedData[0].id;
           const firstImage = images[0].file;
           
-          // 1. Convert to base64
-          const reader = new FileReader();
-          const base64Promise = new Promise((resolve) => {
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(firstImage);
-          });
-          const b64 = await base64Promise;
-          
-          // 2. Generate embedding
-          const vector = await generateImageEmbedding(b64);
+          // Generate embedding (using Imagga + Pinecone)
+          const vector = await generateImageEmbedding(firstImage);
           
           // 3. Upsert to Pinecone
           await upsertToPinecone(productId, vector, {
