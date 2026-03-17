@@ -966,27 +966,27 @@ function ResponsiveHeader({
         </div>
 
         {/* Location selector - NOW RESPONSIVE */}
-        <button
-          onClick={() => setLocationModalOpen(true)}
-          style={{
-            flex: 1,
-            maxWidth: isMobile ? 'auto' : 250,
-            minWidth: isMobile ? 120 : 200,
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? 4 : 8,
-            padding: isMobile ? '4px 8px' : '7px 13px',
-            borderRadius: 12,
-            border: `1.5px solid ${C.border}`,
-            background: C.surfaceDim,
-            cursor: 'pointer',
-            transition: 'all 0.25s',
-            overflow: 'hidden',
-            ':hover': {
-              borderColor: C.primaryBorder,
-              background: C.primaryBg
-            }
-          }}
+          <button
+            onClick={() => setLocationModalOpen(true)}
+            style={{
+              flex: 1,
+              maxWidth: isMobile ? 'auto' : 250,
+              minWidth: isMobile ? 120 : 200,
+              display: 'flex',
+              alignItems: 'center',
+              gap: isMobile ? 4 : 8,
+              padding: isMobile ? '4px 8px' : '7px 13px',
+              borderRadius: 12,
+              border: `${isMobile ? '1px' : '1.5px'} solid ${C.border}`,
+              background: C.surfaceDim,
+              cursor: 'pointer',
+              transition: 'all 0.25s',
+              overflow: 'hidden',
+              ':hover': {
+                borderColor: C.primaryBorder,
+                background: C.primaryBg
+              }
+            }}
           onMouseEnter={e => {
             e.currentTarget.style.borderColor = C.primaryBorder;
             e.currentTarget.style.background = C.primaryBg;
@@ -1177,8 +1177,8 @@ function ResponsiveHeader({
           )}
         </div>
 
-        {/* Mobile actions */}
-        {isMobile && (
+        {/* Mobile actions - REMOVED cart/profile icons per task */}
+        {false && isMobile && (
           <div style={{
             display: 'flex',
             alignItems: 'center',

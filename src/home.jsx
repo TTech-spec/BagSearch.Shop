@@ -734,8 +734,8 @@ export default function LuxeBag() {
               ))}
             </nav>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              {["search", "shopping_bag", "person"].map(ic => (
-                <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }} onClick={() => ic === "person" ? handleProfileClick() : ic === "search" ? navigate("/products") : setAuthGateOpen(true)}><Icon name={ic} /></button>
+              {["search"].map(ic => (
+                <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }} onClick={() => ic === "search" ? navigate("/products") : null}><Icon name={ic} /></button>
               ))}
               <button className="mobile-menu-btn icon-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", alignItems: "center", color: "#1A0A00" }}><Icon name="menu" /></button>
             </div>
@@ -829,11 +829,11 @@ export default function LuxeBag() {
                   <span style={{ fontSize: 18, fontWeight: 900, color: "white", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
                 </div>
                 <p style={{ color: "rgba(249,221,208,0.65)", lineHeight: 1.7, maxWidth: 260, marginBottom: 24, fontSize: 13 }}>Luxury craftsmanship. Intelligent discovery. Africa's first AI-powered luxury bag marketplace.</p>
-                <div style={{ display: "flex", gap: 10 }}>
-                  {["public", "share", "mail"].map(ic => (
-                    <a key={ic} href="#" style={{ padding: 9, background: "rgba(201,75,44,0.15)", borderRadius: "50%", display: "flex", color: "#F9DDD0", textDecoration: "none", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(201,75,44,0.3)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(201,75,44,0.15)"}><Icon name={ic} size={18} /></a>
-                  ))}
-                </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {["shopping_bag", "person"].map(ic => (
+            <button key={ic} style={{ padding: 9, borderRadius: "50%", border: "none", background: "rgba(201,75,44,0.15)", color: "#F9DDD0", cursor: "pointer", transition: "background 0.2s" }} onClick={() => { ic === "person" ? handleProfileClick() : setAuthGateOpen(true); }} onMouseEnter={e => e.currentTarget.style.background = "rgba(201,75,44,0.3)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(201,75,44,0.15)"}><Icon name={ic} size={18} /></button>
+          ))}
+        </div>
               </div>
               {[
                 { title: "Shop", links: ["New Arrivals", "Best Sellers", "Tote Bags", "Crossbody", "Visual Search"] },
