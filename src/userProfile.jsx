@@ -616,13 +616,12 @@ function UserProfile() {
         await supabase.from('products').delete().or(`user_id.eq.${userId},seller_id.eq.${userId}`);
       }
 
-      // 2. Delete common user data
-      await Promise.all([
-        supabase.from('search_history').delete().eq('user_id', userId),
-        supabase.from('saved_items').delete().eq('user_id', userId),
-        supabase.from('orders').delete().eq('user_id', userId),
-        supabase.from('users').delete().eq('user_id', userId),
-      ]);
+      // 2. Delete common user data sequentially to handle potential foreign key constraints
+      await supabase.from('product_views').delete().eq('buyer_id', userId);
+      await supabase.from('search_history').delete().eq('user_id', userId);
+      await supabase.from('saved_items').delete().eq('user_id', userId);
+      await supabase.from('orders').delete().eq('user_id', userId);
+      await supabase.from('users').delete().eq('user_id', userId);
 
       setDeleted(true);
       setTimeout(async () => {
