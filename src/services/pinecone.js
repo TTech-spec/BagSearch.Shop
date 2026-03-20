@@ -1,182 +1,108 @@
 // src/services/pinecone.js
-import axios from 'axios';
+// Visual search powered entirely by Imagga tag analysis
 
-// PINECONE API DETAILS
-const PINECONE_API_KEY = 'pcsk_3CYBJh_Q1cP5VALa2g6W9v9mCEHYcuTY26jfeRB3hJNPWSeZUpKPThGpSRvReoT6bmaavr';
-const PINECONE_INDEX_HOST = 'https://luxe-index-92v2zjt.svc.us-east-1-aws.pinecone.io'; 
-const PINECONE_INFERENCE_URL = 'https://api.pinecone.io/embed';
-const PINECONE_API_VERSION = '2024-07';
-
-// IMAGGA API DETAILS
 const IMAGGA_AUTH = 'Basic YWNjX2QyMTI3NTliZTg4MWQxMzo1ZThkYzdiNWYxNzBjNmY1NjM1MjdiYTk3NWU1MDlkMA==';
 const IMAGGA_URL = 'https://api.imagga.com/v2/tags';
 
 /**
- * Helper to convert file to base64
+ * Analyze an image with Imagga and return tags with confidence scores
+ * @param {File|string} imageInput - File object or base64/URL string
+ * @returns {Promise<Array<{tag: string, confidence: number}>>}
  */
-export const fileToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
+export const analyzeImageWithImagga = async (imageInput) => {
+  const formData = new FormData();
+
+  if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
+    const res = await fetch(imageInput);
+    const blob = await res.blob();
+    formData.append('image', blob, 'image.jpg');
+  } else if (typeof imageInput === 'string' && imageInput.startsWith('http')) {
+    formData.append('image_url', imageInput);
+  } else {
+    formData.append('image', imageInput);
+  }
+
+  const response = await fetch(`${IMAGGA_URL}?limit=20`, {
+    method: 'POST',
+    headers: { Authorization: IMAGGA_AUTH },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.status?.text || `Imagga error ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data?.result?.tags) throw new Error('Imagga response parse failed');
+
+  return data.result.tags.map(t => ({ tag: t.tag.en.toLowerCase(), confidence: t.confidence }));
+};
+
+/**
+ * Score a product against a list of tags
+ */
+const scoreProduct = (product, tags) => {
+  const fields = [
+    product.name,
+    product.category,
+    product.brand,
+    product.condition,
+    product.description,
+    product.sub,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const productWords = fields.split(/[\s,•\-\/]+/).filter(w => w.length > 2);
+
+  let score = 0;
+  for (const { tag, confidence } of tags) {
+    const tagWords = tag.split(/\s+/).filter(w => w.length > 2);
+    for (const tagWord of tagWords) {
+      if (productWords.some(pw => pw.includes(tagWord) || tagWord.includes(pw))) {
+        score += confidence / tagWords.length;
+      }
+    }
+  }
+  return score;
+};
+
+/**
+ * Visual search: upload image → get Imagga tags → rank products by tag match
+ * @param {File} imageFile
+ * @param {Array} allProducts - products already loaded in the app
+ * @returns {Promise<Array>} - matched products sorted by relevance, highest first
+ */
+export const visualSearch = async (imageFile, allProducts) => {
+  const tags = await analyzeImageWithImagga(imageFile);
+  console.log('Imagga tags:', tags.slice(0, 10).map(t => `${t.tag}(${t.confidence.toFixed(0)})`).join(', '));
+
+  const scored = allProducts
+    .map(p => ({ ...p, _score: scoreProduct(p, tags) }))
+    .filter(p => p._score > 0)
+    .sort((a, b) => b._score - a._score);
+
+  return scored;
+};
+
+// ─── Legacy exports kept so nothing else breaks ─────────────────────────────
+
+export const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
+    reader.onerror = reject;
   });
+
+export const generateImageEmbedding = async () => {
+  throw new Error('Pinecone removed. Use visualSearch() instead.');
 };
 
-/**
- * Image analysis using Imagga Tagging API
- * @param {File|string} imageInput - File object or base64 string
- * @returns {Promise<string>} - tags combined into a description
- */
-const analyzeImageWithImagga = async (imageInput) => {
-  const formData = new FormData();
-  
-  try {
-    if (typeof imageInput === 'string' && imageInput.startsWith('data:')) {
-      // Convert base64 to Blob for Imagga
-      const res = await fetch(imageInput);
-      const blob = await res.blob();
-      formData.append('image', blob, 'image.jpg');
-    } else {
-      formData.append('image', imageInput);
-    }
+export const queryPinecone = async () => [];
 
-    const response = await axios.post(IMAGGA_URL, formData, {
-      headers: {
-        'Authorization': IMAGGA_AUTH
-      }
-    });
+export const upsertToPinecone = async () => {};
 
-    if (response.data && response.data.result && response.data.result.tags) {
-      // Get top 5 tags to form a description
-      const tags = response.data.result.tags
-        .slice(0, 5)
-        .map(t => t.tag.en)
-        .join(' ');
-      return tags;
-    }
-    throw new Error('Imagga response parse failed');
-  } catch (error) {
-    console.error('Imagga Tagging Error:', error.response?.data || error.message);
-    return "luxury bag"; // generic fallback
-  }
-};
-
-/**
- * Generate text embedding (Pinecone text model - works reliably)
- */
-const generateTextEmbedding = async (text) => {
-  try {
-    const response = await axios.post(
-      PINECONE_INFERENCE_URL,
-      {
-        model: 'text-embedding-large-3',
-        inputs: [{ text }]
-      },
-      {
-        headers: {
-          'Api-Key': PINECONE_API_KEY,
-          'Content-Type': 'application/json',
-          'X-Pinecone-Api-Version': PINECONE_API_VERSION
-        }
-      }
-    );
-    
-    if (response.data?.data?.[0]?.embedding) {
-      return response.data.data[0].embedding;
-    }
-    throw new Error('Text embedding response parse failed');
-  } catch (error) {
-    console.error('Text Embedding Error:', error.response?.data || error.message);
-    throw error;
-  }
-};
-
-/**
- * Visual search entry: Image -> analysis -> embedding
- * @param {File} imageFile - User uploaded image
- */
-export const generateImageEmbedding = async (imageFile) => {
-  console.log('👜 Visual search: analyzing image with Imagga...');
-  const desc = await analyzeImageWithImagga(imageFile);
-  console.log('🎨 Imagga Tags:', desc);
-  return await generateTextEmbedding(desc);
-};
-
-/**
- * Query Pinecone for similar products
- */
-export const queryPinecone = async (vector) => {
-  try {
-    const response = await axios.post(
-      `${PINECONE_INDEX_HOST}/query`,
-      {
-        vector: vector,
-        topK: 12,
-        includeMetadata: true
-      },
-      {
-        headers: {
-          'Api-Key': PINECONE_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    return response.data.matches || [];
-  } catch (error) {
-    console.error('Pinecone Query Error:', error.response?.data || error.message);
-    return [];
-  }
-};
-
-/**
- * Delete vectors from Pinecone
- * @param {string[]} ids - Array of product IDs to delete
- */
-export const deleteFromPinecone = async (ids) => {
-  if (!ids || ids.length === 0) return;
-  try {
-    await axios.post(
-      `${PINECONE_INDEX_HOST}/vectors/delete`,
-      { ids: ids.map(id => String(id)) },
-      {
-        headers: {
-          'Api-Key': PINECONE_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    console.log('✅ Deleted from Pinecone:', ids);
-  } catch (error) {
-    console.error('Pinecone Delete Error:', error.response?.data || error.message);
-  }
-};
-
-/**
- * Upsert product to Pinecone (call from createProduct.jsx)
- */
-export const upsertToPinecone = async (id, imageFile, metadata) => {
-  try {
-    const vector = await generateImageEmbedding(imageFile);
-    await axios.post(
-      `${PINECONE_INDEX_HOST}/vectors/upsert`,
-      {
-        vectors: [{
-          id: String(id),
-          values: vector,
-          metadata
-        }]
-      },
-      {
-        headers: {
-          'Api-Key': PINECONE_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    console.log('✅ Product upserted to Pinecone:', id);
-  } catch (error) {
-    console.error('Pinecone Upsert Error:', error.response?.data || error.message);
-  }
-};
+export const deleteFromPinecone = async () => {};

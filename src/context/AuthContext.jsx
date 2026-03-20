@@ -32,9 +32,50 @@ export const AuthProvider = ({ children }) => {
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
+        
+        // Handle post-login logic (especially for OAuth)
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+          const user = session.user;
+          // Small delay to let login.jsx finish its tasks if this was a password login
+          setTimeout(async () => {
+            try {
+              // Check if profile exists
+              const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+              if (profileError && profileError.code === 'PGRST116') {
+                // Profile doesn't exist, create it
+                const metadata = user.user_metadata;
+                const role = metadata?.role || 'buyer';
+                const fullName = metadata?.full_name || metadata?.name || 'User';
+                
+                const { error: insertError } = await supabase.from('users').insert([{
+                  user_id: user.id,
+                  full_name: fullName,
+                  email: user.email,
+                  role: role,
+                  updated_at: new Date(),
+                }]);
+                
+                if (insertError && insertError.name !== 'AbortError') {
+                  console.error('Error creating user profile after OAuth:', insertError);
+                }
+              } else if (profileError && profileError.name !== 'AbortError') {
+                console.error('Error checking profile existence:', profileError);
+              }
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                console.error('Error in post-auth profile check:', err);
+              }
+            }
+          }, 100);
+        }
       } else {
         setUser(null);
       }

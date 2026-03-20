@@ -593,11 +593,12 @@ function UserProfile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) throw new Error('Not authenticated');
-      const userId = authUser.id;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const userId = session.user.id;
 
-      // 1. If user is a seller, delete their products and related data
+      // 1. If user is a seller, delete their products from Pinecone first
+      // We do this here because the Edge Function doesn't have Pinecone access
       const { data: products } = await supabase
         .from('products')
         .select('id')
@@ -605,23 +606,23 @@ function UserProfile() {
 
       if (products && products.length > 0) {
         const productIds = products.map(p => p.id);
-        
-        // Delete from Pinecone
         await deleteFromPinecone(productIds);
-        
-        // Delete product views
-        await supabase.from('product_views').delete().in('product_id', productIds);
-        
-        // Delete products
-        await supabase.from('products').delete().or(`user_id.eq.${userId},seller_id.eq.${userId}`);
       }
 
-      // 2. Delete common user data sequentially to handle potential foreign key constraints
-      await supabase.from('product_views').delete().eq('buyer_id', userId);
-      await supabase.from('search_history').delete().eq('user_id', userId);
-      await supabase.from('saved_items').delete().eq('user_id', userId);
-      await supabase.from('orders').delete().eq('user_id', userId);
-      await supabase.from('users').delete().eq('user_id', userId);
+      // 2. Call the Edge Function to delete the auth user and all related data
+      const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (functionError) {
+        let detail = functionError.message;
+        try {
+          const body = await functionError.context?.json();
+          detail = body?.error || detail;
+        } catch (_) {}
+        console.error('Edge function error detail:', detail);
+        throw new Error(detail);
+      }
 
       setDeleted(true);
       setTimeout(async () => {

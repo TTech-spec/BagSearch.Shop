@@ -625,6 +625,31 @@ const Reg = () => {
     }
   };
 
+  const handleGoogleAuth = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const normalizedRole = (formData.role || 'buyer').toLowerCase();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/products`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          data: {
+            role: normalizedRole
+          }
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <PageLoader onDone={handleLoaderDone} />
@@ -1312,6 +1337,65 @@ const Reg = () => {
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
+
+              <div style={{ position: 'relative', padding: '16px 0' }}>
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  <div style={{
+                    width: '100%',
+                    borderTop: `1px solid ${C.border}`
+                  }} />
+                </div>
+                <div style={{
+                  position: 'relative',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  textTransform: 'uppercase'
+                }}>
+                  <span style={{
+                    background: C.surface,
+                    padding: '0 16px',
+                    color: C.textMuted,
+                    fontSize: 12
+                  }}>
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: 16,
+              }}>
+                <button 
+                  onClick={handleGoogleAuth}
+                  disabled={loading}
+                  style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  height: 48,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  background: 'transparent',
+                  color: C.text,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: loading ? 0.7 : 1
+                }}
+                  onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
+                  onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
+                  <span>Google</span>
+                </button>
+              </div>
 
               <div style={{ textAlign: 'center', paddingTop: 8 }}>
                 <p style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>

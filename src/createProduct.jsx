@@ -1,7 +1,6 @@
 import { useState, useContext, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
-import { generateImageEmbedding, upsertToPinecone } from './services/pinecone';
 import { AuthContext } from './context/AuthContext';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
@@ -248,34 +247,6 @@ export default function CreateProduct() {
 
       if (insertError) throw insertError;
       
-      // ─── PINECONE INDEXING ───
-      // Index the product image in Pinecone for visual search
-      try {
-        if (insertedData && insertedData[0] && images.length > 0) {
-          const productId = insertedData[0].id;
-          const firstImage = images[0].file;
-          
-          // Generate embedding (using Imagga + Pinecone)
-          const vector = await generateImageEmbedding(firstImage);
-          
-          // 3. Upsert to Pinecone
-          await upsertToPinecone(productId, vector, {
-            name: insertData.name,
-            brand: insertData.brand,
-            price: insertData.price,
-            location: insertData.location,
-            category: insertData.category,
-            image: uploadedImageUrls[0]
-          });
-          
-          console.log('Product indexed in Pinecone successfully');
-        }
-      } catch (pineconeErr) {
-        // We don't want to fail the whole product creation if Pinecone fails, 
-        // but we should log it.
-        console.error('Pinecone Indexing Failed:', pineconeErr);
-      }
-
       navigate('/products');
     } catch (err) {
       console.error('Error creating product:', err);

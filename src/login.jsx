@@ -590,25 +590,50 @@ const LoginPage = () => {
         throw new Error(`Invalid details. Please toggle to the role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`);
       }
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', profileError);
+      if (profileError && profileError.code !== 'PGRST116' && profileError.name !== 'AbortError') {
+        console.error('Error fetching user profile:', JSON.stringify(profileError, null, 2));
       }
       const finalRole = profile?.role || role;
       const { error: upsertError } = await supabase.from('users').upsert({
         user_id: userId, email, role: finalRole, updated_at: new Date(),
       }, { onConflict: 'user_id' });
-      if (upsertError) console.error('Error saving user role:', upsertError);
+      if (upsertError && upsertError.name !== 'AbortError') console.error('Error saving user role:', JSON.stringify(upsertError, null, 2));
       const userWithRole = {
         ...data.user,
         user_metadata: { ...data.user.user_metadata, role: finalRole },
       };
-      login(userWithRole);
+      // AuthContext.onAuthStateChange will handle setting the user state
+      // and redirecting via LoginRoute. We just show success here.
       setShowSuccess(true);
-      // Navigation happens after success message animation
+      // Optional: extra navigation in case redirect doesn't happen automatically
       setTimeout(() => navigate('/products'), 3500);
     } catch (error) {
       setErrorMsg(error.message);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/products`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          data: {
+            role: role // Pass the selected role
+          }
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setErrorMsg(error.message);
       setLoading(false);
     }
   };
@@ -1067,7 +1092,10 @@ const LoginPage = () => {
                   gap: 16,
                   marginBottom: 16
                 }}>
-                  <button style={{
+                  <button 
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1079,11 +1107,12 @@ const LoginPage = () => {
                     color: C.text,
                     fontSize: 14,
                     fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: loading ? 0.7 : 1
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.primaryBg}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
+                    onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
                     <span>Google</span>
                   </button>
                   <button style={{

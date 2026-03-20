@@ -2,7 +2,7 @@ import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import { fileToBase64, generateImageEmbedding, queryPinecone } from './services/pinecone';
+import { visualSearch } from './services/pinecone';
 import LogoIcon from './components/Logo.jsx';
 
 // ─── Color Palette (warm orange/peach inspired by BagSearch) ────────────────────
@@ -1260,14 +1260,18 @@ export default function Product(){
       if (error) throw error;
       const fmt = (data || []).map(p => ({
         id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: 'db',
-        sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity || 0,
-        lowStock: (p.quantity || 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
+        sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity ?? 0,
+        lowStock: (p.quantity ?? 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
         colors: p.colors || ["#c84b11", "#f97316"],
         src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
+        brand: p.brand || '', condition: p.condition || '', description: p.description || '',
       }));
       return [...fmt, ...mockProducts];
     } catch (err) {
-      console.error('Failed to load products', err);
+      if (err && (err.name === 'AbortError' || err.message?.includes('AbortError'))) {
+        return [...mockProducts];
+      }
+      console.error('Failed to load products', JSON.stringify(err, null, 2));
       return [...mockProducts];
     }
   }, [mapCategory]);
@@ -1296,19 +1300,10 @@ export default function Product(){
     setVisualSearching(true);
     setResultsKey(k=>k+1);
     try {
-      const embedding = await generateImageEmbedding(f);
-      const vector = await generateImageEmbedding(embedding);
-      const matches = await queryPinecone(vector);
-      if (matches && matches.length > 0) {
-        const matchIds = matches.map(m => m.id);
-        const filtered = allProducts.filter(p => matchIds.includes(String(p.id)));
-        const sorted = matchIds.map(id => {
-          const product = filtered.find(p => String(p.id) === id);
-          const match = matches.find(m => m.id === id);
-          return product ? {...product, score: match?.score || 0} : null;
-        }).filter(Boolean).sort((a,b) => b.score - a.score);
-        setDisplayedProducts(sorted);
-        setFloatMsg({ text: `Found ${sorted.length} similar bags! 🎉`, type: 'success' });
+      const results = await visualSearch(f, allProducts);
+      if (results.length > 0) {
+        setDisplayedProducts(results);
+        setFloatMsg({ text: `Found ${results.length} similar bags!`, type: 'success' });
       } else {
         setDisplayedProducts([]);
         setFloatMsg({ text: 'No similar bags found. Try another image!', type: 'info' });
