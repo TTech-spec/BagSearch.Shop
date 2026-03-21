@@ -65,6 +65,35 @@ const NIGERIAN_LOCATIONS = [
   { id: 'onitsha',         label: 'Onitsha',          state: 'Anambra',     emoji: '🛒' },
 ];
 
+// ─── Bag color palette ────────────────────────────────────────────────────────
+const BAG_COLORS = [
+  { id: 'black',        label: 'Black',        hex: '#1A1A1A' },
+  { id: 'white',        label: 'White',        hex: '#F5F5F0', border: '#D0C8BE' },
+  { id: 'beige',        label: 'Beige',        hex: '#D4B896' },
+  { id: 'camel',        label: 'Camel',        hex: '#C19A6B' },
+  { id: 'tan',          label: 'Tan',          hex: '#A67C52' },
+  { id: 'brown',        label: 'Brown',        hex: '#6B3F2A' },
+  { id: 'burgundy',     label: 'Burgundy',     hex: '#722F37' },
+  { id: 'red',          label: 'Red',          hex: '#CC2200' },
+  { id: 'pink',         label: 'Pink',         hex: '#E8A0A0' },
+  { id: 'blush',        label: 'Blush',        hex: '#F2C4B8' },
+  { id: 'orange',       label: 'Orange',       hex: '#E8762B' },
+  { id: 'yellow',       label: 'Yellow',       hex: '#E8C84A' },
+  { id: 'olive',        label: 'Olive',        hex: '#808000' },
+  { id: 'green',        label: 'Green',        hex: '#2D6A3F' },
+  { id: 'mint',         label: 'Mint',         hex: '#98D8C8' },
+  { id: 'teal',         label: 'Teal',         hex: '#2A7A7A' },
+  { id: 'navy',         label: 'Navy',         hex: '#1A2E5A' },
+  { id: 'blue',         label: 'Blue',         hex: '#2255CC' },
+  { id: 'cobalt',       label: 'Cobalt',       hex: '#0047AB' },
+  { id: 'purple',       label: 'Purple',       hex: '#6A2D8F' },
+  { id: 'lavender',     label: 'Lavender',     hex: '#B8A0D8' },
+  { id: 'grey',         label: 'Grey',         hex: '#888888' },
+  { id: 'silver',       label: 'Silver',       hex: '#C0C0C0' },
+  { id: 'gold',         label: 'Gold',         hex: '#CFB53B' },
+  { id: 'multicolor',   label: 'Multi',        hex: 'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)' },
+];
+
 // ─── Progress steps definition ────────────────────────────────────────────────
 const STEPS = [
   { id: 'images',      label: 'Photos',      icon: 'photo_camera',      field: 'images' },
@@ -72,6 +101,7 @@ const STEPS = [
   { id: 'brand',       label: 'Brand',       icon: 'workspace_premium', field: 'brand' },
   { id: 'category',    label: 'Category',    icon: 'category',          field: 'category' },
   { id: 'condition',   label: 'Condition',   icon: 'star',              field: 'condition' },
+  { id: 'colors',      label: 'Colors',      icon: 'palette',           field: 'colors' },
   { id: 'quantity',    label: 'Quantity',    icon: 'inventory_2',       field: 'quantity' },
   { id: 'price',       label: 'Price',       icon: 'payments',          field: 'price' },
   { id: 'location',    label: 'Location',    icon: 'location_on',       field: 'location' },
@@ -94,27 +124,17 @@ async function uploadImageToCloudinary(file, userId) {
     if (!CLOUDINARY_UPLOAD_PRESET) missing.push('VITE_CLOUDINARY_UPLOAD_PRESET');
     throw new Error(`Cloudinary is not configured. Missing: ${missing.join(', ')}. Please check your .env file and RESTART your dev server.`);
   }
-
   const payload = new FormData();
   payload.append('file', file);
   payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
   payload.append('folder', `${CLOUDINARY_FOLDER}/${userId}`);
-
   try {
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-      method: 'POST',
-      body: payload,
-    });
-
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: payload });
     const data = await res.json();
-    if (!res.ok || !data?.secure_url) {
-      throw new Error(data?.error?.message || 'Failed to upload image to Cloudinary.');
-    }
+    if (!res.ok || !data?.secure_url) throw new Error(data?.error?.message || 'Failed to upload image to Cloudinary.');
     return data.secure_url;
   } catch (err) {
-    if (err.message === 'Failed to fetch') {
-      throw new Error('Cloudinary is unreachable. Please check your internet connection or Cloudinary cloud name.');
-    }
+    if (err.message === 'Failed to fetch') throw new Error('Cloudinary is unreachable. Please check your internet connection or Cloudinary cloud name.');
     throw err;
   }
 }
@@ -123,8 +143,7 @@ function isMissingColumnError(err) {
   const msg = String(err?.message || "").toLowerCase();
   const code = String(err?.code || "").toUpperCase();
   return (
-    code === "42703" ||
-    code === "PGRST204" ||
+    code === "42703" || code === "PGRST204" ||
     (msg.includes("column") && msg.includes("does not exist")) ||
     (msg.includes("could not find") && msg.includes("column"))
   );
@@ -136,58 +155,61 @@ export default function CreateProduct() {
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    brand: '',
-    category: '',
+    name: '', brand: '', category: '',
     condition: 'Pristine (Like New)',
-    description: '',
-    price: '',
-    location: '',
-    whatsapp: '',
-    quantity: 1,
+    description: '', price: '', location: '', whatsapp: '',
+    quantity: '',
+    discountEnabled: false,
+    discountType: 'percentage', // 'percentage' | 'fixed'
+    discountValue: '',
+    discountLabel: '',
   });
 
+  const [selectedColors, setSelectedColors] = useState([]);
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
-  const [qtyAnimKey, setQtyAnimKey] = useState(0);
 
   // ── Page entrance animation ──
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
-  // ── Quantity helpers ──
-  const changeQty = (delta) => {
-    setFormData(prev => {
-      const next = Math.min(99, Math.max(1, prev.quantity + delta));
-      if (next !== prev.quantity) setQtyAnimKey(k => k + 1);
-      return { ...prev, quantity: next };
-    });
-  };
-  const setQty = (n) => {
-    setQtyAnimKey(k => k + 1);
-    setFormData(prev => ({ ...prev, quantity: n }));
+  // ── Color toggle ──
+  const toggleColor = (colorId) => {
+    setSelectedColors(prev =>
+      prev.includes(colorId) ? prev.filter(c => c !== colorId) : [...prev, colorId]
+    );
   };
 
   // ── Compute per-step completion ──
   const getStepDone = useCallback((step) => {
     if (step.field === 'images')   return images.length > 0;
     if (step.field === 'condition') return true;
-    if (step.field === 'quantity') return formData.quantity >= 1;
+    if (step.field === 'colors')   return selectedColors.length > 0;
+    if (step.field === 'quantity') return !!formData.quantity && parseInt(formData.quantity) >= 1;
     return !!formData[step.field]?.toString().trim();
-  }, [formData, images]);
+  }, [formData, images, selectedColors]);
 
   const completedCount = STEPS.filter(s => getStepDone(s)).length;
   const progressPct = Math.round((completedCount / STEPS.length) * 100);
-
   const progressColor = progressPct < 35 ? C.primary : progressPct < 70 ? C.primaryLight : C.primary;
   const progressLabel = progressPct < 35 ? 'Just getting started' : progressPct < 70 ? 'Making great progress!' : progressPct < 100 ? 'Almost ready to list!' : '🎉 Ready to list!';
 
+  // ── Discount computed values ──
+  const rawPrice = parseInt((formData.price || '0').toString().replace(/,/g, '')) || 0;
+  const discountVal = parseFloat(formData.discountValue) || 0;
+  const discountedPrice = formData.discountEnabled && discountVal > 0
+    ? formData.discountType === 'percentage'
+      ? Math.round(rawPrice * (1 - discountVal / 100))
+      : Math.max(0, rawPrice - discountVal)
+    : null;
+  const savingsAmount = discountedPrice !== null ? rawPrice - discountedPrice : 0;
+
   // ── Field handlers ──
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleImageChange = (e) => {
@@ -219,7 +241,7 @@ export default function CreateProduct() {
         const imageUrl = await uploadImageToCloudinary(img.file, user.id);
         uploadedImageUrls.push(imageUrl);
       }
-      const rawPrice = formData.price.toString().replace(/,/g, '');
+      const price = formData.price.toString().replace(/,/g, '');
       const insertData = {
         user_id: user.id,
         name: formData.name,
@@ -227,10 +249,16 @@ export default function CreateProduct() {
         category: formData.category,
         condition: formData.condition,
         description: formData.description,
-        price: rawPrice || '0',
+        price: price || '0',
         location: formData.location,
         whatsapp: formData.whatsapp,
-        quantity: formData.quantity,
+        quantity: parseInt(formData.quantity) || 1,
+        colors: selectedColors,
+        discount_enabled: formData.discountEnabled,
+        discount_type: formData.discountType,
+        discount_value: formData.discountEnabled ? discountVal : null,
+        discount_label: formData.discountEnabled ? formData.discountLabel : null,
+        discounted_price: discountedPrice,
         images: uploadedImageUrls,
         seller_name: user.user_metadata?.full_name || 'Anonymous Seller',
       };
@@ -238,15 +266,13 @@ export default function CreateProduct() {
       let { data: insertedData, error: insertError } = await supabase.from('products').insert([insertData]).select();
 
       if (insertError && isMissingColumnError(insertError)) {
-        // Fallback: retry without the 'quantity' column if it's missing from DB
-        const { quantity, ...fallbackData } = insertData;
+        const { quantity, colors, discount_enabled, discount_type, discount_value, discount_label, discounted_price, ...fallbackData } = insertData;
         const retry = await supabase.from('products').insert([fallbackData]).select();
         insertError = retry.error;
         insertedData = retry.data;
       }
 
       if (insertError) throw insertError;
-      
       navigate('/products');
     } catch (err) {
       console.error('Error creating product:', err);
@@ -260,7 +286,6 @@ export default function CreateProduct() {
     <div style={{ background: C.surfaceDim, minHeight: "100vh", fontFamily: "'Manrope', sans-serif", color: C.text }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -268,29 +293,22 @@ export default function CreateProduct() {
         @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes scaleIn       { from{opacity:0;transform:scale(0.94)}       to{opacity:1;transform:scale(1)}     }
         @keyframes fadeIn        { from{opacity:0}                              to{opacity:1}                        }
-
-        @keyframes progressFill  { from{width:0%} to{width:var(--target-width)} }
         @keyframes shimmerProg   { 0%{transform:translateX(-120%)} 100%{transform:translateX(320%)} }
         @keyframes stepPop       { 0%{transform:scale(0.7)} 60%{transform:scale(1.18)} 100%{transform:scale(1)} }
-        @keyframes stepPulse     { 0%,100%{box-shadow:0 0 0 0 rgba(201,75,44,0.4)} 50%{box-shadow:0 0 0 8px rgba(201,75,44,0)} }
         @keyframes stepRipple    { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(2.4);opacity:0} }
         @keyframes pctBounce     { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
-
         @keyframes imgAppear     { from{opacity:0;transform:scale(0.8) rotate(-3deg)} to{opacity:1;transform:scale(1) rotate(0)} }
         @keyframes bounce        { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
         @keyframes uploadPulse   { 0%,100%{opacity:1} 50%{opacity:0.55} }
-
-        @keyframes focusRing     { from{box-shadow:0 0 0 0 rgba(201,75,44,0.3)} to{box-shadow:0 0 0 5px rgba(201,75,44,0)} }
         @keyframes sectionIn     { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
         @keyframes tickDraw      { from{stroke-dashoffset:30} to{stroke-dashoffset:0} }
         @keyframes waPing        { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
-
-        /* Quantity number pop */
-        @keyframes qtyPop        { 0%{transform:scale(0.6) translateY(8px);opacity:0} 60%{transform:scale(1.2) translateY(-2px);opacity:1} 100%{transform:scale(1) translateY(0);opacity:1} }
-        @keyframes qtyGlow       { 0%,100%{text-shadow:none} 50%{text-shadow:0 0 18px rgba(201,75,44,0.5)} }
-
-        /* Stepper button ripple */
-        @keyframes btnPress      { 0%{transform:scale(1)} 40%{transform:scale(0.88)} 100%{transform:scale(1)} }
+        @keyframes colorPop      { 0%{transform:scale(0.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        @keyframes discountSlide { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes priceCross    { from{width:0} to{width:100%} }
+        @keyframes savingsPop    { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+        @keyframes tagWiggle     { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+        @keyframes spin          { to{transform:rotate(360deg)} }
 
         ::-webkit-scrollbar        { width: 5px; }
         ::-webkit-scrollbar-track  { background: transparent; }
@@ -317,24 +335,108 @@ export default function CreateProduct() {
         .img-thumb { animation: imgAppear 0.4s cubic-bezier(0.22,1,0.36,1) both; }
         .img-thumb:hover .remove-btn { opacity: 1 !important; transform: scale(1) !important; }
 
-        .qty-stepper-btn {
-          width: 46px; height: 52px; border: none; cursor: pointer;
+        /* Quantity input */
+        .qty-input-wrap {
+          display: flex; align-items: stretch;
+          border: 1.5px solid ${C.border}; border-radius: 14px;
+          overflow: hidden; background: white;
+          transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .qty-input-wrap:focus-within {
+          border-color: ${C.primary};
+          box-shadow: 0 0 0 3px rgba(201,75,44,0.12);
+        }
+        .qty-spin-btn {
+          width: 44px; border: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          transition: background 0.2s, color 0.2s;
-          flex-shrink: 0;
+          background: ${C.primaryPale}; color: ${C.primary};
+          transition: background 0.18s, transform 0.12s;
+          flex-shrink: 0; font-size: 20px; font-weight: 700;
+          user-select: none;
         }
-        .qty-stepper-btn:not(:disabled):active { animation: btnPress 0.22s ease both; }
-        .qty-stepper-btn:disabled { cursor: not-allowed; }
+        .qty-spin-btn:hover:not(:disabled) { background: ${C.primaryBg}; }
+        .qty-spin-btn:active:not(:disabled) { transform: scale(0.9); }
+        .qty-spin-btn:disabled { background: ${C.surfaceDim}; color: ${C.textFaint}; cursor: not-allowed; }
+        .qty-number-input {
+          flex: 1; border: none; outline: none; text-align: center;
+          font-size: 22px; font-weight: 900; color: ${C.text};
+          font-family: 'Manrope', sans-serif; background: white;
+          min-width: 0; padding: 10px 4px;
+          -moz-appearance: textfield;
+        }
+        .qty-number-input::-webkit-inner-spin-button,
+        .qty-number-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .qty-number-input:focus { background: ${C.primaryPale}; color: ${C.primary}; }
 
-        .qty-pill {
-          padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
-          cursor: pointer; transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-          font-family: 'Manrope', sans-serif;
+        /* Color swatch */
+        .color-swatch {
+          width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+          transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+          position: relative; flex-shrink: 0;
+          border: 2.5px solid transparent;
         }
-        .qty-pill:hover { transform: scale(1.06); }
+        .color-swatch:hover { transform: scale(1.18); }
+        .color-swatch.selected {
+          transform: scale(1.18);
+          animation: colorPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        .color-swatch.selected::after {
+          content: '✓';
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 900;
+          color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+          border-radius: 50%;
+        }
+
+        /* Discount toggle */
+        .discount-toggle {
+          position: relative; display: inline-flex; align-items: center;
+          width: 48px; height: 26px; cursor: pointer;
+        }
+        .discount-toggle input { opacity: 0; width: 0; height: 0; }
+        .discount-slider {
+          position: absolute; inset: 0; border-radius: 13px;
+          transition: background 0.3s;
+        }
+        .discount-slider::before {
+          content: ''; position: absolute;
+          width: 20px; height: 20px; border-radius: 50%;
+          left: 3px; top: 3px; background: white;
+          transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .discount-toggle input:checked + .discount-slider::before { transform: translateX(22px); }
+
+        .discount-type-btn {
+          flex: 1; padding: 9px 0; border: 1.5px solid ${C.border};
+          background: white; color: ${C.textMid}; font-family: 'Manrope',sans-serif;
+          font-size: 13px; font-weight: 700; cursor: pointer;
+          transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .discount-type-btn:first-child { border-radius: 10px 0 0 10px; border-right: none; }
+        .discount-type-btn:last-child  { border-radius: 0 10px 10px 0; }
+        .discount-type-btn.active {
+          background: ${C.primary}; color: white; border-color: ${C.primary};
+          box-shadow: 0 2px 8px ${C.primary}50;
+        }
+
+        .discount-body { animation: discountSlide 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+
+        .price-original-crossed {
+          position: relative; display: inline-block; color: ${C.textMuted};
+        }
+        .price-original-crossed::after {
+          content: ''; position: absolute;
+          height: 2px; background: ${C.danger};
+          top: 50%; left: 0; right: 0;
+          animation: priceCross 0.4s ease 0.1s both;
+        }
+
+        .savings-badge { animation: savingsPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .discount-tag-icon { animation: tagWiggle 1.4s ease-in-out infinite; display: inline-block; }
 
         @media (max-width: 768px) {
-          .create-header { padding-left: 16px !important; padding-right: 16px !important; }
           .create-title { font-size: 28px !important; }
         }
         @media (max-width: 480px) {
@@ -345,10 +447,8 @@ export default function CreateProduct() {
 
       {/* ── HEADER ── */}
       <header style={{
-        background: "rgba(255,255,255,0.94)",
-        backdropFilter: "blur(12px)",
-        borderBottom: `1px solid ${C.border}`,
-        position: "sticky", top: 0, zIndex: 50,
+        background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)",
+        borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 50,
         boxShadow: "0 1px 20px rgba(0,0,0,0.05)",
         opacity: mounted ? 1 : 0,
         transform: mounted ? "translateY(0)" : "translateY(-100%)",
@@ -390,9 +490,7 @@ export default function CreateProduct() {
           <h1 style={{
             fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: C.text,
             letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif", marginBottom: 8
-          }} className="create-title">
-            List Your Bag
-          </h1>
+          }} className="create-title">List Your Bag</h1>
           <p style={{ color: C.textMuted, fontSize: 15, fontWeight: 500, maxWidth: 520 }}>
             Fill in all details below. Our AI visual search will index your bag for maximum buyer visibility.
           </p>
@@ -413,17 +511,16 @@ export default function CreateProduct() {
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: C.textMuted, marginBottom: 3 }}>Listing Progress</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{progressLabel}</div>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4, animation: "pctBounce 0.4s ease" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
               <span style={{ fontSize: 36, fontWeight: 900, color: progressColor, letterSpacing: "-0.04em", transition: "color 0.5s ease", lineHeight: 1 }}>{progressPct}</span>
               <span style={{ fontSize: 16, fontWeight: 700, color: progressColor }}>%</span>
             </div>
           </div>
-
           <div style={{ height: 10, background: C.borderLight, borderRadius: 9999, overflow: "hidden", marginBottom: 20, position: "relative" }}>
             <div style={{
               height: "100%", background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})`,
               borderRadius: 9999, width: `${progressPct}%`,
-              transition: "width 0.65s cubic-bezier(0.34,1.56,0.64,1), background 0.5s ease",
+              transition: "width 0.65s cubic-bezier(0.34,1.56,0.64,1)",
               position: "relative", overflow: "hidden",
               boxShadow: `0 0 12px ${C.primary}88`,
             }}>
@@ -432,16 +529,13 @@ export default function CreateProduct() {
               )}
             </div>
           </div>
-
           <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
             {STEPS.map((step) => {
               const done = getStepDone(step);
               return (
                 <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0, minWidth: 56 }}>
                   <div style={{ position: "relative", width: 36, height: 36 }}>
-                    {done && (
-                      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `2px solid ${C.primary}`, opacity: 0.4, animation: "stepRipple 1.8s ease-out infinite" }} />
-                    )}
+                    {done && <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `2px solid ${C.primary}`, opacity: 0.4, animation: "stepRipple 1.8s ease-out infinite" }} />}
                     <div style={{
                       width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
                       background: done ? C.primary : C.borderLight,
@@ -492,8 +586,7 @@ export default function CreateProduct() {
                 border: `2px dashed ${dragOver ? C.primary : images.length > 0 ? C.primaryLight : C.border}`,
                 borderRadius: 16, padding: "36px 20px", cursor: "pointer", textAlign: "center",
                 background: dragOver ? C.primaryPale : images.length > 0 ? C.successBg : C.surfaceDim,
-                transition: "all 0.3s ease",
-                transform: dragOver ? "scale(1.01)" : "none",
+                transition: "all 0.3s ease", transform: dragOver ? "scale(1.01)" : "none",
               }}>
               <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
               <div style={{
@@ -509,7 +602,6 @@ export default function CreateProduct() {
               </p>
               <p style={{ fontSize: 12, color: C.textMuted }}>Up to 10 photos (Front, Back, Inside, Serial Number)</p>
             </div>
-
             {images.length > 0 && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginTop: 16 }}>
                 {images.map((img, idx) => (
@@ -543,11 +635,11 @@ export default function CreateProduct() {
           <FormSection icon="label" title="Bag Details" subtitle="Basic information about your bag" delay={0.45} mounted={mounted}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
 
-              <FieldGroup label="Bag Name" icon="label" done={!!formData.name}>
+              <FieldGroup label="Bag Name" done={!!formData.name}>
                 <input name="name" value={formData.name} onChange={handleInputChange} required className="field-input" placeholder="e.g., Chanel Classic Flap Caviar" type="text" />
               </FieldGroup>
 
-              <FieldGroup label="Brand" icon="workspace_premium" done={!!formData.brand}>
+              <FieldGroup label="Brand" done={!!formData.brand}>
                 <div style={{ position: "relative" }}>
                   <select name="brand" value={formData.brand} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
                     <option value="">Select a brand</option>
@@ -557,7 +649,7 @@ export default function CreateProduct() {
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="Category" icon="category" done={!!formData.category}>
+              <FieldGroup label="Category" done={!!formData.category}>
                 <div style={{ position: "relative" }}>
                   <select name="category" value={formData.category} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
                     <option value="">Select category</option>
@@ -567,7 +659,7 @@ export default function CreateProduct() {
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="Condition" icon="star" done={true}>
+              <FieldGroup label="Condition" done={true}>
                 <div style={{ position: "relative" }}>
                   <select name="condition" value={formData.condition} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
                     {['Pristine (Like New)','Excellent (Minor Wear)','Very Good (Gentle Use)','Fair (Visible Wear)'].map(c => <option key={c}>{c}</option>)}
@@ -576,106 +668,71 @@ export default function CreateProduct() {
                 </div>
               </FieldGroup>
 
-              {/* ── QUANTITY STEPPER ── */}
-              <FieldGroup label="Quantity Available" icon="inventory_2" done={formData.quantity >= 1}>
+              {/* ── QUANTITY — redesigned with manual input ── */}
+              <FieldGroup label="Quantity Available" done={!!formData.quantity && parseInt(formData.quantity) >= 1}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-
-                  {/* Main stepper control */}
-                  <div style={{
-                    display: "flex", alignItems: "stretch",
-                    border: `1.5px solid ${formData.quantity > 1 ? C.primaryLight : C.border}`,
-                    borderRadius: 14, overflow: "hidden", background: "white",
-                    transition: "border-color 0.3s, box-shadow 0.3s",
-                    boxShadow: formData.quantity > 1 ? `0 0 0 3px rgba(201,75,44,0.10)` : "none",
-                  }}>
-                    {/* Minus */}
-                    <button type="button" className="qty-stepper-btn"
-                      disabled={formData.quantity <= 1}
-                      onClick={() => changeQty(-1)}
-                      style={{
-                        background: formData.quantity <= 1 ? C.surfaceDim : C.primaryPale,
-                        color: formData.quantity <= 1 ? C.textFaint : C.primary,
-                        borderRight: `1px solid ${C.borderLight}`,
-                      }}
-                      onMouseEnter={e => { if (formData.quantity > 1) e.currentTarget.style.background = C.primaryBg; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = formData.quantity <= 1 ? C.surfaceDim : C.primaryPale; }}>
-                      <MS name="remove" size={20} />
+                  <div className="qty-input-wrap">
+                    <button type="button" className="qty-spin-btn"
+                      disabled={!formData.quantity || parseInt(formData.quantity) <= 1}
+                      onClick={() => setFormData(p => ({ ...p, quantity: String(Math.max(1, (parseInt(p.quantity) || 1) - 1)) }))}>
+                      −
                     </button>
-
-                    {/* Number display */}
-                    <div style={{
-                      flex: 1, display: "flex", flexDirection: "column",
-                      alignItems: "center", justifyContent: "center",
-                      padding: "8px 0", background: "white", minWidth: 70,
-                    }}>
-                      <span
-                        key={qtyAnimKey}
-                        style={{
-                          fontSize: 28, fontWeight: 900, color: formData.quantity > 1 ? C.primary : C.text,
-                          letterSpacing: "-0.05em", lineHeight: 1,
-                          animation: "qtyPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both",
-                          display: "block",
-                          transition: "color 0.3s",
-                        }}>
-                        {formData.quantity}
-                      </span>
-                      <span style={{
-                        fontSize: 9, fontWeight: 800, color: C.textMuted,
-                        textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 2,
-                      }}>
-                        {formData.quantity === 1 ? "bag" : "bags"}
-                      </span>
-                    </div>
-
-                    {/* Plus */}
-                    <button type="button" className="qty-stepper-btn"
-                      disabled={formData.quantity >= 99}
-                      onClick={() => changeQty(1)}
-                      style={{
-                        background: formData.quantity >= 99 ? C.surfaceDim : C.primaryPale,
-                        color: formData.quantity >= 99 ? C.textFaint : C.primary,
-                        borderLeft: `1px solid ${C.borderLight}`,
+                    <input
+                      type="number" min="1"
+                      className="qty-number-input"
+                      value={formData.quantity}
+                      placeholder="0"
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d+$/.test(v))
+                          setFormData(p => ({ ...p, quantity: v }));
                       }}
-                      onMouseEnter={e => { if (formData.quantity < 99) e.currentTarget.style.background = C.primaryBg; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = formData.quantity >= 99 ? C.surfaceDim : C.primaryPale; }}>
-                      <MS name="add" size={20} />
+                      onBlur={e => {
+                        const v = parseInt(e.target.value);
+                        if (!v || v < 1) setFormData(p => ({ ...p, quantity: '1' }));
+                      }}
+                    />
+                    <button type="button" className="qty-spin-btn"
+                      onClick={() => setFormData(p => ({ ...p, quantity: String((parseInt(p.quantity) || 0) + 1) }))}>
+                      +
                     </button>
                   </div>
 
-                  {/* Quick-select pills */}
+                  {/* Quick picks */}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {[1, 2, 3, 5, 10].map(n => {
-                      const active = formData.quantity === n || (n === 10 && formData.quantity >= 10);
+                    {[1, 2, 3, 5, 10, 20].map(n => {
+                      const active = parseInt(formData.quantity) === n;
                       return (
-                        <button key={n} type="button" className="qty-pill"
-                          onClick={() => setQty(n)}
+                        <button key={n} type="button"
+                          onClick={() => setFormData(p => ({ ...p, quantity: String(n) }))}
                           style={{
+                            padding: "4px 13px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+                            cursor: "pointer", transition: "all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+                            fontFamily: "'Manrope', sans-serif",
                             border: `1.5px solid ${active ? C.primary : C.border}`,
                             background: active ? C.primary : "white",
                             color: active ? "white" : C.textMid,
                             transform: active ? "scale(1.08)" : "scale(1)",
                             boxShadow: active ? `0 3px 10px ${C.primary}50` : "none",
-                          }}
-                          onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = C.primaryLight; e.currentTarget.style.color = C.primary; }}}
-                          onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}}>
-                          {n === 10 ? '10+' : n}
+                          }}>
+                          {n}
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* Status badge — appears when qty > 1 */}
-                  {formData.quantity > 1 && (
+                  {formData.quantity && parseInt(formData.quantity) > 1 && (
                     <div style={{
-                      display: "flex", alignItems: "center", gap: 7,
-                      padding: "8px 13px", borderRadius: 10,
+                      display: "flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 10,
                       background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
                       animation: "scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both",
                     }}>
                       <MS name="inventory_2" size={15} style={{ color: C.primary, flexShrink: 0 }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>
-                        {formData.quantity >= 10
-                          ? `${formData.quantity} bags in stock — perfect for bulk buyers! 🎉`
+                        {parseInt(formData.quantity) >= 50
+                          ? `${formData.quantity} bags in stock — bulk ready! 🎉`
+                          : parseInt(formData.quantity) >= 10
+                          ? `${formData.quantity} bags in stock — perfect for bulk buyers!`
                           : `${formData.quantity} bags available — great selection!`}
                       </span>
                     </div>
@@ -684,13 +741,92 @@ export default function CreateProduct() {
               </FieldGroup>
 
             </div>
+
+            {/* ── BAG COLORS ── */}
+            <div style={{ marginTop: 22, borderTop: `1px solid ${C.borderLight}`, paddingTop: 20 }}>
+              <FieldGroup label="Available Colors" done={selectedColors.length > 0}>
+                <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 12, marginTop: -4 }}>
+                  Select all colors this bag is available in
+                </p>
+
+                {/* Color grid */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+                  {BAG_COLORS.map(color => {
+                    const isSelected = selectedColors.includes(color.id);
+                    const isMulti = color.id === 'multicolor';
+                    return (
+                      <div key={color.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                        <button
+                          type="button"
+                          className={`color-swatch${isSelected ? ' selected' : ''}`}
+                          onClick={() => toggleColor(color.id)}
+                          title={color.label}
+                          style={{
+                            background: isMulti ? color.hex : color.hex,
+                            backgroundImage: isMulti ? color.hex : undefined,
+                            borderColor: isSelected ? C.primary : (color.border || 'transparent'),
+                            boxShadow: isSelected
+                              ? `0 0 0 3px ${C.primary}40, 0 3px 10px rgba(0,0,0,0.15)`
+                              : '0 1px 4px rgba(0,0,0,0.12)',
+                          }}
+                        />
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                          letterSpacing: "0.05em", color: isSelected ? C.primary : C.textMuted,
+                          transition: "color 0.2s",
+                        }}>{color.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Selected color chips */}
+                {selectedColors.length > 0 && (
+                  <div style={{
+                    display: "flex", flexWrap: "wrap", gap: 7, padding: "10px 14px",
+                    background: C.primaryPale, borderRadius: 12, border: `1px solid ${C.primaryBorder}`,
+                    animation: "scaleIn 0.3s ease both",
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: 4 }}>
+                      <MS name="palette" size={14} style={{ color: C.primary }} /> Selected:
+                    </span>
+                    {selectedColors.map(cid => {
+                      const c = BAG_COLORS.find(x => x.id === cid);
+                      return (
+                        <span key={cid} style={{
+                          display: "inline-flex", alignItems: "center", gap: 5,
+                          padding: "3px 10px 3px 6px", borderRadius: 20,
+                          background: "white", border: `1.5px solid ${C.primaryBorder}`,
+                          fontSize: 11, fontWeight: 700, color: C.textMid,
+                        }}>
+                          <span style={{
+                            width: 12, height: 12, borderRadius: "50%", flexShrink: 0,
+                            background: c?.id === 'multicolor' ? undefined : c?.hex,
+                            backgroundImage: c?.id === 'multicolor' ? c?.hex : undefined,
+                            border: `1px solid ${c?.border || 'rgba(0,0,0,0.1)'}`,
+                            display: "inline-block",
+                          }} />
+                          {c?.label}
+                          <button type="button" onClick={() => toggleColor(cid)} style={{
+                            width: 14, height: 14, borderRadius: "50%", border: "none",
+                            background: C.textFaint, color: C.textMid, cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 9, fontWeight: 900, padding: 0, marginLeft: 1,
+                          }}>✕</button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </FieldGroup>
+            </div>
           </FormSection>
 
           {/* ── SECTION 3: Pricing & Location ── */}
           <FormSection icon="payments" title="Pricing & Location" subtitle="Set your price in Naira and where you're selling from" delay={0.55} mounted={mounted}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18, marginBottom: 24 }}>
 
-              <FieldGroup label="Price (₦)" icon="payments" done={!!formData.price}>
+              <FieldGroup label="Price (₦)" done={!!formData.price}>
                 <div style={{ position: "relative" }}>
                   <span style={{
                     position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
@@ -714,7 +850,7 @@ export default function CreateProduct() {
                 )}
               </FieldGroup>
 
-              <FieldGroup label="Your Location" icon="location_on" done={!!formData.location}>
+              <FieldGroup label="Your Location" done={!!formData.location}>
                 <div style={{ position: "relative" }}>
                   <select name="location" value={formData.location} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
                     <option value="">Select your city</option>
@@ -742,29 +878,192 @@ export default function CreateProduct() {
               </FieldGroup>
 
             </div>
+
+            {/* ── DISCOUNT MODULE ── */}
+            <div style={{
+              borderRadius: 16, border: `1.5px solid ${formData.discountEnabled ? C.primary : C.border}`,
+              overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
+              boxShadow: formData.discountEnabled ? `0 0 0 3px ${C.primary}15, 0 4px 20px ${C.primary}20` : "none",
+            }}>
+              {/* Toggle header */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "14px 18px",
+                background: formData.discountEnabled
+                  ? `linear-gradient(135deg, ${C.primary}18 0%, ${C.primaryLight}12 100%)`
+                  : C.surfaceDim,
+                transition: "background 0.4s",
+                cursor: "pointer",
+              }} onClick={() => setFormData(p => ({ ...p, discountEnabled: !p.discountEnabled }))}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                    background: formData.discountEnabled ? C.primary : C.primaryPale,
+                    transition: "background 0.3s",
+                  }}>
+                    <span className="discount-tag-icon" style={{ fontSize: 17 }}>🏷️</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: formData.discountEnabled ? C.primary : C.text, transition: "color 0.3s" }}>
+                      Run a Discount
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
+                      {formData.discountEnabled ? "Discount is active — buyers will see the sale price" : "Attract more buyers with a special offer"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Toggle switch */}
+                <label className="discount-toggle" onClick={e => e.stopPropagation()}>
+                  <input type="checkbox" name="discountEnabled" checked={formData.discountEnabled} onChange={handleInputChange} />
+                  <span className="discount-slider" style={{ background: formData.discountEnabled ? C.primary : C.textFaint }} />
+                </label>
+              </div>
+
+              {/* Discount body — shown when enabled */}
+              {formData.discountEnabled && (
+                <div className="discount-body" style={{ padding: "18px 18px 20px", borderTop: `1px solid ${C.primaryBorder}`, background: C.primaryPale }}>
+
+                  {/* Type selector */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Discount Type</div>
+                    <div style={{ display: "flex" }}>
+                      <button type="button" className={`discount-type-btn${formData.discountType === 'percentage' ? ' active' : ''}`}
+                        onClick={() => setFormData(p => ({ ...p, discountType: 'percentage', discountValue: '' }))}>
+                        <span style={{ fontSize: 16 }}>%</span> Percentage
+                      </button>
+                      <button type="button" className={`discount-type-btn${formData.discountType === 'fixed' ? ' active' : ''}`}
+                        onClick={() => setFormData(p => ({ ...p, discountType: 'fixed', discountValue: '' }))}>
+                        <span style={{ fontSize: 14, fontWeight: 900 }}>₦</span> Fixed Amount
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+                    {/* Discount value */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+                        {formData.discountType === 'percentage' ? 'Discount %' : 'Amount Off (₦)'}
+                      </div>
+                      <div style={{ position: "relative" }}>
+                        <span style={{
+                          position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                          fontSize: 14, fontWeight: 800, color: C.primary, userSelect: "none"
+                        }}>
+                          {formData.discountType === 'percentage' ? '%' : '₦'}
+                        </span>
+                        <input
+                          type="number" min="1" max={formData.discountType === 'percentage' ? 99 : undefined}
+                          name="discountValue" value={formData.discountValue}
+                          onChange={handleInputChange}
+                          className="field-input"
+                          placeholder={formData.discountType === 'percentage' ? 'e.g., 15' : 'e.g., 50000'}
+                          style={{ paddingLeft: 30, background: "white" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Optional label */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+                        Sale Label <span style={{ color: C.textFaint, fontWeight: 600 }}>(optional)</span>
+                      </div>
+                      <input
+                        name="discountLabel" value={formData.discountLabel}
+                        onChange={handleInputChange}
+                        className="field-input"
+                        placeholder='e.g., "Flash Sale" or "Weekend Deal"'
+                        style={{ background: "white" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick % pills */}
+                  {formData.discountType === 'percentage' && (
+                    <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+                      {[5, 10, 15, 20, 25, 30, 50].map(pct => {
+                        const active = formData.discountValue === String(pct);
+                        return (
+                          <button key={pct} type="button"
+                            onClick={() => setFormData(p => ({ ...p, discountValue: String(pct) }))}
+                            style={{
+                              padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 800,
+                              cursor: "pointer", transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                              fontFamily: "'Manrope', sans-serif",
+                              border: `1.5px solid ${active ? C.primary : C.primaryBorder}`,
+                              background: active ? C.primary : "white",
+                              color: active ? "white" : C.textMid,
+                              transform: active ? "scale(1.1)" : "scale(1)",
+                              boxShadow: active ? `0 3px 10px ${C.primary}50` : "none",
+                            }}>
+                            {pct}% off
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Live preview */}
+                  {rawPrice > 0 && discountVal > 0 && discountedPrice !== null && discountedPrice > 0 && (
+                    <div style={{
+                      padding: "14px 16px", borderRadius: 14,
+                      background: "white", border: `1.5px solid ${C.primaryBorder}`,
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      flexWrap: "wrap", gap: 10,
+                      animation: "savingsPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both",
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textMuted, marginBottom: 5 }}>
+                          {formData.discountLabel || 'Sale'} Preview
+                        </div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                          <span className="price-original-crossed" style={{ fontSize: 16, fontWeight: 700 }}>
+                            ₦{formatNaira(rawPrice)}
+                          </span>
+                          <span style={{ fontSize: 22, fontWeight: 900, color: C.primary, letterSpacing: "-0.03em" }}>
+                            ₦{formatNaira(discountedPrice)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>
+                          ≈ ${(discountedPrice / 1600).toFixed(0)} USD
+                        </div>
+                      </div>
+                      <div className="savings-badge" style={{
+                        padding: "10px 16px", borderRadius: 12,
+                        background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
+                        color: "white", textAlign: "center",
+                        boxShadow: `0 4px 14px ${C.primary}60`,
+                      }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>
+                          {formData.discountType === 'percentage' ? `${discountVal}%` : `₦${formatNaira(savingsAmount)}`}
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.88, marginTop: 1 }}>
+                          {formData.discountType === 'percentage' ? `Save ₦${formatNaira(savingsAmount)}` : 'OFF'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </FormSection>
 
           {/* ── SECTION 4: WhatsApp Contact ── */}
           <FormSection icon="chat" title="WhatsApp Contact" subtitle="Buyers will reach you directly on WhatsApp" delay={0.65} mounted={mounted}>
-            <FieldGroup label="Your WhatsApp Number" icon="chat" done={!!formData.whatsapp}>
+            <FieldGroup label="Your WhatsApp Number" done={!!formData.whatsapp}>
               <div style={{ position: "relative" }}>
                 <div style={{
                   position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
                   width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  {formData.whatsapp && <div style={{
-                    position: "absolute", width: 22, height: 22, borderRadius: "50%",
-                    background: `${C.primary}30`, animation: "waPing 1.8s ease-out infinite"
-                  }} />}
+                  {formData.whatsapp && <div style={{ position: "absolute", width: 22, height: 22, borderRadius: "50%", background: `${C.primary}30`, animation: "waPing 1.8s ease-out infinite" }} />}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill={formData.whatsapp ? C.primary : C.textMuted} style={{ position: "relative", zIndex: 1, transition: "fill 0.3s" }}>
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
                 </div>
                 <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} required className="field-input" placeholder="e.g., 08012345678 or +2348012345678" type="tel" style={{ paddingLeft: 42 }} />
               </div>
-              <p style={{ fontSize: 11, color: C.textMuted, marginTop: 5 }}>
-                Buyers will tap "Chat on WhatsApp" to contact you directly about this listing.
-              </p>
+              <p style={{ fontSize: 11, color: C.textMuted, marginTop: 5 }}>Buyers will tap "Chat on WhatsApp" to contact you directly about this listing.</p>
               {formData.whatsapp && (
                 <a href={`https://wa.me/${formData.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
                   style={{
@@ -784,17 +1083,14 @@ export default function CreateProduct() {
 
           {/* ── SECTION 5: Description ── */}
           <FormSection icon="description" title="Description" subtitle="Describe condition, history, and details" delay={0.75} mounted={mounted}>
-            <FieldGroup label="Detailed Description" icon="description" done={!!formData.description}>
+            <FieldGroup label="Detailed Description" done={!!formData.description}>
               <div style={{
                 border: `1.5px solid ${formData.description ? C.primaryLight : C.border}`,
                 borderRadius: 12, overflow: "hidden", transition: "border-color 0.25s, box-shadow 0.25s"
               }}
                 onFocusCapture={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.primary}20`; }}
                 onBlurCapture={e => { e.currentTarget.style.borderColor = formData.description ? C.primaryLight : C.border; e.currentTarget.style.boxShadow = "none"; }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 4, padding: "8px 12px",
-                  background: C.surfaceDim, borderBottom: `1px solid ${C.border}`
-                }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", background: C.surfaceDim, borderBottom: `1px solid ${C.border}` }}>
                   {[["format_bold","Bold"],["format_italic","Italic"],["format_list_bulleted","List"]].map(([icon, label]) => (
                     <button key={icon} type="button" title={label} style={{
                       width: 28, height: 28, borderRadius: 6, border: "none", background: "transparent",
@@ -811,8 +1107,7 @@ export default function CreateProduct() {
                 <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
                   style={{
                     width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none",
-                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65,
-                    background: C.surface
+                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65, background: C.surface
                   }}
                   placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />
               </div>
@@ -827,13 +1122,8 @@ export default function CreateProduct() {
             opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.5s ease 0.85s both" : "none"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%", background: C.successBg,
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={C.primary}>
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.successBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={C.primary}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               </div>
               <div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>Buyers contact via WhatsApp</p>
@@ -850,36 +1140,22 @@ export default function CreateProduct() {
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
                 Cancel
               </button>
-              <button type="submit" disabled={uploading}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12,
-                  border: "none", background: C.primary,
-                  color: "white", fontSize: 14, fontWeight: 800,
-                  cursor: uploading ? "not-allowed" : "pointer",
-                  transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-                  boxShadow: `0 4px 16px ${C.primary}80`,
-                  opacity: uploading ? 0.7 : 1
-                }}
-                onMouseEnter={e => {
-                  if (!uploading) {
-                    e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
-                    e.currentTarget.style.boxShadow = `0 8px 24px ${C.primary}`;
-                  }
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = "none";
-                  e.currentTarget.style.boxShadow = `0 4px 16px ${C.primary}80`;
-                }}>
+              <button type="submit" disabled={uploading} style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12,
+                border: "none", background: C.primary, color: "white", fontSize: 14, fontWeight: 800,
+                cursor: uploading ? "not-allowed" : "pointer",
+                transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+                boxShadow: `0 4px 16px ${C.primary}80`, opacity: uploading ? 0.7 : 1
+              }}
+                onMouseEnter={e => { if (!uploading) { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; e.currentTarget.style.boxShadow = `0 8px 24px ${C.primary}`; } }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 4px 16px ${C.primary}80`; }}>
                 {uploading ? (
                   <>
-                    <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "waPing 0.7s linear infinite" }} />
+                    <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                     Uploading…
                   </>
                 ) : (
-                  <>
-                    {progressPct === 100 ? '🎉 ' : ''} List My Bag
-                    <MS name="arrow_forward" size={18} />
-                  </>
+                  <>{progressPct === 100 ? '🎉 ' : ''}List My Bag <MS name="arrow_forward" size={18} /></>
                 )}
               </button>
             </div>
@@ -931,7 +1207,7 @@ function FormSection({ icon, title, subtitle, delay, mounted, children }) {
 }
 
 /* ── Field group with animated label ── */
-function FieldGroup({ label, icon, done, children }) {
+function FieldGroup({ label, done, children }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>

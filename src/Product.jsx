@@ -5,6 +5,14 @@ import { supabase } from './services/api';
 import { visualSearch } from './services/pinecone';
 import LogoIcon from './components/Logo.jsx';
 
+const BAG_COLOR_MAP = {
+  black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
+  brown:'#6B3F2A',burgundy:'#722F37',red:'#CC2200',pink:'#E8A0A0',blush:'#F2C4B8',
+  orange:'#E8762B',yellow:'#E8C84A',olive:'#808000',green:'#2D6A3F',mint:'#98D8C8',
+  teal:'#2A7A7A',navy:'#1A2E5A',blue:'#2255CC',cobalt:'#0047AB',purple:'#6A2D8F',
+  lavender:'#B8A0D8',grey:'#888888',silver:'#C0C0C0',gold:'#CFB53B',
+};
+
 // ─── Color Palette (warm orange/peach inspired by BagSearch) ────────────────────
 const C = {
   primary:      '#c84b11',
@@ -328,7 +336,8 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
         <img src={product.src} alt={product.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}/>
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,transparent 55%,rgba(26,10,0,0.3) 100%)',opacity:hov?1:0,transition:'opacity 0.4s'}}/>
-        {product.lowStock&&<span style={{position:'absolute',top:10,left:10,background:'#dc2626',color:'white',fontSize:10,fontWeight:800,letterSpacing:'0.1em',textTransform:'uppercase',padding:'4px 10px',borderRadius:20,boxShadow:'0 2px 8px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite'}}>Low Stock</span>}
+        {product.lowStock&&<span style={{position:'absolute',top:10,left:10,background:'#dc2626',color:'white',fontSize:10,fontWeight:800,letterSpacing:'0.1em',textTransform:'uppercase',padding:'4px 10px',borderRadius:20,boxShadow:'0 2px 8px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite'}}>Low Quantity</span>}
+        {product.discountLabel&&<span style={{position:'absolute',top:product.lowStock?36:10,left:10,background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontSize:10,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',padding:'4px 10px',borderRadius:20,boxShadow:'0 2px 8px rgba(200,75,17,0.4)'}}>{product.discountLabel}</span>}
         {loc&&<span style={{position:'absolute',top:10,right:10,background:'rgba(255,255,255,0.93)',backdropFilter:'blur(8px)',color:C.textMid,fontSize:10,fontWeight:700,padding:'4px 9px',borderRadius:20,display:'flex',alignItems:'center',gap:4,boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}}>{loc.emoji} {loc.name}</span>}
         <div style={{position:'absolute',bottom:10,left:'50%',transform:hov?'translateX(-50%) translateY(0)':'translateX(-50%) translateY(12px)',opacity:hov?1:0,transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',background:'rgba(26,10,0,0.75)',backdropFilter:'blur(8px)',color:'white',fontSize:10,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',padding:'5px 16px',borderRadius:20,whiteSpace:'nowrap',pointerEvents:'none'}}>Quick View</div>
       </div>
@@ -337,15 +346,18 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
         <p style={{fontSize:12,color:C.textFaint,marginBottom:12,fontWeight:500}}>{product.seller}</p>
         <div style={{display:'flex',gap:5,marginBottom:12}}>{product.colors.map((col,i)=>(<span key={i} style={{width:16,height:16,borderRadius:'50%',background:col,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*30}ms`}}/>))}</div>
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:12}}>
-          <div><p style={{fontSize:10,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Stock</p><p style={{fontSize:13,fontWeight:700,color:C.textMid}}>{product.quantity} units</p></div>
-          <p style={{fontSize:21,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s'}}>{formatCurrency(product.price)}</p>
+          <div><p style={{fontSize:10,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Quantity</p><p style={{fontSize:13,fontWeight:700,color:C.textMid}}>{product.quantity} units</p></div>
+          <div style={{textAlign:'right'}}>
+            {product.discountedPrice&&<p style={{fontSize:11,color:C.textFaint,fontWeight:600,textDecoration:'line-through',marginBottom:1}}>{formatCurrency(product.price)}</p>}
+            <p style={{fontSize:21,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s'}}>{formatCurrency(product.discountedPrice||product.price)}</p>
+          </div>
         </div>
         <div style={{display:'flex',gap:7}}>
           <button onClick={handleCart} style={{flex:1,padding:'10px 0',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:12,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>
             {added?<><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
             :<><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>Add to Cart</>}
           </button>
-          <a href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20${encodeURIComponent(product.name)}`} target="_blank" rel="noopener noreferrer" onClick={e=>{ if(!isAuthed){ e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
+          <a href={`https://wa.me/${(product.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(`Hi, I'm interested in *${product.name}*\nPrice: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (discounted)':'₦'+product.price.toLocaleString()}\nProduct image: ${product.src}`)}`} target="_blank" rel="noopener noreferrer" onClick={e=>{ if(!isAuthed){ e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
             style={{width:40,borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1262,9 +1274,14 @@ export default function Product(){
         id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: 'db',
         sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity ?? 0,
         lowStock: (p.quantity ?? 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
-        colors: p.colors || ["#c84b11", "#f97316"],
+        colors: Array.isArray(p.colors) && p.colors.length > 0
+          ? p.colors.map(id => BAG_COLOR_MAP[id] || id).filter(Boolean)
+          : ['#c84b11', '#f97316'],
         src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
         brand: p.brand || '', condition: p.condition || '', description: p.description || '',
+        discountedPrice: p.discounted_price ? parseFloat(p.discounted_price) : null,
+        discountLabel: p.discount_label || null,
+        whatsapp: p.whatsapp || '',
       }));
       return [...fmt, ...mockProducts];
     } catch (err) {

@@ -678,7 +678,7 @@ export default function ProductDetail() {
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.textMuted }}>
                 <div style={{ width:8, height:8, borderRadius:'50%', background:C.success, boxShadow:`0 0 0 3px ${C.successBg}` }}/>
-                {product.quantity} in stock
+                {product.quantity} available
               </div>
             </div>
 
@@ -700,7 +700,7 @@ export default function ProductDetail() {
               </div>
               {/* Stock progress */}
               <div style={{ minWidth:120 }}>
-                <p style={{ fontSize:10, fontWeight:700, color:C.textFaint, marginBottom:5 }}>STOCK LEVEL</p>
+                <p style={{ fontSize:10, fontWeight:700, color:C.textFaint, marginBottom:5 }}>QUANTITY LEVEL</p>
                 <div className="progress-track" style={{ height:6, width:'100%' }}>
                   <div className="progress-fill" style={{ width:`${(product.quantity/20)*100}%`, height:'100%' }}/>
                 </div>
@@ -917,7 +917,7 @@ export default function ProductDetail() {
                   <img src={p.src} alt={p.name} className="card-img-inner" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
                   {p.lowStock && (
                     <span style={{ position:'absolute', top:10, left:10, background:C.danger, color:'white', fontSize:9, fontWeight:800, padding:'3px 10px', borderRadius:99, letterSpacing:'0.06em', textTransform:'uppercase', boxShadow:`0 2px 8px ${C.danger}55`, animation:'pulse 2s ease infinite' }}>
-                      Low Stock
+                      Low Quantity
                     </span>
                   )}
                   {/* Quick view overlay */}

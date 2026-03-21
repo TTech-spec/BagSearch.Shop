@@ -160,7 +160,7 @@ function ProductCard({ product, index, onAddToCart }) {
         <img src={product.src} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)", transform: hovered ? "scale(1.1)" : "scale(1)" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(26,10,0,0.5) 100%)", opacity: hovered ? 1 : 0, transition: "opacity 0.4s" }} />
         {product.lowStock && (
-          <div style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", fontSize: "clamp(8px, 2vw, 9px)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 20, boxShadow: "0 4px 12px rgba(220,38,38,0.5)", animation: "lowStockPulse 2s ease-in-out infinite" }}>⚡ Low Stock</div>
+          <div style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", fontSize: "clamp(8px, 2vw, 9px)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 20, boxShadow: "0 4px 12px rgba(220,38,38,0.5)", animation: "lowStockPulse 2s ease-in-out infinite" }}>⚡ Low Quantity</div>
         )}
         <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)", borderRadius: 12, padding: "5px 10px", display: "flex", alignItems: "center", gap: 4 }}>
           <Stars rating={product.rating} size={10} />
