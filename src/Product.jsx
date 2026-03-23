@@ -131,21 +131,9 @@ const CATEGORIES = [
   {id:'mini',label:'Mini Bags',icon:'💛',color:'#a16207',bg:'#fefce8',border:'#fef08a'},
 ];
 
-const mockProducts = [
-  {id:1,name:"The Midnight Satchel",seller:"Luxury Bags Co.",sellerId:'vendor-1',sub:"Italian Leather • Midnight Blue",price:2450,quantity:12,lowStock:false,category:'satchel',location:'victoria-island',colors:["#1a1a2e","#16213e","#0f3460"],src:"https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8"},
-  {id:2,name:"Ivory Essential Tote",seller:"Eco Style Hub",sellerId:'vendor-2',sub:"Sustainable Vegan Leather • Ivory",price:1800,quantity:3,lowStock:true,category:'tote',location:'lekki',colors:["#f5f0e8","#e8ddd0","#d4c5b0"],src:"https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo"},
-  {id:3,name:"Azure Mini Crossbody",seller:"Trendy Fashion Hub",sellerId:'vendor-3',sub:"Napa Leather • Azure Blue",price:1250,quantity:8,lowStock:false,category:'crossbody',location:'ikeja',colors:["#4a90d9","#357abd","#2868a8"],src:"https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk"},
-  {id:4,name:"Onyx Evening Clutch",seller:"Elite Accessories",sellerId:'vendor-1',sub:"Polished Suede • Onyx Black",price:3100,quantity:2,lowStock:true,category:'evening',location:'abuja',colors:["#1a1a1a","#333333","#4d4d4d"],src:"https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E"},
-  {id:5,name:"Crimson Structured Bag",seller:"Premium Leather Co.",sellerId:'vendor-4',sub:"Premium Leather • Red",price:3200,quantity:6,lowStock:false,category:'clutch',location:'lagos-island',colors:["#c0392b","#e74c3c","#922b21"],src:"https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8"},
-];
+const mockProducts = [];
 
-const mockVendors = [
-  {id:'vendor-1',name:'Luxury Bags Co.',avatar:'👜',location:'victoria-island',rating:4.9,reviews:312,views:18420,products:47,joined:'Mar 2021',specialty:'Italian Leather',badge:'Top Rated',description:'Premium Italian leather bags crafted for the discerning buyer. Every piece is hand-stitched and comes with a certificate of authenticity.',tags:['Luxury','Leather','Italian'],colors:['#c84b11','#f97316']},
-  {id:'vendor-2',name:'Eco Style Hub',avatar:'🌿',location:'lekki',rating:4.7,reviews:189,views:9870,products:28,joined:'Aug 2022',specialty:'Sustainable Fashion',badge:'',description:'Sustainable and vegan leather alternatives. All products are cruelty-free and eco-conscious.',tags:['Vegan','Eco','Sustainable'],colors:['#92400e','#b45309']},
-  {id:'vendor-3',name:'Trendy Fashion Hub',avatar:'✨',location:'ikeja',rating:4.5,reviews:94,views:5630,products:61,joined:'Jan 2023',specialty:'Everyday Fashion',badge:'',description:'Trendy bags for everyday wear. Affordable luxury for the modern Nigerian woman.',tags:['Trendy','Everyday','Affordable'],colors:['#c2410c','#ea580c']},
-  {id:'vendor-4',name:'Premium Leather Co.',avatar:'🏆',location:'lagos-island',rating:4.8,reviews:227,views:14200,products:33,joined:'Jun 2020',specialty:'Premium Leather',badge:'Top Rated',description:'Lagos finest leather craftsmen. Premium hides sourced from Europe, tailored by Nigerian artisans.',tags:['Artisan','Premium','Crafted'],colors:['#c84b11','#f97316']},
-  {id:'vendor-5',name:'Elite Accessories',avatar:'💎',location:'abuja',rating:4.6,reviews:156,views:7340,products:19,joined:'Oct 2021',specialty:'Evening & Clutches',badge:'Top Rated',description:'Specialising in high-end evening bags and clutches for events, galas and corporate functions in Abuja.',tags:['Evening','Clutch','Formal'],colors:['#9a3412','#c84b11']},
-];
+const mockVendors = [];
 
 const CURRENCY_SYMBOL = '₦';
 const FREE_DELIVERY_THRESHOLD = 2000;
@@ -1237,7 +1225,7 @@ export default function Product(){
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);const[searchFocused,setSearchFocused]=useState(false);
   const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(false);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
-  const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[filteredVendors,setFilteredVendors]=useState(mockVendors);const[selectedVendor,setSelectedVendor]=useState(null);
+  const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   
@@ -1271,6 +1259,74 @@ export default function Product(){
     return 'all';
   }, []);
 
+  const buildVendorsFromProducts = useCallback((products) => {
+    const map = new Map();
+    (products || []).forEach(p => {
+      const sellerId = p.sellerId || p.seller || `seller_${p.id}`;
+      if (!sellerId) return;
+      if (!map.has(sellerId)) {
+        map.set(sellerId, {
+          id: sellerId,
+          name: p.seller || 'Anonymous Seller',
+          avatar: '👜',
+          location: p.location || 'all',
+          rating: 4.6,
+          reviews: 0,
+          views: 0,
+          products: 0,
+          joined: p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'N/A',
+          specialty: p.category || 'Bags',
+          badge: '',
+          description: `Trusted seller of ${p.category || 'bags'}`,
+          tags: [p.category || 'bags'],
+          colors: p.colors?.slice(0, 2) || ['#c84b11', '#f97316'],
+        });
+      }
+      const vendor = map.get(sellerId);
+      vendor.products += 1;
+      if (typeof p.views === 'number') vendor.views += p.views;
+    });
+    return Array.from(map.values());
+  }, []);
+
+  const fetchVendors = useCallback(async (products) => {
+    try {
+      const { data, error } = await supabase.from('vendors').select('*');
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const normalized = data.map(v => ({
+          id: v.id || v.seller_id || v.name,
+          name: v.name || 'Unnamed Seller',
+          avatar: v.avatar || '👜',
+          location: v.location || 'all',
+          rating: v.rating ?? 4.6,
+          reviews: v.reviews ?? 0,
+          views: v.views ?? 0,
+          products: v.products ?? 0,
+          joined: v.joined || 'N/A',
+          specialty: v.specialty || 'Bags',
+          badge: v.badge || '',
+          description: v.description || 'Luxe seller',
+          tags: Array.isArray(v.tags) ? v.tags : [v.specialty || 'bags'],
+          colors: Array.isArray(v.colors) && v.colors.length > 0 ? v.colors : ['#c84b11', '#f97316'],
+        }));
+        setVendors(normalized);
+        setFilteredVendors(normalized);
+        return normalized;
+      }
+      // fallback by deriving vendors from products if 'vendors' table is not present or empty
+      const derived = buildVendorsFromProducts(products || []);
+      setVendors(derived);
+      setFilteredVendors(derived);
+      return derived;
+    } catch (err) {
+      console.warn('Could not load vendors table, deriving from products', err);
+      const derived = buildVendorsFromProducts(products || []);
+      setVendors(derived);
+      setFilteredVendors(derived);
+      return derived;
+    }
+  }, [buildVendorsFromProducts]);
+
   const fetchProducts = useCallback(async (locationId = 'all') => {
     try {
       let query = supabase.from('products').select('*');
@@ -1278,7 +1334,7 @@ export default function Product(){
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       const fmt = (data || []).map(p => ({
-        id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: 'db',
+        id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: p.seller_id || p.user_id || 'db',
         sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity ?? 0,
         lowStock: (p.quantity ?? 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
         colors: Array.isArray(p.colors) && p.colors.length > 0
@@ -1302,13 +1358,14 @@ export default function Product(){
 
   useEffect(() => {
     let isMounted = true;
-    fetchProducts().then(combined => {
+    fetchProducts().then(async combined => {
       if (!isMounted) return;
       setAllProducts(combined);
       setDisplayedProducts(combined);
+      await fetchVendors(combined);
     });
     return () => { isMounted = false; };
-  }, [fetchProducts]);
+  }, [fetchProducts, fetchVendors]);
 
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
 
@@ -1341,7 +1398,19 @@ export default function Product(){
       e.target.value='';
     }
   };
-  const handleVendorSearch=q=>{setVendorSearch(q);setFilteredVendors(mockVendors.filter(v=>v.name.toLowerCase().includes(q.toLowerCase())||v.specialty.toLowerCase().includes(q.toLowerCase())||v.tags.some(t=>t.toLowerCase().includes(q.toLowerCase()))));};
+  const handleVendorSearch=q=>{
+    setVendorSearch(q);
+    const normalized = q.trim().toLowerCase();
+    if(!normalized){
+      setFilteredVendors(vendors);
+      return;
+    }
+    setFilteredVendors(vendors.filter(v=>
+      v.name.toLowerCase().includes(normalized) ||
+      (v.specialty||'').toLowerCase().includes(normalized) ||
+      (v.tags||[]).some(t=>t.toLowerCase().includes(normalized))
+    ));
+  };
   const handleViewVendorProducts = (vendor) => { navigate('/seller-products', { state: { vendor } }); };
   const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({ text: `${product.name} added!`, type: 'success' });setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
@@ -1588,7 +1657,7 @@ export default function Product(){
             marginBottom: 16,
             width: isMobile ? '100%' : 'auto'
           }}>
-            {[{id:'products',label:'👜 Products',count:allProducts.length},{id:'vendors',label:'🏪 Vendors',count:mockVendors.length}].map(tab=>(
+            {[{id:'products',label:'👜 Products',count:allProducts.length},{id:'vendors',label:'🏪 Vendors',count:vendors.length}].map(tab=>(
               <button
                 key={tab.id}
                 onClick={()=>setActiveTab(tab.id)}
