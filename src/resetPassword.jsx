@@ -2,6 +2,26 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from './services/api';
 
+// ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
+const C = {
+  primary:       '#C94B2C',
+  primaryLight:  '#E8856A',
+  primaryBg:     '#F9DDD0',
+  primaryPale:   '#FFF5F2',
+  primaryBorder: '#F0C8BB',
+  accent:        '#B33A1E',
+  danger:        '#DC2626',
+  dangerBg:      '#FEF2F2',
+  surface:       '#FFFFFF',
+  surfaceDim:    '#FDF8F5',
+  border:        '#F0D9CC',
+  borderLight:   '#F7ECE4',
+  text:          '#1A0A00',
+  textMid:       '#7A4030',
+  textMuted:     '#B07060',
+  textLight:     '#FFFFFF',
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -129,7 +149,51 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col lg:flex-row font-display">
+    <div className="reset-layout flex w-full flex-col lg:flex-row">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+        * { box-sizing: border-box; }
+
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        .reset-btn {
+          width: 100%;
+          height: 54px;
+          background: ${C.primary};
+          color: ${C.textLight};
+          font-size: 15px;
+          font-weight: 700;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+          box-shadow: 0 4px 14px ${C.primary}50;
+          letter-spacing: 0.01em;
+        }
+        .reset-btn:hover:not(:disabled) { background: ${C.accent}; transform: translateY(-1px); box-shadow: 0 6px 18px ${C.primary}60; }
+        .reset-btn:active:not(:disabled) { transform: translateY(0); }
+        .reset-btn:disabled { opacity: .65; cursor: not-allowed; }
+
+        .reset-input {
+          width: 100%;
+          border-radius: 8px;
+          border: 1px solid ${C.border};
+          background: ${C.surface};
+          padding: 0 16px;
+          height: 54px;
+          font-size: 14px;
+          color: ${C.text};
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          font-family: 'Manrope', sans-serif;
+        }
+        .reset-input:focus { border-color: ${C.primary}; box-shadow: 0 0 0 3px ${C.primary}18; }
+        .reset-input::placeholder { color: ${C.textMuted}; }
+
+        .reset-layout { background: ${C.surfaceDim}; min-height: 100vh; font-family: 'Manrope', sans-serif; }
+      `}</style>
       {/* Left Side: Hero Image (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[#e5e7eb]">
         <div 
@@ -145,7 +209,7 @@ const ResetPassword = () => {
               <path clipRule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fillRule="evenodd"></path>
             </svg>
           </div>
-          <h1 className="text-xl font-bold tracking-tight">LUXURY BOUTIQUE</h1>
+          <h1 className="text-xl font-bold tracking-tight">BagSearch</h1>
         </div>
         {/* Bottom Text Overlay */}
         <div className="absolute bottom-20 left-10 max-w-md text-white">
@@ -163,7 +227,7 @@ const ResetPassword = () => {
                 <path clipRule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fillRule="evenodd"></path>
               </svg>
             </div>
-            <h2 className="text-lg font-bold tracking-tight">LUXURY BOUTIQUE</h2>
+            <h2 className="text-lg font-bold tracking-tight">BagSearch</h2>
           </div>
           
           <div className="mb-10">
@@ -189,7 +253,7 @@ const ResetPassword = () => {
                 <label className="text-[#111318] dark:text-white text-sm font-semibold leading-normal">Verification Code</label>
                 <div className="relative flex items-stretch">
                   <input 
-                    className="form-input flex w-full rounded-lg border-[#dcdfe5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#111318] dark:text-white h-14 px-4 text-base font-normal tracking-[0.5em] transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                    className="reset-input"
                     maxLength={6}
                     placeholder="000000"
                     type="text"
@@ -227,7 +291,7 @@ const ResetPassword = () => {
               <label className="text-[#111318] dark:text-white text-sm font-semibold leading-normal">New Password</label>
               <div className="relative flex items-stretch">
                 <input 
-                  className="form-input flex w-full rounded-lg border-[#dcdfe5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#111318] dark:text-white h-14 px-4 pr-12 text-base font-normal transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="reset-input"
                   placeholder="••••••••"
                   type={showNewPassword ? "text" : "password"}
                   name="newPassword"
@@ -282,7 +346,7 @@ const ResetPassword = () => {
               <label className="text-[#111318] dark:text-white text-sm font-semibold leading-normal">Confirm New Password</label>
               <div className="relative flex items-stretch">
                 <input 
-                  className="form-input flex w-full rounded-lg border-[#dcdfe5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#111318] dark:text-white h-14 px-4 pr-12 text-base font-normal transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="reset-input"
                   placeholder="••••••••"
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
@@ -304,7 +368,7 @@ const ResetPassword = () => {
 
             {/* Submit Button */}
             <button 
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all shadow-lg shadow-primary/20 active:scale-[0.98]"
+              className="reset-btn"
               type="submit"
               disabled={isLoading}
             >
