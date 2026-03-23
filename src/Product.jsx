@@ -1,4 +1,4 @@
-import { useState, useRef, useContext, useEffect, useCallback } from 'react';
+   import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
@@ -13,7 +13,6 @@ const BAG_COLOR_MAP = {
   lavender:'#B8A0D8',grey:'#888888',silver:'#C0C0C0',gold:'#CFB53B',
 };
 
-// ─── Color Palette (warm orange/peach inspired by BagSearch) ────────────────────
 const C = {
   primary:      '#c84b11',
   primaryLight: '#f97316',
@@ -35,77 +34,84 @@ const C = {
   textFaint:    '#c4957a',
 };
 
-// ─── Page Loader ──────────────────────────────────────────────────────────────
+// ─── SIMPLE LIGHTWEIGHT PAGE LOADER ──────────────────────────────────────────
 const PageLoader = ({ onDone }) => {
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
+
   useEffect(() => {
     let p = 0;
     const iv = setInterval(() => {
-      p += Math.random() * 5 + 2;
+      p += Math.random() * 6 + 3;
       if (p >= 100) {
-        p = 100; clearInterval(iv); setProgress(100);
-        setTimeout(() => setPhase(1), 500);
-        setTimeout(() => onDone(), 1300);
-      } else setProgress(Math.min(p, 100));
-    }, 35);
+        p = 100;
+        clearInterval(iv);
+        setProgress(100);
+        setTimeout(() => setFadeOut(true), 250);
+        setTimeout(() => onDone(), 700);
+      } else {
+        setProgress(Math.min(p, 100));
+      }
+    }, 28);
     return () => clearInterval(iv);
   }, [onDone]);
 
   return (
-    <div style={{ position:'fixed',inset:0,zIndex:99999,background:'linear-gradient(135deg,#2d0e00 0%,#4a1a06 50%,#1a0a00 100%)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',opacity:phase===1?0:1,transform:phase===1?'scale(1.03)':'scale(1)',transition:'opacity 0.7s ease,transform 0.7s ease',pointerEvents:phase===1?'none':'all' }}>
-      <style>{`
-        @keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @keyframes ldPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.22);opacity:0.15}}
-        @keyframes ldBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-        @keyframes ldDot{0%,80%,100%{transform:scale(0.55);opacity:0.25}40%{transform:scale(1);opacity:1}}
-        @keyframes ldFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes ldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
-        @keyframes ldRing{0%{transform:scale(0.85);opacity:0.7}100%{transform:scale(1.7);opacity:0}}
-        @keyframes ldMesh{0%{transform:translate(0,0)}50%{transform:translate(18px,-14px)}100%{transform:translate(0,0)}}
-        @keyframes ldGlow{0%,100%{box-shadow:0 8px 28px rgba(200,75,17,0.5)}50%{box-shadow:0 8px 48px rgba(249,115,22,0.9)}}
-      `}</style>
-      <div style={{position:'absolute',inset:0,overflow:'hidden',pointerEvents:'none'}}>
-        {[{x:'-10%',y:'-10%',c:'rgba(200,75,17,0.25)'},{x:'65%',y:'55%',c:'rgba(249,115,22,0.18)'},{x:'35%',y:'15%',c:'rgba(234,88,12,0.15)'}].map((b,i)=>(
-          <div key={i} style={{position:'absolute',left:b.x,top:b.y,width:350,height:350,borderRadius:'50%',background:`radial-gradient(circle,${b.c} 0%,transparent 70%)`,animation:`ldMesh 6s ease-in-out ${i*1.5}s infinite`,filter:'blur(40px)'}}/>
-        ))}
-      </div>
-      {[0,1].map(i=>(<div key={i} style={{position:'absolute',width:130,height:130,borderRadius:'50%',border:'1.5px solid rgba(249,115,22,0.35)',animation:`ldRing 2.2s ease-out ${i*1.1}s infinite`}}/>))}
-      <div style={{position:'relative',width:92,height:92,marginBottom:30}}>
-        <svg width="92" height="92" viewBox="0 0 92 92" style={{position:'absolute',inset:0,animation:'ldSpin 1.9s linear infinite'}}>
-          <circle cx="46" cy="46" r="40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5"/>
-          <circle cx="46" cy="46" r="40" fill="none" stroke="url(#lg1)" strokeWidth="2.5" strokeDasharray={`${2*Math.PI*40*progress/100} ${2*Math.PI*40}`} strokeLinecap="round" style={{transformOrigin:'46px 46px'}}/>
-          <defs><linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f97316"/><stop offset="100%" stopColor="#c84b11"/></linearGradient></defs>
-        </svg>
-        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',animation:'ldBounce 1.7s ease-in-out infinite,ldGlow 1.7s ease-in-out infinite'}}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div style={{animation:'ldFadeUp 0.55s ease 0.15s both',textAlign:'center',marginBottom:5}}>
-        <span style={{fontSize:30,fontWeight:900,letterSpacing:'-0.03em',color:'#fff',fontFamily:'system-ui,sans-serif'}}>
-          Bag<span style={{background:'linear-gradient(135deg,#f97316,#c84b11)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Search</span>
-        </span>
-      </div>
-      <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:38,animation:'ldFadeUp 0.55s ease 0.3s both'}}>
-        <span style={{fontSize:11,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase'}}>Loading BagSearch experience</span>
-        <span style={{display:'flex',gap:3}}>{[0,1,2].map(i=>(<span key={i} style={{width:4,height:4,borderRadius:'50%',background:'#f97316',display:'inline-block',animation:`ldDot 1.3s ease-in-out ${i*0.18}s infinite`}}/>))}</span>
-      </div>
-      <div style={{width:'min(260px,60vw)',animation:'ldFadeUp 0.55s ease 0.45s both'}}>
-        <div style={{height:3,background:'rgba(255,255,255,0.08)',borderRadius:9999,overflow:'hidden'}}>
-          <div style={{height:'100%',borderRadius:9999,width:`${progress}%`,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#f97316,#c84b11)',backgroundSize:'200% auto',animation:'ldShimmer 1.5s linear infinite',transition:'width 0.08s ease',boxShadow:'0 0 14px rgba(249,115,22,0.7)'}}/>
-        </div>
-        <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:10,fontWeight:700,letterSpacing:'0.08em'}}>
-          <span style={{color:'rgba(255,255,255,0.25)'}}>BagSearch</span>
-          <span style={{color:'#f97316'}}>{Math.round(progress)}%</span>
-        </div>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: C.surface,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      opacity: fadeOut ? 0 : 1,
+      transition: 'opacity 0.4s ease',
+      pointerEvents: fadeOut ? 'none' : 'all',
+    }}>
+      {/* Brand */}
+      <span style={{
+        fontSize: 26, fontWeight: 900, letterSpacing: '-0.03em',
+        color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif',
+        marginBottom: 24,
+      }}>
+        Bag<span style={{ color: C.primary }}>Search</span>
+      </span>
+
+      {/* Thin progress bar */}
+      <div style={{
+        width: 180, height: 2,
+        background: C.borderLight,
+        borderRadius: 9999, overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: C.primary,
+          borderRadius: 9999,
+          transition: 'width 0.06s ease',
+        }} />
       </div>
     </div>
   );
 };
+
+// ─── SIMPLE WORD CYCLE HOOK (replaces heavy typewriter) ───────────────────────
+// Fades words in/out — no per-character intervals, very lightweight
+function useWordCycle(phrases, intervalMs = 2400) {
+  const [idx, setIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % phrases.length);
+        setVisible(true);
+      }, 320);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [phrases, intervalMs]);
+
+  return { word: phrases[idx], visible };
+}
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 const NIGERIAN_LOCATIONS = [
@@ -131,10 +137,6 @@ const CATEGORIES = [
   {id:'mini',label:'Mini Bags',icon:'💛',color:'#a16207',bg:'#fefce8',border:'#fef08a'},
 ];
 
-const mockProducts = [];
-
-const mockVendors = [];
-
 const CURRENCY_SYMBOL = '₦';
 const FREE_DELIVERY_THRESHOLD = 2000;
 const formatCurrency = (value, options = {}) => {
@@ -144,49 +146,6 @@ const formatCurrency = (value, options = {}) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
-
-// ─── Typewriter Hook ──────────────────────────────────────────────────────────
-function useTypewriter(phrases, { typeSpeed = 80, deleteSpeed = 45, pauseMs = 1800, startDelay = 600 } = {}) {
-  const [displayed, setDisplayed] = useState('');
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setStarted(true), startDelay);
-    return () => clearTimeout(t);
-  }, [startDelay]);
-
-  useEffect(() => {
-    if (!started) return;
-    const current = phrases[phraseIdx];
-    if (!deleting && charIdx < current.length) {
-      const t = setTimeout(() => {
-        setDisplayed(current.slice(0, charIdx + 1));
-        setCharIdx(c => c + 1);
-      }, typeSpeed + Math.random() * 30);
-      return () => clearTimeout(t);
-    }
-    if (!deleting && charIdx === current.length) {
-      const t = setTimeout(() => setDeleting(true), pauseMs);
-      return () => clearTimeout(t);
-    }
-    if (deleting && charIdx > 0) {
-      const t = setTimeout(() => {
-        setDisplayed(current.slice(0, charIdx - 1));
-        setCharIdx(c => c - 1);
-      }, deleteSpeed);
-      return () => clearTimeout(t);
-    }
-    if (deleting && charIdx === 0) {
-      setDeleting(false);
-      setPhraseIdx(i => (i + 1) % phrases.length);
-    }
-  }, [started, charIdx, deleting, phraseIdx, phrases, typeSpeed, deleteSpeed, pauseMs]);
-
-  return displayed;
-}
 
 /* ─── AUTH GATE MODAL ─── */
 function AuthGateModal({ open, onClose, navigate }) {
@@ -227,7 +186,7 @@ function AuthGateModal({ open, onClose, navigate }) {
           <Icon name="close" size={15} />
         </button>
         <div style={{ padding: "36px 36px 32px", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "#C94B2C", animation: visible ? "authFloat 3s ease-in-out infinite" : "none" }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "#C94B2C" }}>
             <Icon name="lock" size={28} />
           </div>
           <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.04em", marginBottom: 8, fontFamily: "'Cormorant Garamond', serif" }}>Members Only</h2>
@@ -257,7 +216,6 @@ function AuthGateModal({ open, onClose, navigate }) {
           <span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.02em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
         </div>
       </div>
-      <style>{`@keyframes authFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }`}</style>
     </div>
   );
 }
@@ -356,7 +314,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   );
 }
 
-// ─── Compact Product Card (for listing sections) ──────────────────────────────
+// ─── Compact Product Card ─────────────────────────────────────────────────────
 function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor }) {
   const [hov, setHov] = useState(false);
   const [added, setAdded] = useState(false);
@@ -412,7 +370,6 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
 
   return (
     <div ref={ref} style={{ marginBottom: 48, opacity: vis ? 1 : 0, transform: vis ? 'translateY(0)' : 'translateY(32px)', transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
-      {/* Section header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: accentBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: `1.5px solid ${accentColor}33` }}>{icon}</div>
@@ -434,10 +391,8 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
           </button>
         </div>
       </div>
-      {/* Scroll track */}
-      <div ref={scrollRef} onScroll={checkScroll} style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8, paddingTop: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        className="hide-scrollbar">
-        {products.map((p, i) => (
+      <div ref={scrollRef} onScroll={checkScroll} style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8, paddingTop: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="hide-scrollbar">
+        {products.map((p) => (
           <CompactProductCard key={p.id} product={p} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} badge={badge} badgeColor={badgeColor} />
         ))}
       </div>
@@ -445,16 +400,14 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
   );
 }
 
-// ─── RESPONSIVE Deal of the Day ───────────────────────────────────────────────
+// ─── Deal of the Day ──────────────────────────────────────────────────────────
 function DealOfTheDay({ product, navigate, onAddToCart, isAuthed, onRequireAuth }) {
   const [ref, vis] = useScrollReveal(0.05);
   const [hov, setHov] = useState(false);
   const [added, setAdded] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  
-  // countdown to midnight
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
-  
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -464,245 +417,75 @@ function DealOfTheDay({ product, navigate, onAddToCart, isAuthed, onRequireAuth 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
-      const midnight = new Date(); 
+      const midnight = new Date();
       midnight.setHours(24, 0, 0, 0);
       const diff = Math.max(0, Math.floor((midnight - now) / 1000));
       setTimeLeft({ h: Math.floor(diff / 3600), m: Math.floor((diff % 3600) / 60), s: diff % 60 });
     };
-    tick(); 
-    const iv = setInterval(tick, 1000); 
+    tick();
+    const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
   }, []);
-  
+
   const pad = n => String(n).padStart(2, '0');
   const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
-  
+
   if (!product) return null;
-  
+
   const isMobile = windowWidth <= 640;
-  const isTablet = windowWidth > 640 && windowWidth <= 768;
   const isSmallMobile = windowWidth <= 360;
-  
+
   return (
     <div ref={ref} style={{ marginBottom: 48, opacity: vis ? 1 : 0, transform: vis ? 'translateY(0)' : 'translateY(32px)', transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
-      {/* Header with responsive countdown */}
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row',
-        alignItems: isMobile ? 'flex-start' : 'center', 
-        gap: 12, 
-        marginBottom: 18 
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: isMobile ? '100%' : 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 12, marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1.5px solid #fecaca' }}>🔥</div>
           <div>
             <h3 style={{ fontSize: 18, fontWeight: 900, color: C.text, letterSpacing: '-0.03em', marginBottom: 1 }}>Deal of the Day</h3>
             <p style={{ fontSize: 12, color: C.textFaint, fontWeight: 500 }}>Exclusive limited-time offer</p>
           </div>
         </div>
-        {/* Countdown - responsive */}
-        <div style={{ 
-          marginLeft: isMobile ? 0 : 'auto', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 6,
-          width: isMobile ? '100%' : 'auto',
-          justifyContent: isMobile ? 'center' : 'flex-end',
-          marginTop: isMobile ? 8 : 0
-        }}>
+        <div style={{ marginLeft: isMobile ? 0 : 'auto', display: 'flex', alignItems: 'center', gap: 6, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-end', marginTop: isMobile ? 8 : 0 }}>
           <span style={{ fontSize: 11, color: C.danger, fontWeight: 700 }}>Ends in</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {[timeLeft.h, timeLeft.m, timeLeft.s].map((v, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ 
-                  background: C.danger, 
-                  color: 'white', 
-                  fontWeight: 900, 
-                  fontSize: isSmallMobile ? 11 : isMobile ? 12 : 14, 
-                  borderRadius: 7, 
-                  padding: isSmallMobile ? '2px 5px' : isMobile ? '3px 6px' : '4px 8px', 
-                  minWidth: isSmallMobile ? 24 : isMobile ? 28 : 34, 
-                  textAlign: 'center', 
-                  letterSpacing: '-0.02em', 
-                  boxShadow: '0 2px 8px rgba(220,38,38,0.3)', 
-                  fontVariantNumeric: 'tabular-nums' 
-                }}>{pad(v)}</span>
+                <span style={{ background: C.danger, color: 'white', fontWeight: 900, fontSize: isSmallMobile ? 11 : isMobile ? 12 : 14, borderRadius: 7, padding: isSmallMobile ? '2px 5px' : isMobile ? '3px 6px' : '4px 8px', minWidth: isSmallMobile ? 24 : isMobile ? 28 : 34, textAlign: 'center', letterSpacing: '-0.02em', boxShadow: '0 2px 8px rgba(220,38,38,0.3)', fontVariantNumeric: 'tabular-nums' }}>{pad(v)}</span>
                 {i < 2 && <span style={{ fontSize: isMobile ? 12 : 14, fontWeight: 900, color: C.danger, margin: '0 2px', lineHeight: 1 }}>:</span>}
               </div>
             ))}
           </div>
         </div>
       </div>
-      
-      {/* Card - responsive layout */}
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-        style={{ 
-          background: 'linear-gradient(135deg, #fff5f2 0%, #fff 60%)', 
-          border: `2px solid ${hov ? C.primary : '#fcd4be'}`, 
-          borderRadius: 22, 
-          overflow: 'hidden', 
-          display: 'flex', 
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 0, 
-          boxShadow: hov ? '0 24px 60px rgba(200,75,17,0.14)' : '0 6px 24px rgba(200,75,17,0.08)', 
-          transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)', 
-          cursor: 'pointer' 
-        }}
+        style={{ background: 'linear-gradient(135deg, #fff5f2 0%, #fff 60%)', border: `2px solid ${hov ? C.primary : '#fcd4be'}`, borderRadius: 22, overflow: 'hidden', display: 'flex', flexDirection: isMobile ? 'column' : 'row', boxShadow: hov ? '0 24px 60px rgba(200,75,17,0.14)' : '0 6px 24px rgba(200,75,17,0.08)', transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)', cursor: 'pointer' }}
         onClick={() => navigate(`/products/${product.id}`)}>
-        
-        {/* Image section */}
-        <div style={{ 
-          width: isMobile ? '100%' : '42%', 
-          minWidth: isMobile ? '100%' : 180,
-          maxHeight: isMobile ? 250 : 'none',
-          position: 'relative', 
-          overflow: 'hidden', 
-          background: C.primaryBg 
-        }}>
-          <img src={product.src} alt={product.name} style={{ 
-            width: '100%', 
-            height: isMobile ? 250 : '100%', 
-            objectFit: 'cover', 
-            display: 'block', 
-            transition: 'transform 0.6s ease', 
-            transform: hov ? 'scale(1.06)' : 'scale(1)' 
-          }} />
-          <div style={{ 
-            position: 'absolute', 
-            top: 14, 
-            left: 14, 
-            background: '#dc2626', 
-            color: 'white', 
-            fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, 
-            fontWeight: 900, 
-            padding: isSmallMobile ? '2px 8px' : isMobile ? '3px 10px' : '4px 12px', 
-            borderRadius: 20, 
-            letterSpacing: '0.05em', 
-            boxShadow: '0 3px 10px rgba(220,38,38,0.4)', 
-            animation: 'pulseBadge 2s ease-in-out infinite' 
-          }}>🔥 HOT DEAL</div>
+        <div style={{ width: isMobile ? '100%' : '42%', minWidth: isMobile ? '100%' : 180, maxHeight: isMobile ? 250 : 'none', position: 'relative', overflow: 'hidden', background: C.primaryBg }}>
+          <img src={product.src} alt={product.name} style={{ width: '100%', height: isMobile ? 250 : '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease', transform: hov ? 'scale(1.06)' : 'scale(1)' }} />
+          <div style={{ position: 'absolute', top: 14, left: 14, background: '#dc2626', color: 'white', fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, fontWeight: 900, padding: isSmallMobile ? '2px 8px' : isMobile ? '3px 10px' : '4px 12px', borderRadius: 20, letterSpacing: '0.05em', boxShadow: '0 3px 10px rgba(220,38,38,0.4)', animation: 'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
         </div>
-        
-        {/* Content section */}
-        <div style={{ 
-          flex: 1, 
-          padding: isSmallMobile ? '16px 12px' : isMobile ? '20px 16px' : isTablet ? '24px 20px' : '28px 28px 24px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'center' 
-        }}>
-          <p style={{ 
-            fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, 
-            fontWeight: 800, 
-            letterSpacing: '0.14em', 
-            textTransform: 'uppercase', 
-            color: C.primary, 
-            marginBottom: isSmallMobile ? 4 : isMobile ? 6 : 8 
-          }}>{product.seller}</p>
-          
-          <h4 style={{ 
-            fontSize: isSmallMobile ? '1.1rem' : isMobile ? '1.2rem' : isTablet ? '1.4rem' : 'clamp(1.2rem, 2.5vw, 1.7rem)', 
-            fontWeight: 900, 
-            color: C.text, 
-            letterSpacing: '-0.03em', 
-            lineHeight: 1.15, 
-            marginBottom: isSmallMobile ? 6 : isMobile ? 8 : 10 
-          }}>{product.name}</h4>
-          
-          <p style={{ 
-            fontSize: isSmallMobile ? 11 : isMobile ? 12 : 13, 
-            color: C.textMuted, 
-            fontWeight: 500, 
-            lineHeight: 1.6, 
-            marginBottom: isSmallMobile ? 12 : isMobile ? 14 : 18 
-          }}>{product.sub}</p>
-          
-          {/* Price section - responsive */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'baseline', 
-            gap: isSmallMobile ? 6 : isMobile ? 8 : 12, 
-            marginBottom: isSmallMobile ? 14 : isMobile ? 16 : 22,
-            flexWrap: isSmallMobile ? 'wrap' : 'nowrap'
-          }}>
-            <span style={{ 
-              fontSize: isSmallMobile ? 20 : isMobile ? 24 : isTablet ? 28 : 32, 
-              fontWeight: 900, 
-              color: C.primary, 
-              letterSpacing: '-0.04em' 
-            }}>{formatCurrency(product.price)}</span>
-            <span style={{ 
-              fontSize: isSmallMobile ? 12 : isMobile ? 14 : 18, 
-              color: C.textFaint, 
-              textDecoration: 'line-through', 
-              fontWeight: 600 
-            }}>{formatCurrency(Math.round(product.price * 1.3))}</span>
-            <span style={{ 
-              background: '#fef2f2', 
-              color: C.danger, 
-              fontSize: isSmallMobile ? 9 : isMobile ? 10 : 12, 
-              fontWeight: 800, 
-              padding: isSmallMobile ? '1px 6px' : isMobile ? '2px 8px' : '3px 10px', 
-              borderRadius: 20, 
-              border: '1px solid #fecaca',
-              whiteSpace: 'nowrap'
-            }}>-23% OFF</span>
+        <div style={{ flex: 1, padding: isSmallMobile ? '16px 12px' : isMobile ? '20px 16px' : '28px 28px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.primary, marginBottom: isSmallMobile ? 4 : isMobile ? 6 : 8 }}>{product.seller}</p>
+          <h4 style={{ fontSize: isSmallMobile ? '1.1rem' : isMobile ? '1.2rem' : 'clamp(1.2rem, 2.5vw, 1.7rem)', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: isSmallMobile ? 6 : isMobile ? 8 : 10 }}>{product.name}</h4>
+          <p style={{ fontSize: isSmallMobile ? 11 : isMobile ? 12 : 13, color: C.textMuted, fontWeight: 500, lineHeight: 1.6, marginBottom: isSmallMobile ? 12 : isMobile ? 14 : 18 }}>{product.sub}</p>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: isSmallMobile ? 6 : isMobile ? 8 : 12, marginBottom: isSmallMobile ? 14 : isMobile ? 16 : 22, flexWrap: isSmallMobile ? 'wrap' : 'nowrap' }}>
+            <span style={{ fontSize: isSmallMobile ? 20 : isMobile ? 24 : 32, fontWeight: 900, color: C.primary, letterSpacing: '-0.04em' }}>{formatCurrency(product.price)}</span>
+            <span style={{ fontSize: isSmallMobile ? 12 : isMobile ? 14 : 18, color: C.textFaint, textDecoration: 'line-through', fontWeight: 600 }}>{formatCurrency(Math.round(product.price * 1.3))}</span>
+            <span style={{ background: '#fef2f2', color: C.danger, fontSize: isSmallMobile ? 9 : isMobile ? 10 : 12, fontWeight: 800, padding: isSmallMobile ? '1px 6px' : isMobile ? '2px 8px' : '3px 10px', borderRadius: 20, border: '1px solid #fecaca', whiteSpace: 'nowrap' }}>-23% OFF</span>
           </div>
-          
-          {/* Buttons section - responsive */}
-          <div style={{ 
-            display: 'flex', 
-            gap: isSmallMobile ? 6 : isMobile ? 8 : 10,
-            flexDirection: isSmallMobile ? 'column' : 'row'
-          }}>
-            <button onClick={handleCart} style={{ 
-              flex: 1, 
-              maxWidth: isSmallMobile ? '100%' : 200,
-              padding: isSmallMobile ? '9px 0' : isMobile ? '11px 0' : '13px 0', 
-              borderRadius: 12, 
-              border: 'none', 
-              cursor: 'pointer', 
-              fontWeight: 800, 
-              fontSize: isSmallMobile ? 11 : isMobile ? 12 : 13, 
-              background: added ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#c84b11,#f97316)', 
-              color: 'white', 
-              transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)', 
-              boxShadow: added ? '0 4px 16px rgba(22,163,74,0.4)' : '0 6px 20px rgba(200,75,17,0.4)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: 7,
-              width: isSmallMobile ? '100%' : 'auto'
-            }}>
+          <div style={{ display: 'flex', gap: isSmallMobile ? 6 : isMobile ? 8 : 10, flexDirection: isSmallMobile ? 'column' : 'row' }}>
+            <button onClick={handleCart} style={{ flex: 1, maxWidth: isSmallMobile ? '100%' : 200, padding: isSmallMobile ? '9px 0' : isMobile ? '11px 0' : '13px 0', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: isSmallMobile ? 11 : isMobile ? 12 : 13, background: added ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#c84b11,#f97316)', color: 'white', transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: added ? '0 4px 16px rgba(22,163,74,0.4)' : '0 6px 20px rgba(200,75,17,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: isSmallMobile ? '100%' : 'auto' }}>
               {added ? <><svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>Added!</> : <>🛍️ Grab This Deal</>}
             </button>
             <a href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20the%20deal%20for%20${encodeURIComponent(product.name)}`} target="_blank" rel="noopener noreferrer"
               onClick={e => { if (!isAuthed) { e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
-              style={{ 
-                width: isSmallMobile ? '100%' : 46,
-                height: isSmallMobile ? 38 : isMobile ? 40 : 46,
-                borderRadius: 12, 
-                background: C.successBg, 
-                color: C.success, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                cursor: 'pointer', 
-                transition: 'all 0.25s', 
-                textDecoration: 'none', 
-                flexShrink: 0 
-              }}
+              style={{ width: isSmallMobile ? '100%' : 46, height: isSmallMobile ? 38 : isMobile ? 40 : 46, borderRadius: 12, background: C.successBg, color: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.25s', textDecoration: 'none', flexShrink: 0 }}
               onMouseEnter={e => { e.currentTarget.style.background = '#22c55e'; e.currentTarget.style.color = 'white'; }}
               onMouseLeave={e => { e.currentTarget.style.background = C.successBg; e.currentTarget.style.color = C.success; }}>
               <svg width={isMobile ? 14 : 16} height={isMobile ? 14 : 16} viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
             </a>
           </div>
-          <p style={{ 
-            marginTop: isSmallMobile ? 10 : 12, 
-            fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, 
-            color: C.textFaint, 
-            fontWeight: 600 
-          }}>⚡ Only {product.quantity} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
+          <p style={{ marginTop: isSmallMobile ? 10 : 12, fontSize: isSmallMobile ? 9 : isMobile ? 10 : 11, color: C.textFaint, fontWeight: 600 }}>⚡ Only {product.quantity} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -719,7 +502,6 @@ function VendorCard({vendor,index,onViewProducts}){
       style={{background:'white',borderRadius:20,overflow:'hidden',position:'relative',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,boxShadow:hov?`0 24px 60px rgba(200,75,17,0.13),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,box-shadow 0.3s,border-color 0.3s`}}>
       <div style={{height:84,background:`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,opacity:0.1,backgroundImage:'radial-gradient(circle at 20% 50%,white 1px,transparent 1px)',backgroundSize:'22px 22px'}}/>
-        <div style={{position:'absolute',right:-18,top:-18,width:72,height:72,borderRadius:'50%',background:'rgba(255,255,255,0.1)',filter:'blur(6px)'}}/>
         {vendor.badge==='Top Rated'&&<div style={{position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.22)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.35)',borderRadius:20,padding:'3px 10px',fontSize:10,fontWeight:800,color:'white',letterSpacing:'0.05em',display:'flex',alignItems:'center',gap:4}}>⭐ Top Rated</div>}
       </div>
       <div style={{position:'absolute',top:50,left:18,width:60,height:60,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 14px rgba(0,0,0,0.1)',border:'3px solid white',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'scale(1.1)':'scale(1)'}}>{vendor.avatar}</div>
@@ -741,7 +523,7 @@ function VendorCard({vendor,index,onViewProducts}){
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:15}}>
           {[{label:'Views',value:vendor.views,icon:'👁️'},{label:'Reviews',value:vendor.reviews,icon:'⭐'},{label:'Products',value:vendor.products,icon:'👜'}].map(s=>(
-            <div key={s.label} style={{background:C.surfaceDim,borderRadius:11,padding:'9px 6px',textAlign:'center',border:`1px solid ${C.borderLight}`,transition:'all 0.25s',transform:hov?'translateY(-2px)':'none',boxShadow:hov?`0 4px 10px rgba(200,75,17,0.1)`:'none'}}>
+            <div key={s.label} style={{background:C.surfaceDim,borderRadius:11,padding:'9px 6px',textAlign:'center',border:`1px solid ${C.borderLight}`,transition:'all 0.25s',transform:hov?'translateY(-2px)':'none'}}>
               <div style={{fontSize:14,marginBottom:2}}>{s.icon}</div>
               <div style={{fontSize:13,fontWeight:900,color:C.text,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.value}/></div>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginTop:2}}>{s.label}</div>
@@ -808,9 +590,8 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
       <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.55)',zIndex:300,backdropFilter:'blur(6px)',animation:'fadeIn 0.3s ease both'}}/>
       <div style={{position:'fixed',inset:0,zIndex:301,display:'flex',alignItems:'stretch',justifyContent:'flex-end'}}>
         <div style={{width:'min(520px,100vw)',background:`linear-gradient(180deg,${C.primaryPale} 0%,white 30%)`,display:'flex',flexDirection:'column',animation:'slideInRight 0.45s cubic-bezier(0.34,1.2,0.64,1) both',boxShadow:'-24px 0 80px rgba(200,75,17,0.15)',overflowY:'hidden'}}>
-          <div style={{height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#f97316,#c84b11)',backgroundSize:'200% auto',animation:'meshFlow 3s ease-in-out infinite',flexShrink:0}}/>
+          <div style={{height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c)',flexShrink:0}}/>
           <div style={{background:C.primaryBg,padding:'26px 26px 22px',borderBottom:`1px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',flexShrink:0}}>
-            <div style={{position:'absolute',right:-30,top:-30,width:160,height:160,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
                 <div style={{width:50,height:50,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px rgba(200,75,17,0.4)',fontSize:20}}>🛍️</div>
@@ -824,7 +605,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
             </div>
             {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
-              <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease',boxShadow:'0 0 10px rgba(200,75,17,0.5)'}}/></div>
+              <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
             </div>}
             {total>=FREE_DELIVERY_THRESHOLD&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8}}>
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#15803d"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
@@ -834,7 +615,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:60,paddingTop:40}}>
-                <div style={{fontSize:72,marginBottom:18,animation:'bagFloat 3s ease-in-out infinite'}}>🛍️</div>
+                <div style={{fontSize:72,marginBottom:18}}>🛍️</div>
                 <h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:8}}>Your cart is empty</h3>
                 <p style={{fontSize:13,color:C.textMuted,textAlign:'center',fontWeight:500,lineHeight:1.7,maxWidth:260}}>Discover beautiful bags and add them here</p>
                 <button onClick={onClose} style={{marginTop:22,padding:'13px 28px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:14,border:'none',cursor:'pointer',fontWeight:800,fontSize:14,boxShadow:'0 8px 24px rgba(200,75,17,0.35)'}}>Browse Bags</button>
@@ -876,339 +657,61 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
           </div>}
         </div>
       </div>
-      <style>{`@keyframes bagFloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-14px) rotate(5deg)}} @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+      <style>{`@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}} @keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
     </>
   );
 }
 
-// ─── Responsive Header Component ──────────────────────────────────────────────
-function ResponsiveHeader({ 
-  headerVisible, 
-  setIsSidebarOpen, 
-  navigate, 
-  setLocationModalOpen, 
-  selectedLocation, 
-  handleProfileClick, 
-  cartCount, 
-  setCartOpen, 
-  user, 
-  handleLogout,
-  isMobile
-}) {
+// ─── Responsive Header ────────────────────────────────────────────────────────
+function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocationModalOpen, selectedLocation, handleProfileClick, cartCount, setCartOpen, user, handleLogout, isMobile }) {
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
-      background: 'rgba(255,255,255,0.97)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: `1px solid ${C.borderLight}`,
-      opacity: headerVisible ? 1 : 0,
-      transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
-      transition: 'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',
-      boxShadow: `0 1px 20px rgba(200,75,17,0.07)`
-    }}>
-      <div style={{
-        height: 3,
-        background: 'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#f97316,#c84b11)',
-        backgroundSize: '200% auto',
-        animation: 'meshFlow 4s ease-in-out infinite'
-      }} />
-      
-      {/* Main header container - responsive padding */}
-      <div style={{
-        maxWidth: 1280,
-        margin: '0 auto',
-        padding: isMobile ? '0 12px' : '0 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: isMobile ? 56 : 60,
-        gap: isMobile ? 8 : 16
-      }}>
-        
-        {/* Mobile menu button */}
-        <button
-          className="mob-menu"
-          onClick={() => setIsSidebarOpen(true)}
-          style={{
-            display: isMobile ? 'flex' : 'none',
-            padding: 8,
-            borderRadius: 10,
-            border: 'none',
-            background: 'transparent',
-            cursor: 'pointer',
-            color: C.textMid,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <svg style={{ width: 22, height: 22 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
+    <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.borderLight}`, opacity: headerVisible ? 1 : 0, transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)', transition: 'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)', boxShadow: `0 1px 20px rgba(200,75,17,0.07)` }}>
+      <div style={{ height: 3, background: `linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: isMobile ? '0 12px' : '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: isMobile ? 56 : 60, gap: isMobile ? 8 : 16 }}>
+        <button className="mob-menu" onClick={() => setIsSidebarOpen(true)} style={{ display: isMobile ? 'flex' : 'none', padding: 8, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', color: C.textMid, alignItems: 'center', justifyContent: 'center' }}>
+          <svg style={{ width: 22, height: 22 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
         </button>
-
-        {/* Logo */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            cursor: 'pointer',
-            flexShrink: 0,
-            color: C.primary
-          }}
-          onClick={() => navigate('/')}
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0, color: C.primary }} onClick={() => navigate('/')}>
           <LogoIcon size={isMobile ? '32px' : 'clamp(34px, 5vw, 50px)'} />
-          <span style={{
-            fontSize: isMobile ? 16 : 20,
-            fontWeight: 900,
-            color: C.text,
-            letterSpacing: '-0.5px'
-          }}>
-            Bag<span style={{ color: C.primary }}>Search</span>
-          </span>
+          <span style={{ fontSize: isMobile ? 16 : 20, fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>Bag<span style={{ color: C.primary }}>Search</span></span>
         </div>
-
-        {/* Location selector - NOW RESPONSIVE */}
-          <button
-            onClick={() => setLocationModalOpen(true)}
-            style={{
-              flex: 1,
-              maxWidth: isMobile ? 'auto' : 250,
-              minWidth: isMobile ? 120 : 200,
-              display: 'flex',
-              alignItems: 'center',
-              gap: isMobile ? 4 : 8,
-              padding: isMobile ? '4px 8px' : '7px 13px',
-              borderRadius: 12,
-              border: `${isMobile ? '1px' : '1.5px'} solid ${C.border}`,
-              background: C.surfaceDim,
-              cursor: 'pointer',
-              transition: 'all 0.25s',
-              overflow: 'hidden',
-              ':hover': {
-                borderColor: C.primaryBorder,
-                background: C.primaryBg
-              }
-            }}
-          onMouseEnter={e => {
-            e.currentTarget.style.borderColor = C.primaryBorder;
-            e.currentTarget.style.background = C.primaryBg;
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.borderColor = C.border;
-            e.currentTarget.style.background = C.surfaceDim;
-          }}
-        >
-          {/* Location icon with ping animation */}
-          <div style={{
-            position: 'relative',
-            flexShrink: 0,
-            width: 18,
-            height: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <div style={{
-              position: 'absolute',
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: C.primary,
-              opacity: 0.28,
-              animation: 'locPing 1.8s ease-out infinite'
-            }} />
-            <div style={{
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              background: C.primary,
-              position: 'relative',
-              zIndex: 1
-            }} />
+        <button onClick={() => setLocationModalOpen(true)} style={{ flex: 1, maxWidth: isMobile ? 'auto' : 250, minWidth: isMobile ? 120 : 200, display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8, padding: isMobile ? '4px 8px' : '7px 13px', borderRadius: 12, border: `${isMobile ? '1px' : '1.5px'} solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', transition: 'all 0.25s', overflow: 'hidden' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.background = C.primaryBg; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surfaceDim; }}>
+          <div style={{ position: 'relative', flexShrink: 0, width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', width: 10, height: 10, borderRadius: '50%', background: C.primary, opacity: 0.28, animation: 'locPing 1.8s ease-out infinite' }} />
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.primary, position: 'relative', zIndex: 1 }} />
           </div>
-
-          {/* Location text - now truncates properly on mobile */}
-          <div style={{
-            flex: 1,
-            textAlign: 'left',
-            minWidth: 0,
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              fontSize: isMobile ? 8 : 9,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: C.textFaint,
-              lineHeight: 1.2
-            }}>
-              {isMobile ? 'FROM' : 'Shopping from'}
-            </div>
-            <div style={{
-              fontSize: isMobile ? 12 : 13,
-              fontWeight: 800,
-              color: C.text,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {selectedLocation.emoji} {isMobile ? selectedLocation.name.split(' ')[0] || selectedLocation.name : selectedLocation.name}
-            </div>
+          <div style={{ flex: 1, textAlign: 'left', minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ fontSize: isMobile ? 8 : 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.textFaint, lineHeight: 1.2 }}>{isMobile ? 'FROM' : 'Shopping from'}</div>
+            <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedLocation.emoji} {isMobile ? selectedLocation.name.split(' ')[0] || selectedLocation.name : selectedLocation.name}</div>
           </div>
-
-          {/* Dropdown arrow - hidden on very small screens */}
-          {!isMobile && (
-            <svg style={{ width: 13, height: 13, color: C.textFaint, flexShrink: 0 }} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          )}
+          {!isMobile && <svg style={{ width: 13, height: 13, color: C.textFaint, flexShrink: 0 }} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>}
         </button>
-
-        {/* Desktop actions */}
-        <div className="desk-act" style={{
-          display: isMobile ? 'none' : 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          <button
-            onClick={handleProfileClick}
-            style={{
-              padding: '8px 10px',
-              borderRadius: 10,
-              border: `1px solid ${C.border}`,
-              background: C.surfaceDim,
-              cursor: 'pointer',
-              color: C.textMid,
-              display: 'flex',
-              alignItems: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = C.primaryBg;
-              e.currentTarget.style.borderColor = C.primaryBorder;
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = C.surfaceDim;
-              e.currentTarget.style.borderColor = C.border;
-              e.currentTarget.style.transform = 'none';
-            }}
-          >
+        <div className="desk-act" style={{ display: isMobile ? 'none' : 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={handleProfileClick} style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = 'none'; }}>
             <Icon name="person" size={20} />
           </button>
-
           <CartBadge count={cartCount} onClick={() => setCartOpen(true)} />
-
           {user ? (
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 10,
-                border: '1px solid #fecaca',
-                background: '#fef2f2',
-                cursor: 'pointer',
-                color: '#dc2626',
-                fontSize: 13,
-                fontWeight: 700,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#fee2e2';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = '#fef2f2';
-                e.currentTarget.style.transform = 'none';
-              }}
-            >
+            <button onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', cursor: 'pointer', color: '#dc2626', fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.transform = 'none'; }}>
               Logout
             </button>
           ) : (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => navigate('/login')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 10,
-                  border: `1px solid ${C.border}`,
-                  background: C.surfaceDim,
-                  cursor: 'pointer',
-                  color: C.textMid,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = C.primaryBg;
-                  e.currentTarget.style.borderColor = C.primaryBorder;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = C.surfaceDim;
-                  e.currentTarget.style.borderColor = C.border;
-                }}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 10,
-                  border: 'none',
-                  background: C.primary,
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  transition: 'all 0.2s',
-                  boxShadow: `0 4px 12px rgba(200,75,17,0.2)`
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = `0 6px 16px rgba(200,75,17,0.3)`;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = `0 4px 12px rgba(200,75,17,0.2)`;
-                }}
-              >
-                Register
-              </button>
+              <button onClick={() => navigate('/login')} style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; }}>Login</button>
+              <button onClick={() => navigate('/register')} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: C.primary, cursor: 'pointer', color: 'white', fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: `0 4px 12px rgba(200,75,17,0.2)` }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 6px 16px rgba(200,75,17,0.3)`; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 12px rgba(200,75,17,0.2)`; }}>Register</button>
             </div>
           )}
         </div>
-
-        {/* Mobile actions - REMOVED cart/profile icons per task */}
-        {false && isMobile && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }}>
-            <CartBadge count={cartCount} onClick={() => setCartOpen(true)} />
-            <button
-              onClick={handleProfileClick}
-              style={{
-                padding: '6px',
-                borderRadius: 8,
-                border: `1px solid ${C.border}`,
-                background: C.surfaceDim,
-                cursor: 'pointer',
-                color: C.textMid,
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              <Icon name="person" size={18} />
-            </button>
-          </div>
-        )}
       </div>
     </header>
   );
@@ -1227,213 +730,98 @@ export default function Product(){
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
-  const[windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  
+  const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
+
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
-  const isMobile = windowWidth <= 768;
+  const isMobile=windowWidth<=768;
 
-  // ─── Window resize handler ───
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // ─── Typewriter for hero ───
+  // ─── SIMPLE WORD CYCLE (replaces heavy typewriter) ───
   const HERO_PHRASES = ['Perfect Bag', 'Dream Clutch', 'Ideal Tote', 'Luxury Satchel', 'Everyday Crossbody'];
-  const typedWord = useTypewriter(HERO_PHRASES, { typeSpeed: 85, deleteSpeed: 50, pauseMs: 2000, startDelay: 900 });
+  const { word: heroWord, visible: heroWordVisible } = useWordCycle(HERO_PHRASES, 2600);
+
+  useEffect(()=>{
+    const handleResize=()=>setWindowWidth(window.innerWidth);
+    window.addEventListener('resize',handleResize);
+    return()=>window.removeEventListener('resize',handleResize);
+  },[]);
 
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
 
-  const mapCategory = useCallback((dbCat) => {
-    if (!dbCat) return 'all';
-    const c = dbCat.toLowerCase();
-    if (c.includes('tote')) return 'tote';
-    if (c.includes('clutch')) return 'clutch';
-    if (c.includes('crossbody')) return 'crossbody';
-    if (c.includes('backpack')) return 'backpack';
-    if (c.includes('satchel')) return 'satchel';
-    if (c.includes('evening')) return 'evening';
-    if (c.includes('mini')) return 'mini';
-    if (c.includes('handbag') || c.includes('shoulder')) return 'satchel';
-    return 'all';
-  }, []);
+  const mapCategory=useCallback((dbCat)=>{
+    if(!dbCat)return'all';const c=dbCat.toLowerCase();
+    if(c.includes('tote'))return'tote';if(c.includes('clutch'))return'clutch';if(c.includes('crossbody'))return'crossbody';
+    if(c.includes('backpack'))return'backpack';if(c.includes('satchel'))return'satchel';if(c.includes('evening'))return'evening';
+    if(c.includes('mini'))return'mini';if(c.includes('handbag')||c.includes('shoulder'))return'satchel';return'all';
+  },[]);
 
-  const buildVendorsFromProducts = useCallback((products) => {
-    const map = new Map();
-    (products || []).forEach(p => {
-      const sellerId = p.sellerId || p.seller || `seller_${p.id}`;
-      if (!sellerId) return;
-      if (!map.has(sellerId)) {
-        map.set(sellerId, {
-          id: sellerId,
-          name: p.seller || 'Anonymous Seller',
-          avatar: '👜',
-          location: p.location || 'all',
-          rating: 4.6,
-          reviews: 0,
-          views: 0,
-          products: 0,
-          joined: p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'N/A',
-          specialty: p.category || 'Bags',
-          badge: '',
-          description: `Trusted seller of ${p.category || 'bags'}`,
-          tags: [p.category || 'bags'],
-          colors: p.colors?.slice(0, 2) || ['#c84b11', '#f97316'],
-        });
-      }
-      const vendor = map.get(sellerId);
-      vendor.products += 1;
-      if (typeof p.views === 'number') vendor.views += p.views;
+  const buildVendorsFromProducts=useCallback((products)=>{
+    const map=new Map();
+    (products||[]).forEach(p=>{
+      const sellerId=p.sellerId||p.seller||`seller_${p.id}`;if(!sellerId)return;
+      if(!map.has(sellerId)){map.set(sellerId,{id:sellerId,name:p.seller||'Anonymous Seller',avatar:'👜',location:p.location||'all',rating:4.6,reviews:0,views:0,products:0,joined:p.created_at?new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short'}):'N/A',specialty:p.category||'Bags',badge:'',description:`Trusted seller of ${p.category||'bags'}`,tags:[p.category||'bags'],colors:p.colors?.slice(0,2)||['#c84b11','#f97316']});}
+      const vendor=map.get(sellerId);vendor.products+=1;if(typeof p.views==='number')vendor.views+=p.views;
     });
     return Array.from(map.values());
-  }, []);
+  },[]);
 
-  const fetchVendors = useCallback(async (products) => {
-    try {
-      const { data, error } = await supabase.from('vendors').select('*');
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const normalized = data.map(v => ({
-          id: v.id || v.seller_id || v.name,
-          name: v.name || 'Unnamed Seller',
-          avatar: v.avatar || '👜',
-          location: v.location || 'all',
-          rating: v.rating ?? 4.6,
-          reviews: v.reviews ?? 0,
-          views: v.views ?? 0,
-          products: v.products ?? 0,
-          joined: v.joined || 'N/A',
-          specialty: v.specialty || 'Bags',
-          badge: v.badge || '',
-          description: v.description || 'Luxe seller',
-          tags: Array.isArray(v.tags) ? v.tags : [v.specialty || 'bags'],
-          colors: Array.isArray(v.colors) && v.colors.length > 0 ? v.colors : ['#c84b11', '#f97316'],
-        }));
-        setVendors(normalized);
-        setFilteredVendors(normalized);
-        return normalized;
+  const fetchVendors=useCallback(async(products)=>{
+    try{
+      const{data,error}=await supabase.from('vendors').select('*');
+      if(!error&&Array.isArray(data)&&data.length>0){
+        const normalized=data.map(v=>({id:v.id||v.seller_id||v.name,name:v.name||'Unnamed Seller',avatar:v.avatar||'👜',location:v.location||'all',rating:v.rating??4.6,reviews:v.reviews??0,views:v.views??0,products:v.products??0,joined:v.joined||'N/A',specialty:v.specialty||'Bags',badge:v.badge||'',description:v.description||'Luxe seller',tags:Array.isArray(v.tags)?v.tags:[v.specialty||'bags'],colors:Array.isArray(v.colors)&&v.colors.length>0?v.colors:['#c84b11','#f97316']}));
+        setVendors(normalized);setFilteredVendors(normalized);return normalized;
       }
-      // fallback by deriving vendors from products if 'vendors' table is not present or empty
-      const derived = buildVendorsFromProducts(products || []);
-      setVendors(derived);
-      setFilteredVendors(derived);
-      return derived;
-    } catch (err) {
-      console.warn('Could not load vendors table, deriving from products', err);
-      const derived = buildVendorsFromProducts(products || []);
-      setVendors(derived);
-      setFilteredVendors(derived);
-      return derived;
-    }
-  }, [buildVendorsFromProducts]);
+      const derived=buildVendorsFromProducts(products||[]);setVendors(derived);setFilteredVendors(derived);return derived;
+    }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendors(derived);setFilteredVendors(derived);return derived;}
+  },[buildVendorsFromProducts]);
 
-  const fetchProducts = useCallback(async (locationId = 'all') => {
-    try {
-      let query = supabase.from('products').select('*');
-      if (locationId && locationId !== 'all') query = query.eq('location', locationId);
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
-      const fmt = (data || []).map(p => ({
-        id: p.id, name: p.name, seller: p.seller_name || 'Anonymous Seller', sellerId: p.seller_id || p.user_id || 'db',
-        sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity ?? 0,
-        lowStock: (p.quantity ?? 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
-        colors: Array.isArray(p.colors) && p.colors.length > 0
-          ? p.colors.map(id => ({ id, hex: BAG_COLOR_MAP[id] || id })).filter(c => c.hex)
-          : [{ id: 'primary', hex: '#c84b11' }, { id: 'primaryLight', hex: '#f97316' }],
-        src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
-        brand: p.brand || '', condition: p.condition || '', description: p.description || '',
-        discountedPrice: p.discounted_price ? parseFloat(p.discounted_price) : null,
-        discountLabel: p.discount_label || null,
-        whatsapp: p.whatsapp || '',
-      }));
-      return fmt;
-    } catch (err) {
-      if (err && (err.name === 'AbortError' || err.message?.includes('AbortError'))) {
-        return [];
-      }
-      console.error('Failed to load products', JSON.stringify(err, null, 2));
-      return [];
-    }
-  }, [mapCategory]);
+  const fetchProducts=useCallback(async(locationId='all')=>{
+    try{
+      let query=supabase.from('products').select('*');
+      if(locationId&&locationId!=='all')query=query.eq('location',locationId);
+      const{data,error}=await query.order('created_at',{ascending:false});
+      if(error)throw error;
+      return(data||[]).map(p=>({id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:p.quantity??0,lowStock:(p.quantity??0)<5,category:mapCategory(p.category),location:p.location||'all',colors:Array.isArray(p.colors)&&p.colors.length>0?p.colors.map(id=>({id,hex:BAG_COLOR_MAP[id]||id})).filter(c=>c.hex):[{id:'primary',hex:'#c84b11'},{id:'primaryLight',hex:'#f97316'}],src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''}));
+    }catch(err){if(err&&(err.name==='AbortError'||err.message?.includes('AbortError')))return[];console.error('Failed to load products',err);return[];}
+  },[mapCategory]);
 
-  useEffect(() => {
-    let isMounted = true;
-    fetchProducts().then(async combined => {
-      if (!isMounted) return;
-      setAllProducts(combined);
-      setDisplayedProducts(combined);
-      await fetchVendors(combined);
-    });
-    return () => { isMounted = false; };
-  }, [fetchProducts, fetchVendors]);
+  useEffect(()=>{
+    let isMounted=true;
+    fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);});
+    return()=>{isMounted=false;};
+  },[fetchProducts,fetchVendors]);
 
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
 
   const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
   const handleCategoryChange=id=>{setActiveCategory(id);setDisplayedProducts(applyFilters(searchQuery,id,selectedLocation,allProducts));setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
   const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,combined));};
-  const handleClearSearch=async ()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);};
+  const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);};
   const handleImageUpload=async e=>{
-    const f=e.target.files[0];
-    if(!f)return;
-    setUploadedImage(URL.createObjectURL(f));
-    setIsFiltered(true);
-    setVisualSearching(true);
-    setResultsKey(k=>k+1);
-    try {
-      const results = await visualSearch(f, allProducts);
-      if (results.length > 0) {
-        setDisplayedProducts(results);
-        setFloatMsg({ text: `Found ${results.length} similar bags!`, type: 'success' });
-      } else {
-        setDisplayedProducts([]);
-        setFloatMsg({ text: 'No similar bags found. Try another image!', type: 'info' });
-      }
-    } catch (err) {
-      console.error('Visual search failed:', err);
-      setFloatMsg({ text: 'Visual search temporarily unavailable.', type: 'danger' });
-      setDisplayedProducts([]);
-    } finally {
-      setVisualSearching(false);
-      e.target.value='';
-    }
+    const f=e.target.files[0];if(!f)return;
+    setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setVisualSearching(true);setResultsKey(k=>k+1);
+    try{
+      const results=await visualSearch(f,allProducts);
+      if(results.length>0){setDisplayedProducts(results);setFloatMsg({text:`Found ${results.length} similar bags!`,type:'success'});}
+      else{setDisplayedProducts([]);setFloatMsg({text:'No similar bags found. Try another image!',type:'info'});}
+    }catch(err){console.error('Visual search failed:',err);setFloatMsg({text:'Visual search temporarily unavailable.',type:'danger'});setDisplayedProducts([]);}
+    finally{setVisualSearching(false);e.target.value='';}
   };
-  const handleVendorSearch=q=>{
-    setVendorSearch(q);
-    const normalized = q.trim().toLowerCase();
-    if(!normalized){
-      setFilteredVendors(vendors);
-      return;
-    }
-    setFilteredVendors(vendors.filter(v=>
-      v.name.toLowerCase().includes(normalized) ||
-      (v.specialty||'').toLowerCase().includes(normalized) ||
-      (v.tags||[]).some(t=>t.toLowerCase().includes(normalized))
-    ));
-  };
-  const handleViewVendorProducts = (vendor) => { navigate('/seller-products', { state: { vendor } }); };
-  const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({ text: `${product.name} added!`, type: 'success' });setTimeout(()=>setFloatMsg(null),2200);};
+  const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
+  const handleViewVendorProducts=(vendor)=>{navigate('/seller-products',{state:{vendor}});};
+  const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
   const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
-  const handleProfileClick=()=>{
-    if(!user){ setAuthGateOpen(true); return; }
-    navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');
-  };
-  useEffect(()=>{
-    if(location.state?.openCart){
-      setCartOpen(true);
-      navigate('/products',{replace:true,state:{}});
-    }
-  },[location.state,navigate]);
+  const handleProfileClick=()=>{if(!user){setAuthGateOpen(true);return;}navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');};
+  useEffect(()=>{if(location.state?.openCart){setCartOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const getCategoryCount=id=>id==='all'?allProducts.length:allProducts.filter(p=>p.category===id).length;
   const categoriesWithCounts=CATEGORIES.map(c=>({...c,count:getCategoryCount(c.id)}));
 
-  // Derived listing sections
-  const featuredProducts = allProducts.slice(0, 8);
-  const newArrivals = [...allProducts].reverse().slice(0, 8);
-  const topDeals = allProducts.filter(p => p.price < 2000).slice(0, 8);
-  const dealProduct = allProducts.find(p => p.lowStock) || allProducts[0];
+  const featuredProducts=allProducts.slice(0,8);
+  const newArrivals=[...allProducts].reverse().slice(0,8);
+  const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
+  const dealProduct=allProducts.find(p=>p.lowStock)||allProducts[0];
 
   return(
     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif"}}>
@@ -1442,6 +830,11 @@ export default function Product(){
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+        /* ── Hero word fade animation — CSS only, no JS intervals ── */
+        @keyframes wordFadeIn  { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes wordFadeOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-5px)} }
+
         @keyframes scaleIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
         @keyframes pulseBadge{0%,100%{box-shadow:0 2px 8px rgba(220,38,38,0.4)}50%{box-shadow:0 2px 18px rgba(220,38,38,0.7)}}
         @keyframes bounceIn{0%{opacity:0;transform:scale(0.7) translateY(20px)}60%{opacity:1;transform:scale(1.06) translateY(-4px)}100%{transform:scale(1) translateY(0)}}
@@ -1450,49 +843,18 @@ export default function Product(){
         @keyframes locPing{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}
         @keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes floatUpMsg{0%{opacity:0;transform:translateX(-50%) translateY(20px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-16px)}}
-        @keyframes meshFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
         @keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.88)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
         @keyframes slideInPreview{from{opacity:0;transform:translateY(-10px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-        @keyframes twCursor{0%,100%{opacity:1}50%{opacity:0}}
-        @keyframes twWordIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
         .hide-scrollbar::-webkit-scrollbar{height:0;width:0;display:none;}
         .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
         .cat-track::-webkit-scrollbar{height:0;}.cat-track{-ms-overflow-style:none;scrollbar-width:none;}
-        
-        /* Product grid responsive styles */
-        .product-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 20px;
-          width: 100%;
-        }
 
-        /* Mobile: 2 columns */
-        @media (max-width: 640px) {
-          .product-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-          }
-        }
-
-        /* Small mobile: ensure cards don't get too small */
-        @media (max-width: 380px) {
-          .product-grid {
-            gap: 8px !important;
-          }
-        }
-
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;width:100%;}
+        @media(max-width:640px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important;}}
+        @media(max-width:380px){.product-grid{gap:8px!important;}}
         @media(max-width:768px){.desk-act{display:none!important;}.mob-menu{display:flex!important;}}
-        
-        /* Mobile responsive hero section */
-        @media (max-width: 640px) {
-          .hero-banner {
-            padding: 24px 20px !important;
-          }
-          .hero-icons {
-            display: none !important;
-          }
-        }
+        @media(max-width:640px){.hero-banner{padding:24px 20px!important;}.hero-icons{display:none!important;}}
       `}</style>
 
       {floatMsg&&<div style={{position:'fixed',bottom:32,left:'50%',zIndex:9999,background:floatMsg.type==='danger'?'linear-gradient(135deg,#dc2626,#ef4444)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',padding:'12px 22px',borderRadius:50,fontSize:13,fontWeight:800,whiteSpace:'nowrap',boxShadow:floatMsg.type==='danger'?'0 12px 40px rgba(220,38,38,0.45)':'0 12px 40px rgba(200,75,17,0.45)',animation:'floatUpMsg 2.2s ease both',pointerEvents:'none',display:'flex',alignItems:'center',gap:8}}>
@@ -1501,39 +863,18 @@ export default function Product(){
       </div>}
 
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)}/>}
-      <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate} />
+      <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
 
-      {/* HEADER - Now using responsive component */}
-      <ResponsiveHeader
-        headerVisible={headerVisible}
-        setIsSidebarOpen={setIsSidebarOpen}
-        navigate={navigate}
-        setLocationModalOpen={setLocationModalOpen}
-        selectedLocation={selectedLocation}
-        handleProfileClick={handleProfileClick}
-        cartCount={cartCount}
-        setCartOpen={setCartOpen}
-        user={user}
-        handleLogout={handleLogout}
-        isMobile={isMobile}
-      />
+      <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} setLocationModalOpen={setLocationModalOpen} selectedLocation={selectedLocation} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
       <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32} /><span style={{fontWeight:900,fontSize:17,color:C.text}}>BagSearch</span></div>
+          <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32}/><span style={{fontWeight:900,fontSize:17,color:C.text}}>BagSearch</span></div>
           <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',color:C.primary,fontSize:16}}>✕</button>
         </div>
-        {(user ? [
-          {label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},
-          {label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
-          {label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}
-        ] : [
-          {label:'Login',icon:'login',action:()=>{navigate('/login');setIsSidebarOpen(false);}},
-          {label:'Register',icon:'person_add',action:()=>{navigate('/register');setIsSidebarOpen(false);}},
-          {label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}}
-        ]).map(({icon,label,action})=>(
+        {(user?[{label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:'login',action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:'person_add',action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}}]).map(({icon,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':'transparent',cursor:'pointer',color:label==='Logout'?C.danger:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s'}}
             onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
             <Icon name={icon} size={20}/>{label}
@@ -1543,194 +884,74 @@ export default function Product(){
 
       <LocationModal isOpen={locationModalOpen} onClose={()=>setLocationModalOpen(false)} selectedLocation={selectedLocation} onSelect={handleLocationChange}/>
 
-      {/* MAIN - responsive padding */}
-      <div style={{
-        maxWidth: 1280,
-        margin: '0 auto',
-        padding: isMobile ? '24px 12px 60px' : '36px 20px 80px',
-        opacity: pageLoading ? 0 : 1,
-        transition: 'opacity 0.5s ease'
-      }}>
+      <div style={{maxWidth:1280,margin:'0 auto',padding:isMobile?'24px 12px 60px':'36px 20px 80px',opacity:pageLoading?0:1,transition:'opacity 0.5s ease'}}>
 
-        {/* ── Hero banner with TYPEWRITER - responsive ── */}
-        <div style={{
-          marginBottom: isMobile ? 24 : 30,
-          opacity: heroVisible ? 1 : 0,
-          transform: heroVisible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'
-        }}>
-          <div className="hero-banner" style={{
-            background: C.primaryBg,
-            borderRadius: isMobile ? 16 : 24,
-            padding: isMobile ? '24px 20px' : '34px 38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 20,
-            border: `1.5px solid ${C.primaryBorder}`,
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: `0 8px 32px rgba(200,75,17,0.1)`
-          }}>
+        {/* ── Hero Banner with SIMPLE WORD FADE ── */}
+        <div style={{marginBottom:isMobile?24:30,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
+          <div className="hero-banner" style={{background:C.primaryBg,borderRadius:isMobile?16:24,padding:isMobile?'24px 20px':'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
             <div style={{position:'absolute',right:-40,top:-40,width:200,height:200,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
-            <div style={{position:'absolute',right:80,bottom:-30,width:130,height:130,borderRadius:'50%',background:'rgba(249,115,22,0.06)',filter:'blur(14px)'}}/>
-            <div style={{position:'relative', width: isMobile ? '100%' : 'auto' }}>
-              {/* ── TYPEWRITER H1 - responsive font size ── */}
-              <h1 style={{
-                fontSize: isMobile ? 'clamp(1.4rem, 5vw, 1.8rem)' : 'clamp(1.7rem,4vw,2.4rem)',
-                fontWeight: 900,
-                color: C.text,
-                letterSpacing: '-0.04em',
-                lineHeight: 1.2,
-                marginBottom: 10
-              }}>
+            <div style={{position:'relative',width:isMobile?'100%':'auto'}}>
+
+              {/* ── SIMPLE WORD FADE heading — no per-char intervals ── */}
+              <h1 style={{fontSize:isMobile?'clamp(1.4rem,5vw,1.8rem)':'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.2,marginBottom:10}}>
                 Find Your{' '}
-                <br style={{display: isMobile ? 'block' : 'none'}} />
+                <br style={{display:isMobile?'block':'none'}}/>
                 <span style={{
-                  color: C.primary,
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  gap: 0,
-                  minWidth: isMobile ? '8ch' : '10ch',
-                  position: 'relative'
+                  color:C.primary,
+                  display:'inline-block',
+                  minWidth:isMobile?'8ch':'10ch',
+                  // simple CSS opacity transition — no JS animation loops
+                  opacity: heroWordVisible ? 1 : 0,
+                  transform: heroWordVisible ? 'translateY(0)' : 'translateY(5px)',
+                  transition: 'opacity 0.3s ease, transform 0.3s ease',
                 }}>
-                  <span key={typedWord} style={{animation:'twWordIn 0.15s ease both'}}>{typedWord}</span>
-                  <span style={{
-                    display: 'inline-block',
-                    width: '2px',
-                    height: '1em',
-                    background: C.primary,
-                    marginLeft: 2,
-                    verticalAlign: 'middle',
-                    animation: 'twCursor 0.9s step-end infinite',
-                    borderRadius: 1,
-                    flexShrink: 0
-                  }}/>
+                  {heroWord}
                 </span>
               </h1>
-              <p style={{
-                color: C.textMuted,
-                fontSize: isMobile ? 13 : 15,
-                fontWeight: 500,
-                lineHeight: 1.6,
-                maxWidth: isMobile ? '100%' : 380
-              }}>
+
+              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>
                 Search bags or browse vendors — discover luxury across Nigeria
               </p>
               {selectedLocation.id!=='all'&&
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  marginTop: 10,
-                  fontSize: isMobile ? 11 : 12,
-                  fontWeight: 700,
-                  background: 'white',
-                  color: C.primary,
-                  border: `1px solid ${C.primaryBorder}`,
-                  padding: isMobile ? '3px 10px' : '4px 12px',
-                  borderRadius: 20,
-                  animation: 'scaleIn 0.3s ease both'
-                }}>
+                <span style={{display:'inline-flex',alignItems:'center',gap:5,marginTop:10,fontSize:isMobile?11:12,fontWeight:700,background:'white',color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:isMobile?'3px 10px':'4px 12px',borderRadius:20,animation:'scaleIn 0.3s ease both'}}>
                   {selectedLocation.emoji} {selectedLocation.name}
                 </span>
               }
             </div>
-            {/* Hero icons - hidden on mobile */}
-            <div className="hero-icons" style={{display: isMobile ? 'none' : 'flex', gap: 12, position: 'relative'}}>
+            <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
               {['👜','👝','🛍️'].map((e,i)=>(<div key={i} style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:`translateY(${i%2===0?0:-8}px)`}}>{e}</div>))}
             </div>
           </div>
         </div>
 
-        {/* Tab + search - responsive */}
-        <div style={{marginBottom: isMobile ? 20 : 26, opacity:searchVisible?1:0, transition:'opacity 0.5s ease'}}>
-          <div style={{
-            display: 'inline-flex',
-            background: 'white',
-            border: `1.5px solid ${C.border}`,
-            borderRadius: isMobile ? 12 : 16,
-            padding: 5,
-            gap: 4,
-            boxShadow: `0 2px 10px rgba(200,75,17,0.07)`,
-            marginBottom: 16,
-            width: isMobile ? '100%' : 'auto'
-          }}>
+        {/* Tab + search */}
+        <div style={{marginBottom:isMobile?20:26,opacity:searchVisible?1:0,transition:'opacity 0.5s ease'}}>
+          <div style={{display:'inline-flex',background:'white',border:`1.5px solid ${C.border}`,borderRadius:isMobile?12:16,padding:5,gap:4,boxShadow:`0 2px 10px rgba(200,75,17,0.07)`,marginBottom:16,width:isMobile?'100%':'auto'}}>
             {[{id:'products',label:'👜 Products',count:allProducts.length},{id:'vendors',label:'🏪 Vendors',count:vendors.length}].map(tab=>(
-              <button
-                key={tab.id}
-                onClick={()=>setActiveTab(tab.id)}
-                style={{
-                  flex: isMobile ? 1 : 'none',
-                  padding: isMobile ? '8px 12px' : '9px 18px',
-                  borderRadius: isMobile ? 8 : 11,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 800,
-                  fontSize: isMobile ? 12 : 13,
-                  transition: 'all 0.3s cubic-bezier(0.34,1.2,0.64,1)',
-                  background: activeTab===tab.id ? 'linear-gradient(135deg,#c84b11,#f97316)' : 'transparent',
-                  color: activeTab===tab.id ? 'white' : C.textMuted,
-                  boxShadow: activeTab===tab.id ? '0 4px 16px rgba(200,75,17,0.4)' : 'none',
-                  transform: activeTab===tab.id ? 'scale(1.02)' : 'scale(1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: isMobile ? 4 : 7
-                }}>
+              <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{flex:isMobile?1:'none',padding:isMobile?'8px 12px':'9px 18px',borderRadius:isMobile?8:11,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,transition:'all 0.3s cubic-bezier(0.34,1.2,0.64,1)',background:activeTab===tab.id?'linear-gradient(135deg,#c84b11,#f97316)':'transparent',color:activeTab===tab.id?'white':C.textMuted,boxShadow:activeTab===tab.id?'0 4px 16px rgba(200,75,17,0.4)':'none',transform:activeTab===tab.id?'scale(1.02)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:isMobile?4:7}}>
                 {tab.label}
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  background: activeTab===tab.id ? 'rgba(255,255,255,0.25)' : C.primaryBg,
-                  color: activeTab===tab.id ? 'white' : C.primary,
-                  padding: '1px 7px',
-                  borderRadius: 20,
-                  border: activeTab===tab.id ? '1px solid rgba(255,255,255,0.3)' : `1px solid ${C.primaryBorder}`
-                }}>{tab.count}</span>
+                <span style={{fontSize:10,fontWeight:800,background:activeTab===tab.id?'rgba(255,255,255,0.25)':C.primaryBg,color:activeTab===tab.id?'white':C.primary,padding:'1px 7px',borderRadius:20,border:activeTab===tab.id?'1px solid rgba(255,255,255,0.3)':`1px solid ${C.primaryBorder}`}}>{tab.count}</span>
               </button>
             ))}
           </div>
-          
-          {/* Search input - responsive */}
+
           {activeTab==='products'?(
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: 'white',
-              border: `1.5px solid ${searchFocused ? C.primary : C.border}`,
-              borderRadius: isMobile ? 12 : 16,
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              gap: isMobile ? 8 : 10,
-              boxShadow: searchFocused ? `0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)` : `0 2px 10px rgba(0,0,0,0.03)`,
-              transition: 'all 0.25s'
-            }}>
-              <svg style={{width: isMobile ? 18 : 20,height: isMobile ? 18 : 20,color:searchFocused?C.primary:C.textFaint,flexShrink:0,transition:'color 0.25s'}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/></svg>
-              <input type="text" placeholder={isMobile ? "Search bags..." : "Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize: isMobile ? 13 : 14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {isFiltered&&<button onClick={handleClearSearch} style={{width: isMobile ? 22 : 26,height: isMobile ? 22 : 26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize: isMobile ? 12 : 13,color:C.primary,flexShrink:0}}>✕</button>}
+            <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
+              <svg style={{width:isMobile?18:20,height:isMobile?18:20,color:searchFocused?C.primary:C.textFaint,flexShrink:0,transition:'color 0.25s'}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/></svg>
+              <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
+              {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:isMobile?12:13,color:C.primary,flexShrink:0}}>✕</button>}
               <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
-              <button onClick={()=>fileInputRef.current.click()} style={{width: isMobile ? 34 : 38,height: isMobile ? 34 : 38,borderRadius: isMobile ? 8 : 10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}
-                onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.08)';e.currentTarget.style.boxShadow='0 6px 18px rgba(200,75,17,0.5)';}} onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 4px 12px rgba(200,75,17,0.35)';}}>
-                <svg style={{width: isMobile ? 14 : 16,height: isMobile ? 14 : 16}} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+              <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}
+                onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.08)';}} onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
+                <svg style={{width:isMobile?14:16,height:isMobile?14:16}} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
               </button>
             </div>
           ):(
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: 'white',
-              border: `1.5px solid ${vendorSearchFocused?C.primary:C.border}`,
-              borderRadius: isMobile ? 12 : 16,
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              gap: isMobile ? 8 : 10,
-              boxShadow: vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,
-              transition:'all 0.3s'
-            }}>
-              <svg style={{width: isMobile ? 18 : 20,height: isMobile ? 18 : 20,color:vendorSearchFocused?C.primary:C.textFaint,flexShrink:0}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
-              <input type="text" placeholder={isMobile ? "Search vendors..." : "Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize: isMobile ? 13 : 14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
+            <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
+              <svg style={{width:isMobile?18:20,height:isMobile?18:20,color:vendorSearchFocused?C.primary:C.textFaint,flexShrink:0}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
+              <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
               {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer',fontSize:13,color:C.textFaint}}>✕</button>}
-              <div style={{fontSize: isMobile ? 11 : 12,fontWeight:700,color:C.primary,background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,padding: isMobile ? '4px 10px' : '5px 12px',borderRadius:20,whiteSpace:'nowrap'}}>{filteredVendors.length} vendors</div>
+              <div style={{fontSize:isMobile?11:12,fontWeight:700,color:C.primary,background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,padding:isMobile?'4px 10px':'5px 12px',borderRadius:20,whiteSpace:'nowrap'}}>{filteredVendors.length} vendors</div>
             </div>
           )}
           {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
@@ -1740,32 +961,30 @@ export default function Product(){
           </div>}
         </div>
 
-        {/* PRODUCTS TAB - Rest of the code remains the same */}
+        {/* PRODUCTS TAB */}
         {activeTab==='products'&&<>
-          <div style={{marginBottom: isMobile ? 20 : 26,opacity:catVisible?1:0,transform:catVisible?'translateY(0)':'translateY(18px)',transition:'opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)'}}>
+          <div style={{marginBottom:isMobile?20:26,opacity:catVisible?1:0,transform:catVisible?'translateY(0)':'translateY(18px)',transition:'opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><div style={{width:18,height:2.5,background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2}}/><span style={{fontSize:11,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:C.textFaint}}>Browse by Category</span></div>
             <div className="cat-track" style={{display:'flex',gap:9,overflowX:'auto',paddingBottom:6,paddingTop:4}}>
               {categoriesWithCounts.map((cat,i)=>(<CategoryPill key={cat.id} cat={cat} isActive={activeCategory===cat.id} onClick={()=>handleCategoryChange(cat.id)} index={i} count={cat.count}/>))}
             </div>
             <div style={{marginTop:10,height:2,background:C.borderLight,borderRadius:2,overflow:'hidden',position:'relative'}}>
-              {(()=>{const idx=CATEGORIES.findIndex(c=>c.id===activeCategory);const cat=CATEGORIES[idx];return <div style={{position:'absolute',left:`${(idx/CATEGORIES.length)*100}%`,width:`${100/CATEGORIES.length}%`,height:'100%',background:cat?.color||C.primary,borderRadius:2,transition:'left 0.4s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:`0 0 8px ${cat?.color||C.primary}88`}}/>;})()}
+              {(()=>{const idx=CATEGORIES.findIndex(c=>c.id===activeCategory);const cat=CATEGORIES[idx];return <div style={{position:'absolute',left:`${(idx/CATEGORIES.length)*100}%`,width:`${100/CATEGORIES.length}%`,height:'100%',background:cat?.color||C.primary,borderRadius:2,transition:'left 0.4s cubic-bezier(0.34,1.56,0.64,1)'}}/>;})()}
             </div>
           </div>
 
-          {/* All Bags grid header - responsive */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom: isMobile ? 16 : 20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
-            <div><h2 style={{fontSize: isMobile ? 16 : 18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2><p style={{fontSize: isMobile ? 11 : 12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p></div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
+            <div><h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2><p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p></div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-              {selectedVendor&&<button onClick={()=>{setSelectedVendor(null);handleClearSearch();}} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize: isMobile ? 10 : 11,fontWeight:700,cursor:'pointer'}}>🏪 {selectedVendor.name} ✕</button>}
-              {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize: isMobile ? 10 : 11,fontWeight:700,cursor:'pointer'}}>{cat.icon} {cat.label} ✕</button>;})()}
-              {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize: isMobile ? 10 : 11,fontWeight:700,cursor:'pointer'}}>{selectedLocation.emoji} {selectedLocation.name} ✕</button>}
-              {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize: isMobile ? 10 : 11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
+              {selectedVendor&&<button onClick={()=>{setSelectedVendor(null);handleClearSearch();}} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>🏪 {selectedVendor.name} ✕</button>}
+              {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>{cat.icon} {cat.label} ✕</button>;})()}
+              {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>{selectedLocation.emoji} {selectedLocation.name} ✕</button>}
+              {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
 
-          {/* Products Grid - 2 columns on mobile, responsive on desktop */}
           <div style={{position:'relative',minHeight:visualSearching?'300px':'auto'}}>
-            {visualSearching && (
+            {visualSearching&&(
               <div style={{position:'absolute',inset:0,zIndex:10,background:'rgba(255,255,255,0.7)',backdropFilter:'blur(4px)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderRadius:20,animation:'fadeIn 0.3s ease both'}}>
                 <div style={{width:48,height:48,borderRadius:'50%',border:`3px solid ${C.border}`,borderTopColor:C.primary,animation:'ldSpin 0.8s linear infinite',marginBottom:16}}/>
                 <h3 style={{fontSize:18,fontWeight:800,color:C.text,marginBottom:4}}>Searching...</h3>
@@ -1773,22 +992,9 @@ export default function Product(){
               </div>
             )}
             {displayedProducts.length>0
-              ?<div 
-                  key={resultsKey} 
-                  className="product-grid"
-                >
-                  {displayedProducts.map((p,i)=>(
-                    <ProductCard 
-                      key={`${p.id}-${resultsKey}`} 
-                      product={p} 
-                      index={i} 
-                      navigate={navigate} 
-                      onAddToCart={handleAddToCart} 
-                      isAuthed={!!user} 
-                      onRequireAuth={()=>setAuthGateOpen(true)} 
-                    />
-                  ))}
-                </div>
+              ?<div key={resultsKey} className="product-grid">
+                {displayedProducts.map((p,i)=>(<ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>))}
+              </div>
               :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
                 <div style={{fontSize:56,marginBottom:16}}>🔍</div>
                 <h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No bags found</h3>
@@ -1797,139 +1003,37 @@ export default function Product(){
               </div>}
           </div>
 
-          {/* ── NEW LISTING SECTIONS (only shown when not filtered) ── */}
-          {!isFiltered && displayedProducts.length > 0 && (
-            <div style={{ marginTop: isMobile ? 40 : 60, borderTop: `1px solid ${C.borderLight}`, paddingTop: isMobile ? 36 : 52 }}>
+          {!isFiltered&&displayedProducts.length>0&&(
+            <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
+              <DealOfTheDay product={dealProduct} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
+              <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon="⭐" accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
+              <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon="✨" accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
+              {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon="💸" accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
 
-              {/* Deal of the Day - Now responsive */}
-              <DealOfTheDay
-                product={dealProduct}
-                navigate={navigate}
-                onAddToCart={handleAddToCart}
-                isAuthed={!!user}
-                onRequireAuth={() => setAuthGateOpen(true)}
-              />
-
-              {/* Featured Picks */}
-              <HorizontalSection
-                title="Featured Picks"
-                subtitle="Handpicked by our style team just for you"
-                icon="⭐"
-                accentColor={C.primary}
-                accentBg={C.primaryBg}
-                products={featuredProducts}
-                navigate={navigate}
-                onAddToCart={handleAddToCart}
-                isAuthed={!!user}
-                onRequireAuth={() => setAuthGateOpen(true)}
-                badge="Featured"
-                badgeColor={C.primary}
-                onSeeAll={() => handleCategoryChange('all')}
-              />
-
-              {/* New Arrivals */}
-              <HorizontalSection
-                title="New Arrivals"
-                subtitle="Fresh styles added to our collection"
-                icon="✨"
-                accentColor="#be185d"
-                accentBg="#fdf2f8"
-                products={newArrivals}
-                navigate={navigate}
-                onAddToCart={handleAddToCart}
-                isAuthed={!!user}
-                onRequireAuth={() => setAuthGateOpen(true)}
-                badge="New"
-                badgeColor="#be185d"
-                onSeeAll={() => handleCategoryChange('all')}
-              />
-
-              {/* Under Budget */}
-              {topDeals.length > 0 && (
-                <HorizontalSection
-                  title="Under ₦2,000"
-                  subtitle="Amazing bags that won't break the bank"
-                  icon="💸"
-                  accentColor="#15803d"
-                  accentBg="#dcfce7"
-                  products={topDeals}
-                  navigate={navigate}
-                  onAddToCart={handleAddToCart}
-                  isAuthed={!!user}
-                  onRequireAuth={() => setAuthGateOpen(true)}
-                  badge="Budget Pick"
-                  badgeColor="#15803d"
-                  onSeeAll={() => { handleCategoryChange('all'); }}
-                />
-              )}
-
-              {/* Mini Promo Banner - responsive */}
-              <div style={{
-                borderRadius: isMobile ? 16 : 20,
-                background: 'linear-gradient(135deg, #1a0a00 0%, #4a1a06 60%, #c84b11 100%)',
-                padding: isMobile ? '24px 20px' : '32px 36px',
-                display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row',
-                alignItems: isMobile ? 'flex-start' : 'center',
-                justifyContent: 'space-between',
-                gap: 20,
-                marginBottom: 48,
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.08, backgroundImage: 'radial-gradient(circle at 25% 50%, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-                <div style={{ position: 'absolute', right: -60, top: -60, width: 260, height: 260, borderRadius: '50%', background: 'rgba(249,115,22,0.15)', filter: 'blur(40px)' }} />
-                <div style={{ position: 'relative' }}>
-                  <p style={{ fontSize: isMobile ? 10 : 11, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>Exclusive Offer</p>
-                  <h3 style={{
-                    fontSize: isMobile ? 'clamp(1.1rem, 4vw, 1.4rem)' : 'clamp(1.3rem,3vw,1.9rem)',
-                    fontWeight: 900,
-                    color: 'white',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1.2,
-                    marginBottom: 10
-                  }}>
-                    Sell Your Bags on BagSearch<br />
-                    <span style={{ color: '#f97316' }}>Reach 10,000+ Buyers</span>
-                  </h3>
-                  <p style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.6)', fontWeight: 500, maxWidth: isMobile ? '100%' : 360 }}>
-                    Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on first 30 days.
-                  </p>
+              {/* Promo Banner */}
+              <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
+                <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
+                <div style={{position:'relative'}}>
+                  <p style={{fontSize:isMobile?10:11,fontWeight:800,letterSpacing:'0.18em',textTransform:'uppercase',color:'rgba(255,255,255,0.55)',marginBottom:8}}>Exclusive Offer</p>
+                  <h3 style={{fontSize:isMobile?'clamp(1.1rem,4vw,1.4rem)':'clamp(1.3rem,3vw,1.9rem)',fontWeight:900,color:'white',letterSpacing:'-0.03em',lineHeight:1.2,marginBottom:10}}>Sell Your Bags on BagSearch<br/><span style={{color:'#f97316'}}>Reach 10,000+ Buyers</span></h3>
+                  <p style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,0.6)',fontWeight:500,maxWidth:isMobile?'100%':360}}>Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on first 30 days.</p>
                 </div>
-                <button
-                  onClick={() => navigate('/register')}
-                  style={{
-                    position: 'relative',
-                    padding: isMobile ? '12px 24px' : '14px 28px',
-                    background: 'linear-gradient(135deg, #f97316, #c84b11)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: isMobile ? 12 : 14,
-                    fontWeight: 900,
-                    fontSize: isMobile ? 13 : 14,
-                    cursor: 'pointer',
-                    boxShadow: '0 8px 28px rgba(200,75,17,0.5)',
-                    transition: 'all 0.3s',
-                    whiteSpace: 'nowrap',
-                    letterSpacing: '-0.01em',
-                    width: isMobile ? '100%' : 'auto'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = isMobile ? 'scale(1.02)' : 'translateY(-3px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 14px 36px rgba(200,75,17,0.6)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(200,75,17,0.5)'; }}>
+                <button onClick={()=>navigate('/register')} style={{position:'relative',padding:isMobile?'12px 24px':'14px 28px',background:'linear-gradient(135deg,#f97316,#c84b11)',color:'white',border:'none',borderRadius:isMobile?12:14,fontWeight:900,fontSize:isMobile?13:14,cursor:'pointer',boxShadow:'0 8px 28px rgba(200,75,17,0.5)',transition:'all 0.3s',whiteSpace:'nowrap',letterSpacing:'-0.01em',width:isMobile?'100%':'auto'}}
+                  onMouseEnter={e=>{e.currentTarget.style.transform=isMobile?'scale(1.02)':'translateY(-3px) scale(1.03)';e.currentTarget.style.boxShadow='0 14px 36px rgba(200,75,17,0.6)';}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 8px 28px rgba(200,75,17,0.5)';}}>
                   Start Selling Free →
                 </button>
               </div>
-
             </div>
           )}
         </>}
 
-        {/* VENDORS TAB - responsive */}
+        {/* VENDORS TAB */}
         {activeTab==='vendors'&&<div>
           <div style={{marginBottom:22}}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><div style={{width:18,height:2.5,background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2}}/><span style={{fontSize:11,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:C.textFaint}}>Our Sellers</span></div>
-            <h2 style={{fontSize: isMobile ? 20 : 22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:4}}>Meet Our Vendors</h2>
-            <p style={{fontSize: isMobile ? 12 : 13,color:C.textMuted,fontWeight:500}}>Trusted sellers with thousands of happy customers across Nigeria</p>
+            <h2 style={{fontSize:isMobile?20:22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:4}}>Meet Our Vendors</h2>
+            <p style={{fontSize:isMobile?12:13,color:C.textMuted,fontWeight:500}}>Trusted sellers with thousands of happy customers across Nigeria</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:28}}>
             {[{l:'Total Vendors',v:47,i:'🏪',c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:1240,i:'👜',c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:8900,i:'😊',c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:5620,i:'⭐',c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
@@ -1940,7 +1044,7 @@ export default function Product(){
             ))}
           </div>
           {filteredVendors.length>0
-            ?<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap: isMobile ? 16 : 20}}>{filteredVendors.map((v,i)=>(<VendorCard key={v.id} vendor={v} index={i} onViewProducts={handleViewVendorProducts}/>))}</div>
+            ?<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:isMobile?16:20}}>{filteredVendors.map((v,i)=>(<VendorCard key={v.id} vendor={v} index={i} onViewProducts={handleViewVendorProducts}/>))}</div>
             :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><div style={{fontSize:56,marginBottom:16}}>🏪</div><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No vendors found</h3><button onClick={()=>handleVendorSearch('')} style={{marginTop:8,padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>See All Vendors</button></div>}
         </div>}
       </div>
