@@ -46,7 +46,7 @@ const ForgotPassword = () => {
         if (otpError) throw otpError;
         navigate('/reset-password', { state: { phone: identifier, method: 'phone' } });
       } else {
-        const RESET_REDIRECT_URL = import.meta.env.VITE_APP_URL || 'https://aninri.luxe-iibe.vercel.app';
+        const RESET_REDIRECT_URL = import.meta.env.VITE_APP_URL || 'https://bag-search-shop.vercel.app';
 
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(identifier, {
           redirectTo: `${RESET_REDIRECT_URL}/reset-password`,

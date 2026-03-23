@@ -1,19 +1,36 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, Suspense, lazy } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
-import Reg from './Reg.jsx';
-import Login from './login.jsx';
-import Home from './home.jsx';
-import Product from './Product.jsx';
-import SellerProduct from './SellerProduct.jsx';
-import ProductDetail from './productDetail.jsx';
-import UserProfile from './userProfile.jsx';
-import SellerProfile from './sellerProfile.jsx';
-import Sellerlisting from './Sellerlisting.jsx';
-import CreateProduct from './createProduct.jsx';
-import ForgotPassword from './forgotPassword.jsx';
-import ResetPassword from './resetPassword.jsx';
+
+// Lazy load route components for better code splitting
+const Reg = lazy(() => import('./Reg.jsx'));
+const Login = lazy(() => import('./login.jsx'));
+const Home = lazy(() => import('./home.jsx'));
+const Product = lazy(() => import('./Product.jsx'));
+const SellerProduct = lazy(() => import('./SellerProduct.jsx'));
+const ProductDetail = lazy(() => import('./productDetail.jsx'));
+const UserProfile = lazy(() => import('./userProfile.jsx'));
+const SellerProfile = lazy(() => import('./sellerProfile.jsx'));
+const Sellerlisting = lazy(() => import('./Sellerlisting.jsx'));
+const CreateProduct = lazy(() => import('./createProduct.jsx'));
+const ForgotPassword = lazy(() => import('./forgotPassword.jsx'));
+const ResetPassword = lazy(() => import('./resetPassword.jsx'));
+
+// Loading spinner component
+function LoadingSpinner() {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#1a1a1a'
+    }}>
+      <div style={{ color: '#fff', fontSize: '18px' }}>Loading...</div>
+    </div>
+  );
+}
 
 function AuthListener() {
   const navigate = useNavigate();
@@ -133,82 +150,84 @@ function App() {
   return (
     <Router>
       <AuthListener />
-      <Routes>
-        {/* Default route -> Home (public landing page) or Products (if logged in) */}
-        <Route path="/" element={<RootRoute />} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Default route -> Home (public landing page) or Products (if logged in) */}
+          <Route path="/" element={<RootRoute />} />
 
-        {/* Registration route */}
-        <Route path="/register" element={<RegRoute />} />
+          {/* Registration route */}
+          <Route path="/register" element={<RegRoute />} />
 
-        {/* Login route */}
-        <Route path="/login" element={<LoginRoute />} />
+          {/* Login route */}
+          <Route path="/login" element={<LoginRoute />} />
 
-        {/* Forgot Password route */}
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+          {/* Forgot Password route */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Reset Password route */}
-        <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Reset Password route */}
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Products page - public (auth-gated actions handled inside Product.jsx) */}
-        <Route path="/products" element={<Product />} />
+          {/* Products page - public (auth-gated actions handled inside Product.jsx) */}
+          <Route path="/products" element={<Product />} />
 
-        {/* Seller storefront from vendor cards */}
-        <Route path="/seller-products" element={<SellerProduct />} />
-        <Route path="/seller-product" element={<SellerProduct />} />
+          {/* Seller storefront from vendor cards */}
+          <Route path="/seller-products" element={<SellerProduct />} />
+          <Route path="/seller-product" element={<SellerProduct />} />
 
-        {/* Product Detail page - protected behind login */}
-        <Route
-          path="/products/:id"
-          element={
-            <PrivateRoute>
-              <ProductDetail />
-            </PrivateRoute>
-          }
-        />
+          {/* Product Detail page - protected behind login */}
+          <Route
+            path="/products/:id"
+            element={
+              <PrivateRoute>
+                <ProductDetail />
+              </PrivateRoute>
+            }
+          />
 
-        {/* User Profile - protected behind login */}
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <UserProfile />
-            </PrivateRoute>
-          }
-        />
+          {/* User Profile - protected behind login */}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <UserProfile />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Seller Profile - protected behind login */}
-        <Route
-          path="/seller-profile"
-          element={
-            <PrivateRoute>
-              <SellerProfile />
-            </PrivateRoute>
-          }
-        />
+          {/* Seller Profile - protected behind login */}
+          <Route
+            path="/seller-profile"
+            element={
+              <PrivateRoute>
+                <SellerProfile />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Create Product - protected behind login */}
-        <Route
-          path="/upload-product"
-          element={
-            <PrivateRoute>
-              <CreateProduct />
-            </PrivateRoute>
-          }
-        />
+          {/* Create Product - protected behind login */}
+          <Route
+            path="/upload-product"
+            element={
+              <PrivateRoute>
+                <CreateProduct />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Seller Listings - protected behind login */}
-        <Route
-          path="/seller-listing"
-          element={
-            <PrivateRoute>
-              <Sellerlisting />
-            </PrivateRoute>
-          }
-        />
+          {/* Seller Listings - protected behind login */}
+          <Route
+            path="/seller-listing"
+            element={
+              <PrivateRoute>
+                <Sellerlisting />
+              </PrivateRoute>
+            }
+          />
 
-        {/* Fallback unknown routes -> home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback unknown routes -> home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
