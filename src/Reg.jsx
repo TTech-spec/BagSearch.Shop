@@ -6,530 +6,216 @@ import { supabase, ensureSupabaseReady } from './services/api';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
-  primary:      '#C94B2C',      // Burnt orange
-  primaryLight: '#E8856A',       // Lighter orange
-  primaryBg:    '#F9DDD0',       // Peach
-  primaryPale:  '#FFF5F2',       // Very light peach
-  primaryBorder:'#F0C8BB',       // Peach border
-  accent:       '#B33A1E',       // Darker orange
-  success:      '#C94B2C',       // Use orange for success
-  successBg:    '#F9DDD0',       // Peach background
+  primary:      '#C94B2C',
+  primaryLight: '#E8856A',
+  primaryBg:    '#F9DDD0',
+  primaryPale:  '#FFF5F2',
+  primaryBorder:'#F0C8BB',
+  accent:       '#B33A1E',
+  success:      '#C94B2C',
+  successBg:    '#F9DDD0',
   danger:       '#DC2626',
   dangerBg:     '#FEF2F2',
   surface:      '#FFFFFF',
-  surfaceDim:   '#FDF8F5',       // Very light peach (main background)
+  surfaceDim:   '#FDF8F5',
   border:       '#F0D9CC',
   borderLight:  '#F7ECE4',
-  text:         '#1A0A00',       // Dark brown (primary text)
-  textMid:      '#7A4030',       // Medium brown (secondary text)
-  textMuted:    '#B07060',       // Muted orange-brown (tertiary text)
-  textLight:    '#FFFFFF',       // White text
-  textFaint:    '#E8C4B5',       // Very light peach-brown
+  text:         '#1A0A00',
+  textMid:      '#7A4030',
+  textMuted:    '#B07060',
+  textLight:    '#FFFFFF',
+  textFaint:    '#E8C4B5',
 };
 
-// ─── LUXURY PAGE LOADER (Warm Theme) ─────────────────────────────────────────
+// ─── SIMPLE MINIMAL PAGE LOADER ───────────────────────────────────────────────
 const PageLoader = ({ onDone }) => {
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState(0);
-  
+  const [fadeOut, setFadeOut] = useState(false);
+
   useEffect(() => {
     let p = 0;
     const interval = setInterval(() => {
-      p += Math.random() * 5 + 2;
+      p += Math.random() * 6 + 3;
       if (p >= 100) {
         p = 100;
         clearInterval(interval);
         setProgress(100);
-        setTimeout(() => setPhase(1), 500);
-        setTimeout(() => onDone(), 1300);
+        setTimeout(() => setFadeOut(true), 300);
+        setTimeout(() => onDone(), 800);
       } else {
         setProgress(Math.min(p, 100));
       }
-    }, 35);
+    }, 30);
     return () => clearInterval(interval);
   }, [onDone]);
-  
+
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 99999,
-      background: C.primaryBg,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      opacity: phase === 1 ? 0 : 1,
-      transform: phase === 1 ? 'scale(1.03)' : 'scale(1)',
-      transition: 'opacity 0.7s ease, transform 0.7s ease',
-      pointerEvents: phase === 1 ? 'none' : 'all',
+      position: 'fixed',
+      inset: 0,
+      zIndex: 99999,
+      background: C.surface,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      opacity: fadeOut ? 0 : 1,
+      transition: 'opacity 0.45s ease',
+      pointerEvents: fadeOut ? 'none' : 'all',
     }}>
-      <style>{`
-        @keyframes loaderSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes loaderPulseRing { 0%,100%{transform:scale(1);opacity:0.5} 50%{transform:scale(1.22);opacity:0.8} }
-        @keyframes loaderBagBounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.04)} }
-        @keyframes loaderDot { 0%,80%,100%{transform:scale(0.55);opacity:0.25} 40%{transform:scale(1);opacity:1} }
-        @keyframes loaderFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shimmerBar { 0%{background-position:200% center} 100%{background-position:-200% center} }
-        @keyframes loaderGlow { 0%,100%{box-shadow:0 8px 28px rgba(201,75,44,0.25)} 50%{box-shadow:0 8px 36px rgba(232,133,106,0.55)} }
-        @keyframes loaderRingFade { 0%{transform:scale(0.85);opacity:0.6} 100%{transform:scale(1.6);opacity:0} }
-      `}</style>
-      
-      {/* Ripple rings */}
-      {[0,1].map(i => (
-        <div key={i} style={{
-          position: 'absolute',
-          width: 130, height: 130,
-          borderRadius: '50%',
-          border: `1.5px solid ${C.primary}20`,
-          animation: `loaderRingFade 2.2s ease-out ${i * 1.1}s infinite`
-        }} />
-      ))}
-      
-      {/* Soft bg blob */}
-      <div style={{
-        position: 'absolute',
-        width: 280, height: 280,
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${C.primary}15 0%, transparent 70%)`,
-        animation: 'loaderPulseRing 3s ease-in-out infinite',
-      }} />
-      
-      {/* Main icon */}
-      <div style={{ position: 'relative', width: 92, height: 92, marginBottom: 30 }}>
-        <svg width="92" height="92" viewBox="0 0 92 92"
-          style={{ position: 'absolute', inset: 0, animation: 'loaderSpin 1.9s linear infinite' }}>
-          <circle cx="46" cy="46" r="40" fill="none" stroke={C.primaryBg} strokeWidth="2.5" />
-          <circle cx="46" cy="46" r="40" fill="none" stroke={C.primary} strokeWidth="2.5"
-            strokeDasharray={`${2 * Math.PI * 40 * progress / 100} ${2 * Math.PI * 40}`}
-            strokeLinecap="round"
-            style={{ transformOrigin: '46px 46px', transition: 'stroke-dasharray 0.08s ease' }}
-          />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'loaderBagBounce 1.7s ease-in-out infinite, loaderGlow 1.7s ease-in-out infinite',
-          }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-              stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 01-8 0" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      
       {/* Brand */}
-      <div style={{ animation: 'loaderFadeUp 0.55s ease 0.15s both', textAlign: 'center', marginBottom: 5 }}>
-        <span style={{
-          fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em',
-          color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}>
-          Bag<span style={{ color: C.primary }}>Search</span>
-        </span>
-      </div>
-      
-      {/* Tagline + dots */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 7, marginBottom: 38,
-        animation: 'loaderFadeUp 0.55s ease 0.3s both',
+      <span style={{
+        fontSize: 26,
+        fontWeight: 900,
+        letterSpacing: '-0.03em',
+        color: C.text,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        marginBottom: 28,
       }}>
-        <span style={{
-          fontSize: 11, color: C.textMuted, fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          fontFamily: 'system-ui, sans-serif',
-        }}>
-          Loading BagSearch experience
-        </span>
-        <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          {[0,1,2].map(i => (
-            <span key={i} style={{
-              width: 4, height: 4, borderRadius: '50%',
-              background: C.primary, display: 'inline-block',
-              animation: `loaderDot 1.3s ease-in-out ${i * 0.18}s infinite`
-            }} />
-          ))}
-        </span>
-      </div>
-      
+        Bag<span style={{ color: C.primary }}>Search</span>
+      </span>
+
       {/* Progress bar */}
-      <div style={{ width: 'min(260px, 60vw)', animation: 'loaderFadeUp 0.55s ease 0.45s both' }}>
-        <div style={{ height: 3, background: C.primaryBg, borderRadius: 9999, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 9999,
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight}, ${C.primary})`,
-            backgroundSize: '200% auto',
-            animation: 'shimmerBar 1.5s linear infinite',
-            transition: 'width 0.08s ease',
-            boxShadow: `0 0 10px ${C.primary}75`,
-          }} />
-        </div>
+      <div style={{
+        width: 200,
+        height: 2,
+        background: C.borderLight,
+        borderRadius: 9999,
+        overflow: 'hidden',
+      }}>
         <div style={{
-          display: 'flex', justifyContent: 'space-between', marginTop: 8,
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-          fontFamily: 'system-ui, sans-serif',
-        }}>
-          <span style={{ color: C.textFaint }}>BagSearch</span>
-          <span style={{ color: C.primary }}>{Math.round(progress)}%</span>
-        </div>
+          height: '100%',
+          width: `${progress}%`,
+          background: C.primary,
+          borderRadius: 9999,
+          transition: 'width 0.06s ease',
+        }} />
       </div>
     </div>
   );
 };
 
-// ─── REDESIGNED SUCCESS MESSAGE - CREATIVE & ANIMATED ─────────────────────────
+// ─── SIMPLE SLIDE-IN SUCCESS TOAST ────────────────────────────────────────────
 const SuccessToast = ({ show, onClose }) => {
-  const [confetti, setConfetti] = useState([]);
-  const [showCheck, setShowCheck] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (show) {
-      setShowCheck(true);
-      // Create confetti particles
-      const particles = [];
-      for (let i = 0; i < 30; i++) {
-        particles.push({
-          id: i,
-          left: Math.random() * 100,
-          delay: Math.random() * 0.5,
-          size: Math.random() * 8 + 4,
-          color: i % 3 === 0 ? C.primary : i % 3 === 1 ? C.primaryBg : C.primaryLight,
-          rotation: Math.random() * 360,
-        });
-      }
-      setConfetti(particles);
-      
-      // Auto close after 5 seconds
-      const timer = setTimeout(() => {
-        setShowCheck(false);
-        if (onClose) onClose();
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+      // small delay so CSS transition fires
+      const t1 = setTimeout(() => setVisible(true), 30);
+      const t2 = setTimeout(() => {
+        setVisible(false);
+        setTimeout(() => onClose && onClose(), 400);
+      }, 4500);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    } else {
+      setVisible(false);
     }
   }, [show, onClose]);
 
   if (!show) return null;
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      pointerEvents: 'none',
-    }}>
+    <>
       <style>{`
-        @keyframes slideUpScale {
-          0% { opacity: 0; transform: translateY(60px) scale(0.8); }
-          40% { opacity: 1; transform: translateY(-10px) scale(1.02); }
-          70% { transform: translateY(5px) scale(0.98); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes toastSlideIn {
+          from { transform: translateX(-110%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
         }
-        @keyframes confettiFall {
-          0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-          70% { opacity: 1; }
-          100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+        @keyframes toastSlideOut {
+          from { transform: translateX(0);    opacity: 1; }
+          to   { transform: translateX(-110%); opacity: 0; }
         }
-        @keyframes checkDraw {
-          0% { stroke-dashoffset: 50; }
-          100% { stroke-dashoffset: 0; }
+        .success-toast-card {
+          animation: toastSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-        @keyframes glowPulse {
-          0%, 100% { filter: drop-shadow(0 0 15px ${C.primary}80); transform: scale(1); }
-          50% { filter: drop-shadow(0 0 30px ${C.primary}); transform: scale(1.02); }
-        }
-        @keyframes floatBag {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-8px) rotate(-5deg); }
-          75% { transform: translateY(8px) rotate(5deg); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes bounceIn {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.2); }
-          80% { transform: scale(0.95); }
-          100% { transform: scale(1); opacity: 1; }
+        .success-toast-card.hiding {
+          animation: toastSlideOut 0.35s ease forwards;
         }
       `}</style>
 
-      {/* Confetti */}
-      {confetti.map(particle => (
-        <div
-          key={particle.id}
-          style={{
-            position: 'absolute',
-            left: `${particle.left}%`,
-            top: '-50px',
-            width: particle.size,
-            height: particle.size,
-            background: particle.color,
-            borderRadius: particle.size < 6 ? '50%' : '2px',
-            transform: `rotate(${particle.rotation}deg)`,
-            animation: `confettiFall 2.5s ease-out ${particle.delay}s forwards`,
-            zIndex: 9999,
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
-
-      {/* Main Toast Card */}
-      <div style={{
-        background: C.surface,
-        borderRadius: 32,
-        padding: '40px 48px',
-        maxWidth: 480,
-        width: '90%',
-        boxShadow: '0 40px 80px rgba(26,10,0,0.25), 0 10px 30px rgba(201,75,44,0.2)',
-        animation: 'slideUpScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        position: 'relative',
-        overflow: 'hidden',
-        border: `2px solid ${C.primary}25`,
-        pointerEvents: 'all',
-      }}>
-        {/* Decorative top bar */}
+      <div
+        className={`success-toast-card${!visible ? ' hiding' : ''}`}
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          left: 20,
+          zIndex: 9999,
+          background: C.surface,
+          border: `1.5px solid ${C.primaryBorder}`,
+          borderLeft: `4px solid ${C.primary}`,
+          borderRadius: 12,
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: '0 8px 28px rgba(26,10,0,0.12)',
+          maxWidth: 'min(320px, calc(100vw - 40px))',
+          width: '100%',
+        }}
+      >
+        {/* Check icon */}
         <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight}, ${C.primaryBg}, ${C.primary})`,
-          backgroundSize: '300% 100%',
-          animation: 'shimmer 3s linear infinite',
-        }} />
-
-        {/* Floating bag icons in background */}
-        {[1, 2, 3].map(i => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              opacity: 0.03,
-              fontSize: 80,
-              right: i === 1 ? -20 : i === 2 ? 40 : 100,
-              bottom: i === 1 ? -20 : i === 2 ? 60 : -10,
-              transform: `rotate(${i * 15}deg)`,
-              animation: `floatBag ${3 + i}s ease-in-out infinite`,
-              color: C.primary,
-            }}
-          >
-            👝
-          </div>
-        ))}
-
-        {/* Success Icon with Check Animation */}
-        <div style={{
-          width: 100,
-          height: 100,
-          margin: '0 auto 28px',
-          position: 'relative',
-          animation: 'bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}>
-          {/* Outer ring */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${C.primaryBg}, ${C.primaryLight})`,
-            animation: 'glowPulse 2s ease-in-out infinite',
-          }} />
-          
-          {/* Inner circle */}
-          <div style={{
-            position: 'absolute',
-            inset: 8,
-            borderRadius: '50%',
-            background: C.surface,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            {/* Checkmark */}
-            <svg width="50" height="40" viewBox="0 0 50 40" style={{ marginTop: 5 }}>
-              <path
-                d="M5 20 L20 35 L45 5"
-                stroke={C.primary}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                style={{
-                  strokeDasharray: 50,
-                  strokeDashoffset: showCheck ? 0 : 50,
-                  transition: `stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s`,
-                }}
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Welcome Message */}
-        <h2 style={{
-          fontSize: 32,
-          fontWeight: 900,
-          color: C.text,
-          textAlign: 'center',
-          marginBottom: 8,
-          fontFamily: "'Cormorant Garamond', serif",
-          letterSpacing: '-0.02em',
-        }}>
-          Welcome to BagSearch! 🎉
-        </h2>
-
-        <p style={{
-          fontSize: 16,
-          color: C.textMid,
-          textAlign: 'center',
-          marginBottom: 32,
-          lineHeight: 1.6,
-        }}>
-          Your account has been created successfully.
-        </p>
-
-        {/* User Info Preview */}
-        <div style={{
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
           background: C.primaryBg,
-          borderRadius: 20,
-          padding: 20,
-          marginBottom: 28,
-          position: 'relative',
-          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
         }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 100,
-            height: 100,
-            background: `radial-gradient(circle, ${C.primary}15 0%, transparent 70%)`,
-            borderRadius: '50%',
-          }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 15, position: 'relative', zIndex: 1 }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: 20,
-              fontWeight: 'bold',
-            }}>
-              👤
-            </div>
-            <div>
-              <p style={{ fontSize: 14, color: C.textMid, marginBottom: 2 }}>Joined as</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: C.text }}>Premium Member</p>
-            </div>
-          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </div>
 
-        {/* Progress Bar */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: 8,
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: C.text,
+            margin: 0,
+            lineHeight: 1.3,
+          }}>
+            Account created!
+          </p>
+          <p style={{
             fontSize: 12,
             color: C.textMuted,
-            fontWeight: 600,
+            margin: '2px 0 0',
+            lineHeight: 1.4,
           }}>
-            <span>Redirecting to login</span>
-            <span style={{ color: C.primary }}>3s</span>
-          </div>
-          <div style={{
-            height: 6,
-            background: `${C.primary}15`,
-            borderRadius: 9999,
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: '100%',
-              background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})`,
-              animation: 'progressShrink 3s linear forwards',
-            }} />
-          </div>
+            Redirecting to login…
+          </p>
         </div>
 
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={() => window.location.href = '/login?force=true'}
-            style={{
-              flex: 1,
-              padding: '16px 24px',
-              background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-              border: 'none',
-              borderRadius: 16,
-              color: 'white',
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: `0 8px 20px ${C.primary}50`,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0 12px 30px ${C.primary}70`;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 8px 20px ${C.primary}50`;
-            }}
-          >
-            Go to Login
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '16px',
-              background: 'transparent',
-              border: `2px solid ${C.primary}30`,
-              borderRadius: 16,
-              color: C.primary,
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = C.primaryBg;
-              e.currentTarget.style.borderColor = C.primary;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = `${C.primary}30`;
-            }}
-          >
-            Stay Here
-          </button>
-        </div>
-
-        {/* Brand Signature */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: 20,
-          fontSize: 11,
-          color: C.textMuted,
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-        }}>
-          Bag<span style={{ color: C.primary, fontWeight: 800 }}>Search</span> • Luxury Redefined
-        </div>
+        {/* Close */}
+        <button
+          onClick={() => {
+            setVisible(false);
+            setTimeout(() => onClose && onClose(), 400);
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: C.textMuted,
+            cursor: 'pointer',
+            padding: 2,
+            flexShrink: 0,
+            lineHeight: 1,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
-
-      <style>{`
-        @keyframes progressShrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 
@@ -538,7 +224,7 @@ const Reg = () => {
   const { login, setLoading, loading } = useContext(AuthContext);
   const [pageLoading, setPageLoading] = useState(true);
   const handleLoaderDone = useCallback(() => setPageLoading(false), []);
-  
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -547,7 +233,7 @@ const Reg = () => {
     role: 'buyer',
     terms: false,
   });
-  
+
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -634,13 +320,8 @@ const Reg = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/products`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          data: {
-            role: normalizedRole
-          }
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+          data: { role: normalizedRole }
         },
       });
       if (error) throw error;
@@ -657,17 +338,14 @@ const Reg = () => {
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-        
+
+        * { box-sizing: border-box; }
+
         .material-symbols-outlined {
           font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-16px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        
-        /* ── Role Toggle Styles (Warm Theme) ── */
+        /* ── Role Toggle ── */
         .role-track {
           position: relative;
           display: flex;
@@ -677,10 +355,6 @@ const Reg = () => {
           padding: 6px;
           box-shadow: 0 2px 8px ${C.primary}15, 0 0 0 1.5px ${C.primary}20, inset 0 1px 0 rgba(255,255,255,0.9);
           width: 100%;
-        }
-        .dark .role-track {
-          background: #2A1A10;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1.5px ${C.primary}40;
         }
         .role-pill {
           position: absolute;
@@ -711,6 +385,10 @@ const Reg = () => {
           height: 100%;
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
           animation: pillShimmer 2.4s ease-in-out infinite 0.8s;
+        }
+        @keyframes pillShimmer {
+          0%   { left: -40%; }
+          100% { left: 140%; }
         }
         .role-btn {
           flex: 1;
@@ -751,9 +429,6 @@ const Reg = () => {
         .role-btn.inactive .role-icon-wrap {
           background: ${C.primaryBg};
         }
-        .dark .role-btn.inactive .role-icon-wrap {
-          background: ${C.primary}30;
-        }
         .role-dot {
           width: 5px;
           height: 5px;
@@ -779,23 +454,79 @@ const Reg = () => {
           transition: all 0.3s ease;
           font-family: inherit;
         }
-        .dark .role-status-label {
-          background: ${C.primary}30;
-          color: ${C.primaryLight};
+
+        /* ── Input focus ── */
+        .reg-input {
+          width: 100%;
+          border-radius: 8px;
+          border: 1px solid ${C.border};
+          background: ${C.surface};
+          padding: 16px;
+          height: 56px;
+          font-size: 14px;
+          color: ${C.text};
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          font-family: inherit;
+        }
+        .reg-input:focus {
+          border-color: ${C.primary};
+          box-shadow: 0 0 0 3px ${C.primary}18;
         }
 
-        /* Responsive styles */
-        @media (max-width: 768px) {
-          .register-header { padding-left: 16px !important; padding-right: 16px !important; }
-          .register-form-container { padding: 24px 16px !important; }
+        /* ── Left hero panel — hide on mobile ── */
+        .hero-panel {
+          display: none;
         }
-        @media (max-width: 480px) {
-          .register-title { font-size: 32px !important; }
+        @media (min-width: 1024px) {
+          .hero-panel {
+            display: flex;
+            width: 50%;
+          }
+          .form-panel {
+            width: 50%;
+          }
+        }
+
+        /* ── Nav links hide on mobile ── */
+        .nav-links {
+          display: none;
+        }
+        @media (min-width: 768px) {
+          .nav-links {
+            display: flex;
+            gap: 32px;
+          }
+        }
+
+        /* ── Footer shows on mobile only ── */
+        .mobile-footer {
+          display: block;
+        }
+        @media (min-width: 1024px) {
+          .mobile-footer {
+            display: none;
+          }
+        }
+
+        /* ── Form padding on small screens ── */
+        .form-panel {
+          padding: 24px 16px;
+        }
+        @media (min-width: 480px) {
+          .form-panel {
+            padding: 32px 24px;
+          }
+        }
+        @media (min-width: 640px) {
+          .form-panel {
+            padding: 32px 32px;
+          }
         }
       `}</style>
-      
-      <div style={{ 
-        background: C.surfaceDim,  // #FDF8F5 very light peach
+
+      <div style={{
+        background: C.surfaceDim,
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
@@ -804,18 +535,18 @@ const Reg = () => {
         transition: 'opacity 0.5s ease'
       }}>
 
-        {/* HEADER - White background for contrast */}
+        {/* HEADER */}
         <header style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           borderBottom: `1px solid ${C.border}`,
-          padding: '12px 24px',
+          padding: '12px 20px',
           background: C.surface,
           zIndex: 10
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 24, height: 24, color: C.primary }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 22, height: 22, color: C.primary, flexShrink: 0 }}>
               <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <g clipPath="url(#clip0_6_535)">
                   <path clipRule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="currentColor" fillRule="evenodd" />
@@ -825,29 +556,21 @@ const Reg = () => {
                 </defs>
               </svg>
             </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>
               Bag<span style={{ color: C.primary }}>Search</span>
             </h2>
           </div>
-          <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-            <div style={{ display: 'none', '@media (min-width: 768px)': { display: 'flex', gap: 32 } }}>
-              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
-                Shop
-              </a>
-              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
-                Visual Search
-              </a>
-              <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                 onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                 onMouseLeave={e => e.currentTarget.style.color = C.text}>
-                Help
-              </a>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+            <div className="nav-links">
+              {['Shop', 'Visual Search', 'Help'].map(label => (
+                <a key={label} href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                   onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                   onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                  {label}
+                </a>
+              ))}
             </div>
-            <button 
+            <button
               onClick={() => navigate('/login?force=true')}
               style={{
                 background: C.primary,
@@ -858,8 +581,9 @@ const Reg = () => {
                 fontSize: 14,
                 fontWeight: 700,
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: `0 2px 8px ${C.primary}40`
+                transition: 'background 0.2s',
+                boxShadow: `0 2px 8px ${C.primary}40`,
+                whiteSpace: 'nowrap',
               }}
               onMouseEnter={e => e.currentTarget.style.background = C.accent}
               onMouseLeave={e => e.currentTarget.style.background = C.primary}>
@@ -868,120 +592,61 @@ const Reg = () => {
           </div>
         </header>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN */}
         <main style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-          {/* Left Side - Hero (Warm Theme) */}
-          <div style={{ 
-            display: 'none', 
-            '@media (min-width: 1024px)': { display: 'flex' },
-            width: '50%',
+          {/* Left Hero */}
+          <div className="hero-panel" style={{
             position: 'relative',
             background: C.primary,
             alignItems: 'center',
             justifyContent: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden',
           }}>
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.3,
-                backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            />
             <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: `linear-gradient(to top, ${C.primary}E6, transparent)`
+              position: 'absolute', inset: 0, opacity: 0.3,
+              backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
+              backgroundSize: 'cover', backgroundPosition: 'center'
             }} />
-            <div style={{
-              position: 'relative',
-              zIndex: 10,
-              padding: '0 48px',
-              color: C.textLight,
-              maxWidth: 600
-            }}>
-              <h1 style={{
-                fontSize: 48,
-                fontWeight: 900,
-                lineHeight: 1.2,
-                letterSpacing: '-0.02em',
-                marginBottom: 24
-              }}>
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.primary}E6, transparent)` }} />
+            <div style={{ position: 'relative', zIndex: 10, padding: '0 48px', color: C.textLight, maxWidth: 600 }}>
+              <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 24 }}>
                 Step into the future of luxury.
               </h1>
-              <p style={{
-                fontSize: 18,
-                fontWeight: 500,
-                opacity: 0.9,
-                marginBottom: 32,
-                lineHeight: 1.6
-              }}>
+              <p style={{ fontSize: 18, fontWeight: 500, opacity: 0.9, marginBottom: 32, lineHeight: 1.6 }}>
                 Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    padding: 8,
-                    borderRadius: '50%',
-                    fontFamily: "'Material Symbols Outlined'"
-                  }}>photo_camera</span>
-                  <span style={{ fontWeight: 500 }}>Search by uploading a photo</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    padding: 8,
-                    borderRadius: '50%',
-                    fontFamily: "'Material Symbols Outlined'"
-                  }}>chat_bubble</span>
-                  <span style={{ fontWeight: 500 }}>Real-time WhatsApp tracking</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    padding: 8,
-                    borderRadius: '50%',
-                    fontFamily: "'Material Symbols Outlined'"
-                  }}>verified</span>
-                  <span style={{ fontWeight: 500 }}>Early access to limited drops</span>
-                </div>
+                {[
+                  { icon: 'photo_camera', label: 'Search by uploading a photo' },
+                  { icon: 'chat_bubble',  label: 'Real-time WhatsApp tracking' },
+                  { icon: 'verified',     label: 'Early access to limited drops' },
+                ].map(({ icon, label }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: '50%', fontFamily: "'Material Symbols Outlined'" }}>{icon}</span>
+                    <span style={{ fontWeight: 500 }}>{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="register-form-container" style={{
-            width: '100%',
-            '@media (min-width: 1024px)': { width: '50%' },
+          {/* Right Form */}
+          <div className="form-panel" style={{
+            flex: 1,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
-            padding: 32,
             background: C.surface,
-            overflowY: 'auto'
+            overflowY: 'auto',
           }}>
-            <div style={{ maxWidth: 480, width: '100%', display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0' }}>
+            <div style={{ maxWidth: 480, width: '100%', display: 'flex', flexDirection: 'column', gap: 22, padding: '32px 0 40px' }}>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <h2 className="register-title" style={{
-                  fontSize: 36,
-                  fontWeight: 900,
-                  color: C.text,
-                  lineHeight: 1.2,
-                  letterSpacing: '-0.02em'
-                }}>
+              <div>
+                <h2 style={{ fontSize: 32, fontWeight: 900, color: C.text, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 8 }}>
                   Create your account
                 </h2>
-                <p style={{
-                  color: C.textMuted,
-                  fontSize: 16,
-                  fontWeight: 400
-                }}>
+                <p style={{ color: C.textMuted, fontSize: 15, fontWeight: 400, margin: 0 }}>
                   Ready to explore or start selling with BagSearch?
                 </p>
               </div>
@@ -995,98 +660,63 @@ const Reg = () => {
                   padding: '14px 16px',
                   borderRadius: 12,
                   border: `1px solid ${C.danger}40`,
-                  background: C.dangerBg
+                  background: C.dangerBg,
                 }}>
                   <div style={{
-                    flexShrink: 0,
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    background: '#FECACA',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
+                    background: '#FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <span className="material-symbols-outlined" style={{ color: C.danger, fontSize: 14, fontVariationSettings: "'FILL' 1" }}>error</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#991B1B', marginBottom: 4 }}>Registration failed</p>
-                    <p style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.5 }}>{errorMessage}</p>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#991B1B', margin: '0 0 4px' }}>Registration failed</p>
+                    <p style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.5, margin: 0 }}>{errorMessage}</p>
                   </div>
-                  <button 
-                    onClick={() => setErrorMessage('')}
-                    style={{
-                      flexShrink: 0,
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#EF4444',
-                      cursor: 'pointer',
-                      padding: 2
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.color = C.danger}
-                    onMouseLeave={e => e.currentTarget.style.color = '#EF4444'}>
+                  <button onClick={() => setErrorMessage('')} style={{ flexShrink: 0, background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 2 }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
                   </button>
                 </div>
               )}
 
-              {/* ── Beautiful Role Toggle (Warm Theme) ── */}
+              {/* Role Toggle */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{
-                  color: C.text,
-                  fontSize: 14,
-                  fontWeight: 600
-                }}>
-                  How do you want to join?
-                </p>
-
+                <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>How do you want to join?</p>
                 <div className="role-track">
-                  {/* Sliding pill */}
                   <div className={`role-pill ${formData.role}`}>
                     <div className="pill-shimmer" />
                   </div>
-
-                  {/* Buyer */}
-                  <button
-                    type="button"
-                    className={`role-btn ${formData.role === 'buyer' ? 'active' : 'inactive'}`}
-                    onClick={() => handleRoleChange('buyer')}
-                  >
-                    <span className="role-icon-wrap">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                        stroke={formData.role === 'buyer' ? '#fff' : C.primary}
-                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <path d="M16 10a4 4 0 01-8 0" />
-                      </svg>
-                    </span>
-                    Join as Buyer
-                    <span className="role-dot" />
-                  </button>
-
-                  {/* Seller */}
-                  <button
-                    type="button"
-                    className={`role-btn ${formData.role === 'seller' ? 'active' : 'inactive'}`}
-                    onClick={() => handleRoleChange('seller')}
-                  >
-                    <span className="role-icon-wrap">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                        stroke={formData.role === 'seller' ? '#fff' : C.primary}
-                        strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
-                        <path d="M9 11l3-3 3 3" />
-                      </svg>
-                    </span>
-                    Join as Seller
-                    <span className="role-dot" />
-                  </button>
+                  {['buyer', 'seller'].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      className={`role-btn ${formData.role === r ? 'active' : 'inactive'}`}
+                      onClick={() => handleRoleChange(r)}
+                    >
+                      <span className="role-icon-wrap">
+                        {r === 'buyer' ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke={formData.role === 'buyer' ? '#fff' : C.primary}
+                            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 01-8 0" />
+                          </svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke={formData.role === 'seller' ? '#fff' : C.primary}
+                            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                            <path d="M9 11l3-3 3 3" />
+                          </svg>
+                        )}
+                      </span>
+                      Join as {r.charAt(0).toUpperCase() + r.slice(1)}
+                      <span className="role-dot" />
+                    </button>
+                  ))}
                 </div>
-
-                {/* Status badge */}
                 <div>
                   <span className="role-status-label">
                     {formData.role === 'buyer' ? '🛍 Shopping mode' : '🏪 Store mode'}
@@ -1095,343 +725,203 @@ const Reg = () => {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
                 {/* Full Name */}
-                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Full Name</p>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Full Name</span>
                   <input
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      border: `1px solid ${C.border}`,
-                      background: C.surface,
-                      padding: 16,
-                      height: 56,
-                      fontSize: 14,
-                      color: C.text,
-                      outline: 'none',
-                      transition: 'all 0.2s'
-                    }}
+                    className="reg-input"
                     placeholder="Enter your full name"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
                     required
-                    onFocus={e => {
-                      e.currentTarget.style.borderColor = C.primary;
-                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.style.borderColor = C.border;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   />
-                  {errors.fullName && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.fullName}</p>}
+                  {errors.fullName && <span style={{ color: C.danger, fontSize: 12 }}>{errors.fullName}</span>}
                 </label>
 
                 {/* Email */}
-                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Email Address</p>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Email Address</span>
                   <input
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      border: `1px solid ${C.border}`,
-                      background: C.surface,
-                      padding: 16,
-                      height: 56,
-                      fontSize: 14,
-                      color: C.text,
-                      outline: 'none',
-                      transition: 'all 0.2s'
-                    }}
+                    className="reg-input"
                     placeholder="name@example.com"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    onFocus={e => {
-                      e.currentTarget.style.borderColor = C.primary;
-                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.style.borderColor = C.border;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   />
-                  {errors.email && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
+                  {errors.email && <span style={{ color: C.danger, fontSize: 12 }}>{errors.email}</span>}
                 </label>
 
                 {/* Phone */}
-                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <p style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Phone Number</p>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '2px 8px',
-                      background: C.primaryBg,
-                      borderRadius: 4,
-                      color: C.primary,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Phone Number</span>
+                    <span style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '2px 8px', background: C.primaryBg, borderRadius: 4,
+                      color: C.primary, fontSize: 10, fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: '0.05em',
                     }}>
                       <span className="material-symbols-outlined" style={{ fontSize: 12 }}>chat</span>
-                      WhatsApp Sync
-                    </div>
+                      WhatsApp
+                    </span>
                   </div>
                   <input
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      border: `1px solid ${C.border}`,
-                      background: C.surface,
-                      padding: 16,
-                      height: 56,
-                      fontSize: 14,
-                      color: C.text,
-                      outline: 'none',
-                      transition: 'all 0.2s'
-                    }}
-                    id="phone-field"
+                    className="reg-input"
                     placeholder="+1 (555) 000-0000"
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    onFocus={e => {
-                      e.currentTarget.style.borderColor = C.primary;
-                      e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.style.borderColor = C.border;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
                   />
-                  <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>
-                    We'll send order updates and inventory notifications via WhatsApp.
-                  </p>
-                  {errors.phone && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.phone}</p>}
+                  <span style={{ fontSize: 12, color: C.textMuted }}>
+                    We'll send order updates via WhatsApp.
+                  </span>
+                  {errors.phone && <span style={{ color: C.danger, fontSize: 12 }}>{errors.phone}</span>}
                 </label>
 
                 {/* Password */}
-                <label style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                  <p style={{ color: C.text, fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Password</p>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Password</span>
                   <div style={{ position: 'relative' }}>
                     <input
-                      style={{
-                        width: '100%',
-                        borderRadius: 8,
-                        border: `1px solid ${C.border}`,
-                        background: C.surface,
-                        padding: 16,
-                        height: 56,
-                        fontSize: 14,
-                        color: C.text,
-                        outline: 'none',
-                        transition: 'all 0.2s',
-                        paddingRight: 48
-                      }}
+                      className="reg-input"
+                      style={{ paddingRight: 48 }}
                       placeholder="Create a strong password"
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      onFocus={e => {
-                        e.currentTarget.style.borderColor = C.primary;
-                        e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                      }}
-                      onBlur={e => {
-                        e.currentTarget.style.borderColor = C.border;
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     />
                     <button
-                      style={{
-                        position: 'absolute',
-                        right: 12,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'transparent',
-                        border: 'none',
-                        color: C.textMuted,
-                        cursor: 'pointer',
-                        padding: 4
-                      }}
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                        background: 'transparent', border: 'none', color: C.textMuted, cursor: 'pointer', padding: 4,
+                      }}
                       onMouseEnter={e => e.currentTarget.style.color = C.primary}
                       onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>
                       <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
                     </button>
                   </div>
-                  {errors.password && <p style={{ color: C.danger, fontSize: 12, marginTop: 4 }}>{errors.password}</p>}
+                  {errors.password && <span style={{ color: C.danger, fontSize: 12 }}>{errors.password}</span>}
                 </label>
 
                 {/* Terms */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <input
-                    style={{
-                      marginTop: 2,
-                      width: 20,
-                      height: 20,
-                      borderRadius: 4,
-                      border: `1px solid ${C.border}`,
-                      accentColor: C.primary,
-                      cursor: 'pointer'
-                    }}
                     id="terms"
                     type="checkbox"
                     name="terms"
                     checked={formData.terms}
                     onChange={handleChange}
                     required
+                    style={{ marginTop: 2, width: 18, height: 18, accentColor: C.primary, cursor: 'pointer', flexShrink: 0 }}
                   />
-                  <label style={{ fontSize: 14, color: C.text, lineHeight: 1.5 }} htmlFor="terms">
-                    I agree to the <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
-                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Terms of Service</a> and <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
-                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Privacy Policy</a>.
+                  <label htmlFor="terms" style={{ fontSize: 14, color: C.text, lineHeight: 1.5, cursor: 'pointer' }}>
+                    I agree to the{' '}
+                    <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
+                       onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                       onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
+                       onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                       onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Privacy Policy</a>.
                   </label>
                 </div>
-                {errors.terms && <p style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</p>}
+                {errors.terms && <span style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</span>}
 
                 {/* Submit */}
                 <button
                   disabled={loading}
+                  type="submit"
                   style={{
-                    marginTop: 8,
-                    width: '100%',
-                    height: 56,
+                    width: '100%', height: 54,
                     background: C.primary,
                     color: C.textLight,
-                    fontSize: 16,
-                    fontWeight: 700,
-                    border: 'none',
-                    borderRadius: 8,
+                    fontSize: 15, fontWeight: 700,
+                    border: 'none', borderRadius: 8,
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    boxShadow: `0 4px 12px ${C.primary}50`,
-                    opacity: loading ? 0.7 : 1
+                    transition: 'background 0.2s, transform 0.15s',
+                    boxShadow: `0 4px 14px ${C.primary}50`,
+                    opacity: loading ? 0.7 : 1,
+                    marginTop: 4,
                   }}
-                  type="submit"
-                  onMouseEnter={e => {
-                    if (!loading) {
-                      e.currentTarget.style.background = C.accent;
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!loading) {
-                      e.currentTarget.style.background = C.primary;
-                      e.currentTarget.style.transform = 'none';
-                    }
-                  }}>
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                  onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
+                  onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = 'none'; }}}>
+                  {loading ? 'Creating Account…' : 'Create Account'}
                 </button>
               </form>
 
-              <div style={{ position: 'relative', padding: '16px 0' }}>
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  <div style={{
-                    width: '100%',
-                    borderTop: `1px solid ${C.border}`
-                  }} />
+              {/* Divider */}
+              <div style={{ position: 'relative', padding: '4px 0' }}>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
                 </div>
-                <div style={{
-                  position: 'relative',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  textTransform: 'uppercase'
-                }}>
-                  <span style={{
-                    background: C.surface,
-                    padding: '0 16px',
-                    color: C.textMuted,
-                    fontSize: 12
-                  }}>
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                  <span style={{ background: C.surface, padding: '0 16px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase' }}>
                     Or continue with
                   </span>
                 </div>
               </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: 16,
-              }}>
-                <button 
-                  onClick={handleGoogleAuth}
-                  disabled={loading}
-                  style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
+              {/* Google */}
+              <button
+                onClick={handleGoogleAuth}
+                disabled={loading}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   height: 48,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 8,
-                  background: 'transparent',
-                  color: C.text,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  opacity: loading ? 0.7 : 1
+                  border: `1px solid ${C.border}`, borderRadius: 8,
+                  background: 'transparent', color: C.text,
+                  fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s', opacity: loading ? 0.7 : 1,
+                  fontFamily: 'inherit',
                 }}
-                  onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
-                  onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
-                  <span>Google</span>
-                </button>
-              </div>
+                onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
+                onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+              </button>
 
-              <div style={{ textAlign: 'center', paddingTop: 8 }}>
-                <p style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>
-                  Already have an account?{' '}
-                  <span 
-                    onClick={() => navigate('/login?force=true')} 
-                    style={{
-                      color: C.primary,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      marginLeft: 4
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                    onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
-                    Login
-                  </span>
-                </p>
-              </div>
+              {/* Login link */}
+              <p style={{ textAlign: 'center', color: C.textMuted, fontSize: 14, fontWeight: 500, margin: 0 }}>
+                Already have an account?{' '}
+                <span
+                  onClick={() => navigate('/login?force=true')}
+                  style={{ color: C.primary, fontWeight: 700, cursor: 'pointer', marginLeft: 2 }}
+                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
+                  Login
+                </span>
+              </p>
 
             </div>
           </div>
         </main>
 
-        {/* Mobile Footer */}
-        <footer style={{
-          display: 'block',
-          '@media (min-width: 1024px)': { display: 'none' },
-          padding: 24,
+        {/* Mobile footer */}
+        <footer className="mobile-footer" style={{
+          padding: '16px 24px',
           borderTop: `1px solid ${C.border}`,
           background: C.surface,
-          textAlign: 'center'
+          textAlign: 'center',
         }}>
-          <p style={{ color: C.textMuted, fontSize: 12 }}>© 2024 BagSearch. All rights reserved.</p>
+          <p style={{ color: C.textMuted, fontSize: 12, margin: 0 }}>© 2024 BagSearch. All rights reserved.</p>
         </footer>
 
-        {/* Success Modal */}
+        {/* Simple Success Toast */}
         <SuccessToast show={showSuccess} onClose={() => setShowSuccess(false)} />
       </div>
     </>
@@ -1439,4 +929,3 @@ const Reg = () => {
 };
 
 export default Reg;
-

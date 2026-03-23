@@ -5,569 +5,195 @@ import { AuthContext } from './context/AuthContext';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
-  primary:      '#C94B2C',      // Burnt orange
-  primaryLight: '#E8856A',       // Lighter orange
-  primaryBg:    '#F9DDD0',       // Peach
-  primaryPale:  '#FFF5F2',       // Very light peach
-  primaryBorder:'#F0C8BB',       // Peach border
-  accent:       '#B33A1E',       // Darker orange
-  success:      '#C94B2C',       // Use orange for success
-  successBg:    '#F9DDD0',       // Peach background
-  successLight: '#FCE8E0',       // Very light orange
+  primary:      '#C94B2C',
+  primaryLight: '#E8856A',
+  primaryBg:    '#F9DDD0',
+  primaryPale:  '#FFF5F2',
+  primaryBorder:'#F0C8BB',
+  accent:       '#B33A1E',
+  success:      '#C94B2C',
+  successBg:    '#F9DDD0',
+  successLight: '#FCE8E0',
   danger:       '#DC2626',
   dangerBg:     '#FEF2F2',
   surface:      '#FFFFFF',
-  surfaceDim:   '#FDF8F5',       // Very light peach (main background)
+  surfaceDim:   '#FDF8F5',
   border:       '#F0D9CC',
   borderLight:  '#F7ECE4',
-  text:         '#1A0A00',       // Dark brown (primary text)
-  textMid:      '#7A4030',       // Medium brown (secondary text)
-  textMuted:    '#B07060',       // Muted orange-brown (tertiary text)
-  textLight:    '#FFFFFF',       // White text
-  textFaint:    '#E8C4B5',       // Very light peach-brown
+  text:         '#1A0A00',
+  textMid:      '#7A4030',
+  textMuted:    '#B07060',
+  textLight:    '#FFFFFF',
+  textFaint:    '#E8C4B5',
 };
 
-// ─── LUXURY PAGE LOADER (Warm Theme) ──────────────────────────────────────────
+// ─── SIMPLE PAGE LOADER ──────────────────────────────────────────────────────
 const PageLoader = ({ onDone }) => {
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState(0);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 5 + 2;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-        setProgress(100);
-        setTimeout(() => setPhase(1), 500);
-        setTimeout(() => onDone(), 1300);
-      } else {
-        setProgress(Math.min(p, 100));
-      }
-    }, 35);
-    return () => clearInterval(interval);
+    const timer = setTimeout(() => {
+      setVisible(false);
+      setTimeout(() => onDone(), 400);
+    }, 1200);
+    return () => clearTimeout(timer);
   }, [onDone]);
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 99999,
-      background: C.primaryBg,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      opacity: phase === 1 ? 0 : 1,
-      transform: phase === 1 ? 'scale(1.03)' : 'scale(1)',
-      transition: 'opacity 0.7s ease, transform 0.7s ease',
-      pointerEvents: phase === 1 ? 'none' : 'all',
+      background: C.surface,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.4s ease',
+      pointerEvents: visible ? 'all' : 'none',
     }}>
       <style>{`
-        @keyframes loaderSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes loaderPulseRing {
-          0%,100%{transform:scale(1);opacity:0.5}
-          50%{transform:scale(1.22);opacity:0.8}
-        }
-        @keyframes loaderBagBounce {
-          0%,100%{transform:translateY(0) scale(1)}
-          50%{transform:translateY(-7px) scale(1.04)}
-        }
-        @keyframes loaderDot {
-          0%,80%,100%{transform:scale(0.55);opacity:0.25}
-          40%{transform:scale(1);opacity:1}
-        }
-        @keyframes loaderFadeUp {
-          from{opacity:0;transform:translateY(12px)}
-          to{opacity:1;transform:translateY(0)}
-        }
-        @keyframes shimmerBar {
-          0%{background-position:200% center}
-          100%{background-position:-200% center}
-        }
-        @keyframes loaderGlow {
-          0%,100%{box-shadow:0 8px 28px rgba(201,75,44,0.25)}
-          50%{box-shadow:0 8px 36px rgba(201,75,44,0.55)}
-        }
-        @keyframes loaderRingFade {
-          0%{transform:scale(0.85);opacity:0.6}
-          100%{transform:scale(1.6);opacity:0}
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
-
-      {/* Ripple rings */}
-      {[0, 1].map(i => (
-        <div key={i} style={{
-          position: 'absolute',
-          width: 130, height: 130,
-          borderRadius: '50%',
-          border: `1.5px solid ${C.primary}20`,
-          animation: `loaderRingFade 2.2s ease-out ${i * 1.1}s infinite`,
-        }} />
-      ))}
-
-      {/* Soft bg blob */}
       <div style={{
-        position: 'absolute',
-        width: 280, height: 280,
+        width: 36, height: 36,
         borderRadius: '50%',
-        background: `radial-gradient(circle, ${C.primary}15 0%, transparent 70%)`,
-        animation: 'loaderPulseRing 3s ease-in-out infinite',
+        border: `3px solid ${C.primaryBg}`,
+        borderTopColor: C.primary,
+        animation: 'spin 0.75s linear infinite',
       }} />
-
-      {/* Main icon */}
-      <div style={{ position: 'relative', width: 92, height: 92, marginBottom: 30 }}>
-        {/* Spinning arc */}
-        <svg width="92" height="92" viewBox="0 0 92 92"
-          style={{ position: 'absolute', inset: 0, animation: 'loaderSpin 1.9s linear infinite' }}>
-          <circle cx="46" cy="46" r="40" fill="none" stroke={`${C.primary}20`} strokeWidth="2.5" />
-          <circle cx="46" cy="46" r="40" fill="none" stroke={C.primary} strokeWidth="2.5"
-            strokeDasharray={`${2 * Math.PI * 40 * progress / 100} ${2 * Math.PI * 40}`}
-            strokeLinecap="round"
-            style={{ transformOrigin: '46px 46px', transition: 'stroke-dasharray 0.08s ease' }}
-          />
-        </svg>
-
-        {/* Inner circle with bag icon */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: '50%',
-            background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'loaderBagBounce 1.7s ease-in-out infinite, loaderGlow 1.7s ease-in-out infinite',
-          }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-              stroke={C.textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 01-8 0" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Brand */}
-      <div style={{ animation: 'loaderFadeUp 0.55s ease 0.15s both', textAlign: 'center', marginBottom: 5 }}>
-        <span style={{
-          fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em',
-          color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}>
-          Bag<span style={{ color: C.primary }}>Search</span>
-        </span>
-      </div>
-
-      {/* Tagline + dots */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 7, marginBottom: 38,
-        animation: 'loaderFadeUp 0.55s ease 0.3s both',
-      }}>
-        <span style={{
-          fontSize: 11, color: C.textMuted, fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          fontFamily: 'system-ui, sans-serif',
-        }}>
-          Loading BagSearch experience
-        </span>
-        <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          {[0, 1, 2].map(i => (
-            <span key={i} style={{
-              width: 4, height: 4, borderRadius: '50%',
-              background: C.primary, display: 'inline-block',
-              animation: `loaderDot 1.3s ease-in-out ${i * 0.18}s infinite`,
-            }} />
-          ))}
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div style={{ width: 'min(260px, 60vw)', animation: 'loaderFadeUp 0.55s ease 0.45s both' }}>
-        <div style={{ height: 3, background: `${C.primary}15`, borderRadius: 9999, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 9999,
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight}, ${C.primary})`,
-            backgroundSize: '200% auto',
-            animation: 'shimmerBar 1.5s linear infinite',
-            transition: 'width 0.08s ease',
-            boxShadow: `0 0 10px ${C.primary}80`,
-          }} />
-        </div>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', marginTop: 8,
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-          fontFamily: 'system-ui, sans-serif',
-        }}>
-          <span style={{ color: C.textMuted }}>BagSearch</span>
-          <span style={{ color: C.primary }}>{Math.round(progress)}%</span>
-        </div>
-      </div>
     </div>
   );
 };
 
-// ─── REDESIGNED SUCCESS MESSAGE - CREATIVE & ANIMATED ─────────────────────────
-const SuccessToast = ({ show, onClose }) => {
-  const [confetti, setConfetti] = useState([]);
-  const [showCheck, setShowCheck] = useState(false);
+// ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
+// Desktop: slides in from the left
+// Mobile : slides up from the bottom (centered)
+const SuccessCard = ({ show, onClose }) => {
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 480);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     if (show) {
-      setShowCheck(true);
-      // Create confetti particles
-      const particles = [];
-      for (let i = 0; i < 30; i++) {
-        particles.push({
-          id: i,
-          left: Math.random() * 100,
-          delay: Math.random() * 0.5,
-          size: Math.random() * 8 + 4,
-          color: i % 3 === 0 ? C.primary : i % 3 === 1 ? C.primaryBg : C.primaryLight,
-          rotation: Math.random() * 360,
-        });
-      }
-      setConfetti(particles);
-      
-      // Auto close after 5 seconds
+      // Double-rAF ensures the element is painted before the transition fires
+      requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
       const timer = setTimeout(() => {
-        setShowCheck(false);
-        if (onClose) onClose();
-      }, 5000);
-      
+        setMounted(false);
+        setTimeout(() => onClose && onClose(), 400);
+      }, 4000);
       return () => clearTimeout(timer);
+    } else {
+      setMounted(false);
     }
   }, [show, onClose]);
 
   if (!show) return null;
 
+  const sharedCard = {
+    position: 'fixed',
+    zIndex: 9999,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    background: C.surface,
+    border: `1.5px solid ${C.primaryBorder}`,
+    borderRadius: 14,
+    padding: '14px 18px',
+    boxShadow: '0 8px 30px rgba(26,10,0,0.14)',
+    boxSizing: 'border-box',
+  };
+
+  const mobileCard = {
+    ...sharedCard,
+    bottom: 20,
+    left: '50%',
+    width: 'calc(100vw - 32px)',
+    maxWidth: 360,
+    // CSS transition (not animation) so we can JS-toggle mounted
+    transform: mounted ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(140%)',
+    opacity: mounted ? 1 : 0,
+    transition: mounted
+      ? 'transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease'
+      : 'transform 0.35s ease, opacity 0.3s ease',
+  };
+
+  const desktopCard = {
+    ...sharedCard,
+    bottom: 28,
+    left: 28,
+    minWidth: 260,
+    maxWidth: 320,
+    animation: mounted
+      ? 'successSlideIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards'
+      : 'successSlideOut 0.35s ease forwards',
+  };
+
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      pointerEvents: 'none',
-    }}>
+    <>
       <style>{`
-        @keyframes slideUpScale {
-          0% { opacity: 0; transform: translateY(60px) scale(0.8); }
-          40% { opacity: 1; transform: translateY(-10px) scale(1.02); }
-          70% { transform: translateY(5px) scale(0.98); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes successSlideIn {
+          from { transform: translateX(-120%); opacity: 0; }
+          to   { transform: translateX(0);     opacity: 1; }
         }
-        @keyframes confettiFall {
-          0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-          70% { opacity: 1; }
-          100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
-        }
-        @keyframes checkDraw {
-          0% { stroke-dashoffset: 50; }
-          100% { stroke-dashoffset: 0; }
-        }
-        @keyframes glowPulse {
-          0%, 100% { filter: drop-shadow(0 0 15px ${C.primary}80); transform: scale(1); }
-          50% { filter: drop-shadow(0 0 30px ${C.primary}); transform: scale(1.02); }
-        }
-        @keyframes floatBag {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-8px) rotate(-5deg); }
-          75% { transform: translateY(8px) rotate(5deg); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes bounceIn {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.2); }
-          80% { transform: scale(0.95); }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes successSlideOut {
+          from { transform: translateX(0);     opacity: 1; }
+          to   { transform: translateX(-120%); opacity: 0; }
         }
       `}</style>
+      <div style={isMobile ? mobileCard : desktopCard}>
+        {/* Check icon */}
+        <div style={{
+          width: 38, height: 38, borderRadius: '50%',
+          background: C.primaryBg, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
 
-      {/* Confetti */}
-      {confetti.map(particle => (
-        <div
-          key={particle.id}
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0, marginBottom: 2 }}>
+            Login Successful
+          </p>
+          <p style={{ fontSize: 12, color: C.textMuted, margin: 0 }}>
+            Redirecting you now…
+          </p>
+        </div>
+
+        {/* Close */}
+        <button
+          onClick={() => { setMounted(false); setTimeout(() => onClose && onClose(), 400); }}
           style={{
-            position: 'absolute',
-            left: `${particle.left}%`,
-            top: '-50px',
-            width: particle.size,
-            height: particle.size,
-            background: particle.color,
-            borderRadius: particle.size < 6 ? '50%' : '2px',
-            transform: `rotate(${particle.rotation}deg)`,
-            animation: `confettiFall 2.5s ease-out ${particle.delay}s forwards`,
-            zIndex: 9999,
-            pointerEvents: 'none',
+            background: 'none', border: 'none', cursor: 'pointer',
+            padding: 6, color: C.textMuted, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            WebkitTapHighlightColor: 'transparent',
           }}
-        />
-      ))}
-
-      {/* Main Toast Card */}
-      <div style={{
-        background: C.surface,
-        borderRadius: 32,
-        padding: '40px 48px',
-        maxWidth: 480,
-        width: '90%',
-        boxShadow: `0 40px 80px rgba(26,10,0,0.25), 0 10px 30px ${C.primary}30`,
-        animation: 'slideUpScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        position: 'relative',
-        overflow: 'hidden',
-        border: `2px solid ${C.primary}25`,
-        pointerEvents: 'all',
-      }}>
-        {/* Decorative top bar */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight}, ${C.primaryBg}, ${C.primary})`,
-          backgroundSize: '300% 100%',
-          animation: 'shimmer 3s linear infinite',
-        }} />
-
-        {/* Floating bag icons in background */}
-        {[1, 2, 3].map(i => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              opacity: 0.03,
-              fontSize: 80,
-              right: i === 1 ? -20 : i === 2 ? 40 : 100,
-              bottom: i === 1 ? -20 : i === 2 ? 60 : -10,
-              transform: `rotate(${i * 15}deg)`,
-              animation: `floatBag ${3 + i}s ease-in-out infinite`,
-              color: C.primary,
-            }}
-          >
-            👝
-          </div>
-        ))}
-
-        {/* Success Icon with Check Animation */}
-        <div style={{
-          width: 100,
-          height: 100,
-          margin: '0 auto 28px',
-          position: 'relative',
-          animation: 'bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        }}>
-          {/* Outer ring */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${C.primaryBg}, ${C.primaryLight})`,
-            animation: 'glowPulse 2s ease-in-out infinite',
-          }} />
-          
-          {/* Inner circle */}
-          <div style={{
-            position: 'absolute',
-            inset: 8,
-            borderRadius: '50%',
-            background: C.surface,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            {/* Checkmark */}
-            <svg width="50" height="40" viewBox="0 0 50 40" style={{ marginTop: 5 }}>
-              <path
-                d="M5 20 L20 35 L45 5"
-                stroke={C.primary}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                style={{
-                  strokeDasharray: 50,
-                  strokeDashoffset: showCheck ? 0 : 50,
-                  transition: `stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s`,
-                }}
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Welcome Message */}
-        <h2 style={{
-          fontSize: 32,
-          fontWeight: 900,
-          color: C.text,
-          textAlign: 'center',
-          marginBottom: 8,
-          fontFamily: "'Cormorant Garamond', serif",
-          letterSpacing: '-0.02em',
-        }}>
-          Welcome Back! 🎉
-        </h2>
-
-        <p style={{
-          fontSize: 16,
-          color: C.textMid,
-          textAlign: 'center',
-          marginBottom: 32,
-          lineHeight: 1.6,
-        }}>
-          You've successfully signed in to your account.
-        </p>
-
-        {/* User Info Preview */}
-        <div style={{
-          background: C.primaryBg,
-          borderRadius: 20,
-          padding: 20,
-          marginBottom: 28,
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: 100,
-            height: 100,
-            background: `radial-gradient(circle, ${C.primary}15 0%, transparent 70%)`,
-            borderRadius: '50%',
-          }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 15, position: 'relative', zIndex: 1 }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: C.textLight,
-              fontSize: 20,
-              fontWeight: 'bold',
-            }}>
-              👤
-            </div>
-            <div>
-              <p style={{ fontSize: 14, color: C.textMid, marginBottom: 2 }}>Signed in as</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: C.text }}>Premium Member</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: 8,
-            fontSize: 12,
-            color: C.textMuted,
-            fontWeight: 600,
-          }}>
-            <span>Redirecting to dashboard</span>
-            <span style={{ color: C.primary }}>3s</span>
-          </div>
-          <div style={{
-            height: 6,
-            background: `${C.primary}15`,
-            borderRadius: 9999,
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: '100%',
-              background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})`,
-              animation: 'progressShrink 3s linear forwards',
-            }} />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={() => window.location.href = '/products'}
-            style={{
-              flex: 1,
-              padding: '16px 24px',
-              background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-              border: 'none',
-              borderRadius: 16,
-              color: C.textLight,
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: `0 8px 20px ${C.primary}50`,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0 12px 30px ${C.primary}70`;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 8px 20px ${C.primary}50`;
-            }}
-          >
-            Go to Shop Now
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '16px',
-              background: 'transparent',
-              border: `2px solid ${C.primary}30`,
-              borderRadius: 16,
-              color: C.primary,
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = C.primaryBg;
-              e.currentTarget.style.borderColor = C.primary;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = `${C.primary}30`;
-            }}
-          >
-            Stay Here
-          </button>
-        </div>
-
-        {/* Brand Signature */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: 20,
-          fontSize: 11,
-          color: C.textMuted,
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-        }}>
-          Bag<span style={{ color: C.primary, fontWeight: 800 }}>Search</span> • Luxury Redefined
-        </div>
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
-
-      <style>{`
-        @keyframes progressShrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 
-// ─── Login Page with Warm Theme ───────────────────────────────────────────────
+// ─── Login Page ───────────────────────────────────────────────────────────────
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('buyer');
-  const [loading, setLoading] = useState(false);
+  const [role, setRole]         = useState('buyer');
+  const [loading, setLoading]   = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -584,7 +210,7 @@ const LoginPage = () => {
       const userId = data.user.id;
       const { data: profile, error: profileError } = await supabase
         .from('users').select('role').eq('user_id', userId).single();
-      
+
       if (profile && profile.role && profile.role !== role) {
         await supabase.auth.signOut();
         throw new Error(`Invalid details. Please toggle to the role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`);
@@ -598,14 +224,8 @@ const LoginPage = () => {
         user_id: userId, email, role: finalRole, updated_at: new Date(),
       }, { onConflict: 'user_id' });
       if (upsertError && upsertError.name !== 'AbortError') console.error('Error saving user role:', JSON.stringify(upsertError, null, 2));
-      const userWithRole = {
-        ...data.user,
-        user_metadata: { ...data.user.user_metadata, role: finalRole },
-      };
-      // AuthContext.onAuthStateChange will handle setting the user state
-      // and redirecting via LoginRoute. We just show success here.
+
       setShowSuccess(true);
-      // Optional: extra navigation in case redirect doesn't happen automatically
       setTimeout(() => navigate('/products'), 3500);
     } catch (error) {
       setErrorMsg(error.message);
@@ -622,13 +242,8 @@ const LoginPage = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/products`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          data: {
-            role: role // Pass the selected role
-          }
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+          data: { role },
         },
       });
       if (error) throw error;
@@ -639,145 +254,202 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ 
-      background: C.surfaceDim,  // #FDF8F5 very light peach
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      fontFamily: 'sans-serif', 
-      color: C.text  // Dark brown for maximum visibility
+    <div style={{
+      background: C.surfaceDim,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: 'sans-serif',
+      color: C.text,
     }}>
-
-      {/* ── Page Loader ── */}
       <PageLoader onDone={handleLoaderDone} />
 
-      {/* ── Page Content (fades in after loader) ── */}
       <div style={{
         opacity: pageLoading ? 0 : 1,
         transition: 'opacity 0.5s ease',
-        display: 'flex', 
-        flexDirection: 'column', 
+        display: 'flex',
+        flexDirection: 'column',
         minHeight: '100vh',
       }}>
-        <SuccessToast show={showSuccess} onClose={() => setShowSuccess(false)} />
+        <SuccessCard show={showSuccess} onClose={() => setShowSuccess(false)} />
 
         <style>{`
+          *, *::before, *::after { box-sizing: border-box; }
+
+          /* ─ Role toggle ─ */
           .role-track {
             position: relative; display: flex; align-items: center;
-            background: #FFFFFF; border-radius: 20px; padding: 6px;
-            box-shadow: 0 2px 8px rgba(201,75,44,0.08), 0 0 0 1.5px rgba(201,75,44,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+            background: #fff; border-radius: 20px; padding: 6px;
+            box-shadow: 0 2px 8px rgba(201,75,44,0.08),
+                        0 0 0 1.5px rgba(201,75,44,0.15),
+                        inset 0 1px 0 rgba(255,255,255,0.9);
             width: 100%;
           }
-          .dark .role-track { background: #2A1A10; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(201,75,44,0.3); }
           .role-pill {
             position: absolute; top: 6px; left: 6px;
             width: calc(50% - 6px); height: calc(100% - 12px);
-            border-radius: 14px;
-            transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-            z-index: 0;
-            background: linear-gradient(135deg, #C94B2C 0%, #E8856A 100%);
+            border-radius: 14px; z-index: 0;
+            background: linear-gradient(135deg,#C94B2C 0%,#E8856A 100%);
             box-shadow: 0 6px 20px rgba(201,75,44,0.35), 0 2px 6px rgba(201,75,44,0.2);
+            transition: transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
           }
-          .role-pill.seller { transform: translateX(calc(100%)); }
+          .role-pill.seller { transform: translateX(100%); }
           .role-pill.buyer  { transform: translateX(0); }
-          .pill-shimmer { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; pointer-events: none; }
+          .pill-shimmer { position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none; }
           @keyframes shimmer {
-            0%   { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
-            50%  { opacity: 1; }
-            100% { opacity: 0; transform: translateX(300%) skewX(-15deg); }
+            0%{opacity:0;transform:translateX(-100%) skewX(-15deg)}
+            50%{opacity:1}
+            100%{opacity:0;transform:translateX(300%) skewX(-15deg)}
           }
           .pill-shimmer::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-            animation: shimmer 2.4s ease-in-out infinite 0.8s;
+            content:'';position:absolute;top:0;left:0;width:40%;height:100%;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
+            animation:shimmer 2.4s ease-in-out infinite 0.8s;
           }
           .role-btn {
-            flex: 1; position: relative; z-index: 1; border: none; background: transparent;
-            border-radius: 14px; padding: 13px 8px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-family: inherit; font-size: 13.5px; font-weight: 700; letter-spacing: 0.01em;
-            transition: color 0.25s ease;
+            flex:1;position:relative;z-index:1;border:none;background:transparent;
+            border-radius:14px;padding:13px 8px;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            font-family:inherit;font-size:13.5px;font-weight:700;
+            transition:color 0.25s ease;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
           }
-          .role-btn.active   { color: #fff; }
-          .role-btn.inactive { color: #B07060; }
-          .role-btn.inactive:hover { color: #C94B2C; }
+          .role-btn.active   { color:#fff; }
+          .role-btn.inactive { color:#B07060; }
           .role-icon {
-            width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-            transition: background 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width:24px;height:24px;border-radius:50%;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            transition:background 0.25s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
           }
-          .role-btn.active .role-icon   { background: rgba(255,255,255,0.22); transform: scale(1.15); }
-          .role-btn.inactive .role-icon { background: #F9DDD0; }
-          .dark .role-btn.inactive .role-icon { background: rgba(201,75,44,0.25); }
+          .role-btn.active .role-icon   { background:rgba(255,255,255,0.22);transform:scale(1.15); }
+          .role-btn.inactive .role-icon { background:#F9DDD0; }
           .role-dot {
-            width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.75);
-            position: absolute; bottom: 9px; left: 50%;
-            transform: translateX(-50%) scale(0);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s;
+            width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.75);
+            position:absolute;bottom:9px;left:50%;
+            transform:translateX(-50%) scale(0);
+            transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1) 0.1s;
           }
-          .role-btn.active .role-dot { transform: translateX(-50%) scale(1); }
+          .role-btn.active .role-dot { transform:translateX(-50%) scale(1); }
           .role-status-label {
-            font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-            padding: 5px 14px; border-radius: 999px;
-            background: rgba(201,75,44,0.08); color: #C94B2C;
-            display: inline-block; transition: all 0.3s ease;
+            font-size:11.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+            padding:5px 14px;border-radius:999px;
+            background:rgba(201,75,44,0.08);color:#C94B2C;display:inline-block;
           }
-          .dark .role-status-label { background: rgba(201,75,44,0.2); color: #E8856A; }
 
-          /* Responsive styles */
-          @media (max-width: 768px) {
-            .login-container { padding: 16px !important; }
-            .login-header { padding-left: 16px !important; padding-right: 16px !important; }
+          /* ─ Inputs ─ */
+          .login-input {
+            width:100%;display:block;
+            border-radius:8px;
+            border:1px solid ${C.border};
+            background:${C.surface};
+            padding:14px 16px;
+            font-size:16px; /* prevents iOS auto-zoom */
+            color:${C.text};
+            outline:none;
+            transition:border-color 0.2s, box-shadow 0.2s;
+            font-family:inherit;
           }
-          @media (max-width: 480px) {
-            .login-form-container { padding: 24px 16px !important; }
-            .login-title { font-size: 32px !important; }
+          .login-input:focus {
+            border-color:${C.primary};
+            box-shadow:0 0 0 2px ${C.primary}20;
           }
+          .login-input::placeholder { color:${C.textFaint}; }
+
+          /* ─ Submit button ─ */
+          .submit-btn {
+            width:100%;height:54px;
+            background:${C.primary};color:#fff;
+            font-size:16px;font-weight:700;
+            border:none;border-radius:8px;
+            cursor:pointer;transition:background 0.2s,transform 0.15s;
+            box-shadow:0 4px 12px ${C.primary}40;
+            font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .submit-btn:hover:not(:disabled) { background:${C.accent};transform:translateY(-2px); }
+          .submit-btn:active:not(:disabled) { transform:translateY(0); }
+          .submit-btn:disabled { opacity:0.65;cursor:not-allowed; }
+
+          /* ─ Social buttons ─ */
+          .social-btn {
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            height:48px;border:1px solid ${C.border};border-radius:8px;
+            background:transparent;color:${C.text};
+            font-size:14px;font-weight:600;cursor:pointer;
+            transition:background 0.2s;width:100%;font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .social-btn:hover:not(:disabled) { background:${C.primaryBg}; }
+          .social-btn:disabled { opacity:0.6;cursor:not-allowed; }
+
+          /* ─ Layout ─ */
+          .image-panel { display:none; }
+          @media(min-width:1024px){
+            .image-panel { display:flex;width:50%;position:relative;overflow:hidden;background:${C.primaryBg}; }
+          }
+
+          .form-panel {
+            width:100%;
+            display:flex;flex-direction:column;
+            justify-content:center;align-items:center;
+            padding:32px 20px 48px;
+            background:${C.surface};
+          }
+          @media(min-width:1024px){
+            .form-panel { width:50%;padding:48px; }
+          }
+
+          .form-inner { width:100%;max-width:400px; }
+
+          .login-title { font-size:28px; }
+          @media(min-width:400px){ .login-title { font-size:34px; } }
+          @media(min-width:1024px){ .login-title { font-size:36px; } }
+
+          .social-grid {
+            display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;
+          }
+          @media(max-width:340px){
+            .social-grid { grid-template-columns:1fr; }
+          }
+
+          .header-nav { display:none; }
+          @media(min-width:768px){ .header-nav { display:flex;gap:24px; } }
         `}</style>
 
-        {/* Header - White background for contrast */}
-        <header className="login-header" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+        {/* ── Header ── */}
+        <header style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderBottom: `1px solid ${C.border}`,
-          padding: '12px 24px',
-          background: C.surface,
-          zIndex: 10
+          padding: '12px 20px',
+          background: C.surface, zIndex: 10,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 24, height: 24, color: C.primary }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 24, height: 24, color: C.primary, flexShrink: 0 }}>
               <svg fill="currentColor" viewBox="0 0 48 48">
                 <path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" />
               </svg>
             </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
               Bag<span style={{ color: C.primary }}>Search</span>
             </h2>
           </div>
-          <div style={{ display: 'none', gap: 24, '@media (min-width: 768px)': { display: 'flex' } }}>
-            <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-               onMouseEnter={e => e.currentTarget.style.color = C.primary}
-               onMouseLeave={e => e.currentTarget.style.color = C.text}>
-              Shop
-            </a>
-            <a href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-               onMouseEnter={e => e.currentTarget.style.color = C.primary}
-               onMouseLeave={e => e.currentTarget.style.color = C.text}>
-              Collections
-            </a>
-          </div>
+
+          <nav className="header-nav">
+            {['Shop','Collections'].map(label => (
+              <a key={label} href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                {label}
+              </a>
+            ))}
+          </nav>
+
           <button style={{
-            background: C.primary,
-            color: C.textLight,
-            border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-            boxShadow: `0 2px 8px ${C.primary}40`
+            background: C.primary, color: C.textLight, border: 'none',
+            borderRadius: 8, padding: '8px 12px',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+            transition: 'background 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+            WebkitTapHighlightColor: 'transparent',
           }}
             onMouseEnter={e => e.currentTarget.style.background = C.accent}
             onMouseLeave={e => e.currentTarget.style.background = C.primary}>
@@ -787,121 +459,64 @@ const LoginPage = () => {
 
         <main style={{ flex: 1, display: 'flex' }}>
           <div style={{ display: 'flex', width: '100%' }}>
-            {/* Left Side - Warm Theme */}
-            <div style={{ 
-              display: 'none', 
-              '@media (min-width: 1024px)': { display: 'flex' },
-              width: '50%',
-              position: 'relative',
-              overflow: 'hidden',
-              background: C.primaryBg
-            }}>
+
+            {/* ── Image panel (desktop) ── */}
+            <div className="image-panel">
               <div style={{
-                position: 'absolute',
-                inset: 0,
+                position: 'absolute', inset: 0,
                 backgroundImage: `url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                transition: 'transform 0.7s',
-                opacity: 0.8
-              }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} />
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: `linear-gradient(to right, ${C.primary}80, transparent)`
+                backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.8,
               }} />
               <div style={{
-                position: 'relative',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: 80,
-                color: C.textLight,
-                width: '100%'
+                position: 'absolute', inset: 0,
+                background: `linear-gradient(to right, ${C.primary}80, transparent)`,
+              }} />
+              <div style={{
+                position: 'relative', zIndex: 10,
+                display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                padding: 80, color: C.textLight, width: '100%',
               }}>
-                <h1 style={{
-                  fontSize: 48,
-                  fontWeight: 900,
-                  lineHeight: 1.2,
-                  marginBottom: 16,
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
-                }}>
+                <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, marginBottom: 16, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
                   Elevate Your Everyday.
                 </h1>
-                <p style={{
-                  fontSize: 20,
-                  fontWeight: 500,
-                  opacity: 0.9,
-                  maxWidth: 400
-                }}>
+                <p style={{ fontSize: 20, fontWeight: 500, opacity: 0.9, maxWidth: 400 }}>
                   Discover our exclusive collection of premium bags.
                 </p>
               </div>
             </div>
 
-            {/* Right Side: Login Form */}
-            <div className="login-form-container" style={{
-              width: '100%',
-              '@media (min-width: 1024px)': { width: '50%' },
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: 32,
-              background: C.surface
-            }}>
-              <div style={{ width: '100%', maxWidth: 440 }}>
-                <div style={{ marginBottom: 32 }}>
-                  <h2 className="login-title" style={{
-                    fontSize: 36,
-                    fontWeight: 900,
-                    letterSpacing: '-0.02em',
-                    color: C.text,
-                    marginBottom: 8
-                  }}>
+            {/* ── Form panel ── */}
+            <div className="form-panel">
+              <div className="form-inner">
+
+                {/* Heading */}
+                <div style={{ marginBottom: 28 }}>
+                  <h2 className="login-title" style={{ fontWeight: 900, letterSpacing: '-0.02em', color: C.text, margin: 0, marginBottom: 6 }}>
                     Welcome Back
                   </h2>
-                  <p style={{
-                    color: C.textMuted,
-                    marginTop: 8
-                  }}>
+                  <p style={{ color: C.textMuted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>
                     Enter your details to access your account.
                   </p>
                 </div>
 
+                {/* Error */}
                 {errorMsg && (
                   <div style={{
-                    padding: 12,
-                    background: C.primaryBg,
-                    border: `1px solid ${C.primary}`,
-                    color: C.primary,
-                    borderRadius: 8,
-                    fontSize: 14,
-                    marginBottom: 20
+                    padding: '10px 14px',
+                    background: C.primaryBg, border: `1px solid ${C.primary}`,
+                    color: C.primary, borderRadius: 8, fontSize: 14, marginBottom: 20, lineHeight: 1.5,
                   }}>
                     {errorMsg}
                   </div>
                 )}
 
                 {/* Role Toggle */}
-                <div style={{ marginBottom: 24 }}>
-                  <p style={{
-                    marginBottom: 12,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: C.textMuted,
-                    letterSpacing: '0.07em',
-                    textTransform: 'uppercase'
-                  }}>
+                <div style={{ marginBottom: 22 }}>
+                  <p style={{ marginBottom: 10, fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                     I am a…
                   </p>
                   <div className="role-track">
-                    <div className={`role-pill ${role}`}>
-                      <div className="pill-shimmer" />
-                    </div>
+                    <div className={`role-pill ${role}`}><div className="pill-shimmer" /></div>
                     <button type="button" className={`role-btn ${role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => setRole('buyer')}>
                       <span className="role-icon">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -928,233 +543,98 @@ const LoginPage = () => {
                       <span className="role-dot" />
                     </button>
                   </div>
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 10 }}>
                     <span className="role-status-label">
                       {role === 'buyer' ? '🛍 Shopping mode' : '🏪 Store mode'}
                     </span>
                   </div>
                 </div>
 
-                {/* Login Form */}
-                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Form */}
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                   <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: C.text,
-                      marginBottom: 8
-                    }}>
+                    <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 7 }}>
                       Email Address
                     </label>
                     <input
-                      style={{
-                        width: '100%',
-                        borderRadius: 8,
-                        border: `1px solid ${C.border}`,
-                        background: C.surface,
-                        padding: 16,
-                        fontSize: 14,
-                        color: C.text,
-                        outline: 'none',
-                        transition: 'all 0.2s'
-                      }}
-                      type="email" 
+                      className="login-input"
+                      type="email"
                       placeholder="Enter your email"
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
                       required
-                      onFocus={e => {
-                        e.currentTarget.style.borderColor = C.primary;
-                        e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                      }}
-                      onBlur={e => {
-                        e.currentTarget.style.borderColor = C.border;
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
+                      autoComplete="email"
                     />
                   </div>
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <label style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: C.text
-                      }}>
-                        Password
-                      </label>
-                      <span 
-                        onClick={() => navigate('/forgot-password')} 
-                        style={{
-                          color: C.primary,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          textDecoration: 'none'
-                        }}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                      <label style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Password</label>
+                      <span
+                        onClick={() => navigate('/forgot-password')}
+                        style={{ color: C.primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                         onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                         onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                         Forgot Password?
                       </span>
                     </div>
                     <input
-                      style={{
-                        width: '100%',
-                        borderRadius: 8,
-                        border: `1px solid ${C.border}`,
-                        background: C.surface,
-                        padding: 16,
-                        fontSize: 14,
-                        color: C.text,
-                        outline: 'none',
-                        transition: 'all 0.2s'
-                      }}
-                      type="password" 
+                      className="login-input"
+                      type="password"
                       placeholder="Enter your password"
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
                       required
-                      onFocus={e => {
-                        e.currentTarget.style.borderColor = C.primary;
-                        e.currentTarget.style.boxShadow = `0 0 0 2px ${C.primary}20`;
-                      }}
-                      onBlur={e => {
-                        e.currentTarget.style.borderColor = C.border;
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
+                      autoComplete="current-password"
                     />
                   </div>
-                  <button
-                    type="submit" 
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      height: 56,
-                      background: C.primary,
-                      color: C.textLight,
-                      fontSize: 16,
-                      fontWeight: 700,
-                      border: 'none',
-                      borderRadius: 8,
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.2s',
-                      boxShadow: `0 4px 12px ${C.primary}40`,
-                      opacity: loading ? 0.7 : 1
-                    }}
-                    onMouseEnter={e => {
-                      if (!loading) {
-                        e.currentTarget.style.background = C.accent;
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!loading) {
-                        e.currentTarget.style.background = C.primary;
-                        e.currentTarget.style.transform = 'none';
-                      }
-                    }}>
-                    {loading ? 'Verifying...' : 'Sign In'}
+                  <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? 'Verifying…' : 'Sign In'}
                   </button>
                 </form>
 
-                <div style={{ position: 'relative', padding: '24px 0' }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
-                    <div style={{
-                      width: '100%',
-                      borderTop: `1px solid ${C.border}`
-                    }} />
+                {/* Divider */}
+                <div style={{ position: 'relative', padding: '22px 0' }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                    <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
                   </div>
-                  <div style={{
-                    position: 'relative',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    textTransform: 'uppercase'
-                  }}>
-                    <span style={{
-                      background: C.surface,
-                      padding: '0 16px',
-                      color: C.textMuted,
-                      fontSize: 12
-                    }}>
+                  <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                    <span style={{ background: C.surface, padding: '0 14px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Or continue with
                     </span>
                   </div>
                 </div>
 
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 16,
-                  marginBottom: 16
-                }}>
-                  <button 
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                    style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    height: 48,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 8,
-                    background: 'transparent',
-                    color: C.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    opacity: loading ? 0.7 : 1
-                  }}
-                    onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
-                    onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
-                    <span>Google</span>
+                {/* Social */}
+                <div className="social-grid">
+                  <button className="social-btn" onClick={handleGoogleLogin} disabled={loading}>
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google
                   </button>
-                  <button style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    height: 48,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 8,
-                    background: 'transparent',
-                    color: C.text,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.primaryBg}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <span>Facebook</span>
+                  <button className="social-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
                   </button>
                 </div>
 
-                <p style={{
-                  textAlign: 'center',
-                  fontSize: 14,
-                  color: C.textMuted,
-                  paddingTop: 8
-                }}>
+                {/* Sign up */}
+                <p style={{ textAlign: 'center', fontSize: 14, color: C.textMuted, margin: 0 }}>
                   Don't have an account?{' '}
-                  <span 
-                    onClick={() => navigate('/register')} 
-                    style={{
-                      color: C.primary,
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
+                  <span
+                    onClick={() => navigate('/register')}
+                    style={{ color: C.primary, fontWeight: 700, cursor: 'pointer' }}
                     onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                     onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                     Create an account
                   </span>
                 </p>
+
               </div>
             </div>
           </div>

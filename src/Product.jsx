@@ -344,7 +344,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
       <div style={{padding:'15px 15px 13px'}}>
         <h3 style={{fontWeight:800,fontSize:15,color:C.text,marginBottom:2,lineHeight:1.3}}>{product.name}</h3>
         <p style={{fontSize:12,color:C.textFaint,marginBottom:12,fontWeight:500}}>{product.seller}</p>
-        <div style={{display:'flex',gap:5,marginBottom:12}}>{product.colors.map((col,i)=>(<span key={i} style={{width:16,height:16,borderRadius:'50%',background:col,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*30}ms`}}/>))}</div>
+        <div style={{display:'flex',gap:5,marginBottom:12}}>{product.colors.map((c,i)=>(<span key={i} style={{width:16,height:16,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*30}ms`}} title={c.id||''}/>))}</div>
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:12}}>
           <div><p style={{fontSize:10,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Quantity</p><p style={{fontSize:13,fontWeight:700,color:C.textMid}}>{product.quantity} units</p></div>
           <div style={{textAlign:'right'}}>
@@ -382,7 +382,14 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
       </div>
       <div style={{ padding: '11px 12px' }}>
         <p style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</p>
-        <p style={{ fontSize: 10, color: C.textFaint, marginBottom: 8, fontWeight: 500 }}>{product.seller}</p>
+        <p style={{ fontSize: 10, color: C.textFaint, marginBottom: 6, fontWeight: 500 }}>{product.seller}</p>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 10, alignItems: 'center' }}>
+          {product.colors && product.colors.slice(0, 3).map((c, i) => (
+            <span key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c.hex || c, border: '1px solid white', outline: `0.5px solid ${C.border}`, display: 'inline-block' }} title={c.id || ''} />
+          ))}
+          {product.colors && product.colors.length > 3 && <span style={{ fontSize: 8, color: C.textFaint, fontWeight: 700 }}>+{product.colors.length - 3}</span>}
+          <span style={{ fontSize: 9, color: C.textMuted, fontWeight: 700, marginLeft: 'auto' }}>{product.quantity} items</span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 15, fontWeight: 900, color: C.primary }}>{formatCurrency(product.price)}</span>
           <button onClick={handleCart} style={{ width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer', background: added ? '#16a34a' : C.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', transform: added ? 'scale(0.9)' : 'scale(1)' }}>
@@ -1224,7 +1231,7 @@ export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);
   const[pageLoading,setPageLoading]=useState(true);const handleLoaderDone=useCallback(()=>setPageLoading(false),[]);
   const fileInputRef=useRef(null);
-  const[allProducts,setAllProducts]=useState(mockProducts);const[displayedProducts,setDisplayedProducts]=useState(mockProducts);
+  const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
   const[visualSearching,setVisualSearching]=useState(false);
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);const[searchFocused,setSearchFocused]=useState(false);
@@ -1275,21 +1282,21 @@ export default function Product(){
         sub: `${p.brand} • ${p.condition}`, price: parseFloat(p.price), quantity: p.quantity ?? 0,
         lowStock: (p.quantity ?? 0) < 5, category: mapCategory(p.category), location: p.location || 'all',
         colors: Array.isArray(p.colors) && p.colors.length > 0
-          ? p.colors.map(id => BAG_COLOR_MAP[id] || id).filter(Boolean)
-          : ['#c84b11', '#f97316'],
+          ? p.colors.map(id => ({ id, hex: BAG_COLOR_MAP[id] || id })).filter(c => c.hex)
+          : [{ id: 'primary', hex: '#c84b11' }, { id: 'primaryLight', hex: '#f97316' }],
         src: p.images?.length > 0 ? p.images[0] : 'https://via.placeholder.com/400',
         brand: p.brand || '', condition: p.condition || '', description: p.description || '',
         discountedPrice: p.discounted_price ? parseFloat(p.discounted_price) : null,
         discountLabel: p.discount_label || null,
         whatsapp: p.whatsapp || '',
       }));
-      return [...fmt, ...mockProducts];
+      return fmt;
     } catch (err) {
       if (err && (err.name === 'AbortError' || err.message?.includes('AbortError'))) {
-        return [...mockProducts];
+        return [];
       }
       console.error('Failed to load products', JSON.stringify(err, null, 2));
-      return [...mockProducts];
+      return [];
     }
   }, [mapCategory]);
 

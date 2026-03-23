@@ -44,20 +44,57 @@ Deno.serve(async (req) => {
 
     if (products && products.length > 0) {
       const productIds = products.map((p: { id: string }) => p.id)
-      await adminClient.from('product_views').delete().in('product_id', productIds)
-      await adminClient.from('products').delete().in('id', productIds)
+      
+      // Delete product views for these products
+      const { error: viewsError } = await adminClient.from('product_views').delete().in('product_id', productIds)
+      if (viewsError) {
+        console.error('Error deleting product views for seller products:', viewsError.message)
+        // Continue anyway
+      }
+
+      // Delete products
+      const { error: productsError } = await adminClient.from('products').delete().in('id', productIds)
+      if (productsError) {
+        console.error('Error deleting products:', productsError.message)
+        // If products can't be deleted, it might be due to a foreign key violation
+        // that we don't know about yet. Throw to notify user.
+        throw productsError
+      }
     }
 
-    await Promise.all([
-      adminClient.from('search_history').delete().eq('user_id', userId),
-      adminClient.from('saved_items').delete().eq('user_id', userId),
-      adminClient.from('orders').delete().eq('user_id', userId),
-    ])
+    // 3. Delete common user data
+    // We don't use Promise.all here to avoid potential issues with non-existent tables
+    // and to better handle errors
+    const tablesToDeleteFrom = [
+      { table: 'product_views', column: 'buyer_id' },
+      { table: 'search_history', column: 'user_id' },
+      { table: 'saved_items', column: 'user_id' },
+      { table: 'orders', column: 'user_id' },
+    ]
 
-    await adminClient.from('users').delete().eq('user_id', userId)
+    for (const { table, column } of tablesToDeleteFrom) {
+      try {
+        const { error } = await adminClient.from(table).delete().eq(column, userId)
+        if (error) {
+          console.error(`Error deleting from ${table}:`, error.message)
+          // We continue anyway, as the table might not exist
+        }
+      } catch (err) {
+        console.error(`Unexpected error deleting from ${table}:`, err)
+      }
+    }
+
+    const { error: deleteUserError } = await adminClient.from('users').delete().eq('user_id', userId)
+    if (deleteUserError) {
+      console.error('Error deleting from users table:', deleteUserError.message)
+      // Continue to try and delete the auth user anyway
+    }
 
     const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId)
-    if (deleteAuthError) throw deleteAuthError
+    if (deleteAuthError) {
+      console.error('Error deleting auth user:', deleteAuthError.message)
+      throw deleteAuthError
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
