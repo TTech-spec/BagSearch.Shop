@@ -610,18 +610,35 @@ function UserProfile() {
       }
 
       // 2. Call the Edge Function to delete the auth user and all related data
-      const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      let detail = '';
+      try {
+        const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
 
-      if (functionError) {
-        let detail = functionError.message;
-        try {
-          const body = await functionError.context?.json();
-          detail = body?.error || detail;
-        } catch (_) {}
-        console.error('Edge function error detail:', detail);
-        throw new Error(detail);
+        if (functionError) {
+          // Try to get more details from the error
+          detail = functionError.message;
+          if (functionError.context) {
+            try {
+              const body = await functionError.context.json();
+              detail = body?.error || body?.message || detail;
+            } catch (_) {}
+          }
+          console.error('Edge function error:', functionError);
+          console.error('Edge function error detail:', detail);
+          throw new Error(detail || 'Failed to delete account. Please try again.');
+        }
+
+        if (fnData?.error) {
+          throw new Error(fnData.error);
+        }
+      } catch (invokeErr) {
+        // Check if it's a network error or function not found
+        if (invokeErr.message?.includes('function not found') || invokeErr.message?.includes('404')) {
+          throw new Error('Delete account service is not configured. Please contact support.');
+        }
+        throw invokeErr;
       }
 
       setDeleted(true);
