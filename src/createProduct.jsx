@@ -265,13 +265,6 @@ export default function CreateProduct() {
 
       let { data: insertedData, error: insertError } = await supabase.from('products').insert([insertData]).select();
 
-      if (insertError && isMissingColumnError(insertError)) {
-        const { quantity, colors, discount_enabled, discount_type, discount_value, discount_label, discounted_price, ...fallbackData } = insertData;
-        const retry = await supabase.from('products').insert([fallbackData]).select();
-        insertError = retry.error;
-        insertedData = retry.data;
-      }
-
       if (insertError) throw insertError;
       navigate('/products');
     } catch (err) {

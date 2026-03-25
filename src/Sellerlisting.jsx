@@ -55,6 +55,27 @@ const BRANDS = ['Chanel','Hermès','Louis Vuitton','Gucci','Prada','Dior','Balen
 const CATEGORIES = ['Handbags','Shoulder Bags','Clutches','Totes','Backpacks','Crossbody','Evening Bags','Mini Bags','Satchels'];
 const CONDITIONS = ['Pristine (Like New)','Excellent (Minor Wear)','Very Good (Gentle Use)','Fair (Visible Wear)'];
 
+const BAG_COLOR_MAP = {
+  black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
+  brown:'#6B3F2A',burgundy:'#722F37',red:'#CC2200',pink:'#E8A0A0',blush:'#F2C4B8',
+  orange:'#E8762B',yellow:'#E8C84A',olive:'#808000',green:'#2D6A3F',mint:'#98D8C8',
+  teal:'#2A7A7A',navy:'#1A2E5A',blue:'#2255CC',cobalt:'#0047AB',purple:'#6A2D8F',
+  lavender:'#B8A0D8',grey:'#888888',silver:'#C0C0C0',gold:'#CFB53B',
+  multicolor: 'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)',
+};
+
+const BAG_COLORS_LIST = [
+  {id:'black',label:'Black'},{id:'white',label:'White'},{id:'beige',label:'Beige'},
+  {id:'camel',label:'Camel'},{id:'tan',label:'Tan'},{id:'brown',label:'Brown'},
+  {id:'burgundy',label:'Burgundy'},{id:'red',label:'Red'},{id:'pink',label:'Pink'},
+  {id:'blush',label:'Blush'},{id:'orange',label:'Orange'},{id:'yellow',label:'Yellow'},
+  {id:'olive',label:'Olive'},{id:'green',label:'Green'},{id:'mint',label:'Mint'},
+  {id:'teal',label:'Teal'},{id:'navy',label:'Navy'},{id:'blue',label:'Blue'},
+  {id:'cobalt',label:'Cobalt'},{id:'purple',label:'Purple'},{id:'lavender',label:'Lavender'},
+  {id:'grey',label:'Grey'},{id:'silver',label:'Silver'},{id:'gold',label:'Gold'},
+  {id:'multicolor',label:'Multi'},
+];
+
 const DEFAULT_PRODUCT_IMAGE = "https://via.placeholder.com/640x420?text=Product";
 
 function prettyLocation(raw) {
@@ -95,6 +116,10 @@ function getImageList(value) {
 function mapProductToListing(row) {
   const images = getImageList(row?.images);
   const normalizedStatus = ["active", "pending", "inactive"].includes(row?.status) ? row.status : "active";
+  
+  const rawColors = Array.isArray(row?.colors) ? row.colors : (typeof row?.colors === 'string' ? JSON.parse(row.colors || '[]') : []);
+  const mappedColors = rawColors.map(id => ({ id, hex: BAG_COLOR_MAP[String(id).toLowerCase()] || id }));
+
   return {
     id: row?.id,
     title: row?.name || "Untitled Product",
@@ -115,6 +140,7 @@ function mapProductToListing(row) {
     description: row?.description || "",
     whatsapp: row?.whatsapp || "",
     quantity: Number(row?.quantity ?? 1),
+    colors: mappedColors,
   };
 }
 
@@ -210,6 +236,10 @@ function EditDrawer({ listing, onClose, onSaved }) {
     status: listing.status,
     quantity: listing.quantity,
   });
+  const [selectedColors, setSelectedColors] = useState(
+    Array.isArray(listing.colors) ? listing.colors.map(c => (typeof c === 'string' ? c : c.id)) : []
+  );
+  const toggleColor = (id) => setSelectedColors(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const [saving, setSaving]   = useState(false);
   const [saved,  setSaved]    = useState(false);
   const [error,  setError]    = useState(null);
@@ -247,6 +277,7 @@ function EditDrawer({ listing, onClose, onSaved }) {
       };
       const optionalUpdates = {
         quantity: Number(form.quantity),
+        colors: selectedColors,
         status: form.status,
       };
 
@@ -326,6 +357,7 @@ function EditDrawer({ listing, onClose, onSaved }) {
   const TABS = [
     { id: "details", label: "Details", icon: Tag },
     { id: "pricing", label: "Pricing", icon: DollarSign },
+    { id: "colors",  label: "Colors",  icon: RefreshCw },
     { id: "desc",    label: "Description", icon: AlignLeft },
     { id: "status",  label: "Status", icon: CheckCircle },
   ];
@@ -561,6 +593,53 @@ function EditDrawer({ listing, onClose, onSaved }) {
                   </div>
                 </div>
               </FieldRow>
+            </div>
+          )}
+
+          {/* ── TAB: COLORS ── */}
+          {activeTab === "colors" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: "tabIn 0.3s cubic-bezier(0.22,1,0.36,1)" }}>
+              <p style={{ fontSize: 12, color: C.textMid, fontWeight: 500 }}>Select all colors this bag is available in</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {BAG_COLORS_LIST.map(color => {
+                  const isSelected = selectedColors.includes(color.id);
+                  const hex = BAG_COLOR_MAP[color.id];
+                  return (
+                    <div key={color.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <button
+                        type="button"
+                        onClick={() => toggleColor(color.id)}
+                        style={{
+                          width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                          background: hex || color.id,
+                          boxShadow: isSelected
+                            ? `0 0 0 2px white, 0 0 0 4px ${C.brand}, 0 3px 10px rgba(0,0,0,0.15)`
+                            : `0 0 0 1.5px rgba(0,0,0,0.12)`,
+                          transform: isSelected ? "scale(1.18)" : "scale(1)",
+                          transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                          position: "relative",
+                        }}
+                      >
+                        {isSelected && (
+                          <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "white", textShadow: "0 1px 3px rgba(0,0,0,0.6)", borderRadius: "50%" }}>✓</span>
+                        )}
+                      </button>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: isSelected ? C.brand : C.textFaint }}>{color.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedColors.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 14px", background: "#FFF5F2", borderRadius: 12, border: `1px solid ${C.cardBorder}` }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: C.textMid, width: "100%", marginBottom: 4 }}>Selected: {selectedColors.length} color{selectedColors.length > 1 ? 's' : ''}</span>
+                  {selectedColors.map(id => (
+                    <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px 3px 6px", borderRadius: 20, background: "white", border: `1.5px solid ${C.cardBorder}`, fontSize: 11, fontWeight: 700, color: C.textMid }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "50%", background: BAG_COLOR_MAP[id] || id, display: "inline-block", border: "1px solid rgba(0,0,0,0.1)" }} />
+                      {id}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -830,10 +909,18 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
         </p>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+          {listing.colors && listing.colors.length > 0 && (
+            <div style={{ display: "flex", gap: 3, width: "100%", marginBottom: 4 }}>
+              {listing.colors.slice(0, 6).map((c, i) => (
+                <span key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c.hex || c, border: "1px solid white", outline: `0.5px solid ${C.cardBorder}` }} title={c.id || ''} />
+              ))}
+              {listing.colors.length > 6 && <span style={{ fontSize: 8, color: C.textFaint, fontWeight: 700 }}>+{listing.colors.length - 6}</span>}
+            </div>
+          )}
           {[
             { icon: Eye,   val: listing.views, label: "views" },
             { icon: Heart, val: listing.saves, label: "saves" },
-            ...(listing.quantity > 1 ? [{ icon: Package, val: `×${listing.quantity}`, label: "qty" }] : []),
+            { icon: Package, val: `×${listing.quantity}`, label: "qty" },
           ].map(({ icon: Ic, val, label }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, background: C.surfacePeach, flex: "1 0 auto" }}>
               <Ic size={10} color={C.brand} />

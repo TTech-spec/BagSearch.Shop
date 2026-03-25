@@ -11,6 +11,7 @@ const BAG_COLOR_MAP = {
   orange:'#E8762B',yellow:'#E8C84A',olive:'#808000',green:'#2D6A3F',mint:'#98D8C8',
   teal:'#2A7A7A',navy:'#1A2E5A',blue:'#2255CC',cobalt:'#0047AB',purple:'#6A2D8F',
   lavender:'#B8A0D8',grey:'#888888',silver:'#C0C0C0',gold:'#CFB53B',
+  multicolor: 'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)',
 };
 
 const C = {
@@ -519,15 +520,18 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
 
         {/* Color dots */}
         <div style={{display:'flex',gap:4,marginBottom:10,alignItems:'center'}}>
-          {product.colors.slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*25}ms`}} title={c.id||''}/>))}
-          {product.colors.length > 5 && <span style={{fontSize:9,color:C.textFaint,fontWeight:700}}>+{product.colors.length-5}</span>}
+          {product.colors.length > 0
+            ? (<>{product.colors.slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*25}ms`}} title={c.id||''}/>))}
+            {product.colors.length > 5 && <span style={{fontSize:9,color:C.textFaint,fontWeight:700}}>+{product.colors.length-5}</span>}</>)
+            : <span style={{fontSize:10,color:C.textFaint,fontWeight:500}}>—</span>
+          }
         </div>
 
         {/* Qty + Price row */}
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:10}}>
           <div>
             <p style={{fontSize:9,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Qty</p>
-            <p style={{fontSize:12,fontWeight:700,color:C.textMid}}>{product.quantity} units</p>
+            <p style={{fontSize:12,fontWeight:700,color:C.textMid}}>{product.quantity != null ? `${product.quantity} units` : '—'}</p>
           </div>
           <div style={{textAlign:'right'}}>
             {product.discountedPrice&&<p style={{fontSize:10,color:C.textFaint,fontWeight:600,textDecoration:'line-through',marginBottom:1}}>{formatCurrency(product.price)}</p>}
@@ -1005,12 +1009,71 @@ export default function Product(){
 
   const fetchProducts=useCallback(async(locationId='all')=>{
     try{
+      // Try to select all columns including quantity and colors
       let query=supabase.from('products').select('*');
       if(locationId&&locationId!=='all')query=query.eq('location',locationId);
-      const{data,error}=await query.order('created_at',{ascending:false});
-      if(error)throw error;
-      return(data||[]).map(p=>({id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:p.quantity??0,lowStock:(p.quantity??0)<5,category:mapCategory(p.category),location:p.location||'all',colors:Array.isArray(p.colors)&&p.colors.length>0?p.colors.map(id=>({id,hex:BAG_COLOR_MAP[id]||id})).filter(c=>c.hex):[{id:'primary',hex:'#c84b11'},{id:'primaryLight',hex:'#f97316'}],src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''}));
-    }catch(err){if(err&&(err.name==='AbortError'||err.message?.includes('AbortError')))return[];console.error('Failed to load products',err);return[];}
+      let {data,error}=await query.order('created_at',{ascending:false});
+
+      if(error){
+        console.log('Error fetching with all columns:', error);
+        // If there's an error (possibly missing columns), try with basic columns only
+        query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');
+        if(locationId&&locationId!=='all')query=query.eq('location',locationId);
+        const retry=await query.order('created_at',{ascending:false});
+        if(retry.error) throw retry.error;
+        data=retry.data;
+        console.log('Fetched products without quantity/colors columns');
+      }
+
+      console.log('Raw products data sample:', data?.slice(0, 1));
+
+      return(data||[]).map(p=>{
+        let rawColors = [];
+        if (p.colors) {
+          if (Array.isArray(p.colors)) rawColors = p.colors;
+          else if (typeof p.colors === 'string') {
+            try { rawColors = JSON.parse(p.colors); } catch { rawColors = [p.colors]; }
+          }
+        }
+        const mappedColors = rawColors.length > 0
+          ? rawColors.map(c => {
+              if (typeof c === 'string') {
+                const key = c.toLowerCase().trim();
+                const hex = BAG_COLOR_MAP[key];
+                return { id: key, hex: hex || '#c84b11' };
+              }
+              const key = String(c.id || '').toLowerCase().trim();
+              return { id: key, hex: c.hex || BAG_COLOR_MAP[key] || '#c84b11' };
+            })
+          : [];
+
+        const qty = p.quantity != null ? parseInt(p.quantity) : null;
+
+        return {
+          id:p.id,
+          name:p.name,
+          seller:p.seller_name||'Anonymous Seller',
+          sellerId:p.seller_id||p.user_id||'db',
+          sub:`${p.brand} • ${p.condition}`,
+          price:parseFloat(p.price),
+          quantity: qty,
+          lowStock: qty != null ? qty < 5 : false,
+          category:mapCategory(p.category),
+          location:p.location||'all',
+          colors: mappedColors,
+          src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',
+          brand:p.brand||'',
+          condition:p.condition||'',
+          description:p.description||'',
+          discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,
+          discountLabel:p.discount_label||null,
+          whatsapp:p.whatsapp||''
+        };
+      });
+    }catch(err){
+      console.error('Failed to load products:', err);
+      return[];
+    }
   },[mapCategory]);
 
   useEffect(()=>{

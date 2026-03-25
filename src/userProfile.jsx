@@ -612,9 +612,7 @@ function UserProfile() {
       // 2. Call the Edge Function to delete the auth user and all related data
       let detail = '';
       try {
-        const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+        const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account');
 
         if (functionError) {
           // Try to get more details from the error

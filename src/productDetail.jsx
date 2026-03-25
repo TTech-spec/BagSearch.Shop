@@ -4,6 +4,27 @@ import LogoIcon from './components/Logo.jsx';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 
+// ─── Bag Color Map ────────────────────────────────────────────────────────────
+const BAG_COLOR_MAP = {
+  black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
+  brown:'#6B3F2A',burgundy:'#722F37',red:'#CC2200',pink:'#E8A0A0',blush:'#F2C4B8',
+  orange:'#E8762B',yellow:'#E8C84A',olive:'#808000',green:'#2D6A3F',mint:'#98D8C8',
+  teal:'#2A7A7A',navy:'#1A2E5A',blue:'#2255CC',cobalt:'#0047AB',purple:'#6A2D8F',
+  lavender:'#B8A0D8',grey:'#888888',silver:'#C0C0C0',gold:'#CFB53B',
+  multicolor:'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)',
+};
+
+const resolveColor = (c) => {
+  if (!c) return '#c84b11';
+  if (typeof c === 'string') {
+    // If it looks like a hex or CSS color, use directly
+    if (c.startsWith('#') || c.startsWith('rgb') || c.startsWith('linear')) return c;
+    // Otherwise treat as a color ID
+    return BAG_COLOR_MAP[c.toLowerCase().trim()] || c;
+  }
+  return c.hex || BAG_COLOR_MAP[String(c.id || '').toLowerCase()] || '#c84b11';
+};
+
 // ─── BagSearch-inspired Color Palette ───────────────────────────────────────────
 const C = {
   primary:      '#c84b11',
@@ -231,11 +252,16 @@ export default function ProductDetail() {
           description: data.description || "No description provided.",
           price: `$${parseFloat(data.price).toLocaleString()}`,
           originalPrice: `$${(parseFloat(data.price) * 1.15).toLocaleString()}`,
-          quantity: data.quantity || 0,
-          lowStock: (data.quantity || 0) < 5,
+          quantity: data.quantity != null ? parseInt(data.quantity) : null,
+          lowStock: data.quantity != null ? parseInt(data.quantity) < 5 : false,
           rating: 4.8,
           reviews: 24,
-            colors: data.colors || ["#c84b11", "#f97316"],
+            colors: (() => {
+              const raw = data.colors;
+              if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11", "#f97316"];
+              const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
+              return arr.map(c => resolveColor(c));
+            })(),
             sizes: ["S", "M", "L"],
             category: data.category || "General",
             images: data.images?.length > 0 ? data.images : ['https://via.placeholder.com/600']
@@ -678,7 +704,7 @@ export default function ProductDetail() {
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.textMuted }}>
                 <div style={{ width:8, height:8, borderRadius:'50%', background:C.success, boxShadow:`0 0 0 3px ${C.successBg}` }}/>
-                {product.quantity} available
+                {product.quantity != null ? `${product.quantity} available` : 'In stock'}
               </div>
             </div>
 
@@ -702,9 +728,9 @@ export default function ProductDetail() {
               <div style={{ minWidth:120 }}>
                 <p style={{ fontSize:10, fontWeight:700, color:C.textFaint, marginBottom:5 }}>QUANTITY LEVEL</p>
                 <div className="progress-track" style={{ height:6, width:'100%' }}>
-                  <div className="progress-fill" style={{ width:`${(product.quantity/20)*100}%`, height:'100%' }}/>
+                  <div className="progress-fill" style={{ width:`${Math.min(((product.quantity||0)/20)*100, 100)}%`, height:'100%' }}/>
                 </div>
-                <p style={{ fontSize:9, color:C.textMuted, marginTop:4 }}>🔒 Only {product.quantity} units left</p>
+                <p style={{ fontSize:9, color:C.textMuted, marginTop:4 }}>🔒 {product.quantity != null ? `Only ${product.quantity} units left` : 'Limited stock'}</p>
               </div>
             </div>
 
@@ -794,7 +820,7 @@ export default function ProductDetail() {
                     onMouseEnter={e=>e.currentTarget.style.background=C.primaryBg}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>−</button>
                   <span style={{ width:44, textAlign:'center', fontSize:15, fontWeight:900, color:C.text }}>{quantity}</span>
-                  <button onClick={() => setQuantity(q => Math.min(product.quantity,q+1))} style={{ width:42, height:46, border:'none', background:'transparent', cursor:'pointer', fontSize:20, color:C.textMid, transition:'background 0.2s', fontWeight:700 }}
+                  <button onClick={() => setQuantity(q => Math.min(product.quantity ?? 99, q+1))} style={{ width:42, height:46, border:'none', background:'transparent', cursor:'pointer', fontSize:20, color:C.textMid, transition:'background 0.2s', fontWeight:700 }}
                     onMouseEnter={e=>e.currentTarget.style.background=C.primaryBg}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>+</button>
                 </div>
@@ -973,7 +999,7 @@ export default function ProductDetail() {
         <div style={{ display:'flex', alignItems:'center', border:`1.5px solid ${C.border}`, borderRadius:10, overflow:'hidden', background:'white', flexShrink:0 }}>
           <button onClick={() => setQuantity(q=>Math.max(1,q-1))} style={{ width:36,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>−</button>
           <span style={{ width:32,textAlign:'center',fontSize:14,fontWeight:900,color:C.text }}>{quantity}</span>
-          <button onClick={() => setQuantity(q=>Math.min(product.quantity,q+1))} style={{ width:36,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>+</button>
+          <button onClick={() => setQuantity(q=>Math.min(product.quantity ?? 99,q+1))} style={{ width:36,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>+</button>
         </div>
         {/* add to cart */}
         <button onClick={handleAddToCart} style={{

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo, useRef } from 'react';
+import { useState, useEffect, useContext, useMemo, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
@@ -557,13 +557,10 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={!deleting && !deleted ? onClose : undefined}
         style={{ position:'fixed', inset:0, zIndex:600, background:'rgba(10,0,0,0.65)', backdropFilter:'blur(5px)', animation:'overlayFade 0.25s ease' }}
       />
-
-      {/* Modal */}
       <div style={{
         position:'fixed', top:'50%', left:'50%',
         transform:'translate(-50%,-50%)',
@@ -576,21 +573,14 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
           ? 'deleteShakeX 0.5s ease'
           : 'deleteModalPop 0.4s cubic-bezier(0.34,1.28,0.64,1) both',
       }}>
-
-        {/* ── Header ── */}
         <div style={{ background:'linear-gradient(135deg,#1a0000 0%,#2d0808 100%)', padding:'28px 28px 24px', position:'relative', overflow:'hidden' }}>
-          {/* Orbs */}
           <div style={{ position:'absolute', top:-40, right:-20, width:150, height:150, borderRadius:'50%', background:'rgba(220,38,38,0.12)', pointerEvents:'none' }}/>
           <div style={{ position:'absolute', bottom:-30, left:30, width:100, height:100, borderRadius:'50%', background:'rgba(220,38,38,0.07)', pointerEvents:'none' }}/>
-          {/* Scan line */}
           <div style={{ position:'absolute', top:0, bottom:0, width:60, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)', animation:'scanLine 3s ease-in-out infinite', pointerEvents:'none' }}/>
-
           <div style={{ position:'relative', zIndex:2 }}>
-            {/* Icon */}
             <div style={{ width:54, height:54, borderRadius:16, background:'rgba(220,38,38,0.18)', border:'1.5px solid rgba(220,38,38,0.35)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:18, animation:'deleteIconSpin 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.1s both' }}>
               <MS name="delete_forever" size={28} style={{ color:'#ef4444' }}/>
             </div>
-
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <div>
                 <div style={{ fontSize:20, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', marginBottom:5, fontFamily:"'DM Serif Display',serif" }}>
@@ -612,7 +602,6 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
           </div>
         </div>
 
-        {/* ── Success state ── */}
         {deleted ? (
           <div style={{ padding:'40px 28px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', animation:'fadeUp 0.4s ease' }}>
             <div style={{ width:64, height:64, borderRadius:'50%', background:'#dcfce7', border:'2px solid #86efac', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 }}>
@@ -628,9 +617,7 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
           </div>
         ) : (
           <>
-            {/* ── Body ── */}
             <div style={{ padding:'22px 28px' }}>
-              {/* Warning list */}
               <div style={{ background:'#fff5f5', border:'1.5px solid #fecaca', borderRadius:14, padding:'14px 16px', marginBottom:20 }}>
                 {warnings.map((w, i) => (
                   <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'8px 0', borderBottom: i < warnings.length - 1 ? '1px solid #fee2e2' : 'none', opacity:0, animation:`fadeUp 0.4s ease ${80 + i*80}ms both` }}>
@@ -641,8 +628,6 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
                   </div>
                 ))}
               </div>
-
-              {/* Confirm input */}
               <div>
                 <label style={{ display:'block', fontSize:10, fontWeight:800, color:C.textMuted, letterSpacing:'0.12em', textTransform:'uppercase', marginBottom:8 }}>
                   Type <span style={{ color:C.danger, fontWeight:900 }}>DELETE</span> to confirm
@@ -672,8 +657,6 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
                 )}
               </div>
             </div>
-
-            {/* ── Footer ── */}
             <div style={{ padding:'0 28px 24px', display:'flex', gap:10 }}>
               <button
                 onClick={onClose}
@@ -683,7 +666,6 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
                 onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.borderColor=C.border;}}>
                 Cancel
               </button>
-
               <button
                 onClick={() => isValid && !deleting && onConfirm()}
                 disabled={!isValid || deleting}
@@ -747,32 +729,91 @@ function DeleteAccountModal({ visible, onClose, onConfirm, deleting, deleted }) 
 // ─── EDIT PROFILE COMPONENTS ──────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint, disabled }) {
+// ─── FIXED: FloatInput with proper memoization and stable event handlers ───
+const FloatInput = memo(function FloatInput({ label, value, onChange, type='text', icon, iconColor, hint, disabled }) {
   const [focused, setFocused] = useState(false);
   const has = value && value.length > 0;
+  
+  const handleChange = useCallback((e) => {
+    if (onChange) {
+      onChange(e);
+    }
+  }, [onChange]);
+  
   return (
     <div>
-      <div style={{ display:"flex", alignItems:"center", border:`2px solid ${focused?C.primary:has?C.heroDark:C.cardBorder}`, borderRadius:14, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 6px 24px rgba(200,75,17,0.1)`:"none", overflow:"hidden" }}>
+      <div style={{ 
+        display:"flex", 
+        alignItems:"center", 
+        border:`2px solid ${focused?C.primary:has?C.heroDark:C.cardBorder}`, 
+        borderRadius:14, 
+        background:focused?C.primaryPale:C.surface, 
+        transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", 
+        boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 6px 24px rgba(200,75,17,0.1)`:"none", 
+        overflow:"hidden" 
+      }}>
         {icon && (
-          <div style={{ paddingLeft:14, display:"flex", alignItems:"center", transform:focused?"scale(1.15)":"scale(1)", transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+          <div style={{ 
+            paddingLeft:14, 
+            display:"flex", 
+            alignItems:"center", 
+            transform:focused?"scale(1.15)":"scale(1)", 
+            transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" 
+          }}>
             <MS name={icon} size={16} style={{ color:focused?C.primary:iconColor||C.textFaint }}/>
           </div>
         )}
-        <div style={{ flex:1, position:"relative", paddingTop:20, paddingBottom:8, paddingLeft:icon?10:14, paddingRight:14 }}>
-          <label style={{ position:"absolute", top:focused||has?5:"50%", transform:focused||has?"none":"translateY(-50%)", fontSize:focused||has?9:13, fontWeight:focused||has?800:500, color:focused?C.primary:C.textFaint, letterSpacing:focused||has?"0.12em":"0", textTransform:focused||has?"uppercase":"none", transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", pointerEvents:"none", fontFamily:"'Manrope',sans-serif" }}>
+        <div style={{ 
+          flex:1, 
+          position:"relative", 
+          paddingTop:20, 
+          paddingBottom:8, 
+          paddingLeft:icon?10:14, 
+          paddingRight:14 
+        }}>
+          <label style={{ 
+            position:"absolute", 
+            top:focused||has?5:"50%", 
+            transform:focused||has?"none":"translateY(-50%)", 
+            fontSize:focused||has?9:13, 
+            fontWeight:focused||has?800:500, 
+            color:focused?C.primary:C.textFaint, 
+            letterSpacing:focused||has?"0.12em":"0", 
+            textTransform:focused||has?"uppercase":"none", 
+            transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", 
+            pointerEvents:"none", 
+            fontFamily:"'Manrope',sans-serif" 
+          }}>
             {label}
           </label>
-          <input type={type} value={value} onChange={onChange} disabled={disabled}
-            onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
-            style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:13, fontWeight:600, color:C.text, fontFamily:"'Manrope',sans-serif", marginTop:2 }}/>
+          <input
+            type={type}
+            value={value || ''}
+            onChange={handleChange}
+            disabled={disabled}
+            onFocus={()=>setFocused(true)}
+            onBlur={()=>setFocused(false)}
+            style={{ 
+              width:"100%", 
+              background:"transparent", 
+              border:"none", 
+              outline:"none", 
+              fontSize:13, 
+              fontWeight:600, 
+              color:C.text, 
+              fontFamily:"'Manrope',sans-serif", 
+              marginTop:2 
+            }}
+          />
         </div>
       </div>
       {hint && <p style={{ fontSize:10, color:C.textFaint, fontWeight:500, marginTop:4, paddingLeft:4 }}>{hint}</p>}
     </div>
   );
-}
+});
 
-function FloatInputAI({ label, value, onChange, icon, iconColor, hint }) {
+// ─── FIXED: FloatInputAI with proper memoization ───
+const FloatInputAI = memo(function FloatInputAI({ label, value, onChange, icon, iconColor, hint }) {
   const [focused,   setFocused]   = useState(false);
   const [aiOpen,    setAIOpen]    = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -781,13 +822,19 @@ function FloatInputAI({ label, value, onChange, icon, iconColor, hint }) {
   const wrapRef = useRef(null);
   const has = value && value.length > 0;
 
+  const handleChange = useCallback((e) => {
+    if (onChange) {
+      onChange(e);
+    }
+  }, [onChange]);
+
   useEffect(() => {
     const h = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setAIOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const handleGenerate = async (stylePref) => {
+  const handleGenerate = useCallback(async (stylePref) => {
     setStreaming(true);
     setAIResult("");
     await generate({
@@ -799,34 +846,96 @@ Rules: 1-3 words max. Premium-sounding. Relevant to handbags/fashion. Return ONL
       onDone:  (t) => { setAIResult(t.trim()); setStreaming(false); },
       onError: (e) => { setAIResult("Error: " + e); setStreaming(false); },
     });
-  };
+  }, [generate, value]);
 
-  const handleAccept = () => {
+  const handleAccept = useCallback(() => {
     onChange({ target: { value: aiResult.trim() } });
     setAIOpen(false);
     setAIResult("");
-  };
+  }, [onChange, aiResult]);
 
   return (
     <div ref={wrapRef} style={{ position:"relative" }}>
-      <div style={{ display:"flex", alignItems:"center", border:`2px solid ${focused?C.primary:has?C.heroDark:C.cardBorder}`, borderRadius:14, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 6px 24px rgba(200,75,17,0.1)`:"none" }}>
+      <div style={{ 
+        display:"flex", 
+        alignItems:"center", 
+        border:`2px solid ${focused?C.primary:has?C.heroDark:C.cardBorder}`, 
+        borderRadius:14, 
+        background:focused?C.primaryPale:C.surface, 
+        transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", 
+        boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 6px 24px rgba(200,75,17,0.1)`:"none" 
+      }}>
         {icon && (
-          <div style={{ paddingLeft:14, display:"flex", alignItems:"center", transform:focused?"scale(1.15)":"scale(1)", transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
+          <div style={{ 
+            paddingLeft:14, 
+            display:"flex", 
+            alignItems:"center", 
+            transform:focused?"scale(1.15)":"scale(1)", 
+            transition:"transform 0.3s cubic-bezier(0.34,1.56,0.64,1)" 
+          }}>
             <MS name={icon} size={16} style={{ color:focused?C.primary:iconColor||C.textFaint }}/>
           </div>
         )}
-        <div style={{ flex:1, position:"relative", paddingTop:20, paddingBottom:8, paddingLeft:icon?10:14, paddingRight:10 }}>
-          <label style={{ position:"absolute", top:focused||has?5:"50%", transform:focused||has?"none":"translateY(-50%)", fontSize:focused||has?9:13, fontWeight:focused||has?800:500, color:focused?C.primary:C.textFaint, letterSpacing:focused||has?"0.12em":"0", textTransform:focused||has?"uppercase":"none", transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", pointerEvents:"none", fontFamily:"'Manrope',sans-serif" }}>
+        <div style={{ 
+          flex:1, 
+          position:"relative", 
+          paddingTop:20, 
+          paddingBottom:8, 
+          paddingLeft:icon?10:14, 
+          paddingRight:10 
+        }}>
+          <label style={{ 
+            position:"absolute", 
+            top:focused||has?5:"50%", 
+            transform:focused||has?"none":"translateY(-50%)", 
+            fontSize:focused||has?9:13, 
+            fontWeight:focused||has?800:500, 
+            color:focused?C.primary:C.textFaint, 
+            letterSpacing:focused||has?"0.12em":"0", 
+            textTransform:focused||has?"uppercase":"none", 
+            transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", 
+            pointerEvents:"none", 
+            fontFamily:"'Manrope',sans-serif" 
+          }}>
             {label}
           </label>
-          <input value={value} onChange={onChange}
-            onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
-            style={{ width:"100%", background:"transparent", border:"none", outline:"none", fontSize:13, fontWeight:600, color:C.text, fontFamily:"'Manrope',sans-serif", marginTop:2 }}/>
+          <input
+            value={value || ''}
+            onChange={handleChange}
+            onFocus={()=>setFocused(true)}
+            onBlur={()=>setFocused(false)}
+            style={{ 
+              width:"100%", 
+              background:"transparent", 
+              border:"none", 
+              outline:"none", 
+              fontSize:13, 
+              fontWeight:600, 
+              color:C.text, 
+              fontFamily:"'Manrope',sans-serif", 
+              marginTop:2 
+            }}
+          />
         </div>
         <button
           onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
           title="AI Brand Name Ideas (Gemini)"
-          style={{ marginRight:10, width:32, height:32, borderRadius:10, border:"none", background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryBg, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.35)`:"none", transform:aiOpen?"scale(1.1)":"scale(1)", flexShrink:0 }}
+          style={{ 
+            marginRight:10, 
+            width:32, 
+            height:32, 
+            borderRadius:10, 
+            border:"none", 
+            background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryBg, 
+            cursor:"pointer", 
+            display:"flex", 
+            alignItems:"center", 
+            justifyContent:"center", 
+            transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", 
+            boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.35)`:"none", 
+            transform:aiOpen?"scale(1.1)":"scale(1)", 
+            flexShrink:0 
+          }}
           onMouseEnter={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBorder;e.currentTarget.style.transform="scale(1.08)";} }}
           onMouseLeave={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.transform="scale(1)";} }}>
           <SparkleIcon size={15} color={aiOpen?"white":C.primary} animated={streaming}/>
@@ -837,9 +946,10 @@ Rules: 1-3 words max. Premium-sounding. Relevant to handbags/fashion. Return ONL
         onClose={()=>setAIOpen(false)} onAccept={handleAccept} onRegenerate={handleGenerate}/>
     </div>
   );
-}
+});
 
-function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
+// ─── FIXED: BrandStoryBoxAI with proper memoization ───
+const BrandStoryBoxAI = memo(function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
   const [focused,   setFocused]   = useState(false);
   const [aiOpen,    setAIOpen]    = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -847,8 +957,14 @@ function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
   const { generate } = useAIAssist();
   const wrapRef = useRef(null);
   const max  = 400;
-  const pct  = Math.min((value.length / max) * 100, 100);
+  const pct  = Math.min(((value?.length || 0) / max) * 100, 100);
   const circ = 2 * Math.PI * 13;
+
+  const handleChange = useCallback((e) => {
+    if (onChange) {
+      onChange(e.target.value.slice(0, max));
+    }
+  }, [onChange, max]);
 
   useEffect(() => {
     const h = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setAIOpen(false); };
@@ -856,7 +972,7 @@ function BrandStoryBoxAI({ value, onChange, sellerName, bagCategories }) {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const handleGenerate = async (stylePref) => {
+  const handleGenerate = useCallback(async (stylePref) => {
     setStreaming(true);
     setAIResult("");
     const catLabels = (bagCategories || []).map(id => BAG_CATEGORIES.find(c => c.id === id)?.label).filter(Boolean).join(", ");
@@ -872,27 +988,65 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
       onDone:  (t) => { setAIResult(t.trim().slice(0, max)); setStreaming(false); },
       onError: (e) => { setAIResult("Error: " + e); setStreaming(false); },
     });
-  };
+  }, [generate, sellerName, bagCategories, value, max]);
 
-  const handleAccept = () => {
+  const handleAccept = useCallback(() => {
     onChange(aiResult.trim().slice(0, max));
     setAIOpen(false);
     setAIResult("");
-  };
+  }, [onChange, aiResult, max]);
 
   return (
     <div ref={wrapRef} style={{ position:"relative" }}>
-      <div style={{ border:`2px solid ${focused?C.primary:value.length>0?C.heroDark:C.cardBorder}`, borderRadius:16, background:focused?C.primaryPale:C.surface, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 8px 32px rgba(200,75,17,0.1)`:"none" }}>
+      <div style={{ 
+        border:`2px solid ${focused?C.primary:(value && value.length > 0)?C.heroDark:C.cardBorder}`, 
+        borderRadius:16, 
+        background:focused?C.primaryPale:C.surface, 
+        transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", 
+        boxShadow:focused?`0 0 0 4px ${C.primaryBg},0 8px 32px rgba(200,75,17,0.1)`:"none" 
+      }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px 0" }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ width:26, height:26, borderRadius:8, background:focused?C.primary:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>
+            <div style={{ 
+              width:26, 
+              height:26, 
+              borderRadius:8, 
+              background:focused?C.primary:C.primaryBg, 
+              display:"flex", 
+              alignItems:"center", 
+              justifyContent:"center", 
+              transition:"all 0.3s" 
+            }}>
               <MS name="auto_awesome" size={13} style={{ color:focused?"#fff":C.primary }}/>
             </div>
-            <span style={{ fontSize:10, fontWeight:800, color:focused?C.primary:C.textFaint, letterSpacing:"0.12em", textTransform:"uppercase", transition:"color 0.3s" }}>Brand Story</span>
+            <span style={{ 
+              fontSize:10, 
+              fontWeight:800, 
+              color:focused?C.primary:C.textFaint, 
+              letterSpacing:"0.12em", 
+              textTransform:"uppercase", 
+              transition:"color 0.3s" 
+            }}>Brand Story</span>
           </div>
           <button
             onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); setAIOpen(v=>!v); if(!aiOpen){setAIResult("");setStreaming(false);} }}
-            style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, border:`1.5px solid ${aiOpen?C.primary:C.primaryBorder}`, background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryPale, color:aiOpen?"white":C.primary, fontSize:10, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", letterSpacing:"0.06em", transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.3)`:"none" }}
+            style={{ 
+              display:"flex", 
+              alignItems:"center", 
+              gap:6, 
+              padding:"5px 12px", 
+              borderRadius:20, 
+              border:`1.5px solid ${aiOpen?C.primary:C.primaryBorder}`, 
+              background:aiOpen?`linear-gradient(135deg,${C.primary},${C.accent})`:C.primaryPale, 
+              color:aiOpen?"white":C.primary, 
+              fontSize:10, 
+              fontWeight:800, 
+              cursor:"pointer", 
+              fontFamily:"'Manrope',sans-serif", 
+              letterSpacing:"0.06em", 
+              transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)", 
+              boxShadow:aiOpen?`0 4px 14px rgba(200,75,17,0.3)`:"none" 
+            }}
             onMouseEnter={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primary;} }}
             onMouseLeave={e=>{ if(!aiOpen){e.currentTarget.style.background=C.primaryPale;e.currentTarget.style.borderColor=C.primaryBorder;} }}>
             <SparkleIcon size={11} color={aiOpen?"white":C.primary} animated={streaming}/>
@@ -900,14 +1054,30 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
           </button>
         </div>
 
-        <textarea value={value} onChange={e=>onChange(e.target.value.slice(0,max))}
-          onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+        <textarea
+          value={value || ''}
+          onChange={handleChange}
+          onFocus={()=>setFocused(true)}
+          onBlur={()=>setFocused(false)}
           placeholder="Tell buyers about your bag brand — your origin story, what makes your pieces special, the vibe you bring to every collection…"
           rows={4}
-          style={{ width:"100%", border:"none", outline:"none", resize:"none", background:"transparent", padding:"10px 16px 0", fontSize:12, fontWeight:500, color:C.text, lineHeight:1.7, fontFamily:"'Manrope',sans-serif" }}/>
+          style={{ 
+            width:"100%", 
+            border:"none", 
+            outline:"none", 
+            resize:"none", 
+            background:"transparent", 
+            padding:"10px 16px 0", 
+            fontSize:12, 
+            fontWeight:500, 
+            color:C.text, 
+            lineHeight:1.7, 
+            fontFamily:"'Manrope',sans-serif" 
+          }}
+        />
 
         <div style={{ display:"flex", alignItems:"center", justifyContent:"flex-end", padding:"4px 12px 10px", gap:7 }}>
-          <span style={{ fontSize:10, color:C.textFaint, fontWeight:600 }}>{value.length}/{max}</span>
+          <span style={{ fontSize:10, color:C.textFaint, fontWeight:600 }}>{(value?.length || 0)}/{max}</span>
           <svg width="30" height="30" viewBox="0 0 30 30" style={{ transform:"rotate(-90deg)" }}>
             <circle cx="15" cy="15" r="13" fill="none" stroke={C.borderLight} strokeWidth="2.5"/>
             <circle cx="15" cy="15" r="13" fill="none" stroke={pct>=100?C.danger:pct>75?C.accent:C.primary} strokeWidth="2.5" strokeDasharray={circ} strokeDashoffset={circ-(circ*pct)/100} strokeLinecap="round" style={{ transition:"stroke-dashoffset 0.4s ease,stroke 0.3s" }}/>
@@ -919,7 +1089,7 @@ Return ONLY the brand story text — no quotes, no label, no explanation.`,
         onClose={()=>setAIOpen(false)} onAccept={handleAccept} onRegenerate={handleGenerate}/>
     </div>
   );
-}
+});
 
 function CatChip({ cat, selected, onClick, index, visible }) {
   const [hov, setHov] = useState(false);
@@ -969,19 +1139,47 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
 
   useEffect(() => {
     if (!seller) return;
-    setForm({ full_name:seller.name||'', email:seller.email||'', phone:seller.phone||'', brand_name:seller.brand_name||'', brand_story:seller.brand_story||'' });
+    setForm({ 
+      full_name:seller.name||'', 
+      email:seller.email||'', 
+      phone:seller.phone||'', 
+      brand_name:seller.brand_name||'', 
+      brand_story:seller.brand_story||'' 
+    });
     setCategories(seller.bag_categories||[]);
   }, [seller]);
 
-  const showToast = (msg, type='success') => {
+  const showToast = useCallback((msg, type='success') => {
     setToast({ visible:true, message:msg, type });
     setTimeout(()=>setToast(t=>({...t,visible:false})), 3000);
-  };
+  }, []);
 
-  const f = (field) => (e) => setForm(prev=>({...prev,[field]:typeof e==='string'?e:e.target.value}));
-  const toggleCat = (id) => setCategories(prev=>prev.includes(id)?prev.filter(c=>c!==id):[...prev,id]);
+  // ─── FIXED: Stable callbacks with useCallback so memo'd inputs don't re-render ───
+  const handleFullName = useCallback((e) => {
+    setForm(prev => ({ ...prev, full_name: e.target.value }));
+  }, []);
+  
+  const handleEmail = useCallback((e) => {
+    setForm(prev => ({ ...prev, email: e.target.value }));
+  }, []);
+  
+  const handlePhone = useCallback((e) => {
+    setForm(prev => ({ ...prev, phone: e.target.value }));
+  }, []);
+  
+  const handleBrandName = useCallback((e) => {
+    setForm(prev => ({ ...prev, brand_name: e.target.value }));
+  }, []);
+  
+  const handleBrandStory = useCallback((v) => {
+    setForm(prev => ({ ...prev, brand_story: v }));
+  }, []);
 
-  const handleSave = async () => {
+  const toggleCat = useCallback((id) => {
+    setCategories(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  }, []);
+
+  const handleSave = useCallback(async () => {
     if (!form.full_name.trim())                           { showToast('Name is required','error'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { showToast('Invalid email address','error'); return; }
     if (categories.length===0)                            { showToast('Pick at least one bag category','error'); return; }
@@ -1005,7 +1203,7 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       setTimeout(()=>setSaved(false), 2800);
     } catch(e) { showToast(e.message||'Save failed','error'); }
     finally { setSaving(false); }
-  };
+  }, [form, categories, userId, onSaved, showToast]);
 
   const SCard = ({ children, visible, delay=0, extra={} }) => (
     <div style={{ background:"rgba(255,255,255,0.95)", backdropFilter:"blur(12px)", border:`1.5px solid ${C.cardBorder}`, borderRadius:20, padding:"28px", marginBottom:16, boxShadow:`0 6px 32px rgba(200,75,17,0.06)`, opacity:visible?1:0, transform:visible?"none":"translateY(24px)", transition:`opacity 0.55s ease ${delay}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms`, ...extra }}>
@@ -1056,9 +1254,9 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       <SCard visible={sec1In}>
         <SHead icon="person" title="Personal Info" subtitle="Your identity on BagSearch"/>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:14 }}>
-          <FloatInput label="Full Name" value={form.full_name} onChange={f('full_name')} icon="badge"  iconColor={C.primary}/>
-          <FloatInput label="Email"     value={form.email}     onChange={f('email')}     icon="mail"   iconColor={C.accent} type="email"/>
-          <FloatInput label="Phone"     value={form.phone}     onChange={f('phone')}     icon="phone"  iconColor={C.success} type="tel" hint="Include country code e.g. +234"/>
+          <FloatInput label="Full Name" value={form.full_name} onChange={handleFullName} icon="badge"  iconColor={C.primary}/>
+          <FloatInput label="Email"     value={form.email}     onChange={handleEmail}    icon="mail"   iconColor={C.accent} type="email"/>
+          <FloatInput label="Phone"     value={form.phone}     onChange={handlePhone}    icon="phone"  iconColor={C.success} type="tel" hint="Include country code e.g. +234"/>
         </div>
       </SCard>
 
@@ -1068,14 +1266,14 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
           <FloatInputAI
             label="Brand Name"
             value={form.brand_name}
-            onChange={f('brand_name')}
+            onChange={handleBrandName}
             icon="shopping_bag"
             iconColor={C.primary}
             hint="Your store name e.g. Adé Bags Lagos — tap ✨ for AI name ideas"
           />
           <BrandStoryBoxAI
             value={form.brand_story}
-            onChange={(v) => setForm(prev=>({...prev, brand_story:v}))}
+            onChange={handleBrandStory}
             sellerName={form.brand_name || form.full_name}
             bagCategories={categories}
           />
@@ -1146,7 +1344,6 @@ export default function SellerProfile() {
   const [tabIn,       setTabIn]       = useState(false);
   const [editPanelIn, setEditPanelIn] = useState(false);
 
-  // ── Delete account state ──
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting,        setDeleting]        = useState(false);
   const [deleted,         setDeleted]         = useState(false);
@@ -1208,16 +1405,13 @@ export default function SellerProfile() {
     loadMetrics();
   },[user]);
 
-  // ── Delete account handler ──
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = useCallback(async () => {
     setDeleting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
       const userId = session.user.id;
 
-      // 1. If user is a seller, delete their products from Pinecone first
-      // We do this here because the Edge Function doesn't have Pinecone access
       const { data: products } = await supabase
         .from('products')
         .select('id')
@@ -1228,7 +1422,6 @@ export default function SellerProfile() {
         await deleteFromPinecone(productIds);
       }
 
-      // 2. Call the Edge Function to delete the auth user and all related data
       let detail = '';
       try {
         const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
@@ -1243,14 +1436,10 @@ export default function SellerProfile() {
               detail = body?.error || body?.message || detail;
             } catch (_) {}
           }
-          console.error('Edge function error:', functionError);
-          console.error('Edge function error detail:', detail);
           throw new Error(detail || 'Failed to delete account. Please try again.');
         }
 
-        if (fnData?.error) {
-          throw new Error(fnData.error);
-        }
+        if (fnData?.error) throw new Error(fnData.error);
       } catch (invokeErr) {
         if (invokeErr.message?.includes('function not found') || invokeErr.message?.includes('404')) {
           throw new Error('Delete account service is not configured. Please contact support.');
@@ -1267,7 +1456,7 @@ export default function SellerProfile() {
       console.error('Delete account error:', e);
       setDeleting(false);
     }
-  };
+  }, [navigate]);
 
   const stats = useMemo(()=>[
     { icon:'payments',        label:'Total Revenue',   value:'—',                                             badge:'—', accent:C.primary,   glow:'rgba(200,75,17,0.15)' },
@@ -1276,11 +1465,11 @@ export default function SellerProfile() {
     { icon:'visibility',      label:'Total Views',     value:metricsLoading?'…':String(totalViewsCount),     badge:'',  accent:'#a78bfa',    glow:'rgba(167,139,250,0.12)' },
   ],[metricsLoading,activeListingsCount,totalViewsCount]);
 
-  const switchTab = (tab) => {
+  const switchTab = useCallback((tab) => {
     if (tab===activeTab) return;
     setActiveTab(tab);
     if (tab==='edit'){ setEditPanelIn(false); setTimeout(()=>setEditPanelIn(true),80); }
-  };
+  }, [activeTab]);
 
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)` }}>
@@ -1327,17 +1516,6 @@ export default function SellerProfile() {
         @keyframes cursorBlink  {0%,100%{opacity:1}50%{opacity:0}}
         @keyframes progressPulse{0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
         @keyframes skeletonPulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
-        @keyframes deleteShakeX {
-          0%,100%{transform:translate(-50%,-50%)}
-          15%{transform:translate(calc(-50% - 7px),-50%)}
-          30%{transform:translate(calc(-50% + 6px),-50%)}
-          45%{transform:translate(calc(-50% - 4px),-50%)}
-          60%{transform:translate(calc(-50% + 3px),-50%)}
-          75%{transform:translate(calc(-50% - 2px),-50%)}
-        }
-        @keyframes deleteModalPop{from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-        @keyframes deleteIconSpin{from{opacity:0;transform:rotate(-90deg) scale(0.5)}to{opacity:1;transform:rotate(0deg) scale(1)}}
-        @keyframes deleteCheckDraw{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
 
         .sidebar-desktop{display:flex!important}
         .sidebar-mobile-overlay{display:none!important}
@@ -1573,12 +1751,12 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     { icon:'edit',        label:'Edit Profile', key:'edit', badge:true  },
   ];
 
-  const handleClick = (item) => {
+  const handleClick = useCallback((item) => {
     if (item.key==='home')                          navigate('/products');
     if (item.key==='dashboard'||item.key==='edit')  switchTab?.(item.key);
     if (item.key==='listings')                      navigate('/seller-listing');
     onNav?.();
-  };
+  }, [navigate, switchTab, onNav]);
 
   return (
     <>
@@ -1612,7 +1790,6 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
       </nav>
 
       <div style={{ padding:"16px 14px 20px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-        {/* User info */}
         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
           <div style={{ width:36, height:36, borderRadius:"50%", background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"white", flexShrink:0 }}>{initials}</div>
           <div style={{ minWidth:0 }}>
@@ -1621,13 +1798,11 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
           </div>
         </div>
 
-        {/* Contact info */}
         <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="mail" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{seller?.email}</span></div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="phone" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted }}>{seller?.phone}</span></div>
         </div>
 
-        {/* ── Delete Account Button ── */}
         <button
           onClick={onDeleteClick}
           style={{
