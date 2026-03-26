@@ -61,7 +61,6 @@ function formatRelativeTime(value) {
 
 function mapBuyerViewRow(row) {
   const productName = row.product_name || row.products?.name || row.product?.name || 'Product';
-  const productSku  = row.product_sku  || row.products?.sku  || row.product?.sku  || row.sku || '—';
   const img =
     row.product_image ||
     (Array.isArray(row.products?.images) ? row.products.images[0] : null) ||
@@ -73,7 +72,7 @@ function mapBuyerViewRow(row) {
     row.buyer_full_name || row.buyer_email || row.users?.email || 'Buyer';
   const buyerPhone = row.buyer_phone || row.users?.phone || row.buyer?.phone || row.phone || '';
   return {
-    id: row.id, bag: productName, sku: productSku, img,
+    id: row.id, bag: productName, sku: '—', img,
     buyer: buyerName, phone: buyerPhone, source: row.source || row.view_source || 'direct',
     time: formatRelativeTime(row.viewed_at || row.created_at), replied: false,
   };
@@ -1117,6 +1116,15 @@ function SaveToast({ message, type, visible }) {
   );
 }
 
+// ─── SCard — defined outside EditProfilePanel to prevent focus loss ───────────
+function SCard({ children, visible, delay=0, extra={} }) {
+  return (
+    <div style={{ background:"rgba(255,255,255,0.95)", backdropFilter:"blur(12px)", border:`1.5px solid ${C.cardBorder}`, borderRadius:20, padding:"28px", marginBottom:16, boxShadow:`0 6px 32px rgba(200,75,17,0.06)`, opacity:visible?1:0, transform:visible?"none":"translateY(24px)", transition:`opacity 0.55s ease ${delay}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms`, ...extra }}>
+      {children}
+    </div>
+  );
+}
+
 // ─── Edit Profile Panel ───────────────────────────────────────────────────────
 function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
   const [form,       setForm]       = useState({ full_name:'', email:'', phone:'', brand_name:'', brand_story:'' });
@@ -1204,12 +1212,6 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
     } catch(e) { showToast(e.message||'Save failed','error'); }
     finally { setSaving(false); }
   }, [form, categories, userId, onSaved, showToast]);
-
-  const SCard = ({ children, visible, delay=0, extra={} }) => (
-    <div style={{ background:"rgba(255,255,255,0.95)", backdropFilter:"blur(12px)", border:`1.5px solid ${C.cardBorder}`, borderRadius:20, padding:"28px", marginBottom:16, boxShadow:`0 6px 32px rgba(200,75,17,0.06)`, opacity:visible?1:0, transform:visible?"none":"translateY(24px)", transition:`opacity 0.55s ease ${delay}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}ms`, ...extra }}>
-      {children}
-    </div>
-  );
 
   const SHead = ({ icon, title, subtitle, color=C.primary }) => (
     <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:22 }}>
@@ -1395,10 +1397,10 @@ export default function SellerProfile() {
         if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
         const { data:vd, count:vc, error:ve } = await supabase
           .from('product_views')
-          .select(`id,viewed_at,source,buyer_name,buyer_phone,products:product_id(id,name,sku,images),users:buyer_id(full_name,email,phone)`,{ count:'exact' })
+          .select(`id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images),users:buyer_id(full_name,email,phone)`,{ count:'exact' })
           .in('product_id',productIds).order('viewed_at',{ ascending:false }).limit(20);
         if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
-        else { setTotalViewsCount(rows.reduce((a,p)=>a+(Number(p.views_count)||0),0)); }
+        else { console.error('product_views fetch error:', ve.message); setTotalViewsCount(0); setBuyerViews([]); }
       } catch(e){ console.error(e); }
       finally { setMetricsLoading(false); }
     }
@@ -1412,6 +1414,7 @@ export default function SellerProfile() {
       if (!session) throw new Error('Not authenticated');
       const userId = session.user.id;
 
+      // Delete seller's products from Pinecone
       const { data: products } = await supabase
         .from('products')
         .select('id')
@@ -1420,32 +1423,37 @@ export default function SellerProfile() {
       if (products && products.length > 0) {
         const productIds = products.map(p => p.id);
         await deleteFromPinecone(productIds);
+        await supabase.from('product_views').delete().in('product_id', productIds);
+        await supabase.from('products').delete().in('id', productIds);
       }
 
-      let detail = '';
-      try {
-        const { data: fnData, error: functionError } = await supabase.functions.invoke('delete-account', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-
-        if (functionError) {
-          detail = functionError.message;
-          if (functionError.context) {
-            try {
-              const body = await functionError.context.json();
-              detail = body?.error || body?.message || detail;
-            } catch (_) {}
-          }
-          throw new Error(detail || 'Failed to delete account. Please try again.');
-        }
-
-        if (fnData?.error) throw new Error(fnData.error);
-      } catch (invokeErr) {
-        if (invokeErr.message?.includes('function not found') || invokeErr.message?.includes('404')) {
-          throw new Error('Delete account service is not configured. Please contact support.');
-        }
-        throw invokeErr;
+      // Delete buyer-side data
+      await supabase.from('product_views').delete().eq('buyer_id', userId);
+      for (const { table, col } of [
+        { table: 'search_history', col: 'user_id' },
+        { table: 'saved_items',    col: 'user_id' },
+        { table: 'orders',         col: 'user_id' },
+      ]) {
+        try { await supabase.from(table).delete().eq(col, userId); } catch (_) {}
       }
+
+      // Call edge function to delete the auth user using service role
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('delete-account', {
+        body: { userId },
+      });
+
+      if (fnError) {
+        let msg = fnError.message;
+        try {
+          const body = fnError.context
+            ? await fnError.context.json()
+            : null;
+          if (body?.error) msg = body.error;
+        } catch (_) {}
+        throw new Error(msg || 'Failed to delete account');
+      }
+
+      if (fnData?.error) throw new Error(fnData.error);
 
       setDeleted(true);
       setTimeout(async () => {

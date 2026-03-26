@@ -126,22 +126,11 @@ function RegRoute() {
   return <Reg />;
 }
 
-// Root route - redirects based on auth status
+// Root route - always redirect to products
 function RootRoute() {
-  const { user, loading } = useContext(AuthContext);
-  
-  // While loading, show nothing or a loading spinner
-  if (loading) {
-    return null;
-  }
-  
-  // If user is logged in, redirect to products
-  if (user) {
-    return <Navigate to="/products" replace />;
-  }
-  
-  // If not logged in, show Home page
-  return <Home />;
+  const { loading } = useContext(AuthContext);
+  if (loading) return null;
+  return <Navigate to="/products" replace />;
 }
 
 function App() {

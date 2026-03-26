@@ -520,9 +520,9 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
 
         {/* Color dots */}
         <div style={{display:'flex',gap:4,marginBottom:10,alignItems:'center'}}>
-          {product.colors.length > 0
-            ? (<>{product.colors.slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*25}ms`}} title={c.id||''}/>))}
-            {product.colors.length > 5 && <span style={{fontSize:9,color:C.textFaint,fontWeight:700}}>+{product.colors.length-5}</span>}</>)
+          {(product.colors||[]).length > 0
+            ? (<>{(product.colors||[]).slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*25}ms`}} title={c.id||''}/>))}
+            {(product.colors||[]).length > 5 && <span style={{fontSize:9,color:C.textFaint,fontWeight:700}}>+{(product.colors||[]).length-5}</span>}</>)
             : <span style={{fontSize:10,color:C.textFaint,fontWeight:500}}>—</span>
           }
         </div>
@@ -1057,7 +1057,7 @@ export default function Product(){
           sub:`${p.brand} • ${p.condition}`,
           price:parseFloat(p.price),
           quantity: qty,
-          lowStock: qty != null ? qty < 5 : false,
+          lowStock: qty != null && qty > 0 && qty < 5,
           category:mapCategory(p.category),
           location:p.location||'all',
           colors: mappedColors,
@@ -1083,7 +1083,22 @@ export default function Product(){
   },[fetchProducts,fetchVendors]);
 
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
-  const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
+  const searchSaveTimer = useRef(null);
+  const saveSearch = useCallback((q) => {
+    if (!user || !q.trim() || q.trim().length < 2) return;
+    clearTimeout(searchSaveTimer.current);
+    searchSaveTimer.current = setTimeout(async () => {
+      try {
+        await supabase.from('search_history').insert({
+          user_id: user.id,
+          query: q.trim(),
+          type: 'text',
+        });
+      } catch (_) {}
+    }, 1500); // save after user stops typing for 1.5s
+  }, [user]);
+
+  const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
   const handleCategoryChange=id=>{setActiveCategory(id);setDisplayedProducts(applyFilters(searchQuery,id,selectedLocation,allProducts));setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
   const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,combined));};
   const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);};
@@ -1379,30 +1394,61 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   const [reviews, setReviews] = useState([]);
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
+  const [submittingReview, setSubmittingReview] = useState(false);
   const vendorProducts = allProducts.filter(p => p.sellerId === vendor.id || p.seller_id === vendor.id);
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadData() {
       try {
         setLoading(true);
-        const { data } = await supabase.from('users').select('brand_name, brand_story, bag_categories, avatar_url, full_name, phone').eq('user_id', vendor.id).maybeSingle();
-        if (data) setProfile(data);
-      } catch (err) { console.error('Failed to load profile:', err); }
+        // Fetch seller profile
+        const { data: profileData } = await supabase
+          .from('users')
+          .select('brand_name, brand_story, bag_categories, avatar_url, full_name, phone')
+          .eq('user_id', vendor.id)
+          .maybeSingle();
+        if (profileData) setProfile(profileData);
+
+        // Fetch real reviews
+        const { data: reviewData } = await supabase
+          .from('seller_reviews')
+          .select('id, author_name, rating, text, created_at')
+          .eq('seller_id', vendor.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (reviewData) setReviews(reviewData);
+      } catch (err) { console.error('Failed to load vendor data:', err); }
       finally { setLoading(false); }
     }
-    loadProfile();
+    loadData();
   }, [vendor.id]);
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!newReviewText.trim()) return;
-    setReviews([{ id:Date.now(),author:'Current User',rating:newRating,text:newReviewText.trim(),date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) }, ...reviews]);
-    setNewReviewText(''); setNewRating(5);
+    setSubmittingReview(true);
+    try {
+      const { data, error } = await supabase.from('seller_reviews').insert({
+        seller_id: vendor.id,
+        author_name: 'Anonymous',
+        rating: newRating,
+        text: newReviewText.trim(),
+      }).select().single();
+      if (!error && data) setReviews(prev => [data, ...prev]);
+      setNewReviewText(''); setNewRating(5);
+    } catch (err) { console.error('Failed to post review:', err); }
+    finally { setSubmittingReview(false); }
   };
 
   const displayName = profile?.brand_name || profile?.full_name || vendor.name;
-  const displayAvatar = profile?.avatar_url ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="Avatar" /> : vendor.avatar || '🏪';
-  const displayStory = profile?.brand_story || vendor.description || 'Welcome to our store! We sell the finest bags around.';
+  const displayAvatar = profile?.avatar_url
+    ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="Avatar" />
+    : <span style={{fontSize:48}}>🏪</span>;
+  const displayStory = profile?.brand_story || null;
+  const displayCategories = profile?.bag_categories || [];
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : null;
 
   return (
     <div style={{ animation:'fadeIn 0.4s ease', paddingBottom:40 }}>
@@ -1410,24 +1456,43 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         onMouseEnter={e=>e.currentTarget.style.background='#fdf4ee'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
         <Icon name="arrow_back" size={18} /> Back to Vendors
       </button>
-      <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'center',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
-        <div style={{ width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0 }}>{displayAvatar}</div>
-        <div>
+
+      {/* Seller header */}
+      <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
+        <div style={{ width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0 }}>{displayAvatar}</div>
+        <div style={{ flex:1, minWidth:200 }}>
           <h2 style={{ fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em' }}>{displayName}</h2>
-          <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12 }}>
-            <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icon name="star" size={16}/> {vendor.rating} ({vendor.reviews} reviews)</span>
-            <span style={{ fontSize:13,color:'#9a6348' }}>•</span>
-            <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Products</span>
+          <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap' }}>
+            {avgRating && (
+              <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}>
+                <Icon name="star" size={16}/> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})
+              </span>
+            )}
+            <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Product{vendorProducts.length!==1?'s':''}</span>
           </div>
-          <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,maxWidth:600 }}>{displayStory}</p>
+          {displayStory
+            ? <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,maxWidth:600 }}>{displayStory}</p>
+            : <p style={{ fontSize:13,color:'#c4957a',fontStyle:'italic' }}>No brand story added yet.</p>
+          }
+          {displayCategories.length > 0 && (
+            <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:12 }}>
+              {displayCategories.map(cat => (
+                <span key={cat} style={{ fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,background:'#fde8d8',color:'#c84b11',border:'1px solid #f9c4a0' }}>{cat}</span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Products */}
       <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:16 }}>Products from {displayName}</h3>
       <div className="product-grid" style={{ marginBottom:40 }}>
         {vendorProducts.length > 0 ? vendorProducts.map((p,i) => (
           <ProductCard key={p.id} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />
         )) : <p style={{ color:'#9a6348' }}>No products available yet.</p>}
       </div>
+
+      {/* Reviews */}
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f7ece4',boxShadow:'0 4px 16px rgba(0,0,0,0.03)' }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Reviews & Comments</h3>
         <form onSubmit={handleSubmitReview} style={{ background:'#fdf8f5',padding:24,borderRadius:16,marginBottom:32,border:'1px solid #f0d9cc' }}>
@@ -1443,19 +1508,21 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
             </div>
           </div>
           <textarea value={newReviewText} onChange={e=>setNewReviewText(e.target.value)} placeholder="Share your experience with this seller..." style={{ width:'100%',padding:16,borderRadius:12,border:'1.5px solid #f0d9cc',background:'white',minHeight:100,resize:'vertical',fontSize:14,fontFamily:'inherit',marginBottom:16,outline:'none' }}/>
-          <button type="submit" style={{ padding:'12px 24px',background:'linear-gradient(135deg, #c84b11, #f97316)',color:'white',border:'none',borderRadius:10,fontWeight:800,fontSize:14,cursor:'pointer',boxShadow:'0 4px 12px rgba(200,75,17,0.3)',transition:'all 0.2s' }}
-            onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
-            onMouseLeave={e=>e.currentTarget.style.transform='none'}>Post Review</button>
+          <button type="submit" disabled={submittingReview} style={{ padding:'12px 24px',background:'linear-gradient(135deg, #c84b11, #f97316)',color:'white',border:'none',borderRadius:10,fontWeight:800,fontSize:14,cursor:submittingReview?'default':'pointer',opacity:submittingReview?0.7:1,boxShadow:'0 4px 12px rgba(200,75,17,0.3)',transition:'all 0.2s' }}>
+            {submittingReview ? 'Posting…' : 'Post Review'}
+          </button>
         </form>
         <div>
-          {reviews.length > 0 ? reviews.map(r=>(
+          {reviews.length === 0
+            ? <p style={{ color:'#c4957a',fontSize:13,textAlign:'center',padding:'24px 0' }}>No reviews yet. Be the first!</p>
+            : reviews.map(r=>(
             <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
               <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
                 <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                  <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{r.author.charAt(0)}</div>
+                  <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{(r.author_name||'A').charAt(0)}</div>
                   <div>
-                    <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author}</div>
-                    <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>{r.date}</div>
+                    <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author_name || 'Anonymous'}</div>
+                    <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</div>
                   </div>
                 </div>
                 <div style={{ display:'flex',gap:2 }}>
@@ -1464,12 +1531,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
               </div>
               <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,paddingLeft:46 }}>{r.text}</p>
             </div>
-          )) : (
-            <div style={{ textAlign:'center',padding:'32px 0' }}>
-              <Icon name="chat_bubble_outline" size={48} style={{ color:'#f0d9cc',marginBottom:12 }}/>
-              <p style={{ color:'#9a6348',fontSize:14,fontWeight:600 }}>No reviews yet. Be the first to share your experience!</p>
-            </div>
-          )}
+          ))}
         </div>
       </div>
     </div>
