@@ -1,8 +1,8 @@
-import { useState, useRef, useContext, useEffect, useCallback } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import { visualSearch } from './services/pinecone';
+import { visualSearch } from './services/visualSearch';
 import LogoIcon from './components/Logo.jsx';
 
 const BAG_COLOR_MAP = {
@@ -111,8 +111,8 @@ const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Out
 
 // ─── ANIMATED FEEDBACK BOX ────────────────────────────────────────────────────
 function FeedbackBox({ onClose }) {
-  const [phase, setPhase] = useState(0); // 0=hidden,1=entering,2=visible,3=exiting
-  const [step, setStep] = useState('rate'); // rate | comment | thanks
+  const [phase, setPhase] = useState(0);
+  const [step, setStep] = useState('rate');
   const [rating, setRating] = useState(0);
   const [hovRating, setHovRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -161,47 +161,20 @@ function FeedbackBox({ onClose }) {
 
   const ratingLabels = ['','Terrible 😤','Bad 😕','Okay 😐','Good 😊','Amazing! 🤩'];
   const ratingColors = ['','#dc2626','#ea580c','#d97706','#16a34a','#c84b11'];
-
   const visible = phase === 2;
 
   return (
     <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'0 0 24px',pointerEvents:'none' }}>
-      {/* Backdrop */}
       <div onClick={handleClose} style={{ position:'absolute',inset:0,background:'rgba(26,10,0,0.45)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',opacity:visible?1:0,transition:'opacity 0.4s ease',pointerEvents:'all',cursor:'pointer' }} />
-
-      {/* Panel */}
-      <div style={{
-        position:'relative',zIndex:1,width:'min(480px,96vw)',
-        background:'white',
-        borderRadius:28,
-        overflow:'hidden',
-        boxShadow:'0 -4px 0 0 #c84b11, 0 32px 80px rgba(200,75,17,0.22)',
-        pointerEvents:'all',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)',
-        transition: 'opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1)',
-      }}>
-        {/* Shimmer top bar */}
+      <div style={{ position:'relative',zIndex:1,width:'min(480px,96vw)',background:'white',borderRadius:28,overflow:'hidden',boxShadow:'0 -4px 0 0 #c84b11, 0 32px 80px rgba(200,75,17,0.22)',pointerEvents:'all',opacity:visible?1:0,transform:visible?'translateY(0) scale(1)':'translateY(40px) scale(0.96)',transition:'opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1)' }}>
         <div style={{ height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',backgroundSize:'200% 100%',animation:'shimFeedback 2.5s linear infinite' }} />
-
-        {/* Particles */}
         {particles.map(p => (
-          <div key={p.id} style={{
-            position:'absolute',top:'30%',left:`${p.x}%`,
-            fontSize:20,zIndex:10,pointerEvents:'none',
-            animation:`particleBurst 1s cubic-bezier(0.22,1,0.36,1) ${p.delay}ms both`,
-            '--angle': `${p.angle}deg`,
-            '--dist': `${p.dist}px`,
-          }}>{p.emoji}</div>
+          <div key={p.id} style={{ position:'absolute',top:'30%',left:`${p.x}%`,fontSize:20,zIndex:10,pointerEvents:'none',animation:`particleBurst 1s cubic-bezier(0.22,1,0.36,1) ${p.delay}ms both`,'--angle':`${p.angle}deg`,'--dist':`${p.dist}px` }}>{p.emoji}</div>
         ))}
-
-        {/* Close btn */}
         <button onClick={handleClose} style={{ position:'absolute',top:16,right:16,width:32,height:32,borderRadius:'50%',border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,transition:'all 0.2s',zIndex:5 }}
           onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}}
           onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>✕</button>
-
         <div style={{ padding:'28px 28px 32px' }}>
-          {/* STEP: RATE */}
           {step === 'rate' && (
             <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
               <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:20 }}>
@@ -211,14 +184,9 @@ function FeedbackBox({ onClose }) {
                   <p style={{ fontSize:13,color:C.textMuted,fontWeight:500,margin:0 }}>How's your BagSearch experience?</p>
                 </div>
               </div>
-
-              {/* Stars */}
               <div style={{ display:'flex',justifyContent:'center',gap:8,marginBottom:14,padding:'8px 0' }}>
                 {[1,2,3,4,5].map(star => (
-                  <button key={star}
-                    onMouseEnter={() => setHovRating(star)}
-                    onMouseLeave={() => setHovRating(0)}
-                    onClick={() => handleRating(star)}
+                  <button key={star} onMouseEnter={() => setHovRating(star)} onMouseLeave={() => setHovRating(0)} onClick={() => handleRating(star)}
                     style={{ background:'none',border:'none',cursor:'pointer',padding:4,transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',transform:(hovRating||rating)>=star?'scale(1.35) rotate(-8deg)':'scale(1)' }}>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill={(hovRating||rating)>=star?'#f97316':'#f0d9cc'} style={{ transition:'fill 0.15s,filter 0.15s',filter:(hovRating||rating)>=star?'drop-shadow(0 2px 6px rgba(249,115,22,0.5))':'none' }}>
                       <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
@@ -226,15 +194,11 @@ function FeedbackBox({ onClose }) {
                   </button>
                 ))}
               </div>
-
-              {/* Dynamic label */}
               <div style={{ textAlign:'center',height:20,marginBottom:16 }}>
                 <span style={{ fontSize:14,fontWeight:800,color:ratingColors[hovRating||rating]||C.textFaint,transition:'all 0.2s',opacity:(hovRating||rating)?1:0.4 }}>
                   {ratingLabels[hovRating||rating]||'Tap a star to rate'}
                 </span>
               </div>
-
-              {/* Quick chips */}
               <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
                 {['🛍️ Great selection','🚀 Fast loading','💎 Good quality','📱 Easy to use','💸 Fair prices'].map(chip => (
                   <button key={chip} onClick={() => { setComment(chip.replace(/^[^\s]+\s/,'')); setStep('comment'); }}
@@ -247,8 +211,6 @@ function FeedbackBox({ onClose }) {
               </div>
             </div>
           )}
-
-          {/* STEP: COMMENT */}
           {step === 'comment' && (
             <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
               <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:18 }}>
@@ -262,22 +224,15 @@ function FeedbackBox({ onClose }) {
                   </div>
                 </div>
               </div>
-
               <div style={{ position:'relative',marginBottom:16 }}>
-                <textarea
-                  autoFocus
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  placeholder="What did you love? What could be better? Every word helps us improve 💛"
+                <textarea autoFocus value={comment} onChange={e => setComment(e.target.value)} placeholder="What did you love? What could be better? Every word helps us improve 💛"
                   style={{ width:'100%',minHeight:110,padding:'14px 16px',borderRadius:16,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:14,fontFamily:'inherit',fontWeight:500,color:C.text,resize:'none',outline:'none',transition:'border-color 0.2s,box-shadow 0.2s',lineHeight:1.6,boxSizing:'border-box' }}
                   onFocus={e=>{e.target.style.borderColor=C.primary;e.target.style.boxShadow=`0 0 0 3px rgba(200,75,17,0.12)`;}}
-                  onBlur={e=>{e.target.style.borderColor=C.border;e.target.style.boxShadow='none';}}
-                />
+                  onBlur={e=>{e.target.style.borderColor=C.border;e.target.style.boxShadow='none';}}/>
                 <div style={{ position:'absolute',bottom:10,right:12,fontSize:11,color:C.textFaint,fontWeight:600 }}>{comment.length}/300</div>
               </div>
-
               <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%',padding:'14px 0',borderRadius:14,border:'none',background:submitting?C.primaryBg:'linear-gradient(135deg,#c84b11,#f97316)',color:submitting?C.primary:'white',fontWeight:900,fontSize:15,cursor:submitting?'default':'pointer',transition:'all 0.35s',boxShadow:submitting?'none':'0 6px 20px rgba(200,75,17,0.38)',display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}
-                onMouseEnter={e=>{if(!submitting){e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 10px 28px rgba(200,75,17,0.45)';} }}
+                onMouseEnter={e=>{if(!submitting){e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 10px 28px rgba(200,75,17,0.45)';}}}
                 onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=submitting?'none':'0 6px 20px rgba(200,75,17,0.38)';}}>
                 {submitting
                   ? <><div style={{ width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(200,75,17,0.3)',borderTopColor:C.primary,animation:'ldSpin 0.7s linear infinite' }} />Sending…</>
@@ -285,8 +240,6 @@ function FeedbackBox({ onClose }) {
               </button>
             </div>
           )}
-
-          {/* STEP: THANKS */}
           {step === 'thanks' && (
             <div style={{ textAlign:'center',padding:'12px 0',animation:'feedStep 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
               <div style={{ width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',fontSize:32,boxShadow:'0 8px 28px rgba(200,75,17,0.4)',animation:'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
@@ -307,7 +260,6 @@ function FeedbackBox({ onClose }) {
   );
 }
 
-// ─── FLOATING FEEDBACK TRIGGER BUTTON ─────────────────────────────────────────
 function FeedbackTrigger({ onClick }) {
   const [hov, setHov] = useState(false);
   const [pulse, setPulse] = useState(false);
@@ -316,26 +268,8 @@ function FeedbackTrigger({ onClick }) {
     return () => clearInterval(t);
   }, []);
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        position:'fixed',bottom:24,right:20,zIndex:800,
-        display:'flex',alignItems:'center',gap:hov?10:0,
-        height:50,
-        paddingLeft:hov?18:14,paddingRight:hov?20:14,
-        borderRadius:25,border:'none',
-        background:'linear-gradient(135deg,#c84b11,#f97316)',
-        color:'white',
-        cursor:'pointer',
-        boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,
-        transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-        transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',
-        overflow:'hidden',
-        whiteSpace:'nowrap',
-      }}>
-      {/* Pulse ring */}
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ position:'fixed',bottom:24,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap' }}>
       {pulse && <div style={{ position:'absolute',inset:-4,borderRadius:30,border:'2px solid rgba(249,115,22,0.6)',animation:'triggerPulse 1s ease-out both',pointerEvents:'none' }} />}
       <span style={{ fontSize:20,display:'block',transition:'transform 0.3s',transform:hov?'rotate(-10deg) scale(1.2)':'none' }}>💬</span>
       <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?120:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>Feedback</span>
@@ -343,7 +277,6 @@ function FeedbackTrigger({ onClick }) {
   );
 }
 
-/* ─── AUTH GATE MODAL ─── */
 function AuthGateModal({ open, onClose, navigate }) {
   const [phase, setPhase] = useState(0);
   useEffect(() => {
@@ -426,7 +359,6 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
     </div></>);
 }
 
-// ─── Category Pill ────────────────────────────────────────────────────────────
 function CategoryPill({cat,isActive,onClick,index,count}){
   const[hov,setHov]=useState(false);
   return(<button onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -438,7 +370,6 @@ function CategoryPill({cat,isActive,onClick,index,count}){
   </button>);
 }
 
-// ─── PRODUCT CARD (fixed badge layout + responsive cart button) ───────────────
 function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}){
   const[ref,vis]=useScrollReveal();
   const[hov,setHov]=useState(false);
@@ -446,79 +377,33 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   const loc=NIGERIAN_LOCATIONS.find(l=>l.id===product.location);
   const handleCart=(e)=>{e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
 
-  // Has both badges?
-  const hasBothBadges = product.lowStock && product.discountLabel;
-
   return(
     <div ref={ref} onClick={()=>navigate(`/products/${product.id}`)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
-
-      {/* ── Image container ── */}
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
         <img src={product.src} alt={product.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}/>
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,transparent 55%,rgba(26,10,0,0.3) 100%)',opacity:hov?1:0,transition:'opacity 0.4s'}}/>
-
-        {/*
-          ── BADGE SYSTEM (FIXED) ──
-          Left side: stacked column — Low Quantity on top, Discount below
-          Right side: Location badge — anchored top-right, never overlaps
-        */}
-        {/* Left badges — vertical stack, never overlap */}
-        <div style={{
-          position:'absolute',top:10,left:10,
-          display:'flex',flexDirection:'column',gap:5,
-          alignItems:'flex-start',zIndex:2,
-        }}>
+        <div style={{position:'absolute',top:10,left:10,display:'flex',flexDirection:'column',gap:5,alignItems:'flex-start',zIndex:2}}>
           {product.lowStock && (
-            <span style={{
-              background:'#dc2626',color:'white',
-              fontSize:9,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',
-              padding:'3px 8px',borderRadius:20,
-              boxShadow:'0 2px 8px rgba(220,38,38,0.4)',
-              animation:'pulseBadge 2s ease-in-out infinite',
-              display:'flex',alignItems:'center',gap:4,whiteSpace:'nowrap',
-            }}>
-              <span style={{width:5,height:5,borderRadius:'50%',background:'white',display:'inline-block',flexShrink:0}}/>
-              Low Stock
+            <span style={{background:'#dc2626',color:'white',fontSize:9,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',padding:'3px 8px',borderRadius:20,boxShadow:'0 2px 8px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite',display:'flex',alignItems:'center',gap:4,whiteSpace:'nowrap'}}>
+              <span style={{width:5,height:5,borderRadius:'50%',background:'white',display:'inline-block',flexShrink:0}}/>Low Stock
             </span>
           )}
           {product.discountLabel && (
-            <span style={{
-              background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',
-              fontSize:9,fontWeight:800,letterSpacing:'0.06em',textTransform:'uppercase',
-              padding:'3px 8px',borderRadius:20,
-              boxShadow:'0 2px 8px rgba(200,75,17,0.4)',
-              whiteSpace:'nowrap',
-            }}>{product.discountLabel}</span>
+            <span style={{background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontSize:9,fontWeight:800,letterSpacing:'0.06em',textTransform:'uppercase',padding:'3px 8px',borderRadius:20,boxShadow:'0 2px 8px rgba(200,75,17,0.4)',whiteSpace:'nowrap'}}>{product.discountLabel}</span>
           )}
         </div>
-
-        {/* Right badge — location, always top-right */}
         {loc && (
-          <span style={{
-            position:'absolute',top:10,right:10,zIndex:2,
-            background:'rgba(255,255,255,0.93)',backdropFilter:'blur(8px)',
-            color:C.textMid,fontSize:10,fontWeight:700,
-            padding:'4px 9px',borderRadius:20,
-            display:'flex',alignItems:'center',gap:4,
-            boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-            whiteSpace:'nowrap',maxWidth:'calc(100% - 100px)',overflow:'hidden',
-            textOverflow:'ellipsis',
-          }}>
+          <span style={{position:'absolute',top:10,right:10,zIndex:2,background:'rgba(255,255,255,0.93)',backdropFilter:'blur(8px)',color:C.textMid,fontSize:10,fontWeight:700,padding:'4px 9px',borderRadius:20,display:'flex',alignItems:'center',gap:4,boxShadow:'0 2px 8px rgba(0,0,0,0.08)',whiteSpace:'nowrap',maxWidth:'calc(100% - 100px)',overflow:'hidden',textOverflow:'ellipsis'}}>
             <span style={{flexShrink:0}}>{loc.emoji}</span>
             <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{loc.name}</span>
           </span>
         )}
-
         <div style={{position:'absolute',bottom:10,left:'50%',transform:hov?'translateX(-50%) translateY(0)':'translateX(-50%) translateY(12px)',opacity:hov?1:0,transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',background:'rgba(26,10,0,0.75)',backdropFilter:'blur(8px)',color:'white',fontSize:10,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',padding:'5px 16px',borderRadius:20,whiteSpace:'nowrap',pointerEvents:'none'}}>Quick View</div>
       </div>
-
-      {/* ── Card Body ── */}
       <div style={{padding:'13px 13px 12px'}}>
         <h3 style={{fontWeight:800,fontSize:14,color:C.text,marginBottom:2,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.name}</h3>
         <p style={{fontSize:11,color:C.textFaint,marginBottom:10,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.seller}</p>
-
-        {/* Color dots */}
         <div style={{display:'flex',gap:4,marginBottom:10,alignItems:'center'}}>
           {(product.colors||[]).length > 0
             ? (<>{(product.colors||[]).slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block',transition:'transform 0.2s',transform:hov?'scale(1.15)':'scale(1)',transitionDelay:`${i*25}ms`}} title={c.id||''}/>))}
@@ -526,8 +411,6 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
             : <span style={{fontSize:10,color:C.textFaint,fontWeight:500}}>—</span>
           }
         </div>
-
-        {/* Qty + Price row */}
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:10}}>
           <div>
             <p style={{fontSize:9,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Qty</p>
@@ -538,42 +421,17 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
             <p style={{fontSize:19,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s',lineHeight:1}}>{formatCurrency(product.discountedPrice||product.price)}</p>
           </div>
         </div>
-
-        {/* ── ACTION BUTTONS — fully responsive ── */}
         <div style={{display:'flex',gap:6,alignItems:'stretch'}}>
-          <button
-            onClick={handleCart}
-            style={{
-              flex:1,
-              minWidth:0,
-              padding:'9px 6px',
-              borderRadius:10,border:'none',cursor:'pointer',
-              fontWeight:800,fontSize:11,
-              background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',
-              color:'white',
-              transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-              boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',
-              transform:added?'scale(0.96)':'scale(1)',
-              display:'flex',alignItems:'center',justifyContent:'center',gap:4,
-              whiteSpace:'nowrap',overflow:'hidden',
-            }}>
+          <button onClick={handleCart} style={{flex:1,minWidth:0,padding:'9px 6px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:11,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:4,whiteSpace:'nowrap',overflow:'hidden'}}>
             {added
               ?<><svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
               :<><svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
               <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
           </button>
-
-          <a
-            href={`https://wa.me/${(product.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(`Hi, I'm interested in *${product.name}*\nPrice: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (discounted)':'₦'+product.price.toLocaleString()}\nProduct image: ${product.src}`)}`}
+          <a href={`https://wa.me/${(product.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(`Hi, I'm interested in *${product.name}*\nPrice: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (discounted)':'₦'+product.price.toLocaleString()}\nProduct image: ${product.src}`)}`}
             target="_blank" rel="noopener noreferrer"
             onClick={e=>{ if(!isAuthed){ e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
-            style={{
-              width:36,minWidth:36,height:'auto',
-              borderRadius:10,
-              background:C.successBg,color:C.success,
-              display:'flex',alignItems:'center',justifyContent:'center',
-              cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0,
-            }}
+            style={{width:36,minWidth:36,height:'auto',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
             onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -584,7 +442,6 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   );
 }
 
-// ─── Compact Product Card ─────────────────────────────────────────────────────
 function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor }) {
   const [hov, setHov] = useState(false);
   const [added, setAdded] = useState(false);
@@ -618,7 +475,6 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   );
 }
 
-// ─── Horizontal Scroll Section ────────────────────────────────────────────────
 function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
   const scrollRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
@@ -658,119 +514,217 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
   );
 }
 
-// ─── Deal of the Day ──────────────────────────────────────────────────────────
-function DealOfTheDay({ product, navigate, onAddToCart, isAuthed, onRequireAuth }) {
+// ─── HOT DEALS CAROUSEL ───────────────────────────────────────────────────────
+function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequireAuth }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [animDir, setAnimDir] = useState('next'); // 'next' | 'prev'
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [addedMap, setAddedMap] = useState({});
   const [ref, vis] = useScrollReveal(0.05);
-  const [hov, setHov] = useState(false);
-  const [added, setAdded] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [timeLeft, setTimeLeft] = useState({ h:0,m:0,s:0 });
+  const autoRef = useRef(null);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
   useEffect(() => { const h=()=>setWindowWidth(window.innerWidth); window.addEventListener('resize',h); return()=>window.removeEventListener('resize',h); }, []);
-  useEffect(() => { const tick=()=>{ const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0); const diff=Math.max(0,Math.floor((midnight-now)/1000)); setTimeLeft({h:Math.floor(diff/3600),m:Math.floor((diff%3600)/60),s:diff%60}); }; tick(); const iv=setInterval(tick,1000); return()=>clearInterval(iv); }, []);
-  const pad = n => String(n).padStart(2,'0');
-  const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(()=>setAdded(false),1800); };
-  if (!product) return null;
   const isMobile = windowWidth <= 640;
-  const isSmallMobile = windowWidth <= 360;
+  const isSmall = windowWidth <= 380;
+
+  // Countdown to midnight
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date(); const midnight = new Date(); midnight.setHours(24,0,0,0);
+      const diff = Math.max(0, Math.floor((midnight - now) / 1000));
+      setTimeLeft({h:Math.floor(diff/3600),m:Math.floor((diff%3600)/60),s:diff%60});
+    };
+    tick(); const iv = setInterval(tick, 1000); return () => clearInterval(iv);
+  }, []);
+
+  const pad = n => String(n).padStart(2,'0');
+
+  const goTo = useCallback((newIdx, dir = 'next') => {
+    if (isAnimating || products.length <= 1) return;
+    setAnimDir(dir);
+    setIsAnimating(true);
+    setTimeout(() => {
+      setActiveIdx(newIdx);
+      setIsAnimating(false);
+    }, 380);
+  }, [isAnimating, products.length]);
+
+  const goNext = useCallback(() => goTo((activeIdx + 1) % products.length, 'next'), [activeIdx, products.length, goTo]);
+  const goPrev = useCallback(() => goTo((activeIdx - 1 + products.length) % products.length, 'prev'), [activeIdx, products.length, goTo]);
+
+  // Auto-advance every 5s
+  useEffect(() => {
+    if (isPaused || products.length <= 1) return;
+    autoRef.current = setInterval(goNext, 5000);
+    return () => clearInterval(autoRef.current);
+  }, [isPaused, goNext, products.length]);
+
+  const handleCart = (e, product) => {
+    e.stopPropagation();
+    setAddedMap(m => ({...m, [product.id]: true}));
+    onAddToCart(product);
+    setTimeout(() => setAddedMap(m => ({...m, [product.id]: false})), 1800);
+  };
+
+  if (!products || products.length === 0) return null;
+
+  const product = products[activeIdx];
+  const discountPct = product.discountedPrice
+    ? Math.round((1 - product.discountedPrice / product.price) * 100)
+    : 23;
+  const added = addedMap[product.id];
+
+  // Slide-in animation styles
+  const slideStyle = isAnimating
+    ? { opacity: 0, transform: animDir === 'next' ? 'translateX(-24px)' : 'translateX(24px)' }
+    : { opacity: 1, transform: 'translateX(0)' };
+
   return (
     <div ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
-      <div style={{ display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',gap:12,marginBottom:18 }}>
+
+      {/* Header row */}
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:12 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
-          <div style={{ width:40,height:40,borderRadius:12,background:'#fef2f2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:'1.5px solid #fecaca' }}>🔥</div>
+          <div style={{ width:40,height:40,borderRadius:12,background:'#fef2f2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:'1.5px solid #fecaca',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥</div>
           <div>
-            <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:1 }}>Deal of the Day</h3>
-            <p style={{ fontSize:12,color:C.textFaint,fontWeight:500 }}>Exclusive limited-time offer</p>
+            <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:1 }}>Hot Deals</h3>
+            <p style={{ fontSize:12,color:C.textFaint,fontWeight:500 }}>{products.length} exclusive limited-time offer{products.length!==1?'s':''}</p>
           </div>
         </div>
-        <div style={{ marginLeft:isMobile?0:'auto',display:'flex',alignItems:'center',gap:6,width:isMobile?'100%':'auto',justifyContent:isMobile?'center':'flex-end',marginTop:isMobile?8:0 }}>
+        {/* Countdown */}
+        <div style={{ display:'flex',alignItems:'center',gap:6 }}>
           <span style={{ fontSize:11,color:C.danger,fontWeight:700 }}>Ends in</span>
           <div style={{ display:'flex',alignItems:'center',gap:4 }}>
             {[timeLeft.h,timeLeft.m,timeLeft.s].map((v,i)=>(
               <div key={i} style={{ display:'flex',alignItems:'center' }}>
-                <span style={{ background:C.danger,color:'white',fontWeight:900,fontSize:isSmallMobile?11:isMobile?12:14,borderRadius:7,padding:isSmallMobile?'2px 5px':isMobile?'3px 6px':'4px 8px',minWidth:isSmallMobile?24:isMobile?28:34,textAlign:'center',letterSpacing:'-0.02em',boxShadow:'0 2px 8px rgba(220,38,38,0.3)',fontVariantNumeric:'tabular-nums' }}>{pad(v)}</span>
-                {i<2&&<span style={{ fontSize:isMobile?12:14,fontWeight:900,color:C.danger,margin:'0 2px',lineHeight:1 }}>:</span>}
+                <span style={{ background:C.danger,color:'white',fontWeight:900,fontSize:isSmall?11:13,borderRadius:7,padding:isSmall?'2px 5px':'4px 8px',minWidth:isSmall?24:30,textAlign:'center',letterSpacing:'-0.02em',boxShadow:'0 2px 8px rgba(220,38,38,0.3)',fontVariantNumeric:'tabular-nums' }}>{pad(v)}</span>
+                {i<2&&<span style={{ fontSize:14,fontWeight:900,color:C.danger,margin:'0 2px',lineHeight:1 }}>:</span>}
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-        style={{ background:'linear-gradient(135deg, #fff5f2 0%, #fff 60%)',border:`2px solid ${hov?C.primary:'#fcd4be'}`,borderRadius:22,overflow:'hidden',display:'flex',flexDirection:isMobile?'column':'row',boxShadow:hov?'0 24px 60px rgba(200,75,17,0.14)':'0 6px 24px rgba(200,75,17,0.08)',transition:'all 0.35s cubic-bezier(0.22,1,0.36,1)',cursor:'pointer' }}
-        onClick={()=>navigate(`/products/${product.id}`)}>
-        <div style={{ width:isMobile?'100%':'42%',minWidth:isMobile?'100%':180,maxHeight:isMobile?250:'none',position:'relative',overflow:'hidden',background:C.primaryBg }}>
-          <img src={product.src} alt={product.name} style={{ width:'100%',height:isMobile?250:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s ease',transform:hov?'scale(1.06)':'scale(1)' }} />
-          <div style={{ position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmallMobile?9:isMobile?10:11,fontWeight:900,padding:isSmallMobile?'2px 8px':isMobile?'3px 10px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
-        </div>
-        <div style={{ flex:1,padding:isSmallMobile?'16px 12px':isMobile?'20px 16px':'28px 28px 24px',display:'flex',flexDirection:'column',justifyContent:'center' }}>
-          <p style={{ fontSize:isSmallMobile?9:isMobile?10:11,fontWeight:800,letterSpacing:'0.14em',textTransform:'uppercase',color:C.primary,marginBottom:isSmallMobile?4:isMobile?6:8 }}>{product.seller}</p>
-          <h4 style={{ fontSize:isSmallMobile?'1.1rem':isMobile?'1.2rem':'clamp(1.2rem, 2.5vw, 1.7rem)',fontWeight:900,color:C.text,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:isSmallMobile?6:isMobile?8:10 }}>{product.name}</h4>
-          <p style={{ fontSize:isSmallMobile?11:isMobile?12:13,color:C.textMuted,fontWeight:500,lineHeight:1.6,marginBottom:isSmallMobile?12:isMobile?14:18 }}>{product.sub}</p>
-          <div style={{ display:'flex',alignItems:'baseline',gap:isSmallMobile?6:isMobile?8:12,marginBottom:isSmallMobile?14:isMobile?16:22,flexWrap:isSmallMobile?'wrap':'nowrap' }}>
-            <span style={{ fontSize:isSmallMobile?20:isMobile?24:32,fontWeight:900,color:C.primary,letterSpacing:'-0.04em' }}>{formatCurrency(product.price)}</span>
-            <span style={{ fontSize:isSmallMobile?12:isMobile?14:18,color:C.textFaint,textDecoration:'line-through',fontWeight:600 }}>{formatCurrency(Math.round(product.price*1.3))}</span>
-            <span style={{ background:'#fef2f2',color:C.danger,fontSize:isSmallMobile?9:isMobile?10:12,fontWeight:800,padding:isSmallMobile?'1px 6px':isMobile?'2px 8px':'3px 10px',borderRadius:20,border:'1px solid #fecaca',whiteSpace:'nowrap' }}>-23% OFF</span>
-          </div>
-          <div style={{ display:'flex',gap:isSmallMobile?6:isMobile?8:10,flexDirection:isSmallMobile?'column':'row' }}>
-            <button onClick={handleCart} style={{ flex:1,maxWidth:isSmallMobile?'100%':200,padding:isSmallMobile?'9px 0':isMobile?'11px 0':'13px 0',borderRadius:12,border:'none',cursor:'pointer',fontWeight:800,fontSize:isSmallMobile?11:isMobile?12:13,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 16px rgba(22,163,74,0.4)':'0 6px 20px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:7,width:isSmallMobile?'100%':'auto' }}>
-              {added?<><svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>:<>🛍️ Grab This Deal</>}
-            </button>
-            <a href={`https://wa.me/2348147061837?text=Hi%2C%20I'm%20interested%20in%20the%20deal%20for%20${encodeURIComponent(product.name)}`} target="_blank" rel="noopener noreferrer"
-              onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}else{e.stopPropagation();}}}
-              style={{ width:isSmallMobile?'100%':46,height:isSmallMobile?38:isMobile?40:46,borderRadius:12,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0 }}
-              onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
-              onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
-              <svg width={isMobile?14:16} height={isMobile?14:16} viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            </a>
-          </div>
-          <p style={{ marginTop:isSmallMobile?10:12,fontSize:isSmallMobile?9:isMobile?10:11,color:C.textFaint,fontWeight:600 }}>⚡ Only {product.quantity} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-// ─── Vendor Card ──────────────────────────────────────────────────────────────
-function VendorCard({vendor,index,onViewProducts}){
-  const[hov,setHov]=useState(false);const[ref,setRef]=useState(null);const[vis,setVis]=useState(false);
-  useEffect(()=>{if(!ref)return;const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVis(true);o.disconnect();}},{threshold:0.08});o.observe(ref);return()=>o.disconnect();},[ref]);
-  const loc=NIGERIAN_LOCATIONS.find(l=>l.id===vendor.location);
-  return(
-    <div ref={setRef} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{background:'white',borderRadius:20,overflow:'hidden',position:'relative',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,boxShadow:hov?`0 24px 60px rgba(200,75,17,0.13),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,box-shadow 0.3s,border-color 0.3s`}}>
-      <div style={{height:84,background:`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`,position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',inset:0,opacity:0.1,backgroundImage:'radial-gradient(circle at 20% 50%,white 1px,transparent 1px)',backgroundSize:'22px 22px'}}/>
-        {vendor.badge==='Top Rated'&&<div style={{position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.22)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.35)',borderRadius:20,padding:'3px 10px',fontSize:10,fontWeight:800,color:'white',letterSpacing:'0.05em',display:'flex',alignItems:'center',gap:4}}>⭐ Top Rated</div>}
-      </div>
-      <div style={{position:'absolute',top:50,left:18,width:60,height:60,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 14px rgba(0,0,0,0.1)',border:'3px solid white',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'scale(1.1)':'scale(1)'}}>{vendor.avatar}</div>
-      <div style={{padding:'12px 18px 18px',paddingTop:20}}>
-        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:6,marginTop:16}}>
-          <div>
-            <h3 style={{fontSize:16,fontWeight:900,color:C.text,letterSpacing:'-0.02em',marginBottom:2}}>{vendor.name}</h3>
-            <div style={{display:'flex',alignItems:'center',gap:5}}>
-              <span style={{fontSize:11}}>{loc?.emoji}</span><span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{loc?.name}</span>
-              <span style={{width:3,height:3,borderRadius:'50%',background:C.border,display:'inline-block'}}/>
-              <span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>Since {vendor.joined}</span>
-            </div>
+      {/* Main carousel card */}
+      <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)}
+        style={{ position:'relative',borderRadius:22,overflow:'hidden',border:`2px solid #fcd4be`,boxShadow:'0 6px 32px rgba(200,75,17,0.1)',background:'linear-gradient(135deg,#fff5f2 0%,#fff 60%)' }}>
+
+        {/* Slide content */}
+        <div style={{ display:'flex',flexDirection:isMobile?'column':'row',transition:'opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1)',...slideStyle }}>
+
+          {/* Image pane */}
+          <div style={{ width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0 }}
+            onClick={()=>navigate(`/products/${product.id}`)} style2={{cursor:'pointer'}}>
+            <img src={product.src} alt={product.name}
+              style={{ width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease' }}
+              onClick={()=>navigate(`/products/${product.id}`)}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+              onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
+            {/* Hot badge */}
+            <div style={{ position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmall?9:11,fontWeight:900,padding:isSmall?'2px 8px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
+            {/* Slide counter badge */}
+            {products.length > 1 && (
+              <div style={{ position:'absolute',bottom:14,left:14,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',color:'white',fontSize:11,fontWeight:800,padding:'4px 10px',borderRadius:20 }}>
+                {activeIdx+1} / {products.length}
+              </div>
+            )}
           </div>
-          <div style={{textAlign:'right',flexShrink:0}}><StarRating rating={vendor.rating} size={11}/><div style={{fontSize:13,fontWeight:900,color:C.primary,marginTop:3}}>{vendor.rating}</div></div>
-        </div>
-        <p style={{fontSize:12,color:C.textMuted,lineHeight:1.65,marginBottom:13,fontWeight:500,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{vendor.description}</p>
-        <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
-          {vendor.tags.map(tag=>(<span key={tag} style={{fontSize:10,fontWeight:700,background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'3px 9px',borderRadius:20}}>{tag}</span>))}
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:15}}>
-          {[{label:'Views',value:vendor.views,icon:'👁️'},{label:'Reviews',value:vendor.reviews,icon:'⭐'},{label:'Products',value:vendor.products,icon:'👜'}].map(s=>(
-            <div key={s.label} style={{background:C.surfaceDim,borderRadius:11,padding:'9px 6px',textAlign:'center',border:`1px solid ${C.borderLight}`,transition:'all 0.25s',transform:hov?'translateY(-2px)':'none'}}>
-              <div style={{fontSize:14,marginBottom:2}}>{s.icon}</div>
-              <div style={{fontSize:13,fontWeight:900,color:C.text,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.value}/></div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginTop:2}}>{s.label}</div>
+
+          {/* Info pane */}
+          <div style={{ flex:1,padding:isMobile?'20px 18px 24px':isSmall?'16px 14px':'28px 32px 28px',display:'flex',flexDirection:'column',justifyContent:'center' }}>
+            <p style={{ fontSize:isSmall?9:11,fontWeight:800,letterSpacing:'0.14em',textTransform:'uppercase',color:C.primary,marginBottom:6 }}>{product.seller}</p>
+            <h4 style={{ fontSize:isMobile?'1.15rem':'clamp(1.2rem,2.5vw,1.65rem)',fontWeight:900,color:C.text,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:8,cursor:'pointer' }}
+              onClick={()=>navigate(`/products/${product.id}`)}>{product.name}</h4>
+            <p style={{ fontSize:13,color:C.textMuted,fontWeight:500,lineHeight:1.6,marginBottom:16 }}>{product.sub}</p>
+
+            {/* Price row */}
+            <div style={{ display:'flex',alignItems:'baseline',gap:10,marginBottom:16,flexWrap:'wrap' }}>
+              <span style={{ fontSize:isMobile?24:32,fontWeight:900,color:C.primary,letterSpacing:'-0.04em' }}>{formatCurrency(product.discountedPrice||product.price)}</span>
+              {product.discountedPrice && <span style={{ fontSize:isMobile?14:18,color:C.textFaint,textDecoration:'line-through',fontWeight:600 }}>{formatCurrency(product.price)}</span>}
+              <span style={{ background:'#fef2f2',color:C.danger,fontSize:isSmall?9:12,fontWeight:800,padding:'3px 10px',borderRadius:20,border:'1px solid #fecaca',whiteSpace:'nowrap' }}>-{discountPct}% OFF</span>
             </div>
-          ))}
+
+            {/* Color dots */}
+            {(product.colors||[]).length > 0 && (
+              <div style={{ display:'flex',gap:5,marginBottom:18,alignItems:'center' }}>
+                {(product.colors||[]).slice(0,6).map((c,i)=>(
+                  <span key={i} style={{ width:14,height:14,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block' }} title={c.id||''} />
+                ))}
+                {(product.colors||[]).length > 6 && <span style={{ fontSize:10,color:C.textFaint,fontWeight:700 }}>+{(product.colors||[]).length-6}</span>}
+              </div>
+            )}
+
+            {/* CTA row */}
+            <div style={{ display:'flex',gap:isMobile?8:10,flexDirection:isSmall?'column':'row',alignItems:'stretch' }}>
+              <button onClick={e=>handleCart(e,product)}
+                style={{ flex:1,maxWidth:isSmall?'100%':220,padding:isMobile?'11px 0':'13px 0',borderRadius:12,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 16px rgba(22,163,74,0.4)':'0 6px 20px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:7 }}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
+                {added?<><svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>:<>🛍️ Grab This Deal</>}
+              </button>
+              <a href={`https://wa.me/${(product.whatsapp||'2348147061837').replace(/\D/g,'')}?text=${encodeURIComponent(`Hi, I'm interested in the deal for ${product.name}`)}`}
+                target="_blank" rel="noopener noreferrer"
+                onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}else{e.stopPropagation();}}}
+                style={{ width:isSmall?'100%':46,height:isSmall?40:46,borderRadius:12,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0 }}
+                onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
+                onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              </a>
+            </div>
+
+            <p style={{ marginTop:12,fontSize:isSmall?9:11,color:C.textFaint,fontWeight:600 }}>
+              ⚡ Only {product.quantity??'few'} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}
+            </p>
+          </div>
         </div>
-        <button onClick={()=>onViewProducts(vendor)} style={{width:'100%',padding:'11px 0',borderRadius:12,border:'none',background:hov?`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.3s',boxShadow:hov?`0 8px 22px ${vendor.colors[0]}55`:'0 4px 12px rgba(200,75,17,0.3)',transform:hov?'translateY(-1px)':'none'}}>
-          View Products →
-        </button>
+
+        {/* Prev / Next arrow buttons — overlaid */}
+        {products.length > 1 && (
+          <>
+            <button onClick={goPrev} style={{ position:'absolute',left:isMobile?8:14,top:'50%',transform:'translateY(-50%)',width:38,height:38,borderRadius:'50%',border:'none',background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,0.12)',transition:'all 0.2s',zIndex:5 }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.92)';e.currentTarget.style.color=C.primary;}}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            </button>
+            <button onClick={goNext} style={{ position:'absolute',right:isMobile?8:14,top:'50%',transform:'translateY(-50%)',width:38,height:38,borderRadius:'50%',border:'none',background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,0.12)',transition:'all 0.2s',zIndex:5 }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.92)';e.currentTarget.style.color=C.primary;}}>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Dot indicators + thumbnail strip */}
+      {products.length > 1 && (
+        <div style={{ marginTop:16,display:'flex',flexDirection:'column',alignItems:'center',gap:14 }}>
+          {/* Dots */}
+          <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+            {products.map((_,i) => (
+              <button key={i} onClick={()=>goTo(i, i>activeIdx?'next':'prev')}
+                style={{ width:i===activeIdx?28:8,height:8,borderRadius:99,border:'none',cursor:'pointer',background:i===activeIdx?C.primary:C.border,transition:'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',padding:0 }}/>
+            ))}
+          </div>
+
+          {/* Thumbnail strip (up to 5 thumbs) */}
+          {products.length > 1 && (
+            <div style={{ display:'flex',gap:10,overflowX:'auto',paddingBottom:4,scrollbarWidth:'none' }} className="hide-scrollbar">
+              {products.map((p,i) => {
+                const isActive = i === activeIdx;
+                return (
+                  <button key={p.id} onClick={()=>goTo(i, i>activeIdx?'next':'prev')}
+                    style={{ flexShrink:0,width:isActive?80:64,height:isActive?64:54,borderRadius:12,overflow:'hidden',border:`2.5px solid ${isActive?C.primary:C.borderLight}`,padding:0,cursor:'pointer',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:isActive?`0 6px 18px rgba(200,75,17,0.35)`:'none',transform:isActive?'translateY(-3px)':'none' }}>
+                    <img src={p.src} alt={p.name} style={{ width:'100%',height:'100%',objectFit:'cover',display:'block',filter:isActive?'none':'grayscale(0.3) brightness(0.9)',transition:'filter 0.3s' }}/>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -814,7 +768,6 @@ function CartBadge({count,onClick}){
   );
 }
 
-// ─── CART PAGE ────────────────────────────────────────────────────────────────
 function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
   const[checkingOut,setCheckingOut]=useState(false);const[checked,setChecked]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
@@ -898,7 +851,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
   );
 }
 
-// ─── Responsive Header ────────────────────────────────────────────────────────
 function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocationModalOpen, selectedLocation, handleProfileClick, cartCount, setCartOpen, user, handleLogout, isMobile }) {
   return (
     <header style={{ position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.97)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:`0 1px 20px rgba(200,75,17,0.07)` }}>
@@ -966,8 +918,6 @@ export default function Product(){
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
-
-  // Feedback box state
   const[feedbackOpen,setFeedbackOpen]=useState(false);
 
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
@@ -1009,24 +959,16 @@ export default function Product(){
 
   const fetchProducts=useCallback(async(locationId='all')=>{
     try{
-      // Try to select all columns including quantity and colors
       let query=supabase.from('products').select('*');
       if(locationId&&locationId!=='all')query=query.eq('location',locationId);
       let {data,error}=await query.order('created_at',{ascending:false});
-
       if(error){
-        console.log('Error fetching with all columns:', error);
-        // If there's an error (possibly missing columns), try with basic columns only
         query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');
         if(locationId&&locationId!=='all')query=query.eq('location',locationId);
         const retry=await query.order('created_at',{ascending:false});
         if(retry.error) throw retry.error;
         data=retry.data;
-        console.log('Fetched products without quantity/colors columns');
       }
-
-      console.log('Raw products data sample:', data?.slice(0, 1));
-
       return(data||[]).map(p=>{
         let rawColors = [];
         if (p.colors) {
@@ -1046,34 +988,18 @@ export default function Product(){
               return { id: key, hex: c.hex || BAG_COLOR_MAP[key] || '#c84b11' };
             })
           : [];
-
         const qty = p.quantity != null ? parseInt(p.quantity) : null;
-
         return {
-          id:p.id,
-          name:p.name,
-          seller:p.seller_name||'Anonymous Seller',
-          sellerId:p.seller_id||p.user_id||'db',
-          sub:`${p.brand} • ${p.condition}`,
-          price:parseFloat(p.price),
-          quantity: qty,
-          lowStock: qty != null && qty > 0 && qty < 5,
-          category:mapCategory(p.category),
-          location:p.location||'all',
-          colors: mappedColors,
-          src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',
-          brand:p.brand||'',
-          condition:p.condition||'',
-          description:p.description||'',
+          id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',
+          sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,
+          lowStock:qty != null && qty > 0 && qty < 5,category:mapCategory(p.category),location:p.location||'all',
+          colors:mappedColors,src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',
+          brand:p.brand||'',condition:p.condition||'',description:p.description||'',
           discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,
-          discountLabel:p.discount_label||null,
-          whatsapp:p.whatsapp||''
+          discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''
         };
       });
-    }catch(err){
-      console.error('Failed to load products:', err);
-      return[];
-    }
+    }catch(err){console.error('Failed to load products:', err);return[];}
   },[mapCategory]);
 
   useEffect(()=>{
@@ -1088,14 +1014,8 @@ export default function Product(){
     if (!user || !q.trim() || q.trim().length < 2) return;
     clearTimeout(searchSaveTimer.current);
     searchSaveTimer.current = setTimeout(async () => {
-      try {
-        await supabase.from('search_history').insert({
-          user_id: user.id,
-          query: q.trim(),
-          type: 'text',
-        });
-      } catch (_) {}
-    }, 1500); // save after user stops typing for 1.5s
+      try { await supabase.from('search_history').insert({user_id:user.id,query:q.trim(),type:'text'}); } catch (_) {}
+    }, 1500);
   }, [user]);
 
   const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
@@ -1113,7 +1033,8 @@ export default function Product(){
     finally{setVisualSearching(false);e.target.value='';}
   };
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
-  const handleViewVendorProducts=(vendor)=>{setSelectedVendorDetail(vendor);setActiveTab('vendorDetail');};
+  const handleViewVendorProducts=useCallback((vendor)=>{setSelectedVendorDetail(vendor);setActiveTab('vendorDetail');},[]);
+  const handleRequireAuth=useCallback(()=>setAuthGateOpen(true),[]);
   const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
   const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
@@ -1125,7 +1046,11 @@ export default function Product(){
   const featuredProducts=allProducts.slice(0,8);
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
-  const dealProduct=allProducts.find(p=>p.lowStock)||allProducts[0];
+
+  // ── Hot deals: products with a discounted price OR lowStock flag ──
+  const hotDealProducts = useMemo(() =>
+    allProducts.filter(p => p.discountedPrice || p.lowStock).slice(0, 10),
+  [allProducts]);
 
   return(
     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif"}}>
@@ -1149,7 +1074,6 @@ export default function Product(){
         @keyframes slideInPreview{from{opacity:0;transform:translateY(-10px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-        /* ── Feedback animations ── */
         @keyframes shimFeedback{0%{background-position:0% 50%}100%{background-position:200% 50%}}
         @keyframes feedStep{from{opacity:0;transform:translateY(12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes popIn{0%{opacity:0;transform:scale(0.5) rotate(-15deg)}60%{transform:scale(1.15) rotate(5deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
@@ -1164,7 +1088,6 @@ export default function Product(){
         .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
         .cat-track::-webkit-scrollbar{height:0;}.cat-track{-ms-overflow-style:none;scrollbar-width:none;}
 
-        /* ── Product grid — solid 2-col on narrow mobile ── */
         .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;width:100%;}
         @media(max-width:640px){
           .product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}
@@ -1172,12 +1095,9 @@ export default function Product(){
         @media(max-width:380px){
           .product-grid{gap:8px!important;}
         }
-
-        /* ── Ensure cart btn never clips on any screen ── */
         @media(max-width:720px){
           .product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}
         }
-
         @media(max-width:768px){.desk-act{display:none!important;}.mob-menu{display:flex!important;}}
         @media(max-width:640px){.hero-banner{padding:24px 20px!important;}.hero-icons{display:none!important;}}
       `}</style>
@@ -1190,13 +1110,8 @@ export default function Product(){
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
 
-      {/* ── Animated Feedback Box ── */}
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
-
-      {/* ── Feedback Trigger Button ── */}
-      {!feedbackOpen && !cartOpen && (
-        <FeedbackTrigger onClick={() => setFeedbackOpen(true)} />
-      )}
+      {!feedbackOpen && !cartOpen && <FeedbackTrigger onClick={() => setFeedbackOpen(true)} />}
 
       <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} setLocationModalOpen={setLocationModalOpen} selectedLocation={selectedLocation} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
 
@@ -1219,7 +1134,7 @@ export default function Product(){
 
       <div style={{maxWidth:1280,margin:'0 auto',padding:isMobile?'24px 12px 80px':'36px 20px 80px',opacity:pageLoading?0:1,transition:'opacity 0.5s ease'}}>
 
-        {/* ── Hero Banner ── */}
+        {/* Hero */}
         <div style={{marginBottom:isMobile?24:30,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
           <div className="hero-banner" style={{background:C.primaryBg,borderRadius:isMobile?16:24,padding:isMobile?'24px 20px':'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
             <div style={{position:'absolute',right:-40,top:-40,width:200,height:200,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
@@ -1246,7 +1161,7 @@ export default function Product(){
           </div>
         </div>
 
-        {/* Tab + search */}
+        {/* Tab + Search */}
         <div style={{marginBottom:isMobile?20:26,opacity:searchVisible?1:0,transition:'opacity 0.5s ease'}}>
           <div style={{display:'inline-flex',background:'white',border:`1.5px solid ${C.border}`,borderRadius:isMobile?12:16,padding:5,gap:4,boxShadow:`0 2px 10px rgba(200,75,17,0.07)`,marginBottom:16,width:isMobile?'100%':'auto'}}>
             {[{id:'products',label:'👜 Products',count:allProducts.length},{id:'vendors',label:'🏪 Vendors',count:vendors.length}].map(tab=>(
@@ -1327,7 +1242,18 @@ export default function Product(){
 
           {!isFiltered&&displayedProducts.length>0&&(
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
-              <DealOfTheDay product={dealProduct} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
+
+              {/* ── HOT DEALS CAROUSEL (replaces old single DealOfTheDay) ── */}
+              {hotDealProducts.length > 0 && (
+                <HotDealsCarousel
+                  products={hotDealProducts}
+                  navigate={navigate}
+                  onAddToCart={handleAddToCart}
+                  isAuthed={!!user}
+                  onRequireAuth={()=>setAuthGateOpen(true)}
+                />
+              )}
+
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon="⭐" accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon="✨" accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon="💸" accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
@@ -1370,7 +1296,6 @@ export default function Product(){
             :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><div style={{fontSize:56,marginBottom:16}}>🏪</div><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No vendors found</h3><button onClick={()=>handleVendorSearch('')} style={{marginTop:8,padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>See All Vendors</button></div>}
         </div>}
 
-        {/* VENDOR DETAIL VIEW */}
         {activeTab==='vendorDetail'&&selectedVendorDetail&&<div>
           <VendorDetailView
             vendor={selectedVendorDetail}
@@ -1387,35 +1312,77 @@ export default function Product(){
   );
 }
 
+// ─── Vendor Card ──────────────────────────────────────────────────────────────
+function VendorCard({vendor,index,onViewProducts}){
+  const[hov,setHov]=useState(false);const[ref,setRef]=useState(null);const[vis,setVis]=useState(false);
+  useEffect(()=>{if(!ref)return;const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVis(true);o.disconnect();}},{threshold:0.08});o.observe(ref);return()=>o.disconnect();},[ref]);
+  const loc=NIGERIAN_LOCATIONS.find(l=>l.id===vendor.location);
+  return(
+    <div ref={setRef} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{background:'white',borderRadius:20,overflow:'hidden',position:'relative',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,boxShadow:hov?`0 24px 60px rgba(200,75,17,0.13),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,box-shadow 0.3s,border-color 0.3s`}}>
+      <div style={{height:84,background:`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`,position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,opacity:0.1,backgroundImage:'radial-gradient(circle at 20% 50%,white 1px,transparent 1px)',backgroundSize:'22px 22px'}}/>
+        {vendor.badge==='Top Rated'&&<div style={{position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.22)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.35)',borderRadius:20,padding:'3px 10px',fontSize:10,fontWeight:800,color:'white',letterSpacing:'0.05em',display:'flex',alignItems:'center',gap:4}}>⭐ Top Rated</div>}
+      </div>
+      <div style={{position:'absolute',top:50,left:18,width:60,height:60,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 14px rgba(0,0,0,0.1)',border:'3px solid white',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'scale(1.1)':'scale(1)'}}>{vendor.avatar}</div>
+      <div style={{padding:'12px 18px 18px',paddingTop:20}}>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:6,marginTop:16}}>
+          <div>
+            <h3 style={{fontSize:16,fontWeight:900,color:C.text,letterSpacing:'-0.02em',marginBottom:2}}>{vendor.name}</h3>
+            <div style={{display:'flex',alignItems:'center',gap:5}}>
+              <span style={{fontSize:11}}>{loc?.emoji}</span><span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{loc?.name}</span>
+              <span style={{width:3,height:3,borderRadius:'50%',background:C.border,display:'inline-block'}}/>
+              <span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>Since {vendor.joined}</span>
+            </div>
+          </div>
+          <div style={{textAlign:'right',flexShrink:0}}><StarRating rating={vendor.rating} size={11}/><div style={{fontSize:13,fontWeight:900,color:C.primary,marginTop:3}}>{vendor.rating}</div></div>
+        </div>
+        <p style={{fontSize:12,color:C.textMuted,lineHeight:1.65,marginBottom:13,fontWeight:500,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{vendor.description}</p>
+        <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
+          {vendor.tags.map(tag=>(<span key={tag} style={{fontSize:10,fontWeight:700,background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'3px 9px',borderRadius:20}}>{tag}</span>))}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:15}}>
+          {[{label:'Views',value:vendor.views,icon:'👁️'},{label:'Reviews',value:vendor.reviews,icon:'⭐'},{label:'Products',value:vendor.products,icon:'👜'}].map(s=>(
+            <div key={s.label} style={{background:C.surfaceDim,borderRadius:11,padding:'9px 6px',textAlign:'center',border:`1px solid ${C.borderLight}`,transition:'all 0.25s',transform:hov?'translateY(-2px)':'none'}}>
+              <div style={{fontSize:14,marginBottom:2}}>{s.icon}</div>
+              <div style={{fontSize:13,fontWeight:900,color:C.text,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.value}/></div>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginTop:2}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <button onClick={()=>onViewProducts(vendor)} style={{width:'100%',padding:'11px 0',borderRadius:12,border:'none',background:hov?`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.3s',boxShadow:hov?`0 8px 22px ${vendor.colors[0]}55`:'0 4px 12px rgba(200,75,17,0.3)',transform:hov?'translateY(-1px)':'none'}}>
+          View Products →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Vendor Detail View ────────────────────────────────────────────────────────
 function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart, isAuthed, onRequireAuth }) {
+  const { user } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
-  const vendorProducts = allProducts.filter(p => p.sellerId === vendor.id || p.seller_id === vendor.id);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editReviewText, setEditReviewText] = useState('');
+  const [editRating, setEditRating] = useState(5);
+  const [updatingReview, setUpdatingReview] = useState(false);
+  const vendorProducts = useMemo(
+    () => allProducts.filter(p => p.sellerId === vendor.id || p.seller_id === vendor.id),
+    [allProducts, vendor.id]
+  );
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        // Fetch seller profile
-        const { data: profileData } = await supabase
-          .from('users')
-          .select('brand_name, brand_story, bag_categories, avatar_url, full_name, phone')
-          .eq('user_id', vendor.id)
-          .maybeSingle();
+        const { data: profileData } = await supabase.from('users').select('brand_name, brand_story, bag_categories, avatar_url, full_name, phone').eq('user_id', vendor.id).maybeSingle();
         if (profileData) setProfile(profileData);
-
-        // Fetch real reviews
-        const { data: reviewData } = await supabase
-          .from('seller_reviews')
-          .select('id, author_name, rating, text, created_at')
-          .eq('seller_id', vendor.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
+        const { data: reviewData } = await supabase.from('seller_reviews').select('id, author_name, rating, text, created_at').eq('seller_id', vendor.id).order('created_at', { ascending: false }).limit(20);
         if (reviewData) setReviews(reviewData);
       } catch (err) { console.error('Failed to load vendor data:', err); }
       finally { setLoading(false); }
@@ -1423,21 +1390,37 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     loadData();
   }, [vendor.id]);
 
+  const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!newReviewText.trim()) return;
     setSubmittingReview(true);
     try {
-      const { data, error } = await supabase.from('seller_reviews').insert({
-        seller_id: vendor.id,
-        author_name: 'Anonymous',
-        rating: newRating,
-        text: newReviewText.trim(),
-      }).select().single();
+      const { data, error } = await supabase.from('seller_reviews').insert({ seller_id: vendor.id, author_name: authorName, rating: newRating, text: newReviewText.trim() }).select().single();
       if (!error && data) setReviews(prev => [data, ...prev]);
       setNewReviewText(''); setNewRating(5);
     } catch (err) { console.error('Failed to post review:', err); }
     finally { setSubmittingReview(false); }
+  };
+
+  const handleEditClick = (review) => {
+    setEditingReviewId(review.id);
+    setEditReviewText(review.text);
+    setEditRating(review.rating);
+  };
+
+  const handleUpdateReview = async (reviewId) => {
+    if (!editReviewText.trim()) return;
+    setUpdatingReview(true);
+    try {
+      const { error } = await supabase.from('seller_reviews').update({ text: editReviewText.trim(), rating: editRating }).eq('id', reviewId);
+      if (!error) {
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, text: editReviewText.trim(), rating: editRating } : r));
+        setEditingReviewId(null);
+      }
+    } catch (err) { console.error('Failed to update review:', err); }
+    finally { setUpdatingReview(false); }
   };
 
   const displayName = profile?.brand_name || profile?.full_name || vendor.name;
@@ -1446,9 +1429,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     : <span style={{fontSize:48}}>🏪</span>;
   const displayStory = profile?.brand_story || null;
   const displayCategories = profile?.bag_categories || [];
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
-    : null;
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : null;
 
   return (
     <div style={{ animation:'fadeIn 0.4s ease', paddingBottom:40 }}>
@@ -1456,8 +1437,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         onMouseEnter={e=>e.currentTarget.style.background='#fdf4ee'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
         <Icon name="arrow_back" size={18} /> Back to Vendors
       </button>
-
-      {/* Seller header */}
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
         <div style={{ width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0 }}>{displayAvatar}</div>
         <div style={{ flex:1, minWidth:200 }}>
@@ -1483,16 +1462,12 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           )}
         </div>
       </div>
-
-      {/* Products */}
       <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:16 }}>Products from {displayName}</h3>
       <div className="product-grid" style={{ marginBottom:40 }}>
         {vendorProducts.length > 0 ? vendorProducts.map((p,i) => (
           <ProductCard key={p.id} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />
         )) : <p style={{ color:'#9a6348' }}>No products available yet.</p>}
       </div>
-
-      {/* Reviews */}
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f7ece4',boxShadow:'0 4px 16px rgba(0,0,0,0.03)' }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Reviews & Comments</h3>
         <form onSubmit={handleSubmitReview} style={{ background:'#fdf8f5',padding:24,borderRadius:16,marginBottom:32,border:'1px solid #f0d9cc' }}>
@@ -1507,7 +1482,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
               ))}
             </div>
           </div>
-          <textarea value={newReviewText} onChange={e=>setNewReviewText(e.target.value)} placeholder="Share your experience with this seller..." style={{ width:'100%',padding:16,borderRadius:12,border:'1.5px solid #f0d9cc',background:'white',minHeight:100,resize:'vertical',fontSize:14,fontFamily:'inherit',marginBottom:16,outline:'none' }}/>
+          <textarea value={newReviewText} onChange={e=>setNewReviewText(e.target.value)} placeholder="Share your experience with this seller..." style={{ width:'100%',padding:16,borderRadius:12,border:'1.5px solid #f0d9cc',background:'white',minHeight:100,resize:'vertical',fontSize:14,fontFamily:'inherit',marginBottom:16,outline:'none',color:'#1a0a00' }}/>
           <button type="submit" disabled={submittingReview} style={{ padding:'12px 24px',background:'linear-gradient(135deg, #c84b11, #f97316)',color:'white',border:'none',borderRadius:10,fontWeight:800,fontSize:14,cursor:submittingReview?'default':'pointer',opacity:submittingReview?0.7:1,boxShadow:'0 4px 12px rgba(200,75,17,0.3)',transition:'all 0.2s' }}>
             {submittingReview ? 'Posting…' : 'Post Review'}
           </button>

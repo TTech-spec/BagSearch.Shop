@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useMemo, useRef, useCallback, memo } f
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
-import { deleteFromPinecone } from './services/pinecone';
+import { deleteFromPinecone } from './services/visualSearch';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
