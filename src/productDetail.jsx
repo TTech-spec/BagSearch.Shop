@@ -44,40 +44,7 @@ const C = {
   textFaint:    '#c4957a',
 };
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const mockProduct = {
-  id: 1,
-  name: "The Midnight Satchel",
-  brand: "Luxury Bags Co.",
-  seller: "Chukwuemeka Stores",
-  sellerPhone: "2348147061837",
-  sellerLocation: "Balogun Market, Lagos Island, Lagos",
-  sellerVerified: true,
-  sellerJoined: "2021",
-  sub: "Italian Leather • Midnight Blue",
-  description: "Crafted from premium Italian leather, The Midnight Satchel combines timeless elegance with modern functionality. Its structured silhouette and deep midnight blue tone make it the perfect statement piece for any occasion — from boardrooms to evening soirées.",
-  price: "$2,450",
-  originalPrice: "$2,900",
-  quantity: 12,
-  lowStock: false,
-  rating: 4.7,
-  reviews: 128,
-  colors: ["#1a1a2e", "#16213e", "#0f3460"],
-  sizes: ["XS", "S", "M", "L", "XL"],
-  category: "Satchels",
-  images: [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8",
-  ],
-};
-
-const similarProducts = [
-  { id: 2, name: "Ivory Essential Tote", seller: "Eco Style Hub", price: "$1,800", lowStock: true, colors: ["#f5f0e8","#e8ddd0","#d4c5b0"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo" },
-  { id: 3, name: "Azure Mini Crossbody", seller: "Trendy Fashion Hub", price: "$1,250", lowStock: false, colors: ["#4a90d9","#357abd","#2868a8"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk" },
-  { id: 4, name: "Onyx Evening Clutch", seller: "Elite Accessories", price: "$3,100", lowStock: true, colors: ["#1a1a1a","#333333","#4d4d4d"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E" },
-  { id: 5, name: "Crimson Structured Bag", seller: "Premium Leather Co.", price: "$3,200", lowStock: false, colors: ["#c0392b","#e74c3c","#922b21"], src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8" },
-];
+// ─── Mock data removed — all data fetched from Supabase ──────────────────────
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const WaIcon = ({ size = 16 }) => (
@@ -133,6 +100,7 @@ export default function ProductDetail() {
   const [networkError, setNetworkError] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [imgZoom, setImgZoom] = useState(false);
+  const [similarProducts, setSimilarProducts] = useState([]);
   const viewLoggedRef = useRef(null);
 
   useEffect(() => { fetchProduct(); }, [id]);
@@ -159,26 +127,7 @@ export default function ProductDetail() {
     try {
       setLoading(true);
       if (id && ['1','2','3','4','5'].includes(id)) {
-        const mock = [mockProduct, ...similarProducts].find(p => p.id.toString() === id);
-        if (mock) {
-          const adapted = {
-            ...mock,
-            images: mock.images || [mock.src],
-            originalPrice: mock.originalPrice || `$${(parseFloat((mock.price||'0').replace(/[^0-9.]/g,''))*1.2).toLocaleString()}`,
-            sellerPhone: mock.sellerPhone || "2348147061837",
-            sellerLocation: mock.sellerLocation || "Lagos, Nigeria",
-            rating: mock.rating || 4.5,
-            reviews: mock.reviews || 10,
-            colors: mock.colors || ["#c84b11","#f97316"],
-            sizes: mock.sizes || ["S","M","L"],
-            quantity: mock.quantity || 10,
-            isMock: true,
-          };
-          setProduct(adapted);
-          setSelectedColor(adapted.colors[0]);
-          setLoading(false);
-          return;
-        }
+        // mock IDs no longer supported
       }
       const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
       if (error) throw error;
