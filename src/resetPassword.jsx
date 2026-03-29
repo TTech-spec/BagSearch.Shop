@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from './services/api';
+import LogoIcon from './components/Logo.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -204,11 +205,7 @@ const ResetPassword = () => {
         />
         {/* Brand Overlay */}
         <div className="absolute top-10 left-10 flex items-center gap-2 text-white drop-shadow-md">
-          <div className="size-8">
-            <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path clipRule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fillRule="evenodd"></path>
-            </svg>
-          </div>
+          <LogoIcon size={32} />
           <h1 className="text-xl font-bold tracking-tight">BagSearch</h1>
         </div>
         {/* Bottom Text Overlay */}
@@ -222,11 +219,7 @@ const ResetPassword = () => {
         <div className="w-full max-w-[440px]">
           {/* Mobile Logo */}
           <div className="flex lg:hidden items-center gap-2 mb-12">
-            <div className="size-6 text-primary">
-              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path clipRule="evenodd" d="M12.0799 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.0799 24Z" fill="currentColor" fillRule="evenodd"></path>
-              </svg>
-            </div>
+            <LogoIcon size={24} />
             <h2 className="text-lg font-bold tracking-tight">BagSearch</h2>
           </div>
           

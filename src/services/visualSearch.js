@@ -1,7 +1,7 @@
-// src/services/visualSearch.js — Google Vision visual search
-
-const GOOGLE_VISION_API_KEY = 'AIzaSyD25zh624d0PIcqIDl9zY1Yz4Kn8ZoW2b8';
-const GOOGLE_VISION_URL = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`;
+// src/services/visualSearch.js — Imagga visual search
+const IMAGGA_AUTH = 'Basic YWNjX2QyMTI3NTliZTg4MWQxMzo1ZThkYzdiNWYxNzBjNmY1NjM1MjdiYTk3NWU1MDlkMA==';
+const IMAGGA_TAGS_URL = 'https://api.imagga.com/v2/tags';
+const IMAGGA_COLORS_URL = 'https://api.imagga.com/v2/colors';
 
 const BAG_KEYWORD_MAP = {
   'handbag':['handbag','bag','tote','purse'],
@@ -26,14 +26,6 @@ const BAG_KEYWORD_MAP = {
   'louis vuitton':['louis vuitton','lv'],
 };
 
-const fileToBase64Content = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-  });
-
 const addTag = (tagMap, tag, confidence) => {
   const key = tag.toLowerCase().trim();
   if (!key || key.length < 2) return;
@@ -43,57 +35,70 @@ const addTag = (tagMap, tag, confidence) => {
   }
 };
 
-const analyzeImage = async (imageFile) => {
-  const base64Content = await fileToBase64Content(imageFile);
-  const response = await fetch(GOOGLE_VISION_URL, {
+export const analyzeImage = async (imageFile) => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  
+  // 1. Fetch Tags
+  const tagsResponse = await fetch(IMAGGA_TAGS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      requests: [{
-        image: { content: base64Content },
-        features: [
-          { type: 'LABEL_DETECTION', maxResults: 30 },
-          { type: 'OBJECT_LOCALIZATION', maxResults: 10 },
-          { type: 'WEB_DETECTION', maxResults: 15 },
-          { type: 'IMAGE_PROPERTIES', maxResults: 5 },
-        ],
-      }],
-    }),
+    headers: { 
+      'Authorization': IMAGGA_AUTH
+    },
+    body: formData,
   });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Google Vision error ${response.status}`);
+
+  if (!tagsResponse.ok) {
+    const err = await tagsResponse.json().catch(() => ({}));
+    throw new Error(err?.status?.text || `Imagga tags error ${tagsResponse.status}`);
   }
-  const data = await response.json();
-  const result = data.responses?.[0];
-  if (!result) throw new Error('Empty response from Google Vision');
+
+  const tagsData = await tagsResponse.json();
+  const rawTags = tagsData.result?.tags || [];
 
   const tagMap = new Map();
-  for (const label of result.labelAnnotations || [])
-    addTag(tagMap, label.description, (label.score || 0) * 100);
-  for (const obj of result.localizedObjectAnnotations || [])
-    addTag(tagMap, obj.name, (obj.score || 0) * 100);
-  for (const entity of result.webDetection?.webEntities || [])
-    if (entity.description && (entity.score || 0) > 0.2)
-      addTag(tagMap, entity.description, (entity.score || 0) * 100);
+  for (const t of rawTags) {
+    addTag(tagMap, t.tag.en, t.confidence);
+  }
 
-  for (const color of result.imagePropertiesAnnotation?.dominantColors?.colors || []) {
-    const { red: r = 0, green: g = 0, blue: b = 0 } = color.color || {};
-    const s = (color.score || 0) * 100;
-    if (r > 180 && g < 80 && b < 80) addTag(tagMap, 'red', s);
-    else if (r < 60 && g < 60 && b < 60) addTag(tagMap, 'black', s);
-    else if (r > 200 && g > 200 && b > 200) addTag(tagMap, 'white', s);
-    else if (r > 150 && g > 100 && b < 80) addTag(tagMap, 'brown', s);
-    else if (r > 180 && g > 140 && b < 80) addTag(tagMap, 'camel', s);
-    else if (r < 80 && g < 80 && b > 150) addTag(tagMap, 'blue', s);
-    else if (r < 80 && g > 120 && b < 80) addTag(tagMap, 'green', s);
-    else if (r > 120 && g > 120 && b > 120) addTag(tagMap, 'grey', s);
+  // 2. Optional: Fetch Colors for better matching (Keeping logic from before)
+  try {
+    const colorFormData = new FormData();
+    colorFormData.append('image', imageFile);
+
+    const colorsResponse = await fetch(IMAGGA_COLORS_URL, {
+      method: 'POST',
+      headers: { 
+        'Authorization': IMAGGA_AUTH
+      },
+      body: colorFormData,
+    });
+    
+    if (colorsResponse.ok) {
+      const colorsData = await colorsResponse.json();
+      const dominantColors = colorsData.result?.colors?.image_colors || [];
+      for (const color of dominantColors) {
+        const { r, g, b } = color;
+        const s = color.percent;
+        if (r > 180 && g < 80 && b < 80) addTag(tagMap, 'red', s);
+        else if (r < 60 && g < 60 && b < 60) addTag(tagMap, 'black', s);
+        else if (r > 200 && g > 200 && b > 200) addTag(tagMap, 'white', s);
+        else if (r > 150 && g > 100 && b < 80) addTag(tagMap, 'brown', s);
+        else if (r > 180 && g > 140 && b < 80) addTag(tagMap, 'camel', s);
+        else if (r < 80 && g < 80 && b > 150) addTag(tagMap, 'blue', s);
+        else if (r < 80 && g > 120 && b < 80) addTag(tagMap, 'green', s);
+        else if (r > 120 && g > 120 && b > 120) addTag(tagMap, 'grey', s);
+      }
+    }
+  } catch (err) {
+    console.error('Imagga colors error:', err);
   }
 
   return Array.from(tagMap.entries())
     .map(([tag, confidence]) => ({ tag, confidence }))
     .sort((a, b) => b.confidence - a.confidence);
 };
+
 
 const scoreProduct = (product, tags) => {
   const fields = [
@@ -122,14 +127,6 @@ export const visualSearch = async (imageFile, allProducts) => {
     .sort((a, b) => b._score - a._score);
   return scored.length > 0 ? scored : allProducts.slice(0, 20);
 };
-
-export const fileToBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-  });
 
 export const generateImageEmbedding = async () => { throw new Error('Use visualSearch() instead.'); };
 export const queryPinecone = async () => [];

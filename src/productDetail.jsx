@@ -260,7 +260,7 @@ export default function ProductDetail() {
   const originalPrice = parsePrice(product.originalPrice);
   const discount = originalPrice > 0 ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
   const whatsappMsg = encodeURIComponent(`Hi! I'm interested in the *${product.name}* listed at ${product.price}. Is it still available?`);
-  const whatsappUrl = `https://wa.me/${product.sellerPhone}?text=${whatsappMsg}`;
+  const whatsappUrl = `https://wa.me/${(product.sellerPhone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
 
   return (
     <div style={{

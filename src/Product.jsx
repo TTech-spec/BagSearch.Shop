@@ -33,6 +33,9 @@ const C = {
   textMid:      '#5c3317',
   textMuted:    '#9a6348',
   textFaint:    '#c4957a',
+  whatsapp:     '#25d366',
+  whatsappDark: '#128c7e',
+  whatsappBg:   '#dcfce7',
 };
 
 // ─── PAGE LOADER ──────────────────────────────────────────────────────────────
@@ -106,6 +109,13 @@ const formatCurrency = (value, options = {}) => {
   const normalized = Number(value ?? 0);
   return `${CURRENCY_SYMBOL}${normalized.toLocaleString(undefined, { maximumFractionDigits: 0, ...options })}`;
 };
+
+// ─── WhatsApp SVG Icon ────────────────────────────────────────────────────────
+const WaIcon = ({ size = 16, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
 
 const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
@@ -434,7 +444,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
             style={{width:36,minWidth:36,height:'auto',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
             onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <WaIcon size={14} color="currentColor" />
           </a>
         </div>
       </div>
@@ -517,7 +527,7 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
 // ─── HOT DEALS CAROUSEL ───────────────────────────────────────────────────────
 function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequireAuth }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const [animDir, setAnimDir] = useState('next'); // 'next' | 'prev'
+  const [animDir, setAnimDir] = useState('next');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [addedMap, setAddedMap] = useState({});
@@ -530,7 +540,6 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
   const isMobile = windowWidth <= 640;
   const isSmall = windowWidth <= 380;
 
-  // Countdown to midnight
   useEffect(() => {
     const tick = () => {
       const now = new Date(); const midnight = new Date(); midnight.setHours(24,0,0,0);
@@ -555,7 +564,6 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
   const goNext = useCallback(() => goTo((activeIdx + 1) % products.length, 'next'), [activeIdx, products.length, goTo]);
   const goPrev = useCallback(() => goTo((activeIdx - 1 + products.length) % products.length, 'prev'), [activeIdx, products.length, goTo]);
 
-  // Auto-advance every 5s
   useEffect(() => {
     if (isPaused || products.length <= 1) return;
     autoRef.current = setInterval(goNext, 5000);
@@ -577,15 +585,12 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
     : 23;
   const added = addedMap[product.id];
 
-  // Slide-in animation styles
   const slideStyle = isAnimating
     ? { opacity: 0, transform: animDir === 'next' ? 'translateX(-24px)' : 'translateX(24px)' }
     : { opacity: 1, transform: 'translateX(0)' };
 
   return (
     <div ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
-
-      {/* Header row */}
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:12 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
           <div style={{ width:40,height:40,borderRadius:12,background:'#fef2f2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:'1.5px solid #fecaca',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥</div>
@@ -594,7 +599,6 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
             <p style={{ fontSize:12,color:C.textFaint,fontWeight:500 }}>{products.length} exclusive limited-time offer{products.length!==1?'s':''}</p>
           </div>
         </div>
-        {/* Countdown */}
         <div style={{ display:'flex',alignItems:'center',gap:6 }}>
           <span style={{ fontSize:11,color:C.danger,fontWeight:700 }}>Ends in</span>
           <div style={{ display:'flex',alignItems:'center',gap:4 }}>
@@ -608,24 +612,17 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
         </div>
       </div>
 
-      {/* Main carousel card */}
       <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)}
         style={{ position:'relative',borderRadius:22,overflow:'hidden',border:`2px solid #fcd4be`,boxShadow:'0 6px 32px rgba(200,75,17,0.1)',background:'linear-gradient(135deg,#fff5f2 0%,#fff 60%)' }}>
-
-        {/* Slide content */}
         <div style={{ display:'flex',flexDirection:isMobile?'column':'row',transition:'opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1)',...slideStyle }}>
-
-          {/* Image pane */}
           <div style={{ width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0 }}
-            onClick={()=>navigate(`/products/${product.id}`)} style2={{cursor:'pointer'}}>
+            onClick={()=>navigate(`/products/${product.id}`)}>
             <img src={product.src} alt={product.name}
               style={{ width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease' }}
               onClick={()=>navigate(`/products/${product.id}`)}
               onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
               onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
-            {/* Hot badge */}
             <div style={{ position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmall?9:11,fontWeight:900,padding:isSmall?'2px 8px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
-            {/* Slide counter badge */}
             {products.length > 1 && (
               <div style={{ position:'absolute',bottom:14,left:14,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',color:'white',fontSize:11,fontWeight:800,padding:'4px 10px',borderRadius:20 }}>
                 {activeIdx+1} / {products.length}
@@ -633,21 +630,18 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
             )}
           </div>
 
-          {/* Info pane */}
           <div style={{ flex:1,padding:isMobile?'20px 18px 24px':isSmall?'16px 14px':'28px 32px 28px',display:'flex',flexDirection:'column',justifyContent:'center' }}>
             <p style={{ fontSize:isSmall?9:11,fontWeight:800,letterSpacing:'0.14em',textTransform:'uppercase',color:C.primary,marginBottom:6 }}>{product.seller}</p>
             <h4 style={{ fontSize:isMobile?'1.15rem':'clamp(1.2rem,2.5vw,1.65rem)',fontWeight:900,color:C.text,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:8,cursor:'pointer' }}
               onClick={()=>navigate(`/products/${product.id}`)}>{product.name}</h4>
             <p style={{ fontSize:13,color:C.textMuted,fontWeight:500,lineHeight:1.6,marginBottom:16 }}>{product.sub}</p>
 
-            {/* Price row */}
             <div style={{ display:'flex',alignItems:'baseline',gap:10,marginBottom:16,flexWrap:'wrap' }}>
               <span style={{ fontSize:isMobile?24:32,fontWeight:900,color:C.primary,letterSpacing:'-0.04em' }}>{formatCurrency(product.discountedPrice||product.price)}</span>
               {product.discountedPrice && <span style={{ fontSize:isMobile?14:18,color:C.textFaint,textDecoration:'line-through',fontWeight:600 }}>{formatCurrency(product.price)}</span>}
               <span style={{ background:'#fef2f2',color:C.danger,fontSize:isSmall?9:12,fontWeight:800,padding:'3px 10px',borderRadius:20,border:'1px solid #fecaca',whiteSpace:'nowrap' }}>-{discountPct}% OFF</span>
             </div>
 
-            {/* Color dots */}
             {(product.colors||[]).length > 0 && (
               <div style={{ display:'flex',gap:5,marginBottom:18,alignItems:'center' }}>
                 {(product.colors||[]).slice(0,6).map((c,i)=>(
@@ -657,7 +651,6 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
               </div>
             )}
 
-            {/* CTA row */}
             <div style={{ display:'flex',gap:isMobile?8:10,flexDirection:isSmall?'column':'row',alignItems:'stretch' }}>
               <button onClick={e=>handleCart(e,product)}
                 style={{ flex:1,maxWidth:isSmall?'100%':220,padding:isMobile?'11px 0':'13px 0',borderRadius:12,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 16px rgba(22,163,74,0.4)':'0 6px 20px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:7 }}
@@ -671,7 +664,7 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
                 style={{ width:isSmall?'100%':46,height:isSmall?40:46,borderRadius:12,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0 }}
                 onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
                 onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                <WaIcon size={16} color="currentColor" />
               </a>
             </div>
 
@@ -681,7 +674,6 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
           </div>
         </div>
 
-        {/* Prev / Next arrow buttons — overlaid */}
         {products.length > 1 && (
           <>
             <button onClick={goPrev} style={{ position:'absolute',left:isMobile?8:14,top:'50%',transform:'translateY(-50%)',width:38,height:38,borderRadius:'50%',border:'none',background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,0.12)',transition:'all 0.2s',zIndex:5 }}
@@ -698,18 +690,14 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
         )}
       </div>
 
-      {/* Dot indicators + thumbnail strip */}
       {products.length > 1 && (
         <div style={{ marginTop:16,display:'flex',flexDirection:'column',alignItems:'center',gap:14 }}>
-          {/* Dots */}
           <div style={{ display:'flex',gap:8,alignItems:'center' }}>
             {products.map((_,i) => (
               <button key={i} onClick={()=>goTo(i, i>activeIdx?'next':'prev')}
                 style={{ width:i===activeIdx?28:8,height:8,borderRadius:99,border:'none',cursor:'pointer',background:i===activeIdx?C.primary:C.border,transition:'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',padding:0 }}/>
             ))}
           </div>
-
-          {/* Thumbnail strip (up to 5 thumbs) */}
           {products.length > 1 && (
             <div style={{ display:'flex',gap:10,overflowX:'auto',paddingBottom:4,scrollbarWidth:'none' }} className="hide-scrollbar">
               {products.map((p,i) => {
@@ -729,17 +717,90 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
   );
 }
 
-// ─── Cart Item ────────────────────────────────────────────────────────────────
-function CartItem({item,onUpdateQty,onRemove,index}){
-  const[removing,setRemoving]=useState(false);const[vis,setVis]=useState(false);
+// ─── Cart Item — with WhatsApp icon ──────────────────────────────────────────
+function CartItem({item, onUpdateQty, onRemove, index, isAuthed, onRequireAuth}){
+  const[removing,setRemoving]=useState(false);
+  const[vis,setVis]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>setVis(true),index*70);return()=>clearTimeout(t);},[index]);
   const handleRemove=()=>{setRemoving(true);setTimeout(()=>onRemove(item.id),420);};
+
+  const waNumber = (item.whatsapp||'').replace(/\D/g,'');
+  const waMsg = encodeURIComponent(
+    `Hi! I have *${item.qty}x ${item.name}* in my cart.\nTotal: ₦${(item.price * item.qty).toLocaleString()}\nProduct: ${item.src}`
+  );
+  const waLink = waNumber ? `https://wa.me/${waNumber}?text=${waMsg}` : null;
+
   return(
-    <div style={{display:'flex',gap:13,background:'white',borderRadius:16,padding:14,border:`1.5px solid ${C.borderLight}`,boxShadow:`0 2px 10px rgba(200,75,17,0.05)`,opacity:removing?0:vis?1:0,transform:removing?'translateX(60px) scale(0.9)':vis?'translateX(0) scale(1)':'translateX(-20px) scale(0.97)',transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',maxHeight:removing?0:130,overflow:'hidden'}}>
-      <img src={item.src} alt={item.name} style={{width:72,height:72,objectFit:'cover',borderRadius:12,flexShrink:0,border:`1px solid ${C.borderLight}`}}/>
+    <div style={{
+      display:'flex',gap:13,background:'white',borderRadius:16,padding:14,
+      border:`1.5px solid ${C.borderLight}`,
+      boxShadow:`0 2px 10px rgba(200,75,17,0.05)`,
+      opacity:removing?0:vis?1:0,
+      transform:removing?'translateX(60px) scale(0.9)':vis?'translateX(0) scale(1)':'translateX(-20px) scale(0.97)',
+      transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',
+      maxHeight:removing?0:200,overflow:'hidden'
+    }}>
+      {/* WhatsApp icon on the left side of the image */}
+      <div style={{position:'relative',flexShrink:0}}>
+        <img src={item.src} alt={item.name} style={{width:72,height:72,objectFit:'cover',borderRadius:12,display:'block',border:`1px solid ${C.borderLight}`}}/>
+        {/* WhatsApp badge */}
+        {waLink && (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e=>{
+              if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}
+            }}
+            title={`Message ${item.seller} on WhatsApp`}
+            style={{
+              position:'absolute',bottom:-6,left:-6,
+              width:26,height:26,borderRadius:'50%',
+              background:C.whatsapp,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              textDecoration:'none',
+              boxShadow:`0 3px 10px rgba(37,211,102,0.5)`,
+              border:'2.5px solid white',
+              transition:'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+              zIndex:2,
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.18)';e.currentTarget.style.background=C.whatsappDark;}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.background=C.whatsapp;}}>
+            <WaIcon size={12} color="white" />
+          </a>
+        )}
+      </div>
+
       <div style={{flex:1,minWidth:0}}>
-        <h4 style={{fontSize:13,fontWeight:800,color:C.text,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</h4>
-        <p style={{fontSize:11,color:C.textFaint,marginBottom:8,fontWeight:500}}>{item.seller}</p>
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:4}}>
+          <h4 style={{fontSize:13,fontWeight:800,color:C.text,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1}}>{item.name}</h4>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:8}}>
+          <p style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{item.seller}</p>
+          {waLink && (
+            <a
+              href={isAuthed ? waLink : '#'}
+              target={isAuthed ? '_blank' : '_self'}
+              rel="noopener noreferrer"
+              onClick={e=>{
+                if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}
+              }}
+              style={{
+                display:'inline-flex',alignItems:'center',gap:3,
+                fontSize:9,fontWeight:800,
+                color:C.whatsapp,
+                background:'#f0fdf4',
+                border:'1px solid #bbf7d0',
+                padding:'2px 7px',borderRadius:20,
+                textDecoration:'none',
+                transition:'all 0.2s',flexShrink:0,
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.whatsapp;e.currentTarget.style.color='white';e.currentTarget.style.borderColor=C.whatsapp;}}
+              onMouseLeave={e=>{e.currentTarget.style.background='#f0fdf4';e.currentTarget.style.color=C.whatsapp;e.currentTarget.style.borderColor='#bbf7d0';}}>
+              <WaIcon size={8} color="currentColor" /> Chat
+            </a>
+          )}
+        </div>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',background:C.surfaceDim,borderRadius:10,border:`1.5px solid ${C.border}`,overflow:'hidden'}}>
             <button onClick={()=>item.qty>1?onUpdateQty(item.id,item.qty-1):handleRemove()} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}} onMouseEnter={e=>e.currentTarget.style.background='#fee2e2'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>−</button>
@@ -768,18 +829,81 @@ function CartBadge({count,onClick}){
   );
 }
 
-function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
-  const[checkingOut,setCheckingOut]=useState(false);const[checked,setChecked]=useState(false);
+// ─── Cart Page — "Chat Sellers on WhatsApp" replaces "Place Order" ────────────
+function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequireAuth}){
+  const[chatting,setChatting]=useState(false);
+  const[chatted,setChatted]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
-  const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;const tax=total*0.075;const grand=total+delivery+tax;
-  const handleCheckout=()=>{setCheckingOut(true);setTimeout(()=>{setCheckingOut(false);setChecked(true);},1800);setTimeout(()=>{setChecked(false);onClose();},3500);};
+  const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;
+  const tax=total*0.075;
+  const grand=total+delivery+tax;
+
+  // Group items by seller and open a WhatsApp message per seller
+  const handleChatSellers = () => {
+    if (!cartItems.length) return;
+    if (!isAuthed) { onRequireAuth && onRequireAuth(); return; }
+
+    setChatting(true);
+
+    // Group by seller
+    const bySellerMap = cartItems.reduce((acc, item) => {
+      const key = item.seller || 'Seller';
+      if (!acc[key]) acc[key] = { whatsapp: item.whatsapp || '', items: [] };
+      acc[key].items.push(item);
+      return acc;
+    }, {});
+
+    const sellers = Object.entries(bySellerMap);
+
+    sellers.forEach(([sellerName, { whatsapp, items }], idx) => {
+      const number = (whatsapp || '').replace(/\D/g, '');
+      if (!number) return;
+
+      const itemLines = items
+        .map(i => `• ${i.qty}x *${i.name}* — ₦${(i.price * i.qty).toLocaleString()}`)
+        .join('\n');
+
+      const sellerTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+
+      const msg = encodeURIComponent(
+        `Hi ${sellerName}! 👋\n\nI'd like to order the following:\n\n${itemLines}\n\n*Subtotal: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability and delivery details. Thank you! 🛍️`
+      );
+
+      setTimeout(() => {
+        window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
+      }, idx * 600); // stagger opens so browser doesn't block them
+    });
+
+    setTimeout(() => {
+      setChatting(false);
+      setChatted(true);
+    }, 1000);
+
+    setTimeout(() => {
+      setChatted(false);
+      onClose();
+    }, 3400);
+  };
+
+  // Build unique sellers list for the info banner
+  const uniqueSellers = useMemo(() => {
+    const map = {};
+    cartItems.forEach(i => {
+      if (!map[i.seller]) map[i.seller] = { name: i.seller, whatsapp: i.whatsapp, count: 0 };
+      map[i.seller].count++;
+    });
+    return Object.values(map);
+  }, [cartItems]);
+
   return(
     <>
       <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.55)',zIndex:300,backdropFilter:'blur(6px)',animation:'fadeIn 0.3s ease both'}}/>
       <div style={{position:'fixed',inset:0,zIndex:301,display:'flex',alignItems:'stretch',justifyContent:'flex-end'}}>
         <div style={{width:'min(520px,100vw)',background:`linear-gradient(180deg,${C.primaryPale} 0%,white 30%)`,display:'flex',flexDirection:'column',animation:'slideInRight 0.45s cubic-bezier(0.34,1.2,0.64,1) both',boxShadow:'-24px 0 80px rgba(200,75,17,0.15)',overflowY:'hidden'}}>
           <div style={{height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c)',flexShrink:0}}/>
+
+          {/* Header */}
           <div style={{background:C.primaryBg,padding:'26px 26px 22px',borderBottom:`1px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
@@ -792,15 +916,36 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
               <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,color:C.primary,transition:'all 0.2s',flexShrink:0}}
                 onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>✕</button>
             </div>
-            {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
+
+            {/* WhatsApp info banner */}
+            {cartItems.length > 0 && (
+              <div style={{background:'#f0fdf4',borderRadius:12,padding:'10px 14px',border:'1px solid #bbf7d0',display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:28,height:28,borderRadius:8,background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <WaIcon size={14} color="white"/>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:11,fontWeight:800,color:'#15803d',marginBottom:1}}>
+                    Chat directly with {uniqueSellers.length} seller{uniqueSellers.length!==1?'s':''}
+                  </p>
+                  <p style={{fontSize:10,color:'#16a34a',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                    {uniqueSellers.map(s=>s.name).join(', ')}
+                  </p>
+                </div>
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#15803d"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+              </div>
+            )}
+
+            {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`,marginTop:10}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
               <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
             </div>}
-            {total>=FREE_DELIVERY_THRESHOLD&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8}}>
+            {total>=FREE_DELIVERY_THRESHOLD&&<div style={{background:'#dcfce7',borderRadius:12,padding:'10px 14px',border:'1px solid #a7f3d0',display:'flex',alignItems:'center',gap:8,marginTop:10}}>
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#15803d"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
               <span style={{fontSize:12,color:'#15803d',fontWeight:800}}>🎉 FREE delivery unlocked!</span>
             </div>}
           </div>
+
+          {/* Items list */}
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:60,paddingTop:40}}>
@@ -811,14 +956,27 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
               </div>
             ):(
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {cartItems.map((item,i)=>(<CartItem key={item.id} item={item} onUpdateQty={onUpdateQty} onRemove={onRemove} index={i}/>))}
+                {cartItems.map((item,i)=>(
+                  <CartItem
+                    key={item.id}
+                    item={item}
+                    onUpdateQty={onUpdateQty}
+                    onRemove={onRemove}
+                    index={i}
+                    isAuthed={isAuthed}
+                    onRequireAuth={onRequireAuth}
+                  />
+                ))}
               </div>
             )}
           </div>
+
+          {/* Footer — chat sellers CTA */}
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
+            {/* Order summary */}
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
-              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Delivery',v:delivery===0?'FREE ✨':formatCurrency(delivery),g:delivery===0},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
+              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Est. Delivery',v:delivery===0?'FREE ✨':formatCurrency(delivery),g:delivery===0},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
                 <div key={r.l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.textMuted,fontWeight:500}}>{r.l}</span><span style={{fontSize:13,fontWeight:700,color:r.g?'#15803d':C.text}}>{r.v}</span></div>
               ))}
               <div style={{height:1,background:C.border,margin:'11px 0'}}/>
@@ -827,19 +985,86 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose}){
                 <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
               </div>
             </div>
-            <div style={{display:'flex',gap:8,marginBottom:14}}>
-              <input placeholder="Promo code…" style={{flex:1,padding:'10px 13px',borderRadius:12,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:13,color:C.text,fontFamily:'inherit',fontWeight:500,outline:'none'}} onFocus={e=>e.currentTarget.style.borderColor=C.primaryBorder} onBlur={e=>e.currentTarget.style.borderColor=C.border}/>
-              <button style={{padding:'10px 16px',borderRadius:12,border:`1.5px solid ${C.primaryBorder}`,background:C.primaryBg,color:C.primary,fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.2s',whiteSpace:'nowrap'}} onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>Apply</button>
-            </div>
-            <button onClick={handleCheckout} style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:checked?'linear-gradient(135deg,#15803d,#16a34a)':checkingOut?'linear-gradient(135deg,#c84b11,#ea580c)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:900,fontSize:15,letterSpacing:'-0.01em',transition:'all 0.5s cubic-bezier(0.34,1.2,0.64,1)',boxShadow:checked?'0 8px 28px rgba(22,163,74,0.4)':'0 8px 28px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,transform:checkingOut?'scale(0.97)':'scale(1)'}}>
-              {checked?<><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Order Placed! 🎉</>
-                :checkingOut?<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>
-              :<>Place Order · {formatCurrency(grand)} <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"/></svg></>}
+
+            {/* Sellers breakdown */}
+            {uniqueSellers.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginBottom:8}}>Sellers in your cart</p>
+                <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                  {uniqueSellers.map(s => {
+                    const sellerItems = cartItems.filter(i => i.seller === s.name);
+                    const sellerTotal = sellerItems.reduce((sum,i)=>sum+i.price*i.qty,0);
+                    const waNumber = (s.whatsapp||'').replace(/\D/g,'');
+                    const sellerLines = sellerItems.map(i=>`• ${i.qty}x *${i.name}* — ₦${(i.price*i.qty).toLocaleString()}`).join('\n');
+                    const msg = encodeURIComponent(`Hi ${s.name}! 👋\n\nI'd like to order:\n\n${sellerLines}\n\n*Total: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability. Thank you! 🛍️`);
+                    const link = waNumber ? `https://wa.me/${waNumber}?text=${msg}` : null;
+                    return (
+                      <div key={s.name} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:'#f0fdf4',borderRadius:12,border:'1px solid #bbf7d0'}}>
+                        <div style={{width:32,height:32,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          <WaIcon size={14} color="white"/>
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <p style={{fontSize:12,fontWeight:800,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.name}</p>
+                          <p style={{fontSize:10,color:'#16a34a',fontWeight:600}}>{s.count} item{s.count!==1?'s':''} · {formatCurrency(sellerTotal)}</p>
+                        </div>
+                        {link && (
+                          <a
+                            href={isAuthed ? link : '#'}
+                            target={isAuthed ? '_blank' : '_self'}
+                            rel="noopener noreferrer"
+                            onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}}}
+                            style={{display:'flex',alignItems:'center',gap:5,padding:'5px 11px',borderRadius:20,background:C.whatsapp,color:'white',fontSize:11,fontWeight:800,textDecoration:'none',transition:'all 0.2s',flexShrink:0}}
+                            onMouseEnter={e=>e.currentTarget.style.background=C.whatsappDark}
+                            onMouseLeave={e=>e.currentTarget.style.background=C.whatsapp}>
+                            <WaIcon size={11} color="white"/> Chat
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Main CTA — Chat All Sellers */}
+            <button
+              onClick={handleChatSellers}
+              style={{
+                width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',
+                background: chatted
+                  ? 'linear-gradient(135deg,#15803d,#16a34a)'
+                  : chatting
+                  ? `linear-gradient(135deg,${C.whatsappDark},${C.whatsapp})`
+                  : `linear-gradient(135deg,${C.whatsapp},#20c95a)`,
+                color:'white',fontWeight:900,fontSize:15,letterSpacing:'-0.01em',
+                transition:'all 0.5s cubic-bezier(0.34,1.2,0.64,1)',
+                boxShadow: chatted
+                  ? '0 8px 28px rgba(22,163,74,0.4)'
+                  : `0 8px 28px rgba(37,211,102,0.4)`,
+                display:'flex',alignItems:'center',justifyContent:'center',gap:10,
+                transform:chatting?'scale(0.97)':'scale(1)',
+              }}
+              onMouseEnter={e=>{if(!chatting&&!chatted){e.currentTarget.style.transform='translateY(-2px) scale(1.01)';e.currentTarget.style.boxShadow=`0 14px 36px rgba(37,211,102,0.5)`;} }}
+              onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow=chatted?'0 8px 28px rgba(22,163,74,0.4)':`0 8px 28px rgba(37,211,102,0.4)`;}}
+            >
+              {chatted ? (
+                <><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                Chats Opened! 🎉</>
+              ) : chatting ? (
+                <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>
+                Opening WhatsApp…</>
+              ) : (
+                <><WaIcon size={18} color="white"/>
+                Chat Sellers on WhatsApp · {formatCurrency(grand)}</>
+              )}
             </button>
+
+            {/* Trust badges */}
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:0,marginTop:14}}>
-              {[{i:'🔒',l:'Secure'},{i:'🚚',l:'Fast Delivery'},{i:'↩️',l:'Easy Returns'}].map((b,idx)=>(
-                <div key={b.l} style={{display:'flex',alignItems:'center',gap:5,padding:'0 12px',borderRight:idx<2?`1px solid ${C.border}`:'none'}}>
-                  <span style={{fontSize:12}}>{b.i}</span><span style={{fontSize:10,color:C.textFaint,fontWeight:700}}>{b.l}</span>
+              {[{i:<WaIcon size={12} color={C.whatsapp}/>,l:'Direct Chat'},{i:'🔒',l:'Secure'},{i:'↩️',l:'Easy Returns'}].map((b,idx)=>(
+                <div key={idx} style={{display:'flex',alignItems:'center',gap:5,padding:'0 12px',borderRight:idx<2?`1px solid ${C.border}`:'none'}}>
+                  <span style={{fontSize:12,display:'flex',alignItems:'center'}}>{b.i}</span>
+                  <span style={{fontSize:10,color:C.textFaint,fontWeight:700}}>{b.l}</span>
                 </div>
               ))}
             </div>
@@ -1046,8 +1271,6 @@ export default function Product(){
   const featuredProducts=allProducts.slice(0,8);
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
-
-  // ── Hot deals: products with a discounted price OR lowStock flag ──
   const hotDealProducts = useMemo(() =>
     allProducts.filter(p => p.discountedPrice || p.lowStock).slice(0, 10),
   [allProducts]);
@@ -1107,7 +1330,14 @@ export default function Product(){
         {floatMsg.text}
       </div>}
 
-      {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)}/>}
+      {cartOpen&&<CartPage
+        cartItems={cartItems}
+        onUpdateQty={handleUpdateQty}
+        onRemove={handleRemoveFromCart}
+        onClose={()=>setCartOpen(false)}
+        isAuthed={!!user}
+        onRequireAuth={handleRequireAuth}
+      />}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
 
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
@@ -1242,8 +1472,6 @@ export default function Product(){
 
           {!isFiltered&&displayedProducts.length>0&&(
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
-
-              {/* ── HOT DEALS CAROUSEL (replaces old single DealOfTheDay) ── */}
               {hotDealProducts.length > 0 && (
                 <HotDealsCarousel
                   products={hotDealProducts}

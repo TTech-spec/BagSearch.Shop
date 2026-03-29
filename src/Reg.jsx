@@ -3,6 +3,7 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase, ensureSupabaseReady } from './services/api';
+import LogoIcon from './components/Logo.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -546,16 +547,7 @@ const Reg = () => {
           zIndex: 10
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 22, height: 22, color: C.primary, flexShrink: 0 }}>
-              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <g clipPath="url(#clip0_6_535)">
-                  <path clipRule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="currentColor" fillRule="evenodd" />
-                </g>
-                <defs>
-                  <clipPath id="clip0_6_535"><rect fill="white" height="48" width="48" /></clipPath>
-                </defs>
-              </svg>
-            </div>
+            <LogoIcon size={22} />
             <h2 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>
               Bag<span style={{ color: C.primary }}>Search</span>
             </h2>

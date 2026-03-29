@@ -2,6 +2,7 @@ import { useState, useContext, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import LogoIcon from './components/Logo.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -449,9 +450,7 @@ export default function CreateProduct() {
       }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: C.primary }} onClick={() => navigate('/products')}>
-            <svg width="24" height="24" fill="none" viewBox="0 0 48 48">
-              <path clipRule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fillRule="evenodd" />
-            </svg>
+            <LogoIcon size={24} />
             <span style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: "-0.5px" }}>Bag<span style={{ color: C.primary }}>Search</span></span>
           </div>
           <button onClick={() => navigate('/seller-profile')} style={{

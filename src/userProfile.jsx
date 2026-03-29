@@ -7,29 +7,35 @@ import {
   ArrowLeft, Upload, Check, X, Pencil, Loader
 } from 'lucide-react';
 
-// ─── Design Tokens ────────────────────────────────────────────────────────────
+// ─── Design Tokens — Warm Light Mode ─────────────────────────────────────────
 const T = {
-  bg:           '#0a0705',
-  bgCard:       '#110e0b',
-  bgCardHover:  '#161210',
-  surface:      '#1c1714',
-  surfaceHover: '#221e1a',
-  border:       '#2a2420',
+  bg:           '#faf7f4',
+  bgCard:       '#ffffff',
+  bgCardHover:  '#fef9f6',
+  surface:      '#f5f0eb',
+  surfaceHover: '#ede6df',
+  border:       '#e4d9d0',
+  borderStrong: '#d4c5b8',
   orange:       '#c84b11',
   orangeLight:  '#f97316',
-  orangeGlow:   'rgba(200,75,17,0.35)',
-  orangePale:   'rgba(200,75,17,0.08)',
-  amber:        '#f59e0b',
-  amberGlow:    'rgba(245,158,11,0.2)',
-  red:          '#ef4444',
-  redGlow:      'rgba(239,68,68,0.25)',
-  green:        '#22c55e',
-  greenGlow:    'rgba(34,197,94,0.2)',
-  textPrimary:  '#faf5f0',
-  textSec:      '#b09080',
-  textMuted:    '#6b4e3a',
-  textFaint:    '#3d2b1f',
-  gold:         '#e8c17a',
+  orangeGlow:   'rgba(200,75,17,0.18)',
+  orangePale:   'rgba(200,75,17,0.07)',
+  amber:        '#b45309',
+  amberLight:   '#d97706',
+  amberGlow:    'rgba(180,83,9,0.15)',
+  red:          '#dc2626',
+  redGlow:      'rgba(220,38,38,0.18)',
+  green:        '#16a34a',
+  greenLight:   '#22c55e',
+  greenGlow:    'rgba(22,163,74,0.15)',
+  textPrimary:  '#1c1209',
+  textSec:      '#6b4e3a',
+  textMuted:    '#9d7b68',
+  textFaint:    '#c4a898',
+  gold:         '#92400e',
+  shadow:       'rgba(100,50,20,0.08)',
+  shadowMd:     'rgba(100,50,20,0.13)',
+  shadowLg:     'rgba(100,50,20,0.18)',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,8 +52,8 @@ const GLOBAL_CSS = `
   body { background: ${T.bg}; }
 
   ::-webkit-scrollbar       { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 2px; }
+  ::-webkit-scrollbar-track { background: ${T.surface}; }
+  ::-webkit-scrollbar-thumb { background: ${T.borderStrong}; border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: ${T.orange}; }
 
   @keyframes fadeUp    { from { opacity:0; transform:translateY(22px);   } to { opacity:1; transform:translateY(0); } }
@@ -65,7 +71,7 @@ const GLOBAL_CSS = `
   @keyframes histIn    { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
   @keyframes orb1      { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-20px) scale(1.1)} 66%{transform:translate(-20px,30px) scale(.9)} }
   @keyframes orb2      { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-30px,20px) scale(.9)} 66%{transform:translate(20px,-30px) scale(1.1)} }
-  @keyframes dangerPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 70%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
+  @keyframes dangerPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)} 70%{box-shadow:0 0 0 8px rgba(220,38,38,0)} }
   @keyframes spinSlow  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 `;
 
@@ -108,12 +114,12 @@ function Toast({ msg, type='success', visible }) {
       opacity: visible?1:0,
       transition:'all .4s cubic-bezier(.22,1,.36,1)',
       zIndex:999, pointerEvents:'none',
-      background: type==='success' ? 'linear-gradient(135deg,#166534,#15803d)' : 'linear-gradient(135deg,#7f1d1d,#dc2626)',
+      background: type==='success' ? 'linear-gradient(135deg,#14532d,#16a34a)' : 'linear-gradient(135deg,#7f1d1d,#dc2626)',
       color:'#fff', padding:'10px 20px', borderRadius:40,
       fontSize:12, fontWeight:700, fontFamily:"'DM Sans',sans-serif",
-      boxShadow:`0 12px 40px rgba(0,0,0,.5)`,
+      boxShadow:`0 12px 40px rgba(0,0,0,.2)`,
       display:'flex', alignItems:'center', gap:8, letterSpacing:'.04em',
-      border:`1px solid ${type==='success'?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'}`,
+      border:`1px solid ${type==='success'?'rgba(134,239,172,.4)':'rgba(254,202,202,.3)'}`,
       whiteSpace:'nowrap',
     }}>
       {type==='success' ? <Check size={13}/> : <X size={13}/>} {msg}
@@ -153,14 +159,14 @@ function EditField({ icon, label, value, field, onSave, loading, type='text', ac
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{
         position:'relative', padding:'12px 14px', borderRadius:12,
-        background: editing ? T.surface : hov ? T.surfaceHover : 'transparent',
-        border:`1px solid ${editing ? accentColor+'55' : hov ? T.border : 'transparent'}`,
+        background: editing ? T.surface : hov ? T.surface : 'transparent',
+        border:`1px solid ${editing ? accentColor+'66' : hov ? T.border : 'transparent'}`,
         transition:'all .25s ease', overflow:'hidden',
       }}
     >
-      <div style={{ position:'absolute', left:0, top:'20%', bottom:'20%', width:2, borderRadius:1, background:accentColor, opacity: editing ? 1 : hov ? .4 : 0, transition:'opacity .25s' }} />
+      <div style={{ position:'absolute', left:0, top:'20%', bottom:'20%', width:2, borderRadius:1, background:accentColor, opacity: editing ? 1 : hov ? .35 : 0, transition:'opacity .25s' }} />
       <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
-        <div style={{ width:30, height:30, borderRadius:8, background:`${accentColor}18`, border:`1px solid ${accentColor}28`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color:accentColor, transition:'all .25s', transform: editing?'scale(1.08)':'scale(1)' }}>
+        <div style={{ width:30, height:30, borderRadius:8, background:`${accentColor}12`, border:`1px solid ${accentColor}28`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, color:accentColor, transition:'all .25s', transform: editing?'scale(1.08)':'scale(1)' }}>
           {icon}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
@@ -170,7 +176,7 @@ function EditField({ icon, label, value, field, onSave, loading, type='text', ac
               <input ref={inputRef} type={type} value={draft}
                 onChange={e=>{setDraft(e.target.value);setErr('');}} onKeyDown={onKey}
                 placeholder={`Enter ${label.toLowerCase()}…`}
-                style={{ width:'100%', fontSize:13, fontWeight:500, color:T.textPrimary, background:T.bg, border:`1.5px solid ${err?T.red:accentColor+'55'}`, borderRadius:8, padding:'7px 10px', outline:'none', fontFamily:"'DM Sans',sans-serif", transition:'border-color .2s', boxShadow: err?`0 0 0 3px ${T.redGlow}`:`0 0 0 3px ${accentColor}18` }}
+                style={{ width:'100%', fontSize:13, fontWeight:500, color:T.textPrimary, background:T.bgCard, border:`1.5px solid ${err?T.red:accentColor+'88'}`, borderRadius:8, padding:'7px 10px', outline:'none', fontFamily:"'DM Sans',sans-serif", transition:'border-color .2s', boxShadow: err?`0 0 0 3px ${T.redGlow}`:`0 0 0 3px ${accentColor}18` }}
               />
               {err && <p style={{ fontSize:10, color:T.red, marginTop:4, fontWeight:600 }}>⚠ {err}</p>}
               <div style={{ display:'flex', gap:6, marginTop:8 }}>
@@ -194,7 +200,7 @@ function EditField({ icon, label, value, field, onSave, loading, type='text', ac
         </div>
         {!editing && !loading && (
           <button onClick={start}
-            style={{ width:26, height:26, borderRadius:7, background: hov?`${accentColor}18`:'transparent', border:`1px solid ${hov?accentColor+'44':'transparent'}`, cursor:'pointer', color: hov?accentColor:T.textFaint, display:'flex', alignItems:'center', justifyContent:'center', opacity: hov?1:0, transform: hov?'scale(1)':'scale(.6)', transition:'all .25s cubic-bezier(.34,1.56,.64,1)', flexShrink:0, alignSelf:'flex-start', marginTop:6 }}>
+            style={{ width:26, height:26, borderRadius:7, background: hov?`${accentColor}12`:'transparent', border:`1px solid ${hov?accentColor+'44':'transparent'}`, cursor:'pointer', color: hov?accentColor:T.textFaint, display:'flex', alignItems:'center', justifyContent:'center', opacity: hov?1:0, transform: hov?'scale(1)':'scale(.6)', transition:'all .25s cubic-bezier(.34,1.56,.64,1)', flexShrink:0, alignSelf:'flex-start', marginTop:6 }}>
             <Pencil size={11}/>
           </button>
         )}
@@ -232,7 +238,7 @@ function NameEditor({ value, onSave, loading }) {
         <input ref={inputRef} value={draft}
           onChange={e=>{setDraft(e.target.value);setErr('');}}
           onKeyDown={e=>{if(e.key==='Enter')save();if(e.key==='Escape')cancel();}}
-          style={{ fontSize:'clamp(1.1rem,3.5vw,1.6rem)', fontWeight:700, color:T.textPrimary, background:'rgba(255,255,255,.04)', border:`2px solid ${err?T.red:T.orange}`, borderRadius:10, padding:'6px 14px', outline:'none', fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', boxShadow:`0 0 0 4px ${err?T.redGlow:T.orangePale}`, maxWidth:'min(320px,calc(100vw - 120px))' }}
+          style={{ fontSize:'clamp(1.1rem,3.5vw,1.6rem)', fontWeight:700, color:T.textPrimary, background:T.bgCard, border:`2px solid ${err?T.red:T.orange}`, borderRadius:10, padding:'6px 14px', outline:'none', fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', boxShadow:`0 0 0 4px ${err?T.redGlow:T.orangePale}`, maxWidth:'min(320px,calc(100vw - 120px))', boxShadow:`0 2px 12px ${T.shadow}` }}
         />
         <div style={{ display:'flex', gap:6 }}>
           <button onClick={save} disabled={saving} style={{ width:34, height:34, borderRadius:9, background:`linear-gradient(135deg,${T.orange},${T.orangeLight})`, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 14px ${T.orangeGlow}` }}>
@@ -248,11 +254,11 @@ function NameEditor({ value, onSave, loading }) {
     <div
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       onClick={()=>{setDraft(value??'');setEditing(true);setErr('');}}
-      style={{ display:'inline-flex', alignItems:'center', gap:10, cursor:'pointer', padding:'4px 10px 4px 4px', borderRadius:10, margin:'-4px -10px -4px -4px', background: hov?'rgba(200,75,17,.06)':'transparent', border:`1.5px solid ${hov?T.orange+'44':'transparent'}`, transition:'all .25s', maxWidth:'100%' }}
+      style={{ display:'inline-flex', alignItems:'center', gap:10, cursor:'pointer', padding:'4px 10px 4px 4px', borderRadius:10, margin:'-4px -10px -4px -4px', background: hov?T.orangePale:'transparent', border:`1.5px solid ${hov?T.orange+'55':'transparent'}`, transition:'all .25s', maxWidth:'100%' }}
       title="Click to edit name"
     >
       <h1 style={{ fontSize:'clamp(1.1rem,3.5vw,1.7rem)', fontWeight:700, color:T.textPrimary, letterSpacing:'-.03em', fontFamily:"'Unbounded',sans-serif", lineHeight:1.15, wordBreak:'break-word' }}>{value || '—'}</h1>
-      <Pencil size={12} color={T.orange} style={{ flexShrink:0, opacity: hov?.9:.4, transition:'opacity .2s' }}/>
+      <Pencil size={12} color={T.orange} style={{ flexShrink:0, opacity: hov?.9:.3, transition:'opacity .2s' }}/>
     </div>
   );
 }
@@ -264,14 +270,14 @@ function HistRow({ item, index }) {
   return (
     <div
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', borderRadius:10, background: hov?T.surfaceHover:T.surface, border:`1px solid ${hov?T.border:'transparent'}`, transition:'all .2s ease', cursor:'default', animation:`histIn .35s cubic-bezier(.22,1,.36,1) ${index*45}ms both` }}
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', borderRadius:10, background: hov?T.surface:'transparent', border:`1px solid ${hov?T.border:'transparent'}`, transition:'all .2s ease', cursor:'default', animation:`histIn .35s cubic-bezier(.22,1,.36,1) ${index*45}ms both` }}
     >
-      <div style={{ width:7, height:7, borderRadius:'50%', background: isImg?T.amber:T.orange, flexShrink:0, boxShadow:`0 0 8px ${isImg?T.amberGlow:T.orangeGlow}` }}/>
+      <div style={{ width:7, height:7, borderRadius:'50%', background: isImg?T.amberLight:T.orange, flexShrink:0, boxShadow:`0 0 8px ${isImg?T.amberGlow:T.orangeGlow}` }}/>
       <div style={{ flex:1, minWidth:0 }}>
         <p style={{ fontSize:12, fontWeight:500, color:T.textPrimary, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:"'DM Sans',sans-serif" }}>{item.query}</p>
         <p style={{ fontSize:10, color:T.textMuted, marginTop:2, fontFamily:"'DM Mono',monospace" }}>{fmtShort(item.created_at)}</p>
       </div>
-      <span style={{ fontSize:8, fontWeight:700, letterSpacing:'.14em', textTransform:'uppercase', padding:'3px 9px', borderRadius:20, background: isImg?`${T.amber}18`:T.orangePale, color: isImg?T.amber:T.orange, border:`1px solid ${isImg?T.amber+'33':T.orange+'33'}`, flexShrink:0, fontFamily:"'DM Mono',monospace" }}>{item.type}</span>
+      <span style={{ fontSize:8, fontWeight:700, letterSpacing:'.14em', textTransform:'uppercase', padding:'3px 9px', borderRadius:20, background: isImg?`${T.amberLight}14`:T.orangePale, color: isImg?T.amber:T.orange, border:`1px solid ${isImg?T.amber+'40':T.orange+'40'}`, flexShrink:0, fontFamily:"'DM Mono',monospace" }}>{item.type}</span>
     </div>
   );
 }
@@ -282,9 +288,9 @@ function StatCard({ val, label, icon, color, glow, delay }) {
   return (
     <div
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ padding:'18px 14px', borderRadius:14, textAlign:'center', background: hov?T.surfaceHover:T.surface, border:`1px solid ${hov?color+'44':T.border}`, transition:'all .3s ease', transform: hov?'translateY(-4px)':'none', boxShadow: hov?`0 16px 40px ${glow}`:'none', cursor:'default', position:'relative', overflow:'hidden' }}
+      style={{ padding:'18px 14px', borderRadius:14, textAlign:'center', background: hov?T.bgCard:T.surface, border:`1px solid ${hov?color+'55':T.border}`, transition:'all .3s ease', transform: hov?'translateY(-4px)':'none', boxShadow: hov?`0 12px 32px ${glow}, 0 4px 12px ${T.shadow}`:`0 2px 8px ${T.shadow}`, cursor:'default', position:'relative', overflow:'hidden' }}
     >
-      {hov && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 100%, ${glow} 0%, transparent 65%)`, pointerEvents:'none' }}/>}
+      {hov && <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 110%, ${glow} 0%, transparent 65%)`, pointerEvents:'none' }}/>}
       <div style={{ position:'relative', zIndex:1 }}>
         <MI name={icon} size={18} color={hov?color:T.textMuted}/>
         <p style={{ fontSize:'clamp(1.5rem,3.5vw,2.1rem)', fontWeight:900, color:hov?color:T.textPrimary, letterSpacing:'-.06em', lineHeight:1, margin:'7px 0 5px', fontFamily:"'Unbounded',sans-serif" }}>
@@ -327,32 +333,31 @@ function DeleteModal({ visible, onClose, onConfirm, deleting, deleted }) {
   return (
     <>
       <div onClick={!deleting&&!deleted?onClose:undefined}
-        style={{ position:'fixed', inset:0, zIndex:600, background:'rgba(0,0,0,.82)', backdropFilter:'blur(8px)', animation:'overlayIn .25s ease' }}/>
+        style={{ position:'fixed', inset:0, zIndex:600, background:'rgba(28,18,9,.55)', backdropFilter:'blur(8px)', animation:'overlayIn .25s ease' }}/>
       <div style={{
         position:'fixed', top:'50%', left:'50%',
         transform:'translate(-50%,-50%)',
         zIndex:601, width:'min(480px,calc(100vw - 20px))',
         background:T.bgCard,
         borderRadius:20, overflow:'hidden',
-        border:`1px solid ${shake?T.red+'55':T.border}`,
-        boxShadow:`0 40px 100px rgba(0,0,0,.8), 0 0 0 1px ${T.border}`,
+        border:`1px solid ${shake?T.red+'66':T.borderStrong}`,
+        boxShadow:`0 40px 80px ${T.shadowLg}, 0 0 0 1px ${T.border}`,
         animation: shake ? 'shakeX .5s ease' : 'modalPop .4s cubic-bezier(.34,1.28,.64,1) both',
         maxHeight:'90vh', overflowY:'auto',
       }}>
         {/* Header */}
-        <div style={{ padding:'26px 26px 20px', background:'linear-gradient(135deg,#120000,#220505)', position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', top:-60, right:-40, width:180, height:180, borderRadius:'50%', background:'rgba(239,68,68,.07)' }}/>
-          <div style={{ position:'absolute', top:0, bottom:0, width:60, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.025),transparent)', animation:'scanline 4s ease infinite', pointerEvents:'none' }}/>
+        <div style={{ padding:'26px 26px 20px', background:'linear-gradient(135deg,#fff5f5,#fee2e2)', position:'relative', overflow:'hidden', borderBottom:`1px solid #fecaca` }}>
+          <div style={{ position:'absolute', top:-60, right:-40, width:180, height:180, borderRadius:'50%', background:'rgba(220,38,38,.05)' }}/>
           <div style={{ position:'relative', zIndex:2, display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
             <div>
-              <div style={{ width:48, height:48, borderRadius:13, background:'rgba(239,68,68,.14)', border:'1.5px solid rgba(239,68,68,.28)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
+              <div style={{ width:48, height:48, borderRadius:13, background:'rgba(220,38,38,.1)', border:'1.5px solid rgba(220,38,38,.22)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill={T.red}><path d="M9 3v1H4v2h1v13a2 2 0 002 2h10a2 2 0 002-2V6h1V4h-5V3H9zm0 5h2v9H9V8zm4 0h2v9h-2V8z"/></svg>
               </div>
-              <p style={{ fontSize:17, fontWeight:700, color:T.textPrimary, fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', marginBottom:4 }}>Delete Account</p>
-              <p style={{ fontSize:11, color:T.textMuted, fontFamily:"'DM Sans',sans-serif" }}>Permanent · cannot be undone</p>
+              <p style={{ fontSize:17, fontWeight:700, color:'#7f1d1d', fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', marginBottom:4 }}>Delete Account</p>
+              <p style={{ fontSize:11, color:'#b91c1c', fontFamily:"'DM Sans',sans-serif" }}>Permanent · cannot be undone</p>
             </div>
             {!deleting && !deleted && (
-              <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:T.textSec, flexShrink:0 }}>
+              <button onClick={onClose} style={{ width:30, height:30, borderRadius:8, background:'rgba(220,38,38,.07)', border:'1px solid rgba(220,38,38,.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:T.red, flexShrink:0 }}>
                 <X size={13}/>
               </button>
             )}
@@ -361,7 +366,7 @@ function DeleteModal({ visible, onClose, onConfirm, deleting, deleted }) {
 
         {deleted ? (
           <div style={{ padding:'40px 26px', display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', animation:'fadeUp .4s ease' }}>
-            <div style={{ width:60, height:60, borderRadius:'50%', background:T.greenGlow, border:`2px solid ${T.green}44`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
+            <div style={{ width:60, height:60, borderRadius:'50%', background:'#f0fdf4', border:`2px solid ${T.greenLight}66`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                 <path d="M4 12l5 5 11-11" stroke={T.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                   style={{ strokeDasharray:60, strokeDashoffset:60, animation:'drawCheck .6s ease .1s forwards' }}/>
@@ -373,11 +378,11 @@ function DeleteModal({ visible, onClose, onConfirm, deleting, deleted }) {
         ) : (
           <>
             <div style={{ padding:'20px 26px' }}>
-              <div style={{ background:'rgba(239,68,68,.05)', border:`1px solid rgba(239,68,68,.14)`, borderRadius:12, padding:'12px 14px', marginBottom:16 }}>
+              <div style={{ background:'#fef2f2', border:`1px solid #fecaca`, borderRadius:12, padding:'12px 14px', marginBottom:16 }}>
                 {warnings.map((w,i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom: i<warnings.length-1?`1px solid rgba(239,68,68,.07)`:'none', opacity:0, animation:`fadeUp .35s ease ${80+i*70}ms both` }}>
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 0', borderBottom: i<warnings.length-1?`1px solid #fee2e2`:'none', opacity:0, animation:`fadeUp .35s ease ${80+i*70}ms both` }}>
                     <MI name={w.icon} size={14} color={T.red}/>
-                    <p style={{ fontSize:12, color:'rgba(239,68,68,.8)', fontWeight:500, fontFamily:"'DM Sans',sans-serif", lineHeight:1.5 }}>{w.text}</p>
+                    <p style={{ fontSize:12, color:'#dc2626', fontWeight:500, fontFamily:"'DM Sans',sans-serif", lineHeight:1.5 }}>{w.text}</p>
                   </div>
                 ))}
               </div>
@@ -391,11 +396,11 @@ function DeleteModal({ visible, onClose, onConfirm, deleting, deleted }) {
             </div>
             <div style={{ padding:'0 26px 22px', display:'flex', gap:10, flexWrap:'wrap' }}>
               <button onClick={onClose} disabled={deleting}
-                style={{ flex:'1 1 100px', padding:'11px', borderRadius:11, border:`1px solid ${T.border}`, background:'transparent', fontSize:12, fontWeight:600, color:T.textSec, cursor:deleting?'not-allowed':'pointer', fontFamily:"'DM Sans',sans-serif" }}>
+                style={{ flex:'1 1 100px', padding:'11px', borderRadius:11, border:`1px solid ${T.border}`, background:T.surface, fontSize:12, fontWeight:600, color:T.textSec, cursor:deleting?'not-allowed':'pointer', fontFamily:"'DM Sans',sans-serif" }}>
                 Cancel
               </button>
               <button onClick={()=>valid&&!deleting&&onConfirm()} disabled={!valid||deleting}
-                style={{ flex:'2 1 160px', padding:'11px', borderRadius:11, border:'none', background: valid&&!deleting?'linear-gradient(135deg,#dc2626,#b91c1c)':'rgba(239,68,68,.18)', fontSize:12, fontWeight:700, color: valid&&!deleting?'#fff':'rgba(239,68,68,.45)', cursor: valid&&!deleting?'pointer':'not-allowed', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow: valid&&!deleting?`0 6px 20px ${T.redGlow}`:'none', transition:'all .25s' }}>
+                style={{ flex:'2 1 160px', padding:'11px', borderRadius:11, border:'none', background: valid&&!deleting?'linear-gradient(135deg,#dc2626,#b91c1c)':'#fecaca', fontSize:12, fontWeight:700, color: valid&&!deleting?'#fff':'#f87171', cursor: valid&&!deleting?'pointer':'not-allowed', fontFamily:"'DM Sans',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow: valid&&!deleting?`0 6px 20px ${T.redGlow}`:'none', transition:'all .25s' }}>
                 {deleting ? <Loader size={13} style={{animation:'spin .7s linear infinite'}}/> : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v1H4v2h1v13a2 2 0 002 2h10a2 2 0 002-2V6h1V4h-5V3H9zm0 5h2v9H9V8zm4 0h2v9h-2V8z"/></svg>}
                 {deleting ? 'Deleting…' : 'Delete Permanently'}
               </button>
@@ -414,12 +419,12 @@ function DangerZone({ onDelete, visible }) {
   return (
     <div
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ background:T.bgCard, border:`1px solid ${hov?'rgba(239,68,68,.28)':T.border}`, borderRadius:18, padding:'clamp(20px,4vw,28px)', boxShadow: hov?`0 8px 40px rgba(239,68,68,.07)`:'none', opacity: visible?1:0, transform: visible?'none':'translateY(20px)', transition:'opacity .6s ease, transform .6s ease, border-color .3s, box-shadow .3s', position:'relative', overflow:'hidden' }}
+      style={{ background:T.bgCard, border:`1px solid ${hov?'#fca5a5':T.border}`, borderRadius:18, padding:'clamp(20px,4vw,28px)', boxShadow: hov?`0 8px 32px rgba(220,38,38,.08), 0 2px 12px ${T.shadow}`:`0 2px 12px ${T.shadow}`, opacity: visible?1:0, transform: visible?'none':'translateY(20px)', transition:'opacity .6s ease, transform .6s ease, border-color .3s, box-shadow .3s', position:'relative', overflow:'hidden' }}
     >
-      <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle,rgba(239,68,68,.04) 0%,transparent 65%)', opacity: hov?1:0, transition:'opacity .4s', pointerEvents:'none' }}/>
+      {hov && <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'radial-gradient(circle,rgba(220,38,38,.06) 0%,transparent 65%)', pointerEvents:'none' }}/>}
       <div style={{ position:'relative', zIndex:1 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, paddingBottom:16, borderBottom:`1px solid ${T.border}` }}>
-          <div style={{ width:32, height:32, borderRadius:9, background:'rgba(239,68,68,.1)', border:`1px solid rgba(239,68,68,.2)`, display:'flex', alignItems:'center', justifyContent:'center', animation: hov?'dangerPulse 1.5s ease infinite':'none', flexShrink:0 }}>
+          <div style={{ width:32, height:32, borderRadius:9, background:'#fef2f2', border:`1px solid #fecaca`, display:'flex', alignItems:'center', justifyContent:'center', animation: hov?'dangerPulse 1.5s ease infinite':'none', flexShrink:0 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill={T.red}><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19H3.5L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
           </div>
           <div style={{ flex:1 }}>
@@ -437,8 +442,7 @@ function DangerZone({ onDelete, visible }) {
         <button
           onMouseEnter={()=>setBtnHov(true)} onMouseLeave={()=>setBtnHov(false)}
           onClick={onDelete}
-          style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:9, padding:'12px', borderRadius:11, border:`1px solid ${btnHov?'transparent':'rgba(239,68,68,.28)'}`, background: btnHov?'linear-gradient(135deg,#dc2626,#b91c1c)':'rgba(239,68,68,.07)', color: btnHov?'#fff':T.red, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .28s cubic-bezier(.22,1,.36,1)', boxShadow: btnHov?`0 8px 24px ${T.redGlow}`:'none', transform: btnHov?'translateY(-2px)':'none', position:'relative', overflow:'hidden' }}>
-          {btnHov && <div style={{ position:'absolute', top:0, bottom:0, width:50, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)', animation:'scanline 2s ease infinite', pointerEvents:'none' }}/>}
+          style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:9, padding:'12px', borderRadius:11, border:`1px solid ${btnHov?'transparent':'#fca5a5'}`, background: btnHov?'linear-gradient(135deg,#dc2626,#b91c1c)':'#fef2f2', color: btnHov?'#fff':T.red, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'DM Sans',sans-serif", transition:'all .28s cubic-bezier(.22,1,.36,1)', boxShadow: btnHov?`0 8px 24px ${T.redGlow}`:'none', transform: btnHov?'translateY(-2px)':'none', position:'relative', overflow:'hidden' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v1H4v2h1v13a2 2 0 002 2h10a2 2 0 002-2V6h1V4h-5V3H9zm0 5h2v9H9V8zm4 0h2v9h-2V8z"/></svg>
           Delete My Account
         </button>
@@ -539,7 +543,7 @@ export default function UserProfile() {
     <div style={{ minHeight:'100vh', background:T.bg, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'DM Sans',sans-serif", padding:24 }}>
       <style>{GLOBAL_CSS}</style>
       <div style={{ textAlign:'center', maxWidth:340 }}>
-        <div style={{ width:64, height:64, borderRadius:'50%', background:T.redGlow, border:`1px solid ${T.red}44`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
+        <div style={{ width:64, height:64, borderRadius:'50%', background:'#fef2f2', border:`1px solid #fecaca`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
           <AlertCircle size={28} color={T.red}/>
         </div>
         <h2 style={{ fontSize:16, fontWeight:700, color:T.textPrimary, fontFamily:"'Unbounded',sans-serif", marginBottom:8 }}>Load Failed</h2>
@@ -555,28 +559,30 @@ export default function UserProfile() {
 
       {/* ── Ambient Background ── */}
       <div aria-hidden style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
-        <div style={{ position:'absolute', top:'-15%', left:'-10%', width:'60vw', height:'60vw', maxWidth:700, maxHeight:700, borderRadius:'50%', background:`radial-gradient(circle, rgba(200,75,17,.07) 0%, transparent 60%)`, animation:'orb1 18s ease-in-out infinite', filter:'blur(80px)' }}/>
+        {/* Warm subtle orbs */}
+        <div style={{ position:'absolute', top:'-15%', left:'-10%', width:'60vw', height:'60vw', maxWidth:700, maxHeight:700, borderRadius:'50%', background:`radial-gradient(circle, rgba(200,75,17,.05) 0%, transparent 60%)`, animation:'orb1 18s ease-in-out infinite', filter:'blur(80px)' }}/>
         <div style={{ position:'absolute', bottom:'-10%', right:'-8%', width:'50vw', height:'50vw', maxWidth:600, maxHeight:600, borderRadius:'50%', background:`radial-gradient(circle, rgba(245,158,11,.04) 0%, transparent 60%)`, animation:'orb2 22s ease-in-out infinite', filter:'blur(80px)' }}/>
-        {/* Grid overlay */}
-        <div style={{ position:'absolute', inset:0, backgroundImage:`linear-gradient(${T.border} 1px, transparent 1px), linear-gradient(90deg, ${T.border} 1px, transparent 1px)`, backgroundSize:'50px 50px', opacity:.25 }}/>
-        {/* Horizontal noise bar at top */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${T.orange}55,${T.orangeLight}88,${T.orange}55,transparent)` }}/>
+        {/* Subtle dot grid */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:`radial-gradient(circle, ${T.borderStrong} 1px, transparent 1px)`, backgroundSize:'28px 28px', opacity:.5 }}/>
+        {/* Top accent line */}
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${T.orange}44,${T.orangeLight}66,${T.orange}44,transparent)` }}/>
       </div>
 
       {/* ── HEADER ── */}
       <header style={{
         position:'sticky', top:0, zIndex:50,
-        background:'rgba(10,7,5,.88)', backdropFilter:'blur(20px)',
+        background:'rgba(250,247,244,.92)', backdropFilter:'blur(20px)',
         borderBottom:`1px solid ${T.border}`,
+        boxShadow:`0 1px 20px ${T.shadow}`,
         opacity: in0?1:0, transform: in0?'translateY(0)':'translateY(-20px)',
         transition:'opacity .4s ease, transform .4s ease',
       }}>
         {/* Top accent line */}
-        <div style={{ height:2, background:`linear-gradient(90deg,transparent,${T.orange},${T.orangeLight},${T.orange},transparent)`, opacity:.6 }}/>
+        <div style={{ height:2, background:`linear-gradient(90deg,transparent,${T.orange},${T.orangeLight},${T.orange},transparent)`, opacity:.7 }}/>
         <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(14px,4vw,20px)', display:'flex', alignItems:'center', gap:clamp(10,14), height:60 }}>
           <button onClick={()=>navigate(-1)}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:9, border:`1px solid ${T.border}`, background:T.surface, cursor:'pointer', color:T.textSec, fontSize:12, fontWeight:600, transition:'all .2s', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap' }}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor=T.orange+'55';e.currentTarget.style.color=T.orange;e.currentTarget.style.transform='translateX(-2px)';}}
+            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:9, border:`1px solid ${T.border}`, background:T.bgCard, cursor:'pointer', color:T.textSec, fontSize:12, fontWeight:600, transition:'all .2s', fontFamily:'inherit', flexShrink:0, whiteSpace:'nowrap', boxShadow:`0 1px 6px ${T.shadow}` }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=T.orange+'66';e.currentTarget.style.color=T.orange;e.currentTarget.style.transform='translateX(-2px)';}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.textSec;e.currentTarget.style.transform='none';}}>
             <ArrowLeft size={13} strokeWidth={2}/> <span style={{ display:'inline' }}>Back</span>
           </button>
@@ -604,26 +610,31 @@ export default function UserProfile() {
         <div style={{
           marginBottom:16, borderRadius:20, overflow:'hidden',
           background:T.bgCard, border:`1px solid ${T.border}`,
-          boxShadow:`0 4px 40px rgba(0,0,0,.6)`,
+          boxShadow:`0 4px 32px ${T.shadowMd}`,
           opacity: in1?1:0, transform: in1?'translateY(0)':'translateY(28px)',
           transition:'opacity .55s ease, transform .55s ease',
         }}>
-          {/* Banner */}
-          <div style={{ height:'clamp(70px,12vw,120px)', background:'linear-gradient(135deg,#0d0907 0%,#180d06 40%,#0d0907 100%)', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', top:0, bottom:0, width:'25%', background:`linear-gradient(90deg,transparent,rgba(200,75,17,.08),transparent)`, animation:'scanline 6s ease-in-out infinite', pointerEvents:'none' }}/>
+          {/* Banner — warm cream with texture */}
+          <div style={{ height:'clamp(70px,12vw,120px)', background:`linear-gradient(135deg, #fef3e2 0%, #fde8c8 40%, #fef3e2 100%)`, position:'relative', overflow:'hidden' }}>
+            {/* Horizontal stripes pattern */}
+            {[...Array(12)].map((_,i) => (
+              <div key={i} style={{ position:'absolute', left:0, right:0, top:`${(i/12)*100}%`, height:1, background:`linear-gradient(90deg,transparent,${T.orange}18,transparent)` }}/>
+            ))}
+            {/* Scanline shimmer */}
+            <div style={{ position:'absolute', top:0, bottom:0, width:'25%', background:`linear-gradient(90deg,transparent,rgba(200,75,17,.06),transparent)`, animation:'scanline 6s ease-in-out infinite', pointerEvents:'none' }}/>
             {/* Concentric circle decoration */}
             <div style={{ position:'absolute', top:'50%', right:'8%', transform:'translateY(-50%)' }}>
               {[70,100,130].map(size=>(
-                <div key={size} style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:size, height:size, borderRadius:'50%', border:`1px solid ${T.orange}${size===70?'33':size===100?'1a':'0d'}` }}/>
+                <div key={size} style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:size, height:size, borderRadius:'50%', border:`1px solid ${T.orange}${size===70?'44':size===100?'28':'18'}` }}/>
               ))}
-              <div style={{ width:20, height:20, borderRadius:'50%', background:T.orange, opacity:.15 }}/>
+              <div style={{ width:20, height:20, borderRadius:'50%', background:T.orange, opacity:.2 }}/>
             </div>
             {/* Vertical stripes */}
             {[20,40,60,80].map(p=>(
-              <div key={p} style={{ position:'absolute', left:`${p}%`, top:0, bottom:0, width:'1px', background:`linear-gradient(180deg,transparent,${T.border},transparent)` }}/>
+              <div key={p} style={{ position:'absolute', left:`${p}%`, top:0, bottom:0, width:'1px', background:`linear-gradient(180deg,transparent,${T.borderStrong},transparent)` }}/>
             ))}
             {/* Bottom accent */}
-            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${T.orange}55,transparent)` }}/>
+            <div style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${T.orange}66,transparent)` }}/>
           </div>
 
           {/* Body */}
@@ -633,15 +644,15 @@ export default function UserProfile() {
               {loading ? <Skel w={80} h={80} r={999} /> : (
                 <div style={{ position:'relative', flexShrink:0 }}>
                   {/* Spinning conic ring */}
-                  <div style={{ position:'absolute', inset:-2, borderRadius:'50%', padding:2, background:`conic-gradient(${T.orange},${T.orangeLight},${T.amber},${T.orange})`, animation:'spinSlow 6s linear infinite', zIndex:0 }}>
+                  <div style={{ position:'absolute', inset:-2, borderRadius:'50%', padding:2, background:`conic-gradient(${T.orange},${T.orangeLight},${T.amberLight},${T.orange})`, animation:'spinSlow 6s linear infinite', zIndex:0 }}>
                     <div style={{ inset:0, position:'absolute', borderRadius:'50%', background:T.bgCard, margin:2 }}/>
                   </div>
-                  <div style={{ position:'relative', width:80, height:80, borderRadius:'50%', background:`linear-gradient(135deg,${T.orange},${T.orangeLight},${T.amber})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff', fontFamily:"'Unbounded',sans-serif", zIndex:1, border:`3px solid ${T.bgCard}` }}>
+                  <div style={{ position:'relative', width:80, height:80, borderRadius:'50%', background:`linear-gradient(135deg,${T.orange},${T.orangeLight},${T.amberLight})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:900, color:'#fff', fontFamily:"'Unbounded',sans-serif", zIndex:1, border:`3px solid ${T.bgCard}`, boxShadow:`0 4px 16px ${T.orangeGlow}` }}>
                     {initials}
                   </div>
                   {/* Online indicator */}
-                  <div style={{ position:'absolute', bottom:4, right:4, width:14, height:14, borderRadius:'50%', background:T.green, border:`2.5px solid ${T.bgCard}`, zIndex:2, animation:'floatY 2.5s ease-in-out infinite' }}>
-                    <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:T.green, animation:'pulseRing 2s ease-out infinite', opacity:.5 }}/>
+                  <div style={{ position:'absolute', bottom:4, right:4, width:14, height:14, borderRadius:'50%', background:T.greenLight, border:`2.5px solid ${T.bgCard}`, zIndex:2, animation:'floatY 2.5s ease-in-out infinite', boxShadow:`0 2px 8px ${T.greenGlow}` }}>
+                    <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:T.greenLight, animation:'pulseRing 2s ease-out infinite', opacity:.5 }}/>
                   </div>
                 </div>
               )}
@@ -651,14 +662,14 @@ export default function UserProfile() {
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8, alignItems:'center' }}>
                   {isSeller && (
                     <button onClick={()=>navigate('/upload-product')}
-                      style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:9, border:`1px solid ${T.orange}44`, background:T.orangePale, cursor:'pointer', color:T.orangeLight, fontSize:11, fontWeight:700, fontFamily:'inherit', transition:'all .2s', whiteSpace:'nowrap' }}
-                      onMouseEnter={e=>{e.currentTarget.style.background=`${T.orange}20`;}}
+                      style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 13px', borderRadius:9, border:`1px solid ${T.orange}55`, background:T.orangePale, cursor:'pointer', color:T.orange, fontSize:11, fontWeight:700, fontFamily:'inherit', transition:'all .2s', whiteSpace:'nowrap', boxShadow:`0 2px 8px ${T.orangeGlow}` }}
+                      onMouseEnter={e=>{e.currentTarget.style.background=`${T.orange}14`;}}
                       onMouseLeave={e=>{e.currentTarget.style.background=T.orangePale;}}>
                       <Upload size={11}/> Upload Product
                     </button>
                   )}
                   {profile?.role && (
-                    <span style={{ padding:'4px 12px', borderRadius:20, fontSize:9, fontWeight:700, letterSpacing:'.14em', textTransform:'uppercase', background:T.orangePale, color:T.orange, border:`1px solid ${T.orange}33`, fontFamily:"'DM Mono',monospace" }}>
+                    <span style={{ padding:'4px 12px', borderRadius:20, fontSize:9, fontWeight:700, letterSpacing:'.14em', textTransform:'uppercase', background:T.orangePale, color:T.orange, border:`1px solid ${T.orange}44`, fontFamily:"'DM Mono',monospace" }}>
                       {profile.role}
                     </span>
                   )}
@@ -690,7 +701,7 @@ export default function UserProfile() {
                     { val:stats?.orders??0,        label:'Orders',   color:T.amber  },
                     { val:stats?.savedItems??0,    label:'Saved',    color:T.green  },
                   ].map(s=>(
-                    <span key={s.label} style={{ padding:'4px 11px', borderRadius:20, fontSize:10, fontWeight:600, background:`${s.color}12`, color:s.color, border:`1px solid ${s.color}28`, fontFamily:"'DM Mono',monospace", whiteSpace:'nowrap' }}>
+                    <span key={s.label} style={{ padding:'4px 11px', borderRadius:20, fontSize:10, fontWeight:600, background:`${s.color}12`, color:s.color, border:`1px solid ${s.color}33`, fontFamily:"'DM Mono',monospace", whiteSpace:'nowrap' }}>
                       {s.val} {s.label}
                     </span>
                   ))}
@@ -709,21 +720,21 @@ export default function UserProfile() {
           transition:'opacity .6s ease, transform .6s ease',
         }}>
           {/* Contact Info Card */}
-          <div style={{ background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18, padding:'clamp(18px,4vw,26px)', boxShadow:`0 4px 24px rgba(0,0,0,.3)` }}>
+          <div style={{ background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18, padding:'clamp(18px,4vw,26px)', boxShadow:`0 2px 16px ${T.shadow}` }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
               <div style={{ width:30, height:30, borderRadius:8, background:T.orangePale, border:`1px solid ${T.orange}33`, display:'flex', alignItems:'center', justifyContent:'center', color:T.orange, flexShrink:0 }}>
                 <User size={14}/>
               </div>
               <h2 style={{ fontSize:11, fontWeight:700, color:T.textPrimary, letterSpacing:'-.01em', fontFamily:"'Unbounded',sans-serif", flex:1 }}>Contact Info</h2>
               <span style={{ fontSize:9, color:T.textFaint, display:'flex', alignItems:'center', gap:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
-                <Pencil size={8}/> hover
+                <Pencil size={8}/> hover to edit
               </span>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
               <EditField icon={<Mail size={13}/>} label="Email" field="email" type="email" value={profile?.email} onSave={handleSave} loading={loading} accentColor={T.orange}/>
               <EditField icon={<Phone size={13}/>} label="Phone" field="phone" type="tel" value={profile?.phone} onSave={handleSave} loading={loading} accentColor={T.green}/>
               <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px' }}>
-                <div style={{ width:30, height:30, borderRadius:8, background:`${T.amber}18`, border:`1px solid ${T.amber}33`, display:'flex', alignItems:'center', justifyContent:'center', color:T.amber, flexShrink:0 }}>
+                <div style={{ width:30, height:30, borderRadius:8, background:`${T.amberLight}14`, border:`1px solid ${T.amberLight}33`, display:'flex', alignItems:'center', justifyContent:'center', color:T.amber, flexShrink:0 }}>
                   <Calendar size={13}/>
                 </div>
                 <div>
@@ -735,14 +746,14 @@ export default function UserProfile() {
           </div>
 
           {/* Search History Card */}
-          <div style={{ background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18, padding:'clamp(18px,4vw,26px)', boxShadow:`0 4px 24px rgba(0,0,0,.3)` }}>
+          <div style={{ background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18, padding:'clamp(18px,4vw,26px)', boxShadow:`0 2px 16px ${T.shadow}` }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
               <div style={{ width:30, height:30, borderRadius:8, background:T.orangePale, border:`1px solid ${T.orange}33`, display:'flex', alignItems:'center', justifyContent:'center', color:T.orange, flexShrink:0 }}>
                 <History size={14}/>
               </div>
               <h2 style={{ fontSize:11, fontWeight:700, color:T.textPrimary, letterSpacing:'-.01em', fontFamily:"'Unbounded',sans-serif", flex:1 }}>Recent Searches</h2>
               {!loading && history.length > 0 && (
-                <span style={{ padding:'2px 8px', borderRadius:20, fontSize:9, fontWeight:700, background:T.orangePale, color:T.orange, border:`1px solid ${T.orange}33`, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{history.length}</span>
+                <span style={{ padding:'2px 8px', borderRadius:20, fontSize:9, fontWeight:700, background:T.orangePale, color:T.orange, border:`1px solid ${T.orange}44`, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{history.length}</span>
               )}
             </div>
             {loading ? (
@@ -765,13 +776,13 @@ export default function UserProfile() {
         {/* ── ACTIVITY STATS ── */}
         <div style={{
           background:T.bgCard, border:`1px solid ${T.border}`, borderRadius:18,
-          padding:'clamp(18px,4vw,26px)', boxShadow:`0 4px 24px rgba(0,0,0,.3)`,
+          padding:'clamp(18px,4vw,26px)', boxShadow:`0 2px 16px ${T.shadow}`,
           marginBottom:16,
           opacity: in3?1:0, transform: in3?'none':'translateY(24px)',
           transition:'opacity .6s ease, transform .6s ease',
         }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
-            <div style={{ width:30, height:30, borderRadius:8, background:`${T.green}18`, border:`1px solid ${T.green}33`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <div style={{ width:30, height:30, borderRadius:8, background:`${T.green}14`, border:`1px solid ${T.green}33`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2" strokeLinecap="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
             </div>
             <h2 style={{ fontSize:11, fontWeight:700, color:T.textPrimary, letterSpacing:'-.01em', fontFamily:"'Unbounded',sans-serif" }}>Activity Stats</h2>
@@ -782,10 +793,10 @@ export default function UserProfile() {
             </div>
           ) : (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(clamp(90px,18vw,150px),1fr))', gap:10 }}>
-              <StatCard val={stats?.totalSearches} label="Searches"     icon="search"       color={T.orange}      glow={T.orangeGlow}  delay={0}  />
-              <StatCard val={stats?.orders}        label="Orders"       icon="shopping_bag"  color={T.green}       glow={T.greenGlow}   delay={100}/>
-              <StatCard val={stats?.imageSearches} label="Img Search"   icon="photo_camera" color={T.amber}       glow={T.amberGlow}   delay={200}/>
-              <StatCard val={stats?.savedItems}    label="Saved"        icon="bookmark"     color={T.orangeLight} glow={T.orangeGlow}  delay={300}/>
+              <StatCard val={stats?.totalSearches} label="Searches"   icon="search"        color={T.orange}      glow={T.orangeGlow}  delay={0}  />
+              <StatCard val={stats?.orders}        label="Orders"     icon="shopping_bag"  color={T.green}       glow={T.greenGlow}   delay={100}/>
+              <StatCard val={stats?.imageSearches} label="Img Search" icon="photo_camera"  color={T.amber}       glow={T.amberGlow}   delay={200}/>
+              <StatCard val={stats?.savedItems}    label="Saved"      icon="bookmark"      color={T.orangeLight} glow={T.orangeGlow}  delay={300}/>
             </div>
           )}
         </div>
