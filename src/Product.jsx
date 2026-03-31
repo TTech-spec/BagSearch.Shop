@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
 import { visualSearch } from './services/visualSearch';
+import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
+import UnderDevelopmentBanner from './UnderDevelopmentBanner';
 
 const BAG_COLOR_MAP = {
   black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
@@ -438,9 +440,37 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
               :<><svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
               <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
           </button>
-          <a href={`https://wa.me/${(product.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(`Hi, I'm interested in *${product.name}*\nPrice: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (discounted)':'₦'+product.price.toLocaleString()}\nProduct image: ${product.src}`)}`}
-            target="_blank" rel="noopener noreferrer"
-            onClick={e=>{ if(!isAuthed){ e.preventDefault(); e.stopPropagation(); onRequireAuth && onRequireAuth(); } else { e.stopPropagation(); } }}
+          <a
+            href={(() => {
+              const number = normalizeWhatsAppNumber(product.whatsapp || '');
+              if (!number) return '';
+              const productLink = `${window.location.origin}/products/${product.id}`;
+              const msg =
+                `Hi, I'm interested in *${product.name}*\n` +
+                `Price: ${
+                  product.discountedPrice
+                    ? '₦' + product.discountedPrice.toLocaleString() + ' (discounted)'
+                    : '₦' + product.price.toLocaleString()
+                }\n` +
+                `Product link: ${productLink}`;
+              return buildWhatsAppUrl(number, msg);
+            })()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e=>{
+              if(!isAuthed){
+                e.preventDefault(); e.stopPropagation();
+                onRequireAuth && onRequireAuth();
+                return;
+              }
+              const number = normalizeWhatsAppNumber(product.whatsapp || '');
+              if(!number){
+                e.preventDefault(); e.stopPropagation();
+                alert('Seller WhatsApp number is missing for this product.');
+                return;
+              }
+              e.stopPropagation();
+            }}
             style={{width:36,minWidth:36,height:'auto',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}}
             onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
@@ -740,10 +770,8 @@ function CartItem({item, onUpdateQty, onRemove, index, isAuthed, onRequireAuth})
       transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',
       maxHeight:removing?0:200,overflow:'hidden'
     }}>
-      {/* WhatsApp icon on the left side of the image */}
       <div style={{position:'relative',flexShrink:0}}>
         <img src={item.src} alt={item.name} style={{width:72,height:72,objectFit:'cover',borderRadius:12,display:'block',border:`1px solid ${C.borderLight}`}}/>
-        {/* WhatsApp badge */}
         {waLink && (
           <a
             href={waLink}
@@ -829,7 +857,7 @@ function CartBadge({count,onClick}){
   );
 }
 
-// ─── Cart Page — "Chat Sellers on WhatsApp" replaces "Place Order" ────────────
+// ─── Cart Page ────────────────────────────────────────────────────────────────
 function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequireAuth}){
   const[chatting,setChatting]=useState(false);
   const[chatted,setChatted]=useState(false);
@@ -839,54 +867,29 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
   const tax=total*0.075;
   const grand=total+delivery+tax;
 
-  // Group items by seller and open a WhatsApp message per seller
   const handleChatSellers = () => {
     if (!cartItems.length) return;
     if (!isAuthed) { onRequireAuth && onRequireAuth(); return; }
-
     setChatting(true);
-
-    // Group by seller
     const bySellerMap = cartItems.reduce((acc, item) => {
       const key = item.seller || 'Seller';
       if (!acc[key]) acc[key] = { whatsapp: item.whatsapp || '', items: [] };
       acc[key].items.push(item);
       return acc;
     }, {});
-
     const sellers = Object.entries(bySellerMap);
-
     sellers.forEach(([sellerName, { whatsapp, items }], idx) => {
       const number = (whatsapp || '').replace(/\D/g, '');
       if (!number) return;
-
-      const itemLines = items
-        .map(i => `• ${i.qty}x *${i.name}* — ₦${(i.price * i.qty).toLocaleString()}`)
-        .join('\n');
-
+      const itemLines = items.map(i => `• ${i.qty}x *${i.name}* — ₦${(i.price * i.qty).toLocaleString()}`).join('\n');
       const sellerTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-
-      const msg = encodeURIComponent(
-        `Hi ${sellerName}! 👋\n\nI'd like to order the following:\n\n${itemLines}\n\n*Subtotal: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability and delivery details. Thank you! 🛍️`
-      );
-
-      setTimeout(() => {
-        window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
-      }, idx * 600); // stagger opens so browser doesn't block them
+      const msg = encodeURIComponent(`Hi ${sellerName}! 👋\n\nI'd like to order the following:\n\n${itemLines}\n\n*Subtotal: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability and delivery details. Thank you! 🛍️`);
+      setTimeout(() => { window.open(`https://wa.me/${number}?text=${msg}`, '_blank'); }, idx * 600);
     });
-
-    setTimeout(() => {
-      setChatting(false);
-      setChatted(true);
-    }, 1000);
-
-    setTimeout(() => {
-      setChatted(false);
-      onClose();
-    }, 3400);
+    setTimeout(() => { setChatting(false); setChatted(true); }, 1000);
+    setTimeout(() => { setChatted(false); onClose(); }, 3400);
   };
 
-  // Build unique sellers list for the info banner
   const uniqueSellers = useMemo(() => {
     const map = {};
     cartItems.forEach(i => {
@@ -902,8 +905,6 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
       <div style={{position:'fixed',inset:0,zIndex:301,display:'flex',alignItems:'stretch',justifyContent:'flex-end'}}>
         <div style={{width:'min(520px,100vw)',background:`linear-gradient(180deg,${C.primaryPale} 0%,white 30%)`,display:'flex',flexDirection:'column',animation:'slideInRight 0.45s cubic-bezier(0.34,1.2,0.64,1) both',boxShadow:'-24px 0 80px rgba(200,75,17,0.15)',overflowY:'hidden'}}>
           <div style={{height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c)',flexShrink:0}}/>
-
-          {/* Header */}
           <div style={{background:C.primaryBg,padding:'26px 26px 22px',borderBottom:`1px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
@@ -916,25 +917,18 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
               <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,color:C.primary,transition:'all 0.2s',flexShrink:0}}
                 onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>✕</button>
             </div>
-
-            {/* WhatsApp info banner */}
             {cartItems.length > 0 && (
               <div style={{background:'#f0fdf4',borderRadius:12,padding:'10px 14px',border:'1px solid #bbf7d0',display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:28,height:28,borderRadius:8,background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                   <WaIcon size={14} color="white"/>
                 </div>
                 <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:11,fontWeight:800,color:'#15803d',marginBottom:1}}>
-                    Chat directly with {uniqueSellers.length} seller{uniqueSellers.length!==1?'s':''}
-                  </p>
-                  <p style={{fontSize:10,color:'#16a34a',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                    {uniqueSellers.map(s=>s.name).join(', ')}
-                  </p>
+                  <p style={{fontSize:11,fontWeight:800,color:'#15803d',marginBottom:1}}>Chat directly with {uniqueSellers.length} seller{uniqueSellers.length!==1?'s':''}</p>
+                  <p style={{fontSize:10,color:'#16a34a',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{uniqueSellers.map(s=>s.name).join(', ')}</p>
                 </div>
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="#15803d"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
               </div>
             )}
-
             {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`,marginTop:10}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span><span style={{fontSize:11,color:C.textFaint,fontWeight:600}}>{Math.round((total/FREE_DELIVERY_THRESHOLD)*100)}%</span></div>
               <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden',border:`1px solid ${C.primaryBorder}`}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
@@ -944,8 +938,6 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
               <span style={{fontSize:12,color:'#15803d',fontWeight:800}}>🎉 FREE delivery unlocked!</span>
             </div>}
           </div>
-
-          {/* Items list */}
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:60,paddingTop:40}}>
@@ -956,24 +948,11 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
               </div>
             ):(
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {cartItems.map((item,i)=>(
-                  <CartItem
-                    key={item.id}
-                    item={item}
-                    onUpdateQty={onUpdateQty}
-                    onRemove={onRemove}
-                    index={i}
-                    isAuthed={isAuthed}
-                    onRequireAuth={onRequireAuth}
-                  />
-                ))}
+                {cartItems.map((item,i)=>(<CartItem key={item.id} item={item} onUpdateQty={onUpdateQty} onRemove={onRemove} index={i} isAuthed={isAuthed} onRequireAuth={onRequireAuth}/>))}
               </div>
             )}
           </div>
-
-          {/* Footer — chat sellers CTA */}
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
-            {/* Order summary */}
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
               {[{l:'Subtotal',v:formatCurrency(total)},{l:'Est. Delivery',v:delivery===0?'FREE ✨':formatCurrency(delivery),g:delivery===0},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
@@ -985,8 +964,6 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
                 <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
               </div>
             </div>
-
-            {/* Sellers breakdown */}
             {uniqueSellers.length > 0 && (
               <div style={{marginBottom:16}}>
                 <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginBottom:8}}>Sellers in your cart</p>
@@ -1000,18 +977,13 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
                     const link = waNumber ? `https://wa.me/${waNumber}?text=${msg}` : null;
                     return (
                       <div key={s.name} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',background:'#f0fdf4',borderRadius:12,border:'1px solid #bbf7d0'}}>
-                        <div style={{width:32,height:32,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                          <WaIcon size={14} color="white"/>
-                        </div>
+                        <div style={{width:32,height:32,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><WaIcon size={14} color="white"/></div>
                         <div style={{flex:1,minWidth:0}}>
                           <p style={{fontSize:12,fontWeight:800,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.name}</p>
                           <p style={{fontSize:10,color:'#16a34a',fontWeight:600}}>{s.count} item{s.count!==1?'s':''} · {formatCurrency(sellerTotal)}</p>
                         </div>
                         {link && (
-                          <a
-                            href={isAuthed ? link : '#'}
-                            target={isAuthed ? '_blank' : '_self'}
-                            rel="noopener noreferrer"
+                          <a href={isAuthed ? link : '#'} target={isAuthed ? '_blank' : '_self'} rel="noopener noreferrer"
                             onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}}}
                             style={{display:'flex',alignItems:'center',gap:5,padding:'5px 11px',borderRadius:20,background:C.whatsapp,color:'white',fontSize:11,fontWeight:800,textDecoration:'none',transition:'all 0.2s',flexShrink:0}}
                             onMouseEnter={e=>e.currentTarget.style.background=C.whatsappDark}
@@ -1025,41 +997,14 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
                 </div>
               </div>
             )}
-
-            {/* Main CTA — Chat All Sellers */}
-            <button
-              onClick={handleChatSellers}
-              style={{
-                width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',
-                background: chatted
-                  ? 'linear-gradient(135deg,#15803d,#16a34a)'
-                  : chatting
-                  ? `linear-gradient(135deg,${C.whatsappDark},${C.whatsapp})`
-                  : `linear-gradient(135deg,${C.whatsapp},#20c95a)`,
-                color:'white',fontWeight:900,fontSize:15,letterSpacing:'-0.01em',
-                transition:'all 0.5s cubic-bezier(0.34,1.2,0.64,1)',
-                boxShadow: chatted
-                  ? '0 8px 28px rgba(22,163,74,0.4)'
-                  : `0 8px 28px rgba(37,211,102,0.4)`,
-                display:'flex',alignItems:'center',justifyContent:'center',gap:10,
-                transform:chatting?'scale(0.97)':'scale(1)',
-              }}
-              onMouseEnter={e=>{if(!chatting&&!chatted){e.currentTarget.style.transform='translateY(-2px) scale(1.01)';e.currentTarget.style.boxShadow=`0 14px 36px rgba(37,211,102,0.5)`;} }}
-              onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow=chatted?'0 8px 28px rgba(22,163,74,0.4)':`0 8px 28px rgba(37,211,102,0.4)`;}}
-            >
-              {chatted ? (
-                <><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                Chats Opened! 🎉</>
-              ) : chatting ? (
-                <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>
-                Opening WhatsApp…</>
-              ) : (
-                <><WaIcon size={18} color="white"/>
-                Chat Sellers on WhatsApp · {formatCurrency(grand)}</>
-              )}
+            <button onClick={handleChatSellers}
+              style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:chatted?'linear-gradient(135deg,#15803d,#16a34a)':chatting?`linear-gradient(135deg,${C.whatsappDark},${C.whatsapp})`:`linear-gradient(135deg,${C.whatsapp},#20c95a)`,color:'white',fontWeight:900,fontSize:15,letterSpacing:'-0.01em',transition:'all 0.5s cubic-bezier(0.34,1.2,0.64,1)',boxShadow:chatted?'0 8px 28px rgba(22,163,74,0.4)':`0 8px 28px rgba(37,211,102,0.4)`,display:'flex',alignItems:'center',justifyContent:'center',gap:10,transform:chatting?'scale(0.97)':'scale(1)'}}
+              onMouseEnter={e=>{if(!chatting&&!chatted){e.currentTarget.style.transform='translateY(-2px) scale(1.01)';e.currentTarget.style.boxShadow=`0 14px 36px rgba(37,211,102,0.5)`;}}}
+              onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.boxShadow=chatted?'0 8px 28px rgba(22,163,74,0.4)':`0 8px 28px rgba(37,211,102,0.4)`;}}>
+              {chatted?(<><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Chats Opened! 🎉</>)
+                :chatting?(<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Opening WhatsApp…</>)
+                :(<><WaIcon size={18} color="white"/>Chat Sellers on WhatsApp · {formatCurrency(grand)}</>)}
             </button>
-
-            {/* Trust badges */}
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:0,marginTop:14}}>
               {[{i:<WaIcon size={12} color={C.whatsapp}/>,l:'Direct Chat'},{i:'🔒',l:'Secure'},{i:'↩️',l:'Easy Returns'}].map((b,idx)=>(
                 <div key={idx} style={{display:'flex',alignItems:'center',gap:5,padding:'0 12px',borderRight:idx<2?`1px solid ${C.border}`:'none'}}>
@@ -1131,8 +1076,10 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);
-  const[pageLoading,setPageLoading]=useState(true);const handleLoaderDone=useCallback(()=>setPageLoading(false),[]);
+  // ↓ pageLoading state kept but no longer used to hide content
+  const[pageLoading,setPageLoading]=useState(true);
   const fileInputRef=useRef(null);
+  const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
   const[visualSearching,setVisualSearching]=useState(false);
@@ -1229,12 +1176,20 @@ export default function Product(){
 
   useEffect(()=>{
     let isMounted=true;
-    fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);});
+    fetchProducts().then(async combined=>{
+      if(!isMounted)return;
+      setAllProducts(combined);
+      setDisplayedProducts(combined);
+      await fetchVendors(combined);
+    }).catch(err => {
+      if(!isMounted) return;
+      setAllProducts([]);
+      setDisplayedProducts([]);
+    });
     return()=>{isMounted=false;};
   },[fetchProducts,fetchVendors]);
 
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
-  const searchSaveTimer = useRef(null);
   const saveSearch = useCallback((q) => {
     if (!user || !q.trim() || q.trim().length < 2) return;
     clearTimeout(searchSaveTimer.current);
@@ -1277,7 +1232,10 @@ export default function Product(){
 
   return(
     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif"}}>
-      <PageLoader onDone={handleLoaderDone}/>
+
+      {/* ↓ CHANGE 1: Banner floats as corner notification, no fullscreen, no blocking */}
+      <UnderDevelopmentBanner onEnter={() => setPageLoading(false)} />
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
@@ -1330,14 +1288,7 @@ export default function Product(){
         {floatMsg.text}
       </div>}
 
-      {cartOpen&&<CartPage
-        cartItems={cartItems}
-        onUpdateQty={handleUpdateQty}
-        onRemove={handleRemoveFromCart}
-        onClose={()=>setCartOpen(false)}
-        isAuthed={!!user}
-        onRequireAuth={handleRequireAuth}
-      />}
+      {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
 
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
@@ -1362,7 +1313,8 @@ export default function Product(){
 
       <LocationModal isOpen={locationModalOpen} onClose={()=>setLocationModalOpen(false)} selectedLocation={selectedLocation} onSelect={handleLocationChange}/>
 
-      <div style={{maxWidth:1280,margin:'0 auto',padding:isMobile?'24px 12px 80px':'36px 20px 80px',opacity:pageLoading?0:1,transition:'opacity 0.5s ease'}}>
+      {/* ↓ CHANGE 2: No opacity:pageLoading?0:1 — page is always fully visible */}
+      <div style={{maxWidth:1280,margin:'0 auto',padding:isMobile?'24px 12px 80px':'36px 20px 80px'}}>
 
         {/* Hero */}
         <div style={{marginBottom:isMobile?24:30,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
@@ -1473,20 +1425,11 @@ export default function Product(){
           {!isFiltered&&displayedProducts.length>0&&(
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
               {hotDealProducts.length > 0 && (
-                <HotDealsCarousel
-                  products={hotDealProducts}
-                  navigate={navigate}
-                  onAddToCart={handleAddToCart}
-                  isAuthed={!!user}
-                  onRequireAuth={()=>setAuthGateOpen(true)}
-                />
+                <HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
               )}
-
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon="⭐" accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon="✨" accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon="💸" accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
-
-              {/* Promo Banner */}
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
                 <div style={{position:'relative'}}>
@@ -1525,15 +1468,7 @@ export default function Product(){
         </div>}
 
         {activeTab==='vendorDetail'&&selectedVendorDetail&&<div>
-          <VendorDetailView
-            vendor={selectedVendorDetail}
-            onClose={()=>{ setSelectedVendorDetail(null); setActiveTab('vendors'); }}
-            allProducts={allProducts}
-            navigate={navigate}
-            onAddToCart={handleAddToCart}
-            isAuthed={!!user}
-            onRequireAuth={()=>setAuthGateOpen(true)}
-          />
+          <VendorDetailView vendor={selectedVendorDetail} onClose={()=>{ setSelectedVendorDetail(null); setActiveTab('vendors'); }} allProducts={allProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
         </div>}
       </div>
     </div>

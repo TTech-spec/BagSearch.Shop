@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import LogoIcon from './components/Logo.jsx';
+import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
+import { authLimiter } from './utils/rateLimiter';
+import { SecureErrorHandler } from './utils/errorHandler';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -205,8 +208,30 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
+    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // Rate limiting check
+      const identifier = email.trim().toLowerCase();
+      if (!authLimiter.isAllowed(identifier)) {
+        const secureError = SecureErrorHandler.handleError(new Error('Too many login attempts. Please try again later.'), 'auth');
+        setErrorMsg(secureError.message);
+        setLoading(false);
+        return;
+      }
+      
+      // Sanitize and validate inputs
+      const sanitizedEmail = sanitizeInput(email);
+      validateRequired(sanitizedEmail, 'Email');
+      validateEmail(sanitizedEmail);
+      
+      const sanitizedPassword = sanitizeInput(password);
+      validateRequired(sanitizedPassword, 'Password');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: sanitizedEmail, 
+        password: sanitizedPassword 
+      });
+      
       if (error) throw error;
       const userId = data.user.id;
       const { data: profile, error: profileError } = await supabase
@@ -214,7 +239,7 @@ const LoginPage = () => {
 
       if (profile && profile.role && profile.role !== role) {
         await supabase.auth.signOut();
-        throw new Error(`Invalid details. Please toggle to the role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`);
+        throw new Error(`Invalid details. Please toggle to role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`);
       }
 
       if (profileError && profileError.code !== 'PGRST116' && profileError.name !== 'AbortError') {
@@ -222,14 +247,15 @@ const LoginPage = () => {
       }
       const finalRole = profile?.role || role;
       const { error: upsertError } = await supabase.from('users').upsert({
-        user_id: userId, email, role: finalRole, updated_at: new Date(),
+        user_id: userId, email: sanitizedEmail, role: finalRole, updated_at: new Date(),
       }, { onConflict: 'user_id' });
       if (upsertError && upsertError.name !== 'AbortError') console.error('Error saving user role:', JSON.stringify(upsertError, null, 2));
 
       setShowSuccess(true);
       setTimeout(() => navigate('/products'), 3500);
     } catch (error) {
-      setErrorMsg(error.message);
+      const secureError = SecureErrorHandler.handleError(error, 'login');
+      setErrorMsg(secureError.message);
     } finally {
       setLoading(false);
     }
@@ -239,17 +265,26 @@ const LoginPage = () => {
     try {
       setLoading(true);
       setErrorMsg('');
+      
+      // Rate limiting check for Google OAuth
+      if (!authLimiter.isAllowed('google_oauth')) {
+        const secureError = SecureErrorHandler.handleError(new Error('Too many login attempts. Please try again later.'), 'auth');
+        setErrorMsg(secureError.message);
+        return;
+      }
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/products`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
-          data: { role },
+          data: { role: sanitizeInput(role) },
         },
       });
       if (error) throw error;
     } catch (error) {
-      setErrorMsg(error.message);
+      const secureError = SecureErrorHandler.handleError(error, 'google_oauth');
+      setErrorMsg(secureError.message);
       setLoading(false);
     }
   };
@@ -407,11 +442,9 @@ const LoginPage = () => {
           @media(min-width:1024px){ .login-title { font-size:36px; } }
 
           .social-grid {
-            display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;
+            display:flex;justify-content:center;margin-bottom:16px;
           }
-          @media(max-width:340px){
-            .social-grid { grid-template-columns:1fr; }
-          }
+          .social-grid .social-btn { max-width:280px; }
 
           .header-nav { display:none; }
           @media(min-width:768px){ .header-nav { display:flex;gap:24px; } }
@@ -611,12 +644,6 @@ const LoginPage = () => {
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Google
-                  </button>
-                  <button className="social-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                    Facebook
                   </button>
                 </div>
 

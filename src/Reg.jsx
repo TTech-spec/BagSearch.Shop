@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase, ensureSupabaseReady } from './services/api';
 import LogoIcon from './components/Logo.jsx';
+import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
+import { authLimiter } from './utils/rateLimiter';
+import { SecureErrorHandler } from './utils/errorHandler';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -242,21 +245,51 @@ const Reg = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+    // Sanitize input to prevent XSS
+    const sanitizedValue = type === 'checkbox' ? checked : sanitizeInput(value);
+    setFormData({ ...formData, [name]: sanitizedValue });
   };
 
   const handleRoleChange = (role) => {
-    setFormData({ ...formData, role: (role || 'buyer').toLowerCase() });
+    const sanitizedRole = sanitizeInput(role);
+    setFormData({ ...formData, role: (sanitizedRole || 'buyer').toLowerCase() });
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.fullName) newErrors.fullName = 'Full name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.password) newErrors.password = 'Password is required';
-    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (formData.role === 'seller' && !formData.phone) newErrors.phone = 'Phone is required for sellers';
-    if (!formData.terms) newErrors.terms = 'You must agree to the terms';
+    
+    try {
+      validateRequired(sanitizeInput(formData.fullName), 'Full name');
+    } catch (error) {
+      newErrors.fullName = error.message;
+    }
+    
+    try {
+      const sanitizedEmail = sanitizeInput(formData.email);
+      validateRequired(sanitizedEmail, 'Email');
+      validateEmail(sanitizedEmail);
+    } catch (error) {
+      newErrors.email = error.message;
+    }
+    
+    try {
+      validateRequired(sanitizeInput(formData.password), 'Password');
+    } catch (error) {
+      newErrors.password = error.message;
+    }
+    
+    if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.role === 'seller' && !formData.phone) {
+      newErrors.phone = 'Phone is required for sellers';
+    }
+    
+    if (!formData.terms) {
+      newErrors.terms = 'You must agree to the terms';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -270,12 +303,25 @@ const Reg = () => {
       setErrorMessage('');
       ensureSupabaseReady();
 
-      const normalizedRole = (formData.role || 'buyer').toLowerCase();
+      // Rate limiting check
+      const identifier = sanitizeInput(formData.email).trim().toLowerCase();
+      if (!authLimiter.isAllowed(identifier)) {
+        const secureError = SecureErrorHandler.handleError(new Error('Too many registration attempts. Please try again later.'), 'registration');
+        setErrorMessage(secureError.message);
+        setLoading(false);
+        return;
+      }
+
+      const normalizedRole = (sanitizeInput(formData.role) || 'buyer').toLowerCase();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: sanitizeInput(formData.email),
+        password: sanitizeInput(formData.password),
         options: {
-          data: { full_name: formData.fullName, role: normalizedRole, phone: formData.phone },
+          data: { 
+            full_name: sanitizeInput(formData.fullName), 
+            role: normalizedRole, 
+            phone: sanitizeInput(formData.phone) 
+          },
         },
       });
 
@@ -283,7 +329,11 @@ const Reg = () => {
       if (!data?.user) throw new Error('Registration successful, but no user data returned. Check your email for confirmation.');
 
       const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
-        data: { full_name: formData.fullName, role: normalizedRole, phone: formData.phone },
+        data: { 
+          full_name: sanitizeInput(formData.fullName), 
+          role: normalizedRole, 
+          phone: sanitizeInput(formData.phone) 
+        },
       });
 
       if (updateError) console.error('Failed to update user metadata:', updateError);
@@ -291,21 +341,19 @@ const Reg = () => {
 
       const { error: insertError } = await supabase.from('users').insert([{
         user_id: data.user.id,
-        full_name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
+        full_name: sanitizeInput(formData.fullName),
+        email: sanitizeInput(formData.email),
+        phone: sanitizeInput(formData.phone),
         role: normalizedRole,
       }]);
 
-      if (insertError) throw new Error(`Profile creation failed: ${insertError.message}`);
+      if (insertError) throw insertError;
 
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      login(currentUser || data.user);
       setShowSuccess(true);
-      setTimeout(() => navigate('/login?force=true'), 3500);
-
+      setTimeout(() => navigate('/products'), 3000);
     } catch (error) {
-      console.error('Registration Flow Error:', error);
+      const secureError = SecureErrorHandler.handleError(error, 'registration');
+      setErrorMessage(secureError.message);
       setErrorMessage(error.message || 'An unexpected error occurred during registration.');
     } finally {
       setLoading(false);

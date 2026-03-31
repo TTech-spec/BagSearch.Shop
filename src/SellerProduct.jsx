@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from './services/api';
+import { AuthContext } from './context/AuthContext';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const C = {
@@ -21,6 +23,144 @@ const C = {
   textMuted: "#9a6348",
   textFaint: "#c4957a",
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatRelativeTime(value) {
+  if (!value) return '—';
+  const d = typeof value === 'string' || typeof value === 'number' ? new Date(value) : value;
+  const ms = Date.now() - d.getTime();
+  if (!Number.isFinite(ms)) return '—';
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
+
+function mapBuyerViewRow(row) {
+  const productName = row.product_name || row.products?.name || row.product?.name || 'Product';
+  const img =
+    row.product_image ||
+    (Array.isArray(row.products?.images) ? row.products.images[0] : null) ||
+    (Array.isArray(row.product?.images)  ? row.product.images[0]  : null) ||
+    row.products?.image || row.product?.image ||
+    'https://via.placeholder.com/96';
+  const buyerName =
+    row.buyer_name || row.users?.full_name || row.buyer?.full_name ||
+    row.buyer_full_name || row.buyer_email || row.users?.email || 'Buyer';
+  const buyerPhone = row.buyer_phone || row.users?.phone || row.buyer?.phone || row.phone || '';
+  return {
+    id: row.id, bag: productName, sku: '—', img,
+    buyer: buyerName, phone: buyerPhone, source: row.source || row.view_source || 'direct',
+    time: formatRelativeTime(row.viewed_at || row.created_at), replied: false,
+  };
+}
+
+// ─── Icon helpers ─────────────────────────────────────────────────────────────
+const MS = ({ name, size = 22, style: s = {} }) => (
+  <span style={{ fontFamily:"'Material Symbols Outlined'", fontWeight:"normal", fontStyle:"normal", fontSize:size, lineHeight:1, display:"inline-block", textTransform:"none", letterSpacing:"normal", whiteSpace:"nowrap", direction:"ltr", fontVariationSettings:"'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24", ...s }}>
+    {name}
+  </span>
+);
+
+const WhatsAppIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
+// ─── Source badge ─────────────────────────────────────────────────────────────
+function SourceBadge({ source }) {
+  const map = {
+    visual:   { icon:'image_search', label:'Visual Search', bg:C.primaryBg,  color:C.primary,   border:C.primaryBorder },
+    direct:   { icon:'search',       label:'Direct Search', bg:C.surfaceDim, color:C.textMuted, border:C.border        },
+    referral: { icon:'link',         label:'Referral',      bg:C.surfaceDim, color:C.textMuted, border:C.border        },
+  };
+  const s = map[source] || map.direct;
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", gap:5, fontSize:11, fontWeight:700, padding:"4px 10px", borderRadius:20, background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:"nowrap" }}>
+      <MS name={s.icon} size={13}/> {s.label}
+    </span>
+  );
+}
+
+// ─── Desktop inquiry row ──────────────────────────────────────────────────────
+function InquiryRow({ row, index, ready }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ display:"grid", gridTemplateColumns:"2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding:"14px 24px", alignItems:"center", borderBottom:`1px solid ${C.borderLight}`, background:hov?"#fffaf5":"white", transition:"background 0.18s", opacity:ready?1:0, animation:ready?`fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) ${index*70+100}ms both`:"none" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        <div style={{ width:46, height:46, borderRadius:10, backgroundImage:`url('${row.img}')`, backgroundSize:"cover", backgroundPosition:"center", border:`1px solid ${C.borderLight}`, flexShrink:0, transition:"transform 0.3s", transform:hov?"scale(1.06)":"scale(1)" }}/>
+        <div>
+          <p style={{ fontSize:13, fontWeight:700, color:C.text }}>{row.bag}</p>
+          <p style={{ fontSize:11, color:C.textMuted, marginTop:1 }}>SKU: {row.sku}</p>
+        </div>
+      </div>
+      <p style={{ fontSize:13, fontWeight:600, color:C.textMid }}>{row.buyer}</p>
+      <SourceBadge source={row.source}/>
+      <p style={{ fontSize:12, color:C.textMuted }}>{row.time}</p>
+      <div style={{ textAlign:"right" }}>
+        {row.replied ? (
+          <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
+            <MS name="check_circle" size={16}/> Replied
+          </span>
+        ) : row.phone ? (
+          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s", boxShadow:`0 2px 8px rgba(37,211,102,0.3)` }}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow=`0 4px 12px rgba(37,211,102,0.4)`;}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 2px 8px rgba(37,211,102,0.3)`;}}>
+            <WhatsAppIcon size={16}/> Chat on WhatsApp
+          </a>
+        ) : (
+          <span style={{ fontSize:11, color:C.textFaint, fontWeight:600 }}>No phone available</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Mobile inquiry card ──────────────────────────────────────────────────────
+function InquiryCard({ row, index, ready }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ background:hov?"#fffaf5":"white", borderRadius:14, border:`1px solid ${C.borderLight}`, padding:"16px", marginBottom:12, transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", boxShadow:hov?`0 6px 24px rgba(200,75,17,0.07)`:`0 1px 6px rgba(0,0,0,0.04)`, transform:hov?"translateY(-2px)":"none", opacity:ready?1:0, animation:ready?`fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) ${index*80+100}ms both`:"none" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+        <div style={{ width:52, height:52, borderRadius:12, backgroundImage:`url('${row.img}')`, backgroundSize:"cover", backgroundPosition:"center", border:`1px solid ${C.borderLight}`, flexShrink:0 }}/>
+        <div style={{ flex:1, minWidth:0 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{row.bag}</p>
+          <p style={{ fontSize:11, color:C.textMuted }}>SKU: {row.sku}</p>
+        </div>
+        <SourceBadge source={row.source}/>
+      </div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+        <div>
+          <p style={{ fontSize:12, fontWeight:700, color:C.textMid }}>{row.buyer}</p>
+          <p style={{ fontSize:11, color:C.textMuted }}>{row.time}</p>
+        </div>
+        {row.replied ? (
+          <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
+            <MS name="check_circle" size={16}/> Replied
+          </span>
+        ) : row.phone ? (
+          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s" }}
+            onMouseEnter={e=>e.currentTarget.style.background="#22c35e"}
+            onMouseLeave={e=>e.currentTarget.style.background="#25D366"}>
+            <WhatsAppIcon size={15}/> Chat on WhatsApp
+          </a>
+        ) : (
+          <span style={{ fontSize:11, color:C.textFaint, fontWeight:600 }}>No phone</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const mockVendorProducts = [
@@ -399,20 +539,26 @@ function RatingBreakdown({ reviews }) {
 export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCart }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const handleBack = onBack || (() => navigate('/products'));
 
   // Default vendor for demo
-  const vendor = propVendor || location.state?.vendor || {
+  const [vendor, setVendor] = useState(propVendor || location.state?.vendor || {
     id: "vendor-1", name: "Luxury Bags Co.", avatar: "👜", location: "Victoria Island, Lagos",
     rating: 4.9, reviews: 312, views: 18420, products: 47, joined: "Mar 2021",
     specialty: "Italian Leather", badge: "Top Rated",
     description: "Premium Italian leather bags crafted for the discerning buyer. Every piece is hand-stitched and comes with a certificate of authenticity. Based in Victoria Island, delivering across Nigeria.",
     tags: ["Luxury", "Leather", "Italian"], colors: ["#c84b11", "#f97316"],
-  };
+  });
 
   const [activeTab, setActiveTab] = useState("products");
   const [filter, setFilter] = useState("all");
+  const [vendorProducts, setVendorProducts] = useState([]);
   const [reviews, setReviews] = useState(mockReviews);
+  const [buyerViews, setBuyerViews] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadingViews, setLoadingViews] = useState(false);
+  
   const [headerVisible, setHeaderVisible] = useState(false);
   const [floatMsg, setFloatMsg] = useState(null);
   const [statsVisible, setStatsVisible] = useState(false);
@@ -420,7 +566,7 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
 
   const viewCount = useAnimatedCount(vendor.views, statsVisible);
   const reviewCount = useAnimatedCount(vendor.reviews, statsVisible);
-  const productCount = useAnimatedCount(vendor.products, statsVisible);
+  const productCount = useAnimatedCount(vendorProducts.length || vendor.products, statsVisible);
 
   useEffect(() => {
     setTimeout(() => setHeaderVisible(true), 80);
@@ -429,8 +575,74 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
     return () => obs.disconnect();
   }, []);
 
-  const categories = ["all", ...new Set(mockVendorProducts.map(p => p.category))];
-  const filtered = filter === "all" ? mockVendorProducts : mockVendorProducts.filter(p => p.category === filter);
+  // Fetch real products if we have a real vendor ID
+  useEffect(() => {
+    async function fetchVendorData() {
+      if (!vendor.id || vendor.id === "vendor-1") {
+        setVendorProducts(mockVendorProducts);
+        return;
+      }
+      try {
+        setLoadingProducts(true);
+        const { data, error } = await supabase.from('products').select('*').or(`user_id.eq.${vendor.id},seller_id.eq.${vendor.id}`).order('created_at', { ascending: false });
+        if (error) throw error;
+        if (data) {
+          const formatted = data.map(p => ({
+            id: p.id,
+            name: p.name,
+            sub: `${p.brand} • ${p.condition}`,
+            price: parseFloat(p.price),
+            quantity: p.quantity || 0,
+            lowStock: (p.quantity || 0) < 5,
+            category: p.category?.toLowerCase() || 'general',
+            colors: Array.isArray(p.colors) ? p.colors : [],
+            src: p.images?.[0] || 'https://via.placeholder.com/500',
+            rating: 4.8,
+            reviews: 12
+          }));
+          setVendorProducts(formatted);
+        }
+      } catch (err) {
+        console.error('Error fetching vendor products:', err);
+        setVendorProducts(mockVendorProducts);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    fetchVendorData();
+  }, [vendor.id]);
+
+  // Fetch real views if current user is this vendor
+  useEffect(() => {
+    async function fetchViews() {
+      const isOwner = user && (user.id === vendor.id || user.id === vendor.user_id);
+      if (!isOwner || !vendorProducts.length) return;
+
+      try {
+        setLoadingViews(true);
+        const productIds = vendorProducts.map(p => p.id);
+        const { data, error } = await supabase
+          .from('product_views')
+          .select(`id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images),users!buyer_id(full_name,email,phone)`)
+          .in('product_id', productIds)
+          .order('viewed_at', { ascending: false })
+          .limit(20);
+        
+        if (error) throw error;
+        if (data) {
+          setBuyerViews(data.map(mapBuyerViewRow));
+        }
+      } catch (err) {
+        console.error('Error fetching views:', err);
+      } finally {
+        setLoadingViews(false);
+      }
+    }
+    fetchViews();
+  }, [user, vendor.id, vendorProducts]);
+
+  const categories = ["all", ...new Set(vendorProducts.map(p => p.category))];
+  const filtered = filter === "all" ? vendorProducts : vendorProducts.filter(p => p.category === filter);
 
   const handleAddToCart = (product) => {
     onAddToCart && onAddToCart(product);

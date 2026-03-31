@@ -12,10 +12,11 @@ const isKeyValid = (key) => key && key.length > 20;
 if (!supabaseUrl || !isKeyValid(supabaseKey)) {
   console.error(
     'CRITICAL: Supabase credentials missing or invalid in .env file.', 
-    { url: supabaseUrl, keyLength: supabaseKey ? supabaseKey.length : 0 }
+    { url: supabaseUrl ? 'configured' : 'missing', keyLength: supabaseKey ? supabaseKey.length : 0 }
   );
 } else {
-  console.log('Supabase initialized with URL:', supabaseUrl, 'and key starting with:', supabaseKey.substring(0, 10));
+  // Removed sensitive key logging for security
+  console.log('Supabase initialized successfully');
 }
 
 // 3. Initialize Supabase

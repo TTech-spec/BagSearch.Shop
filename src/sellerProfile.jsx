@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import { deleteFromPinecone } from './services/visualSearch';
+import NotificationsDropdown from './components/NotificationsDropdown';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
@@ -1397,7 +1398,7 @@ export default function SellerProfile() {
         if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
         const { data:vd, count:vc, error:ve } = await supabase
           .from('product_views')
-          .select(`id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images),users:buyer_id(full_name,email,phone)`,{ count:'exact' })
+          .select(`id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images)`,{ count:'exact' })
           .in('product_id',productIds).order('viewed_at',{ ascending:false }).limit(20);
         if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
         else { console.error('product_views fetch error:', ve.message); setTotalViewsCount(0); setBuyerViews([]); }
@@ -1609,12 +1610,7 @@ export default function SellerProfile() {
               </div>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-              <button style={{ position:"relative", padding:8, borderRadius:10, border:"none", background:"transparent", cursor:"pointer", color:C.textMuted, transition:"all 0.2s" }}
-                onMouseEnter={e=>e.currentTarget.style.background=C.surfaceDim}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <MS name="notifications" size={22}/>
-                <span style={{ position:"absolute", top:7, right:7, width:8, height:8, background:C.danger, borderRadius:"50%", border:"2px solid white", animation:"pulse 2s ease-in-out infinite" }}/>
-              </button>
+              <NotificationsDropdown />
               <div style={{ width:1, height:28, background:C.border }}/>
               <button onClick={()=>navigate('/upload-product')}
                 style={{ display:"flex", alignItems:"center", gap:7, padding:"8px 16px", borderRadius:10, border:"none", background:C.primary, color:"white", fontSize:13, fontWeight:700, cursor:"pointer", transition:"all 0.2s", fontFamily:"inherit", boxShadow:`0 2px 8px rgba(200,75,17,0.3)`, whiteSpace:"nowrap" }}

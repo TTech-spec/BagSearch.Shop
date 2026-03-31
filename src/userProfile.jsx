@@ -238,7 +238,7 @@ function NameEditor({ value, onSave, loading }) {
         <input ref={inputRef} value={draft}
           onChange={e=>{setDraft(e.target.value);setErr('');}}
           onKeyDown={e=>{if(e.key==='Enter')save();if(e.key==='Escape')cancel();}}
-          style={{ fontSize:'clamp(1.1rem,3.5vw,1.6rem)', fontWeight:700, color:T.textPrimary, background:T.bgCard, border:`2px solid ${err?T.red:T.orange}`, borderRadius:10, padding:'6px 14px', outline:'none', fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', boxShadow:`0 0 0 4px ${err?T.redGlow:T.orangePale}`, maxWidth:'min(320px,calc(100vw - 120px))', boxShadow:`0 2px 12px ${T.shadow}` }}
+          style={{ fontSize:'clamp(1.1rem,3.5vw,1.6rem)', fontWeight:700, color:T.textPrimary, background:T.bgCard, border:`2px solid ${err?T.red:T.orange}`, borderRadius:10, padding:'6px 14px', outline:'none', fontFamily:"'Unbounded',sans-serif", letterSpacing:'-.03em', boxShadow:`0 0 0 4px ${err?T.redGlow:T.orangePale}, 0 2px 12px ${T.shadow}`, maxWidth:'min(320px,calc(100vw - 120px))' }}
         />
         <div style={{ display:'flex', gap:6 }}>
           <button onClick={save} disabled={saving} style={{ width:34, height:34, borderRadius:9, background:`linear-gradient(135deg,${T.orange},${T.orangeLight})`, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 14px ${T.orangeGlow}` }}>

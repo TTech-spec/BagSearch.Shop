@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
 const BAG_COLOR_MAP = {
@@ -162,12 +163,51 @@ export default function ProductDetail() {
         };
         setProduct(fmt);
         setSelectedColor(fmt.colors[0]);
+        
+        // Fetch similar products after main product is loaded
+        await fetchSimilarProducts(data);
       }
     } catch (err) {
       console.error('Error fetching product:', err);
       setNetworkError(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSimilarProducts = async (currentProduct) => {
+    try {
+      // Fetch products with similar category or brand
+      const { data: similarData, error } = await supabase
+        .from('products')
+        .select('*')
+        .or(`category.eq.${currentProduct.category},brand.eq.${currentProduct.brand}`)
+        .neq('id', currentProduct.id)
+        .limit(8);
+      
+      if (error) {
+        console.error('Error fetching similar products:', error);
+        return;
+      }
+      
+      if (similarData && similarData.length > 0) {
+        const formattedSimilar = similarData.map(p => ({
+          id: p.id,
+          name: p.name,
+          brand: p.brand,
+          price: `₦${parseFloat(p.price).toLocaleString()}`,
+          images: p.images?.length > 0 ? p.images : ['https://via.placeholder.com/600'],
+          colors: (() => {
+            const raw = p.colors;
+            if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11"];
+            const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
+            return arr.map(c => resolveColor(c));
+          })(),
+        }));
+        setSimilarProducts(formattedSimilar);
+      }
+    } catch (err) {
+      console.error('Error fetching similar products:', err);
     }
   };
 
@@ -208,8 +248,13 @@ export default function ProductDetail() {
   const currentPrice = parsePrice(product.price);
   const originalPrice = parsePrice(product.originalPrice);
   const discount = originalPrice > 0 ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
-  const whatsappMsg = encodeURIComponent(`Hi! I'm interested in the *${product.name}* listed at ${product.price}. Is it still available?`);
-  const whatsappUrl = `https://wa.me/${(product.sellerPhone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
+  const whatsappUrl = (() => {
+    const number = normalizeWhatsAppNumber(product.sellerPhone || '');
+    if (!number) return '';
+    const productLink = `${window.location.origin}/products/${product.id}`;
+    const msg = `Hi! I'm interested in the *${product.name}*.\nProduct link: ${productLink}\nIs it still available?`;
+    return buildWhatsAppUrl(number, msg);
+  })();
 
   return (
     <div style={{
@@ -752,7 +797,7 @@ export default function ProductDetail() {
               <div key={p.id} className="card-hover"
                 style={{ background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${C.borderLight}`,animation:`floatUp 0.55s ${0.05+idx*0.07}s ease both` }}>
                 <div style={{ position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg }}>
-                  <img src={p.src} alt={p.name} className="card-img" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                  <img src={p.images?.[0]} alt={p.name} className="card-img" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
                   {p.lowStock && (
                     <span style={{ position:'absolute',top:9,left:9,background:C.danger,color:'white',fontSize:9,fontWeight:800,padding:'3px 9px',borderRadius:99,letterSpacing:'0.06em',textTransform:'uppercase' }}>
                       Low Stock

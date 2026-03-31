@@ -116,13 +116,6 @@ function LoginRoute() {
 }
 
 function RegRoute() {
-  const { user } = useContext(AuthContext);
-  
-  // If user is logged in, redirect to products
-  if (user) {
-    return <Navigate to="/products" replace />;
-  }
-  
   return <Reg />;
 }
 

@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import LogoIcon from './components/Logo.jsx';
+import { sanitizeInput, validateRequired, validatePrice, validatePhone } from './utils/securityUtils';
+import { uploadLimiter } from './utils/rateLimiter';
+import { SecureErrorHandler } from './utils/errorHandler';
+import { getImageEmbeddingFromSource, upsertProductImageEmbedding } from './services/imageEmbeddings';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -118,7 +122,39 @@ function formatNaira(value) {
   return num.toLocaleString('en-NG');
 }
 
+// Security utilities for file upload validation
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_DIMENSION = 4096; // 4K pixels max
+
+function validateFile(file) {
+  // Check file type
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error('Only JPEG, PNG, and WebP images are allowed');
+  }
+  
+  // Check file size
+  if (file.size > MAX_SIZE) {
+    throw new Error('File size must be less than 5MB');
+  }
+  
+  // Check filename for suspicious patterns
+  const suspiciousPatterns = [
+    /\.php$/, /\.js$/, /\.exe$/, /\.bat$/, /\.cmd$/,
+    /\.sh$/, /\.ps1$/, /\.vbs$/, /\.jar$/, /\.com$/
+  ];
+  
+  if (suspiciousPatterns.some(pattern => pattern.test(file.name))) {
+    throw new Error('Invalid file type detected');
+  }
+  
+  return true;
+}
+
 async function uploadImageToCloudinary(file, userId) {
+  // Validate file before upload
+  validateFile(file);
+  
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     const missing = [];
     if (!CLOUDINARY_CLOUD_NAME) missing.push('VITE_CLOUDINARY_CLOUD_NAME');
@@ -210,49 +246,115 @@ export default function CreateProduct() {
   // ── Field handlers ──
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    // Sanitize input to prevent XSS
+    const sanitizedValue = type === 'checkbox' ? checked : sanitizeInput(value);
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + images.length > 10) { alert('Max 10 photos'); return; }
-    const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-    setImages(prev => [...prev, ...newImgs]);
+    
+    // Rate limiting check
+    if (!uploadLimiter.isAllowed(user?.id || 'anonymous')) {
+      const secureError = SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload');
+      setError(secureError.message);
+      return;
+    }
+    
+    try {
+      // Validate each file
+      files.forEach(file => validateFile(file));
+      
+      if (files.length + images.length > 10) { 
+        throw new Error('Max 10 photos'); 
+      }
+      
+      const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+      setImages(prev => [...prev, ...newImgs]);
+      setError(null);
+    } catch (error) {
+      const secureError = SecureErrorHandler.handleError(error, 'file_upload');
+      setError(secureError.message);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault(); setDragOver(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    if (files.length + images.length > 10) { alert('Max 10 photos'); return; }
-    const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-    setImages(prev => [...prev, ...newImgs]);
+    
+    // Rate limiting check
+    if (!uploadLimiter.isAllowed(user?.id || 'anonymous')) {
+      const secureError = SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload');
+      setError(secureError.message);
+      return;
+    }
+    
+    try {
+      // Validate each file
+      files.forEach(file => validateFile(file));
+      
+      if (files.length + images.length > 10) { 
+        throw new Error('Max 10 photos'); 
+      }
+      
+      const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+      setImages(prev => [...prev, ...newImgs]);
+      setError(null);
+    } catch (error) {
+      const secureError = SecureErrorHandler.handleError(error, 'file_upload');
+      setError(secureError.message);
+    }
   };
 
   const removeImage = (index) => setImages(prev => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) { setError('You must be logged in to list a product'); return; }
-    if (images.length === 0) { setError('Please upload at least one image'); return; }
-    if (!formData.whatsapp.trim()) { setError('Please enter your WhatsApp number'); return; }
-    setUploading(true); setError(null);
+    
     try {
+      // Validate required fields
+      if (!user) {
+        throw new Error('You must be logged in to list a product');
+      }
+      if (images.length === 0) {
+        throw new Error('Please upload at least one image');
+      }
+      
+      // Sanitize and validate inputs
+      const sanitizedName = sanitizeInput(formData.name);
+      validateRequired(sanitizedName, 'Product name');
+      
+      const sanitizedBrand = sanitizeInput(formData.brand);
+      const sanitizedDescription = sanitizeInput(formData.description);
+      const sanitizedWhatsApp = sanitizeInput(formData.whatsapp);
+      
+      validateRequired(sanitizedWhatsApp, 'WhatsApp number');
+      validatePhone(sanitizedWhatsApp);
+      validatePrice(formData.price);
+      
+      if (!sanitizedWhatsApp.trim()) {
+        throw new Error('Please enter your WhatsApp number');
+      }
+      
+      setUploading(true); setError(null);
+      
       const uploadedImageUrls = [];
       for (const img of images) {
         const imageUrl = await uploadImageToCloudinary(img.file, user.id);
         uploadedImageUrls.push(imageUrl);
       }
+      
       const price = formData.price.toString().replace(/,/g, '');
       const insertData = {
         user_id: user.id,
-        name: formData.name,
-        brand: formData.brand,
-        category: formData.category,
-        condition: formData.condition,
-        description: formData.description,
+        name: sanitizedName,
+        brand: sanitizedBrand,
+        category: sanitizeInput(formData.category),
+        condition: sanitizeInput(formData.condition),
+        description: sanitizedDescription,
         price: price || '0',
-        location: formData.location,
-        whatsapp: formData.whatsapp,
+        location: sanitizeInput(formData.location),
+        whatsapp: sanitizedWhatsApp,
         quantity: parseInt(formData.quantity) || 1,
         colors: selectedColors,
         discount_enabled: formData.discountEnabled,
@@ -267,10 +369,25 @@ export default function CreateProduct() {
       let { data: insertedData, error: insertError } = await supabase.from('products').insert([insertData]).select();
 
       if (insertError) throw insertError;
+
+      // Best-effort embedding save for true visual-similarity search.
+      try {
+        const inserted = insertedData && insertedData[0];
+        const firstImage = uploadedImageUrls[0];
+        if (inserted?.id && firstImage) {
+          const embedding = await getImageEmbeddingFromSource(firstImage);
+          if (embedding.length > 0) {
+            await upsertProductImageEmbedding(inserted.id, firstImage, embedding);
+          }
+        }
+      } catch (embeddingError) {
+        console.warn('Product created but embedding setup failed:', embeddingError);
+      }
+
       navigate('/products');
     } catch (err) {
-      console.error('Error creating product:', err);
-      setError(err.message);
+      const secureError = SecureErrorHandler.handleError(err, 'product_creation');
+      setError(secureError.message);
     } finally {
       setUploading(false);
     }
@@ -1099,7 +1216,8 @@ export default function CreateProduct() {
                 <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
                   style={{
                     width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none",
-                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65, background: C.surface
+                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65, 
+                    background: C.surface, whiteSpace: "pre-wrap", wordWrap: "break-word"
                   }}
                   placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />
               </div>
