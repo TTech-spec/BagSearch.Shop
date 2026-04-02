@@ -142,7 +142,7 @@ export default function NotificationsDropdown() {
   };
 
   return (
-    <div style={{ position: 'relative', ref: dropdownRef }}>
+    <div ref={dropdownRef} style={{ position: 'relative' }}>
       {/* Notification Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}

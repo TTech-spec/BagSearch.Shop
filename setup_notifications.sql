@@ -53,21 +53,24 @@ CREATE POLICY "System can insert notifications"
 CREATE OR REPLACE FUNCTION create_product_view_notification()
 RETURNS TRIGGER AS $$
 DECLARE
-  seller_record RECORD;
+  seller_id_value uuid;
   buyer_name_text TEXT;
 BEGIN
-  -- Get the seller of the product
-  SELECT u.id, u.full_name, u.email 
-  INTO seller_record
-  FROM auth.users u
-  JOIN products p ON u.id = p.user_id
+  -- Get the seller id from the product row without depending on auth.users access
+  SELECT COALESCE(p.user_id, p.seller_id)
+  INTO seller_id_value
+  FROM public.products p
   WHERE p.id = NEW.product_id;
+
+  IF seller_id_value IS NULL THEN
+    RETURN NEW;
+  END IF;
 
   -- Get buyer name if available
   buyer_name_text := COALESCE(NEW.buyer_name, 'A buyer');
 
   -- Don't create notification if seller is viewing their own product
-  IF seller_record.id = NEW.buyer_id THEN
+  IF seller_id_value = NEW.buyer_id THEN
     RETURN NEW;
   END IF;
 
@@ -83,7 +86,7 @@ BEGIN
     message,
     metadata
   ) VALUES (
-    seller_record.id,
+    seller_id_value,
     NEW.product_id,
     NEW.buyer_id,
     buyer_name_text,

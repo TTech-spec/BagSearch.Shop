@@ -79,6 +79,27 @@ function mapBuyerViewRow(row) {
   };
 }
 
+async function enrichBuyerViewsWithProfiles(rows) {
+  const buyerIds = [...new Set((rows || []).map((row) => row.buyer_id).filter(Boolean))];
+  if (!buyerIds.length) return rows || [];
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('user_id,full_name,email,phone')
+    .in('user_id', buyerIds);
+
+  if (error) {
+    console.error('buyer profile fetch error:', error.message || error);
+    return rows || [];
+  }
+
+  const profileMap = new Map((data || []).map((row) => [row.user_id, row]));
+  return (rows || []).map((row) => ({
+    ...row,
+    users: profileMap.get(row.buyer_id) || null,
+  }));
+}
+
 function isMissingColumnError(err) {
   const msg  = String(err?.message || '').toLowerCase();
   const code = String(err?.code    || '').toUpperCase();
@@ -1204,8 +1225,13 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       }
       if (error) throw error;
       const { data:{ user:authUser } } = await supabase.auth.getUser();
-      if (authUser && form.email !== authUser.email) await supabase.auth.updateUser({ email:form.email });
-      await supabase.auth.updateUser({ data:{ full_name:form.full_name } });
+      const updateData = { data: { full_name: form.full_name } };
+      if (authUser && form.email !== authUser.email) {
+        updateData.email = form.email;
+      }
+      const { error: authError } = await supabase.auth.updateUser(updateData);
+      if (authError) throw authError;
+      
       setSaved(true);
       showToast('Profile saved successfully! 🎉','success');
       onSaved?.({ ...updates, brand_name:updates.brand_name??'', brand_story:updates.brand_story??'', bag_categories:updates.bag_categories??[] });
@@ -1398,9 +1424,13 @@ export default function SellerProfile() {
         if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
         const { data:vd, count:vc, error:ve } = await supabase
           .from('product_views')
-          .select(`id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images)`,{ count:'exact' })
+          .select(`id,product_id,buyer_id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images)`,{ count:'exact' })
           .in('product_id',productIds).order('viewed_at',{ ascending:false }).limit(20);
-        if (!ve){ setTotalViewsCount(vc||0); setBuyerViews((vd||[]).map(mapBuyerViewRow)); }
+        if (!ve){
+          const enrichedViews = await enrichBuyerViewsWithProfiles(vd || []);
+          setTotalViewsCount(vc||0);
+          setBuyerViews(enrichedViews.map(mapBuyerViewRow));
+        }
         else { console.error('product_views fetch error:', ve.message); setTotalViewsCount(0); setBuyerViews([]); }
       } catch(e){ console.error(e); }
       finally { setMetricsLoading(false); }

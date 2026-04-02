@@ -1,5 +1,133 @@
 import { supabase } from './api';
 
+const buildNotificationMessage = (buyerName, type) => {
+  if (type === 'product_view') {
+    return `${buyerName || 'Someone'} viewed your product`;
+  }
+  return 'You have a new notification';
+};
+
+const mapProductViewToNotification = (view) => {
+  const buyerName =
+    view.buyer_name ||
+    view.users?.full_name ||
+    view.users?.email ||
+    view.buyer_email ||
+    'Someone';
+
+  return {
+    id: `product-view-${view.id}`,
+    seller_id: view.seller_id,
+    product_id: view.product_id,
+    buyer_id: view.buyer_id,
+    buyer_name: buyerName,
+    buyer_email: view.buyer_email || view.users?.email || null,
+    type: 'product_view',
+    title: 'Product Viewed',
+    message: buildNotificationMessage(buyerName, 'product_view'),
+    is_read: false,
+    created_at: view.viewed_at || view.created_at,
+    metadata: {
+      source: view.source,
+      viewed_at: view.viewed_at || view.created_at,
+      fallback: true,
+    },
+    products: view.products || null,
+  };
+};
+
+const getSellerProductIds = async (sellerId) => {
+  const byUser = await supabase
+    .from('products')
+    .select('id')
+    .eq('user_id', sellerId);
+
+  let rows = byUser.data || [];
+  let error = byUser.error;
+
+  if (error || rows.length === 0) {
+    const bySeller = await supabase
+      .from('products')
+      .select('id')
+      .eq('seller_id', sellerId);
+
+    if (!bySeller.error) {
+      rows = [...rows, ...(bySeller.data || [])];
+      error = null;
+    } else if (!error) {
+      error = bySeller.error;
+    }
+  }
+
+  if (error) {
+    console.error('Error fetching seller products:', error);
+    return [];
+  }
+
+  return [...new Set(rows.map((row) => row.id).filter(Boolean))];
+};
+
+const hydrateViewsWithBuyerProfiles = async (views) => {
+  const buyerIds = [...new Set((views || []).map((view) => view.buyer_id).filter(Boolean))];
+
+  if (!buyerIds.length) return views || [];
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('user_id,full_name,email,phone')
+    .in('user_id', buyerIds);
+
+  if (error) {
+    console.error('Error fetching buyer profiles for notifications:', error);
+    return views || [];
+  }
+
+  const profileMap = new Map((data || []).map((row) => [row.user_id, row]));
+
+  return (views || []).map((view) => ({
+    ...view,
+    users: profileMap.get(view.buyer_id) || null,
+  }));
+};
+
+const getFallbackProductViewNotifications = async (sellerId, limit = 50) => {
+  const productIds = await getSellerProductIds(sellerId);
+
+  if (!productIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('product_views')
+    .select(`
+      id,
+      product_id,
+      buyer_id,
+      buyer_name,
+      buyer_email,
+      source,
+      viewed_at,
+      products:product_id (
+        id,
+        name,
+        images,
+        price
+      )
+    `)
+    .in('product_id', productIds)
+    .order('viewed_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching fallback product view notifications:', error);
+    return [];
+  }
+
+  const hydratedViews = await hydrateViewsWithBuyerProfiles(data || []);
+
+  return hydratedViews.map((view) =>
+    mapProductViewToNotification({ ...view, seller_id: sellerId })
+  );
+};
+
 // Get notifications for a seller
 export const getSellerNotifications = async (sellerId, options = {}) => {
   const { 
@@ -36,7 +164,11 @@ export const getSellerNotifications = async (sellerId, options = {}) => {
   
   if (error) {
     console.error('Error fetching notifications:', error);
-    throw error;
+    return getFallbackProductViewNotifications(sellerId, limit);
+  }
+
+  if (!data?.length) {
+    return getFallbackProductViewNotifications(sellerId, limit);
   }
 
   return data;
@@ -44,6 +176,10 @@ export const getSellerNotifications = async (sellerId, options = {}) => {
 
 // Mark notification as read
 export const markNotificationAsRead = async (notificationId) => {
+  if (String(notificationId).startsWith('product-view-')) {
+    return { id: notificationId, is_read: true, fallback: true };
+  }
+
   const { data, error } = await supabase
     .from('notifications')
     .update({ is_read: true })
@@ -70,7 +206,7 @@ export const markAllNotificationsAsRead = async (sellerId) => {
 
   if (error) {
     console.error('Error marking all notifications as read:', error);
-    throw error;
+    return [];
   }
 
   return data;
@@ -86,7 +222,13 @@ export const getUnreadNotificationCount = async (sellerId) => {
 
   if (error) {
     console.error('Error getting unread notification count:', error);
-    return 0;
+    const fallbackNotifications = await getFallbackProductViewNotifications(sellerId, 100);
+    return fallbackNotifications.length;
+  }
+
+  if ((count || 0) === 0) {
+    const fallbackNotifications = await getFallbackProductViewNotifications(sellerId, 100);
+    return fallbackNotifications.length;
   }
 
   return count || 0;

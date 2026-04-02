@@ -1203,8 +1203,13 @@ function EditProfilePanel({ seller, userId, onSaved, panelIn }) {
       }
       if (error) throw error;
       const { data:{ user:authUser } } = await supabase.auth.getUser();
-      if (authUser && form.email !== authUser.email) await supabase.auth.updateUser({ email:form.email });
-      await supabase.auth.updateUser({ data:{ full_name:form.full_name } });
+      const updateData = { data: { full_name: form.full_name } };
+      if (authUser && form.email !== authUser.email) {
+        updateData.email = form.email;
+      }
+      const { error: authError } = await supabase.auth.updateUser(updateData);
+      if (authError) throw authError;
+      
       setSaved(true);
       showToast('Profile saved successfully! 🎉','success');
       onSaved?.({ ...updates, brand_name:updates.brand_name??'', brand_story:updates.brand_story??'', bag_categories:updates.bag_categories??[] });

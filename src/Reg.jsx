@@ -296,7 +296,7 @@ const Reg = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (loading || !validateForm()) return;
 
     try {
       setLoading(true);
@@ -328,33 +328,21 @@ const Reg = () => {
       if (signUpError) throw signUpError;
       if (!data?.user) throw new Error('Registration successful, but no user data returned. Check your email for confirmation.');
 
-      const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
-        data: { 
-          full_name: sanitizeInput(formData.fullName), 
-          role: normalizedRole, 
-          phone: sanitizeInput(formData.phone) 
-        },
-      });
-
-      if (updateError) console.error('Failed to update user metadata:', updateError);
-      else if (updatedUser) console.log('User metadata updated successfully, role:', updatedUser.user_metadata?.role);
-
-      const { error: insertError } = await supabase.from('users').insert([{
+      const { error: insertError } = await supabase.from('users').upsert([{
         user_id: data.user.id,
         full_name: sanitizeInput(formData.fullName),
         email: sanitizeInput(formData.email),
         phone: sanitizeInput(formData.phone),
         role: normalizedRole,
-      }]);
+      }], { onConflict: 'user_id' });
 
       if (insertError) throw insertError;
 
       setShowSuccess(true);
-      setTimeout(() => navigate('/products'), 3000);
+      setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
       const secureError = SecureErrorHandler.handleError(error, 'registration');
       setErrorMessage(secureError.message);
-      setErrorMessage(error.message || 'An unexpected error occurred during registration.');
     } finally {
       setLoading(false);
     }

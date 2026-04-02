@@ -263,7 +263,7 @@ const Reg = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (loading || !validateForm()) return;
 
     try {
       setLoading(true);
@@ -281,13 +281,6 @@ const Reg = () => {
 
       if (signUpError) throw signUpError;
       if (!data?.user) throw new Error('Registration successful, but no user data returned. Check your email for confirmation.');
-
-      const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
-        data: { full_name: formData.fullName, role: normalizedRole, phone: formData.phone },
-      });
-
-      if (updateError) console.error('Failed to update user metadata:', updateError);
-      else if (updatedUser) console.log('User metadata updated successfully, role:', updatedUser.user_metadata?.role);
 
       const { error: insertError } = await supabase.from('users').insert([{
         user_id: data.user.id,
