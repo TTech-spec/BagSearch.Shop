@@ -252,53 +252,43 @@ export default function CreateProduct() {
   };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    
-    // Rate limiting check
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     if (!uploadLimiter.isAllowed(user?.id || 'anonymous')) {
       const secureError = SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload');
       setError(secureError.message);
       return;
     }
-    
+
     try {
-      // Validate each file
-      files.forEach(file => validateFile(file));
-      
-      if (files.length + images.length > 10) { 
-        throw new Error('Max 10 photos'); 
-      }
-      
-      const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-      setImages(prev => [...prev, ...newImgs]);
+      validateFile(file);
+      if (images.length >= 10) throw new Error('Max 10 photos');
+      setImages(prev => [...prev, { file, preview: URL.createObjectURL(file) }]);
       setError(null);
     } catch (error) {
       const secureError = SecureErrorHandler.handleError(error, 'file_upload');
       setError(secureError.message);
     }
+    // reset so same file can be re-selected
+    e.target.value = '';
   };
 
   const handleDrop = (e) => {
     e.preventDefault(); setDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    
-    // Rate limiting check
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (!file) return;
+
     if (!uploadLimiter.isAllowed(user?.id || 'anonymous')) {
       const secureError = SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload');
       setError(secureError.message);
       return;
     }
-    
+
     try {
-      // Validate each file
-      files.forEach(file => validateFile(file));
-      
-      if (files.length + images.length > 10) { 
-        throw new Error('Max 10 photos'); 
-      }
-      
-      const newImgs = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-      setImages(prev => [...prev, ...newImgs]);
+      validateFile(file);
+      if (images.length >= 10) throw new Error('Max 10 photos');
+      setImages(prev => [...prev, { file, preview: URL.createObjectURL(file) }]);
       setError(null);
     } catch (error) {
       const secureError = SecureErrorHandler.handleError(error, 'file_upload');
@@ -697,7 +687,7 @@ export default function CreateProduct() {
                 background: dragOver ? C.primaryPale : images.length > 0 ? C.successBg : C.surfaceDim,
                 transition: "all 0.3s ease", transform: dragOver ? "scale(1.01)" : "none",
               }}>
-              <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
                 background: images.length > 0 ? C.successBg : C.primaryPale,
@@ -707,9 +697,9 @@ export default function CreateProduct() {
                 <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: C.primary }} />
               </div>
               <p style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 5 }}>
-                {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add more?` : "Drag & drop or click to upload"}
+                {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add another?` : "Drag & drop or click to upload"}
               </p>
-              <p style={{ fontSize: 12, color: C.textMuted }}>Up to 10 photos (Front, Back, Inside, Serial Number)</p>
+              <p style={{ fontSize: 12, color: C.textMuted }}>One photo at a time · up to 10 total (Front, Back, Inside, Serial Number)</p>
             </div>
             {images.length > 0 && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginTop: 16 }}>

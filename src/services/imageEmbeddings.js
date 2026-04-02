@@ -78,6 +78,7 @@ export async function findVisualMatchesByEmbedding(imageFile, allProducts, limit
   const ids = (allProducts || []).map(p => p.id).filter(Boolean);
   if (!ids.length) return [];
 
+  // Allow anon reads so visual search works for logged-out users too
   let rows = [];
   try {
     const { data, error } = await supabase
@@ -85,8 +86,12 @@ export async function findVisualMatchesByEmbedding(imageFile, allProducts, limit
       .select('product_id, embedding')
       .in('product_id', ids);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Embedding fetch error:', error.code, error.message);
+      throw error;
+    }
     rows = data || [];
+    console.log(`Embedding rows fetched: ${rows.length} / ${ids.length} products`);
   } catch (error) {
     console.warn('Embedding lookup skipped:', error?.message || error);
     return [];
@@ -96,7 +101,10 @@ export async function findVisualMatchesByEmbedding(imageFile, allProducts, limit
   const scored = rows
     .map((row) => {
       const product = productMap.get(row.product_id);
-      const emb = Array.isArray(row.embedding) ? row.embedding : [];
+      // embedding may come back as a nested array [[...]] from jsonb — flatten it
+      let emb = row.embedding;
+      if (Array.isArray(emb) && emb.length === 1 && Array.isArray(emb[0])) emb = emb[0];
+      emb = Array.isArray(emb) ? emb.map(Number) : [];
       if (!product || emb.length !== queryEmbedding.length) return null;
       return { ...product, _visualSim: cosineSimilarity(queryEmbedding, emb) };
     })
@@ -106,7 +114,8 @@ export async function findVisualMatchesByEmbedding(imageFile, allProducts, limit
   if (!scored.length) return [];
 
   const best = scored[0]._visualSim;
-  const min = Math.max(0.22, best * 0.72);
+  if (best < 0.3) return [];
+  const min = Math.max(0.3, best * 0.82);
   return scored.filter(p => p._visualSim >= min).slice(0, limit);
 }
 

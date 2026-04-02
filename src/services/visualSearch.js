@@ -58,6 +58,23 @@ const addTag = (tagMap, tag, confidence) => {
   }
 };
 
+const CATEGORY_HINTS = {
+  tote: ['tote', 'tote bag'],
+  clutch: ['clutch', 'evening bag'],
+  crossbody: ['crossbody', 'shoulder bag', 'messenger bag'],
+  backpack: ['backpack', 'rucksack'],
+  satchel: ['satchel', 'handbag', 'top handle'],
+  evening: ['evening', 'party bag'],
+  mini: ['mini', 'small bag', 'micro bag'],
+};
+
+const getCategoryHints = (tags) => {
+  const tagsText = (tags || []).map((t) => String(t.tag || '').toLowerCase()).join(' ');
+  return Object.entries(CATEGORY_HINTS)
+    .filter(([, hints]) => hints.some((hint) => tagsText.includes(hint)))
+    .map(([category]) => category);
+};
+
 // Enhanced color analysis with better RGB detection
 const analyzeColor = (r, g, b, percent) => {
   const colors = [];
@@ -263,51 +280,17 @@ const scoreProduct = (product, tags) => {
 };
 
 export const visualSearch = async (imageFile, allProducts) => {
-  // 1) True visual similarity (CLIP embeddings + cosine) when embeddings exist.
+  // Primary path: CLIP embedding cosine similarity
   const embeddingMatches = await findVisualMatchesByEmbedding(imageFile, allProducts, 20);
   if (embeddingMatches.length > 0) {
     console.log(`Found ${embeddingMatches.length} embedding-based visual matches`);
     return embeddingMatches;
   }
 
-  // 2) Fallback to tag/text scoring if embedding table is empty/not configured yet.
-  const tags = await analyzeImage(imageFile);
-  console.log('Enhanced vision tags:', tags.slice(0, 15).map(t => `${t.tag}(${t.confidence.toFixed(1)})`).join(', '));
-
-  if (!tags || tags.length === 0) {
-    return allProducts.slice(0, 12);
-  }
-  
-  // Score all products with enhanced algorithm
-  const scored = allProducts
-    .map(p => ({ 
-      ...p, 
-      _score: scoreProduct(p, tags),
-      _matchDetails: getMatchDetails(p, tags)
-    }))
-    .filter(p => p._score > 0);
-
-  // Sort by score and apply quality filters
-  const sorted = scored.sort((a, b) => b._score - a._score);
-  
-  // Quality filtering to ensure better matches
-  const bestScore = sorted[0] ? sorted[0]._score : 0;
-  const minScoreThreshold = Math.max(8, bestScore * 0.42);
-  const qualityFiltered = sorted.filter(p => {
-    const d = p._matchDetails;
-    const strong = (d.hasExactNameMatch ? 1 : 0) + (d.hasBrandMatch ? 1 : 0) + (d.hasCategoryMatch ? 1 : 0);
-    const acceptable = strong >= 1 || (d.hasColorMatch && (d.hasMaterialMatch || d.hasBagTypeMatch));
-    return p._score >= minScoreThreshold && acceptable;
-  });
-  
-  // Remove duplicates and very similar items
-  const deduped = removeSimilarProducts(qualityFiltered);
-  
-  // Return results with confidence-based limiting
-  const results = deduped.slice(0, 20);
-  
-  console.log(`Found ${results.length} high-quality matches out of ${allProducts.length} products`);
-  return results.length > 0 ? results : allProducts.slice(0, 12);
+  // Imagga requires a server-side proxy — CORS blocks it in the browser.
+  // Return all products so the UI is never empty while embeddings are being set up.
+  console.warn('No embedding matches found. Ensure the RLS policy allows anon reads on product_image_embeddings.');
+  return allProducts.slice(0, 20);
 };
 
 // Helper function to analyze match quality
