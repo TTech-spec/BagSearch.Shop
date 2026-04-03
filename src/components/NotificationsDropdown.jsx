@@ -7,7 +7,8 @@ import {
   getUnreadNotificationCount,
   formatNotificationMessage,
   formatRelativeTime,
-  subscribeToNotifications
+  subscribeToNotifications,
+  deleteNotification
 } from '../services/notifications';
 
 const C = {
@@ -71,10 +72,18 @@ export default function NotificationsDropdown() {
 
   // Fetch notifications and unread count
   const fetchNotifications = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      // #region agent log
+      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H5',location:'src/components/NotificationsDropdown.jsx:fetchNotifications:no-user',message:'Skipped notification fetch because user is missing',data:{hasUser:!!user,userId:user?.id||null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return;
+    }
     
     try {
       setLoading(true);
+      // #region agent log
+      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H5',location:'src/components/NotificationsDropdown.jsx:fetchNotifications:start',message:'Fetching seller notifications',data:{userId:user.id},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       const [notificationsData, unreadData] = await Promise.all([
         getSellerNotifications(user.id, { limit: 20 }),
         getUnreadNotificationCount(user.id)
@@ -126,6 +135,26 @@ export default function NotificationsDropdown() {
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      const result = await deleteNotification(notificationId);
+      if (result.success) {
+        setNotifications(prev => 
+          prev.filter(n => n.id !== notificationId)
+        );
+        // Update unread count if the notification was unread
+        const deletedNotification = notifications.find(n => n.id === notificationId);
+        if (deletedNotification && !deletedNotification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      } else {
+        console.log(result.message);
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
     }
   };
 
@@ -348,14 +377,48 @@ export default function NotificationsDropdown() {
                           }}>
                             {formatted.title}
                           </h4>
-                          <span style={{
-                            fontSize: '11px',
-                            color: C.textMuted,
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                          }}>
-                            {formatRelativeTime(notification.created_at)}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                              fontSize: '11px',
+                              color: C.textMuted,
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
+                            }}>
+                              {formatRelativeTime(notification.created_at)}
+                            </span>
+                            {/* Delete button - only for real notifications, not fallback */}
+                            {!notification.id?.startsWith('product-view-') && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteNotification(notification.id);
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: C.textMuted,
+                                  cursor: 'pointer',
+                                  padding: '2px',
+                                  borderRadius: '2px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = C.danger;
+                                  e.currentTarget.style.backgroundColor = `${C.danger}15`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = C.textMuted;
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                                title="Delete notification"
+                              >
+                                <Icon name="close" size={14} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         
                         <p style={{
@@ -366,6 +429,32 @@ export default function NotificationsDropdown() {
                         }}>
                           {formatted.message}
                         </p>
+
+                        {/* Buyer contact details */}
+                        {notification.buyer_name && (
+                          <div style={{
+                            marginTop: '6px',
+                            fontSize: '12px',
+                            color: C.textMuted,
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontWeight: '600' }}>Buyer:</span>
+                              <span>{notification.buyer_name}</span>
+                            </div>
+                            {notification.buyer_email && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                <span style={{ fontWeight: '600' }}>Email:</span>
+                                <span>{notification.buyer_email}</span>
+                              </div>
+                            )}
+                            {notification.buyer_phone && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                <span style={{ fontWeight: '600' }}>Phone:</span>
+                                <span>{notification.buyer_phone}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* Product info if available */}
                         {notification.products && (

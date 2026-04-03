@@ -1,8 +1,12 @@
-import { pipeline } from '@xenova/transformers';
+import { pipeline, env } from '@xenova/transformers';
 import { supabase } from './api';
 
 const EMBEDDING_MODEL = 'Xenova/clip-vit-base-patch32';
 let extractorPromise = null;
+
+// Always fetch model files from Hugging Face CDN — never try to resolve locally
+env.allowLocalModels = false;
+env.useBrowserCache = true;
 
 async function getExtractor() {
   if (!extractorPromise) {

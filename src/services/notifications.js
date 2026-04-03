@@ -15,6 +15,8 @@ const mapProductViewToNotification = (view) => {
     view.buyer_email ||
     'Someone';
 
+  const buyerPhone = view.users?.phone || view.metadata?.buyer_phone || null;
+
   return {
     id: `product-view-${view.id}`,
     seller_id: view.seller_id,
@@ -22,6 +24,7 @@ const mapProductViewToNotification = (view) => {
     buyer_id: view.buyer_id,
     buyer_name: buyerName,
     buyer_email: view.buyer_email || view.users?.email || null,
+    buyer_phone: buyerPhone,
     type: 'product_view',
     title: 'Product Viewed',
     message: buildNotificationMessage(buyerName, 'product_view'),
@@ -31,12 +34,16 @@ const mapProductViewToNotification = (view) => {
       source: view.source,
       viewed_at: view.viewed_at || view.created_at,
       fallback: true,
+      buyer_phone: buyerPhone,
     },
     products: view.products || null,
   };
 };
 
 const getSellerProductIds = async (sellerId) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H3-H4',location:'src/services/notifications.js:getSellerProductIds:start',message:'Start resolving seller product ids',data:{sellerId},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const byUser = await supabase
     .from('products')
     .select('id')
@@ -61,10 +68,17 @@ const getSellerProductIds = async (sellerId) => {
 
   if (error) {
     console.error('Error fetching seller products:', error);
+    // #region agent log
+    fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H3-H4',location:'src/services/notifications.js:getSellerProductIds:error',message:'Failed to resolve seller product ids',data:{sellerId,error:{message:error.message,code:error.code,details:error.details}},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return [];
   }
 
-  return [...new Set(rows.map((row) => row.id).filter(Boolean))];
+  const uniqueIds = [...new Set(rows.map((row) => row.id).filter(Boolean))];
+  // #region agent log
+  fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H3-H4',location:'src/services/notifications.js:getSellerProductIds:result',message:'Resolved seller product ids',data:{sellerId,byUserCount:(byUser.data||[]).length,bySellerCount:rows.length,uniqueCount:uniqueIds.length},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+  return uniqueIds;
 };
 
 const hydrateViewsWithBuyerProfiles = async (views) => {
@@ -161,6 +175,9 @@ export const getSellerNotifications = async (sellerId, options = {}) => {
   }
 
   const { data, error } = await query;
+  // #region agent log
+  fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H3',location:'src/services/notifications.js:getSellerNotifications:query',message:'Queried notifications table',data:{sellerId,unreadOnly:!!unreadOnly,type:type||null,limit,offset,rows:(data||[]).length,error:error?{message:error.message,code:error.code,details:error.details}:null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   
   if (error) {
     console.error('Error fetching notifications:', error);
@@ -219,6 +236,9 @@ export const getUnreadNotificationCount = async (sellerId) => {
     .select('*', { count: 'exact', head: true })
     .eq('seller_id', sellerId)
     .eq('is_read', false);
+  // #region agent log
+  fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H3-H5',location:'src/services/notifications.js:getUnreadNotificationCount:query',message:'Queried unread notifications count',data:{sellerId,count:count||0,error:error?{message:error.message,code:error.code,details:error.details}:null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     console.error('Error getting unread notification count:', error);
@@ -236,6 +256,12 @@ export const getUnreadNotificationCount = async (sellerId) => {
 
 // Delete notification
 export const deleteNotification = async (notificationId) => {
+  // Handle fallback notifications (from product_views table)
+  if (String(notificationId).startsWith('product-view-')) {
+    console.log('Cannot delete fallback notification:', notificationId);
+    return { success: false, message: 'Cannot delete fallback notifications' };
+  }
+
   const { error } = await supabase
     .from('notifications')
     .delete()
@@ -246,7 +272,7 @@ export const deleteNotification = async (notificationId) => {
     throw error;
   }
 
-  return true;
+  return { success: true };
 };
 
 // Subscribe to real-time notifications for a seller

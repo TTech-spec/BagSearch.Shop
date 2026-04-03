@@ -6,6 +6,7 @@ import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import UnderDevelopmentBanner from './UnderDevelopmentBanner';
+import shoppingBagImg from './images/shopping-bag.png';
 
 const BAG_COLOR_MAP = {
   black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
@@ -376,13 +377,14 @@ function SiteFooter({ navigate, user, handleLogout }) {
           ) : (
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
-                onClick={() => {/* navigate handled above */}}
+                onClick={() => navigate('/register')}
                 style={{ padding: '9px 14px', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, color: 'white', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'opacity 0.2s', textAlign: 'center' }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                 👤 Create Account
               </button>
               <button
+                onClick={() => navigate('/login')}
                 style={{ padding: '9px 14px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
@@ -665,6 +667,323 @@ function FeedbackTrigger({ onClick }) {
       <span style={{ fontSize:20,display:'block',transition:'transform 0.3s',transform:hov?'rotate(-10deg) scale(1.2)':'none' }}>💬</span>
       <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?120:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>Feedback</span>
     </button>
+  );
+}
+
+function MobileAuthPrompt({ open, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);
+  const [particles, setParticles] = useState([]);
+  
+  useEffect(() => {
+    if (open) { 
+      setPhase(1); 
+      setTimeout(() => setPhase(2), 50);
+      // Spawn floating particles
+      const emojis = ['👜', '🛍️', '✨', '💎', '🌟'];
+      const p = Array.from({length: 8}, (_, i) => ({
+        id: i,
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        x: 10 + Math.random() * 80,
+        y: 60 + Math.random() * 30,
+        size: 16 + Math.random() * 12,
+        delay: Math.random() * 800,
+        duration: 3000 + Math.random() * 2000,
+      }));
+      setParticles(p);
+      setTimeout(() => setParticles([]), 6000);
+    } else { 
+      setPhase(3); 
+      setTimeout(() => setPhase(0), 400); 
+    }
+  }, [open]);
+  
+  if (phase === 0) return null;
+  const visible = phase === 2;
+  
+  return (
+    <div style={{ 
+      position: 'fixed', 
+      inset: 0, 
+      zIndex: 9999, 
+      display: 'flex', 
+      alignItems: 'flex-end', 
+      justifyContent: 'center',
+      pointerEvents: visible ? 'all' : 'none'
+    }}>
+      {/* Backdrop */}
+      <div 
+        onClick={onClose}
+        style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'rgba(26,10,0,0.65)', 
+          backdropFilter: 'blur(8px)', 
+          WebkitBackdropFilter: 'blur(8px)',
+          opacity: visible ? 1 : 0, 
+          transition: 'opacity 0.4s ease',
+          cursor: 'pointer'
+        }} 
+      />
+      
+      {/* Floating particles */}
+      {particles.map(p => (
+        <div
+          key={p.id}
+          style={{
+            position: 'absolute',
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            fontSize: p.size,
+            zIndex: 1,
+            pointerEvents: 'none',
+            animation: `floatUp ${p.duration}ms ease-out ${p.delay}ms both`,
+            opacity: 0
+          }}
+        >
+          {p.emoji}
+        </div>
+      ))}
+      
+      {/* Main prompt card */}
+      <div style={{ 
+        position: 'relative', 
+        zIndex: 2, 
+        width: '100%', 
+        maxWidth: '420px', 
+        background: 'linear-gradient(135deg,#ffffff 0%,#fdf8f5 100%)', 
+        borderTopLeftRadius: 32, 
+        borderTopRightRadius: 32,
+        boxShadow: '0 -8px 32px rgba(200,75,17,0.15), 0 16px 64px rgba(26,10,0,0.2)',
+        opacity: visible ? 1 : 0, 
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(100%) scale(0.95)', 
+        transition: 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)',
+        overflow: 'hidden'
+      }}>
+        {/* Gradient top bar */}
+        <div style={{ 
+          height: 6, 
+          background: 'linear-gradient(90deg, #c84b11, #f97316, #ea580c, #c84b11)', 
+          backgroundSize: '200% 100%',
+          animation: 'shimGradient 3s linear infinite'
+        }} />
+        
+        {/* Close button */}
+        <button 
+          onClick={onClose}
+          style={{ 
+            position: 'absolute', 
+            top: 16, 
+            right: 16, 
+            width: 36, 
+            height: 36, 
+            borderRadius: '50%', 
+            border: 'none', 
+            background: 'rgba(200,75,17,0.08)', 
+            color: '#c84b11', 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: 16, 
+            fontWeight: 800, 
+            transition: 'all 0.2s',
+            zIndex: 3
+          }}
+          onMouseEnter={e => { 
+            e.currentTarget.style.background = '#c84b11'; 
+            e.currentTarget.style.color = 'white'; 
+            e.currentTarget.style.transform = 'scale(1.1)'; 
+          }}
+          onMouseLeave={e => { 
+            e.currentTarget.style.background = 'rgba(200,75,17,0.08)'; 
+            e.currentTarget.style.color = '#c84b11'; 
+            e.currentTarget.style.transform = 'scale(1)'; 
+          }}
+        >
+          ✕
+        </button>
+        
+        {/* Content */}
+        <div style={{ padding: '32px 28px 36px', textAlign: 'center' }}>
+          {/* Icon with animation */}
+          <div style={{ 
+            width: 80, 
+            height: 80, 
+            borderRadius: '50%', 
+            background: 'linear-gradient(135deg,#c84b11,#f97316)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto 24px', 
+            fontSize: 36, 
+            boxShadow: '0 12px 32px rgba(200,75,17,0.35)',
+            animation: visible ? 'bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' : 'none',
+            transform: 'scale(0)',
+            transitionDelay: visible ? '100ms' : '0ms'
+          }}>
+            👜
+          </div>
+          
+          {/* Text content */}
+          <h2 style={{ 
+            fontSize: 24, 
+            fontWeight: 900, 
+            color: '#1a0a00', 
+            letterSpacing: '-0.03em', 
+            marginBottom: 8,
+            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
+            animationDelay: visible ? '200ms' : '0ms',
+            opacity: 0,
+            transform: 'translateY(20px)'
+          }}>
+            Welcome to BagSearch
+          </h2>
+          <p style={{ 
+            fontSize: 14, 
+            color: '#9a6348', 
+            fontWeight: 500, 
+            lineHeight: 1.6, 
+            marginBottom: 28,
+            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
+            animationDelay: visible ? '300ms' : '0ms',
+            opacity: 0,
+            transform: 'translateY(20px)'
+          }}>
+            Sign in to save favorites, get exclusive deals, and connect with sellers across Nigeria
+          </p>
+          
+          {/* Action buttons */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 12,
+            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
+            animationDelay: visible ? '400ms' : '0ms',
+            opacity: 0,
+            transform: 'translateY(20px)'
+          }}>
+            <button 
+              onClick={() => { onClose(); navigate("/register"); }}
+              style={{ 
+                width: '100%', 
+                padding: '16px 0', 
+                background: 'linear-gradient(135deg,#c84b11,#f97316)', 
+                color: 'white', 
+                fontWeight: 900, 
+                fontSize: 16, 
+                border: 'none', 
+                borderRadius: 16, 
+                cursor: 'pointer', 
+                boxShadow: '0 8px 24px rgba(200,75,17,0.4)', 
+                transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+              onMouseEnter={e => { 
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; 
+                e.currentTarget.style.boxShadow = '0 12px 32px rgba(200,75,17,0.5)'; 
+              }}
+              onMouseLeave={e => { 
+                e.currentTarget.style.transform = 'translateY(0) scale(1)'; 
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(200,75,17,0.4)'; 
+              }}
+            >
+              <span style={{ position: 'relative', zIndex: 1 }}>Create Free Account</span>
+              <div style={{ 
+                position: 'absolute', 
+                inset: 0, 
+                background: 'linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%)', 
+                animation: 'shimmer 2s ease-in-out infinite',
+                pointerEvents: 'none'
+              }} />
+            </button>
+            
+            <button 
+              onClick={() => { onClose(); navigate("/login?force=true"); }}
+              style={{ 
+                width: '100%', 
+                padding: '14px 0', 
+                background: 'rgba(200,75,17,0.08)', 
+                color: '#c84b11', 
+                fontWeight: 800, 
+                fontSize: 15, 
+                border: '2px solid rgba(200,75,17,0.15)', 
+                borderRadius: 16, 
+                cursor: 'pointer', 
+                transition: 'all 0.3s',
+                backdropFilter: 'blur(8px)'
+              }}
+              onMouseEnter={e => { 
+                e.currentTarget.style.background = 'rgba(200,75,17,0.12)'; 
+                e.currentTarget.style.borderColor = 'rgba(200,75,17,0.25)'; 
+                e.currentTarget.style.transform = 'translateY(-1px)'; 
+              }}
+              onMouseLeave={e => { 
+                e.currentTarget.style.background = 'rgba(200,75,17,0.08)'; 
+                e.currentTarget.style.borderColor = 'rgba(200,75,17,0.15)'; 
+                e.currentTarget.style.transform = 'translateY(0)'; 
+              }}
+            >
+              Already have an account? Sign In
+            </button>
+          </div>
+          
+          {/* Trust indicators */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: 16, 
+            marginTop: 24,
+            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
+            animationDelay: visible ? '500ms' : '0ms',
+            opacity: 0,
+            transform: 'translateY(20px)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>🔒</span>
+              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Secure</span>
+            </div>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>✓</span>
+              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Free</span>
+            </div>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>⚡</span>
+              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Quick</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes shimGradient {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes bounceIn {
+          0% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideInUp {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatUp {
+          0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+          20% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-100px) rotate(15deg); }
+        }
+      `}</style>
+    </div>
   );
 }
 
@@ -1233,6 +1552,8 @@ export default function Product(){
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
   const[dismissedAds,setDismissedAds]=useState([]);
+  const[mobileAuthPromptOpen,setMobileAuthPromptOpen]=useState(false);
+  const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
 
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
   const isMobile=windowWidth<=768;
@@ -1242,6 +1563,27 @@ export default function Product(){
 
   useEffect(()=>{ const h=()=>setWindowWidth(window.innerWidth); window.addEventListener('resize',h); return()=>window.removeEventListener('resize',h); },[]);
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
+
+  // Mobile auth prompt scroll trigger
+  useEffect(() => {
+    if (!isMobile || user) return; // Don't show for logged-in users or desktop
+    
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const threshold = 800; // Show after scrolling 800px
+      
+      if (scrollY > threshold && !hasScrolledPastThreshold) {
+        setHasScrolledPastThreshold(true);
+        // Show prompt after a small delay
+        setTimeout(() => {
+          setMobileAuthPromptOpen(true);
+        }, 1500);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile, user, hasScrolledPastThreshold]);
 
   const mapCategory=useCallback((dbCat)=>{
     if(!dbCat)return'all';const c=dbCat.toLowerCase();
@@ -1412,6 +1754,7 @@ export default function Product(){
 
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
+      <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
       {!feedbackOpen && !cartOpen && <FeedbackTrigger onClick={() => setFeedbackOpen(true)} />}
 
@@ -1458,7 +1801,10 @@ export default function Product(){
               }
             </div>
             <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
-              {['👜','👝','🛍️'].map((e,i)=>(<div key={i} style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:`translateY(${i%2===0?0:-8}px)`}}>{e}</div>))}
+              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}>
+                <img src={shoppingBagImg} alt="" style={{width:38,height:38,objectFit:'contain'}}/>
+              </div>
+              {['👝','🛍️'].map((e,i)=>(<div key={i} style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:`translateY(${i%2===0?-8:0}px)`}}>{e}</div>))}
             </div>
           </div>
         </div>
@@ -1661,6 +2007,9 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [views, setViews] = useState([]);
+  const [totalViewsCount, setTotalViewsCount] = useState(0);
+  const [viewsLoading, setViewsLoading] = useState(false);
   const vendorProducts = useMemo(
     () => allProducts.filter(p => p.sellerId === vendor.id || p.seller_id === vendor.id),
     [allProducts, vendor.id]
@@ -1674,11 +2023,58 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         if (profileData) setProfile(profileData);
         const { data: reviewData } = await supabase.from('seller_reviews').select('id, author_name, rating, text, created_at').eq('seller_id', vendor.id).order('created_at', { ascending: false }).limit(20);
         if (reviewData) setReviews(reviewData);
+        
+        // Fetch views for vendor's products
+        await fetchVendorViews();
       } catch (err) { console.error('Failed to load vendor data:', err); }
       finally { setLoading(false); }
     }
     loadData();
   }, [vendor.id]);
+
+  const fetchVendorViews = async () => {
+    if (vendorProducts.length === 0) {
+      setTotalViewsCount(0);
+      setViews([]);
+      return;
+    }
+    
+    try {
+      setViewsLoading(true);
+      const productIds = vendorProducts.map(p => p.id).filter(Boolean);
+      
+      const { data: viewsData, count: viewsCount, error: viewsError } = await supabase
+        .from('product_views')
+        .select(`
+          id,
+          viewed_at,
+          source,
+          buyer_name,
+          buyer_phone,
+          buyer_email,
+          products:product_id(id, name, images),
+          users:buyer_id(full_name, email, phone)
+        `, { count: 'exact' })
+        .in('product_id', productIds)
+        .order('viewed_at', { ascending: false })
+        .limit(20);
+      
+      if (!viewsError) {
+        setTotalViewsCount(viewsCount || 0);
+        setViews(viewsData || []);
+      } else {
+        console.error('Error fetching vendor views:', viewsError);
+        setTotalViewsCount(0);
+        setViews([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch vendor views:', err);
+      setTotalViewsCount(0);
+      setViews([]);
+    } finally {
+      setViewsLoading(false);
+    }
+  };
 
   const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
 
@@ -1715,6 +2111,9 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap' }}>
             {avgRating && <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icon name="star" size={16}/> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}
             <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Product{vendorProducts.length!==1?'s':''}</span>
+            <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#3b82f6',background:'#eff6ff',padding:'4px 10px',borderRadius:20 }}>
+              <Icon name="visibility" size={16}/> {totalViewsCount} View{totalViewsCount!==1?'s':''}
+            </span>
           </div>
           {displayStory ? <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,maxWidth:600 }}>{displayStory}</p> : <p style={{ fontSize:13,color:'#c4957a',fontStyle:'italic' }}>No brand story added yet.</p>}
           {displayCategories.length > 0 && <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:12 }}>{displayCategories.map(cat => (<span key={cat} style={{ fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,background:'#fde8d8',color:'#c84b11',border:'1px solid #f9c4a0' }}>{cat}</span>))}</div>}
@@ -1724,6 +2123,120 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
       <div className="product-grid" style={{ marginBottom:40 }}>
         {vendorProducts.length > 0 ? vendorProducts.map((p,i) => (<ProductCard key={p.id} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />)) : <p style={{ color:'#9a6348' }}>No products available yet.</p>}
       </div>
+      
+      {/* Recent Views Section */}
+      <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f0d9cc',marginBottom:32 }}>
+        <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Recent Product Views</h3>
+        {viewsLoading ? (
+          <div style={{ textAlign:'center',padding:'40px 0',color:'#9a6348' }}>
+            <div style={{ display:'inline-block',width:24,height:24,border:'2px solid #f0d9cc',borderTopColor:'#c84b11',borderRadius:'50%',animation:'ldSpin 0.8s linear infinite',marginBottom:12 }}></div>
+            <p style={{ fontSize:13 }}>Loading views...</p>
+          </div>
+        ) : views.length === 0 ? (
+          <p style={{ color:'#9a6348',fontSize:13,textAlign:'center',padding:'24px 0' }}>No product views yet.</p>
+        ) : (
+          <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
+            {views.map(view => {
+              const buyerName = view.users?.full_name || view.buyer_name || 'Anonymous Buyer';
+              const buyerEmail = view.users?.email || view.buyer_email;
+              const buyerPhone = view.users?.phone || view.buyer_phone;
+              const productName = view.products?.name || 'Unknown Product';
+              const productImage = view.products?.images?.[0];
+              
+              return (
+                <div key={view.id} style={{ 
+                  padding:'16px 20px', 
+                  background:'#fdf8f5', 
+                  borderRadius:16, 
+                  border:'1px solid #f0d9cc',
+                  display:'flex',
+                  gap:16,
+                  alignItems:'center'
+                }}>
+                  {/* Product Image */}
+                  {productImage ? (
+                    <img 
+                      src={productImage} 
+                      alt={productName}
+                      style={{ 
+                        width:60, 
+                        height:60, 
+                        borderRadius:12, 
+                        objectFit:'cover',
+                        flexShrink:0
+                      }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      width:60, 
+                      height:60, 
+                      borderRadius:12, 
+                      background:'#f0d9cc',
+                      display:'flex',
+                      alignItems:'center',
+                      justifyContent:'center',
+                      flexShrink:0,
+                      fontSize:24
+                    }}>👜</div>
+                  )}
+                  
+                  {/* View Details */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
+                      <span style={{ 
+                        fontSize:14, 
+                        fontWeight:800, 
+                        color:'#1a0a00' 
+                      }}>{buyerName}</span>
+                      <span style={{ 
+                        fontSize:11, 
+                        color:'#9a6348', 
+                        background:'#f0d9cc', 
+                        padding:'2px 8px', 
+                        borderRadius:12 
+                      }}>{view.source || 'web'}</span>
+                    </div>
+                    <div style={{ fontSize:13,color:'#5c3317',marginBottom:2 }}>
+                      viewed <strong>{productName}</strong>
+                    </div>
+                    <div style={{ fontSize:12,color:'#9a6348' }}>
+                      {new Date(view.viewed_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                    {(buyerEmail || buyerPhone) && (
+                      <div style={{ display:'flex',gap:12,marginTop:4 }}>
+                        {buyerEmail && (
+                          <span style={{ fontSize:11,color:'#9a6348' }}>
+                            📧 {buyerEmail}
+                          </span>
+                        )}
+                        {buyerPhone && (
+                          <span style={{ fontSize:11,color:'#9a6348' }}>
+                            📞 {buyerPhone}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            
+            {views.length > 0 && (
+              <div style={{ textAlign:'center',padding:'16px 0' }}>
+                <span style={{ fontSize:12,color:'#9a6348',fontStyle:'italic' }}>
+                  Showing {Math.min(views.length, 20)} of {totalViewsCount} total views
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f7ece4' }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Reviews & Comments</h3>
         <form onSubmit={handleSubmitReview} style={{ background:'#fdf8f5',padding:24,borderRadius:16,marginBottom:32,border:'1px solid #f0d9cc' }}>

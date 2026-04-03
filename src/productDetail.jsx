@@ -110,16 +110,58 @@ export default function ProductDetail() {
     if (!product?.id || product.isMock) return;
     if (viewLoggedRef.current === product.id) return;
     viewLoggedRef.current = product.id;
+    
+    // Debug logging
+    console.log('=== PRODUCT VIEW DEBUG ===');
+    console.log('Product ID:', product.id);
+    console.log('Product isMock:', product.isMock);
+    console.log('User:', user);
+    console.log('User ID:', user?.id);
+    console.log('User email:', user?.email);
+    console.log('User metadata:', user?.user_metadata);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H1-H2',location:'src/productDetail.jsx:logView:start',message:'About to insert product view',data:{productId:product.id,buyerId:user?.id||null,buyerEmail:user?.email||null,isMock:!!product?.isMock},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const logView = async () => {
       try {
-        await supabase.from('product_views').insert({
+        const viewData = {
           product_id: product.id,
           buyer_id: user?.id || null,
           buyer_name: user?.user_metadata?.full_name || user?.email || null,
           buyer_email: user?.email || null,
           source: 'product_detail',
-        }, { returning: 'minimal' });
-      } catch (err) { console.error('Failed to log product view', err); }
+        };
+        
+        console.log('Inserting view data:', viewData);
+        console.log('Data types:', {
+          product_id: typeof product.id,
+          buyer_id: typeof (user?.id || null),
+          buyer_name: typeof (user?.user_metadata?.full_name || user?.email || null),
+          buyer_email: typeof (user?.email || null),
+          source: typeof 'product_detail'
+        });
+        
+        const { error } = await supabase.from('product_views').insert(viewData, { returning: 'minimal' });
+        
+        if (error) {
+          console.error('Product view insert error:', error);
+          console.error('Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+        } else {
+          console.log('Product view inserted successfully');
+        }
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H1',location:'src/productDetail.jsx:logView:result',message:'product_views insert finished',data:{productId:product.id,buyerId:user?.id||null,error:error?{message:error.message,code:error.code,details:error.details,hint:error.hint}:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      } catch (err) { 
+        console.error('Failed to log product view:', err); 
+      }
     };
     logView();
   }, [product?.id, product?.isMock, user?.id]);
@@ -131,6 +173,9 @@ export default function ProductDetail() {
         // mock IDs no longer supported
       }
       const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      // #region agent log
+      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H2',location:'src/productDetail.jsx:fetchProduct:result',message:'Fetched product by route id',data:{routeId:id,foundProductId:data?.id||null,error:error?{message:error.message,code:error.code}:null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       if (error) throw error;
       if (data) {
         const fmt = {
