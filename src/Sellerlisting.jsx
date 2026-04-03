@@ -1025,7 +1025,16 @@ export default function SellerListings() {
   const totalSaves = listings.reduce((s, l) => s + (l.saves ?? 0), 0);
   const avgRating  = listings.filter(l => l.rating).reduce((s, l, _, a) => s + l.rating / a.length, 0);
 
-  const handleDelete = useCallback((id) => setListings(prev => prev.filter(l => l.id !== id)), []);
+  const handleDelete = useCallback(async (id) => {
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      setListings(prev => prev.filter(l => l.id !== id));
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      alert('Could not delete product. Please try again.');
+    }
+  }, []);
   const handleEdit   = useCallback((listing) => setEditTarget(listing), []);
   const handleSaved  = useCallback((updated) => {
     setListings(prev => prev.map(l => l.id === updated.id ? updated : l));
