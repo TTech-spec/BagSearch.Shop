@@ -4,6 +4,9 @@ const buildNotificationMessage = (buyerName, type) => {
   if (type === 'product_view') {
     return `${buyerName || 'Someone'} viewed your product`;
   }
+  if (type === 'review') {
+    return `${buyerName || 'Someone'} posted a review on your profile`;
+  }
   return 'You have a new notification';
 };
 

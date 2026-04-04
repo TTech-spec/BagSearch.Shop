@@ -33,187 +33,120 @@ const C = {
 
 // ─── SIMPLE MINIMAL PAGE LOADER ───────────────────────────────────────────────
 const PageLoader = ({ onDone }) => {
-  const [progress, setProgress] = useState(0);
-  const [fadeOut, setFadeOut] = useState(false);
-
+  const [visible, setVisible] = useState(true);
   useEffect(() => {
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 6 + 3;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(interval);
-        setProgress(100);
-        setTimeout(() => setFadeOut(true), 300);
-        setTimeout(() => onDone(), 800);
-      } else {
-        setProgress(Math.min(p, 100));
-      }
-    }, 30);
-    return () => clearInterval(interval);
+    const timer = setTimeout(() => {
+      setVisible(false);
+      setTimeout(() => onDone(), 400);
+    }, 1200);
+    return () => clearTimeout(timer);
   }, [onDone]);
 
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 99999,
+      position: 'fixed', inset: 0, zIndex: 99999,
       background: C.surface,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      opacity: fadeOut ? 0 : 1,
-      transition: 'opacity 0.45s ease',
-      pointerEvents: fadeOut ? 'none' : 'all',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.4s ease',
+      pointerEvents: visible ? 'all' : 'none',
     }}>
-      {/* Brand */}
-      <span style={{
-        fontSize: 26,
-        fontWeight: 900,
-        letterSpacing: '-0.03em',
-        color: C.text,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        marginBottom: 28,
-      }}>
-        Bag<span style={{ color: C.primary }}>Search</span>
-      </span>
-
-      {/* Progress bar */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <div style={{
-        width: 200,
-        height: 2,
-        background: C.borderLight,
-        borderRadius: 9999,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%',
-          width: `${progress}%`,
-          background: C.primary,
-          borderRadius: 9999,
-          transition: 'width 0.06s ease',
-        }} />
-      </div>
+        width: 36, height: 36, borderRadius: '50%',
+        border: `3px solid ${C.primaryBg}`,
+        borderTopColor: C.primary,
+        animation: 'spin 0.75s linear infinite',
+      }} />
     </div>
   );
 };
 
-// ─── SIMPLE SLIDE-IN SUCCESS TOAST ────────────────────────────────────────────
-const SuccessToast = ({ show, onClose }) => {
-  const [visible, setVisible] = useState(false);
+// ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
+const SuccessCard = ({ show, onClose }) => {
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 480);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     if (show) {
-      // small delay so CSS transition fires
-      const t1 = setTimeout(() => setVisible(true), 30);
-      const t2 = setTimeout(() => {
-        setVisible(false);
+      requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
+      const timer = setTimeout(() => {
+        setMounted(false);
         setTimeout(() => onClose && onClose(), 400);
-      }, 4500);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+      }, 4000);
+      return () => clearTimeout(timer);
     } else {
-      setVisible(false);
+      setMounted(false);
     }
   }, [show, onClose]);
 
   if (!show) return null;
 
+  const sharedCard = {
+    position: 'fixed', zIndex: 9999,
+    display: 'flex', alignItems: 'center', gap: 14,
+    background: C.surface,
+    border: `1.5px solid ${C.primaryBorder}`,
+    borderRadius: 14, padding: '14px 18px',
+    boxShadow: '0 8px 30px rgba(26,10,0,0.14)',
+    boxSizing: 'border-box',
+  };
+  const mobileCard = {
+    ...sharedCard,
+    bottom: 20, left: '50%',
+    width: 'calc(100vw - 32px)', maxWidth: 360,
+    transform: mounted ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(140%)',
+    opacity: mounted ? 1 : 0,
+    transition: mounted
+      ? 'transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease'
+      : 'transform 0.35s ease, opacity 0.3s ease',
+  };
+  const desktopCard = {
+    ...sharedCard,
+    bottom: 28, left: 28, minWidth: 260, maxWidth: 320,
+    animation: mounted
+      ? 'successSlideIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards'
+      : 'successSlideOut 0.35s ease forwards',
+  };
+
   return (
     <>
       <style>{`
-        @keyframes toastSlideIn {
-          from { transform: translateX(-110%); opacity: 0; }
-          to   { transform: translateX(0);    opacity: 1; }
-        }
-        @keyframes toastSlideOut {
-          from { transform: translateX(0);    opacity: 1; }
-          to   { transform: translateX(-110%); opacity: 0; }
-        }
-        .success-toast-card {
-          animation: toastSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .success-toast-card.hiding {
-          animation: toastSlideOut 0.35s ease forwards;
-        }
+        @keyframes successSlideIn { from{transform:translateX(-120%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes successSlideOut { from{transform:translateX(0);opacity:1} to{transform:translateX(-120%);opacity:0} }
       `}</style>
-
-      <div
-        className={`success-toast-card${!visible ? ' hiding' : ''}`}
-        style={{
-          position: 'fixed',
-          bottom: 24,
-          left: 20,
-          zIndex: 9999,
-          background: C.surface,
-          border: `1.5px solid ${C.primaryBorder}`,
-          borderLeft: `4px solid ${C.primary}`,
-          borderRadius: 12,
-          padding: '14px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          boxShadow: '0 8px 28px rgba(26,10,0,0.12)',
-          maxWidth: 'min(320px, calc(100vw - 40px))',
-          width: '100%',
-        }}
-      >
-        {/* Check icon */}
+      <div style={isMobile ? mobileCard : desktopCard}>
         <div style={{
-          width: 34,
-          height: 34,
-          borderRadius: '50%',
-          background: C.primaryBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+          width: 38, height: 38, borderRadius: '50%',
+          background: C.primaryBg, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
             stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-
-        {/* Text */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: C.text,
-            margin: 0,
-            lineHeight: 1.3,
-          }}>
-            Account created!
-          </p>
-          <p style={{
-            fontSize: 12,
-            color: C.textMuted,
-            margin: '2px 0 0',
-            lineHeight: 1.4,
-          }}>
-            Redirecting to login…
-          </p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0, marginBottom: 2 }}>Account Created</p>
+          <p style={{ fontSize: 12, color: C.textMuted, margin: 0 }}>Redirecting to login…</p>
         </div>
-
-        {/* Close */}
         <button
-          onClick={() => {
-            setVisible(false);
-            setTimeout(() => onClose && onClose(), 400);
-          }}
+          onClick={() => { setMounted(false); setTimeout(() => onClose && onClose(), 400); }}
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: C.textMuted,
-            cursor: 'pointer',
-            padding: 2,
-            flexShrink: 0,
-            lineHeight: 1,
+            background: 'none', border: 'none', cursor: 'pointer',
+            padding: 6, color: C.textMuted, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -369,590 +302,724 @@ const Reg = () => {
   };
 
   return (
-    <>
+    <div style={{
+      background: C.surfaceDim,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: 'sans-serif',
+      color: C.text,
+    }}>
       <PageLoader onDone={handleLoaderDone} />
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-
-        * { box-sizing: border-box; }
-
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        /* ── Role Toggle ── */
-        .role-track {
-          position: relative;
-          display: flex;
-          align-items: center;
-          background: ${C.surface};
-          border-radius: 20px;
-          padding: 6px;
-          box-shadow: 0 2px 8px ${C.primary}15, 0 0 0 1.5px ${C.primary}20, inset 0 1px 0 rgba(255,255,255,0.9);
-          width: 100%;
-        }
-        .role-pill {
-          position: absolute;
-          top: 6px;
-          left: 6px;
-          width: calc(50% - 6px);
-          height: calc(100% - 12px);
-          border-radius: 14px;
-          z-index: 0;
-          background: linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%);
-          box-shadow: 0 6px 20px ${C.primary}60, 0 2px 6px ${C.primary}30;
-          transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-        }
-        .role-pill.buyer  { transform: translateX(0); }
-        .role-pill.seller { transform: translateX(100%); }
-        .pill-shimmer {
-          position: absolute;
-          inset: 0;
-          border-radius: 14px;
-          overflow: hidden;
-          pointer-events: none;
-        }
-        .pill-shimmer::after {
-          content: '';
-          position: absolute;
-          top: 0; left: 0;
-          width: 40%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-          animation: pillShimmer 2.4s ease-in-out infinite 0.8s;
-        }
-        @keyframes pillShimmer {
-          0%   { left: -40%; }
-          100% { left: 140%; }
-        }
-        .role-btn {
-          flex: 1;
-          position: relative;
-          z-index: 1;
-          border: none;
-          background: transparent;
-          border-radius: 14px;
-          padding: 13px 8px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          font-family: inherit;
-          font-size: 13.5px;
-          font-weight: 700;
-          letter-spacing: 0.01em;
-          transition: color 0.25s ease;
-        }
-        .role-btn.active   { color: #fff; }
-        .role-btn.inactive { color: ${C.textMuted}; }
-        .role-btn.inactive:hover { color: ${C.primary}; }
-        .role-icon-wrap {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          transition: background 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .role-btn.active .role-icon-wrap {
-          background: rgba(255,255,255,0.22);
-          transform: scale(1.15);
-        }
-        .role-btn.inactive .role-icon-wrap {
-          background: ${C.primaryBg};
-        }
-        .role-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.75);
-          position: absolute;
-          bottom: 9px;
-          left: 50%;
-          transform: translateX(-50%) scale(0);
-          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s;
-        }
-        .role-btn.active .role-dot { transform: translateX(-50%) scale(1); }
-        .role-status-label {
-          font-size: 11.5px;
-          font-weight: 700;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-          padding: 5px 14px;
-          border-radius: 999px;
-          background: ${C.primary}15;
-          color: ${C.primary};
-          display: inline-block;
-          transition: all 0.3s ease;
-          font-family: inherit;
-        }
-
-        /* ── Input focus ── */
-        .reg-input {
-          width: 100%;
-          border-radius: 8px;
-          border: 1px solid ${C.border};
-          background: ${C.surface};
-          padding: 16px;
-          height: 56px;
-          font-size: 14px;
-          color: ${C.text};
-          outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          font-family: inherit;
-        }
-        .reg-input:focus {
-          border-color: ${C.primary};
-          box-shadow: 0 0 0 3px ${C.primary}18;
-        }
-
-        /* ── Left hero panel — hide on mobile ── */
-        .hero-panel {
-          display: none;
-        }
-        @media (min-width: 1024px) {
-          .hero-panel {
-            display: flex;
-            width: 50%;
-          }
-          .form-panel {
-            width: 50%;
-          }
-        }
-
-        /* ── Nav links hide on mobile ── */
-        .nav-links {
-          display: none;
-        }
-        @media (min-width: 768px) {
-          .nav-links {
-            display: flex;
-            gap: 32px;
-          }
-        }
-
-        /* ── Footer shows on mobile only ── */
-        .mobile-footer {
-          display: block;
-        }
-        @media (min-width: 1024px) {
-          .mobile-footer {
-            display: none;
-          }
-        }
-
-        /* ── Form padding on small screens ── */
-        .form-panel {
-          padding: 24px 16px;
-        }
-        @media (min-width: 480px) {
-          .form-panel {
-            padding: 32px 24px;
-          }
-        }
-        @media (min-width: 640px) {
-          .form-panel {
-            padding: 32px 32px;
-          }
-        }
-      `}</style>
 
       <div style={{
-        background: C.surfaceDim,
-        minHeight: '100vh',
+        opacity: pageLoading ? 0 : 1,
+        transition: 'opacity 0.5s ease',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Manrope, sans-serif',
-        opacity: pageLoading ? 0 : 1,
-        transition: 'opacity 0.5s ease'
+        minHeight: '100vh',
       }}>
+        <SuccessCard show={showSuccess} onClose={() => setShowSuccess(false)} />
 
-        {/* HEADER */}
-        <header style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: `1px solid ${C.border}`,
-          padding: '12px 20px',
-          background: C.surface,
-          zIndex: 10
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LogoIcon size={22} />
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>
-              Bag<span style={{ color: C.primary }}>Search</span>
-            </h2>
-          </div>
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <div className="nav-links">
-              {['Shop', 'Visual Search', 'Help'].map(label => (
-                <a key={label} href="#" style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                   onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                   onMouseLeave={e => e.currentTarget.style.color = C.text}>
+        {/* ── ALL STYLES ─────────────────────────────────────────────────── */}
+        <style>{`
+          *, *::before, *::after { box-sizing: border-box; }
+
+          /* ── Shared: role toggle (same on both layouts) ─────────────── */
+          .role-track {
+            position:relative;display:flex;align-items:center;
+            background:#fff;border-radius:20px;padding:6px;
+            box-shadow:0 2px 8px rgba(201,75,44,0.08),
+                        0 0 0 1.5px rgba(201,75,44,0.15),
+                        inset 0 1px 0 rgba(255,255,255,0.9);
+            width:100%;
+          }
+          .role-pill {
+            position:absolute;top:6px;left:6px;
+            width:calc(50% - 6px);height:calc(100% - 12px);
+            border-radius:14px;z-index:0;
+            background:linear-gradient(135deg,#C94B2C 0%,#E8856A 100%);
+            box-shadow:0 6px 20px rgba(201,75,44,0.35),0 2px 6px rgba(201,75,44,0.2);
+            transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
+          }
+          .role-pill.seller { transform:translateX(100%); }
+          .role-pill.buyer  { transform:translateX(0); }
+          .pill-shimmer { position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none; }
+          @keyframes shimmer {
+            0%{opacity:0;transform:translateX(-100%) skewX(-15deg)}
+            50%{opacity:1}
+            100%{opacity:0;transform:translateX(300%) skewX(-15deg)}
+          }
+          .pill-shimmer::after {
+            content:'';position:absolute;top:0;left:0;width:40%;height:100%;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
+            animation:shimmer 2.4s ease-in-out infinite 0.8s;
+          }
+          .role-btn {
+            flex:1;position:relative;z-index:1;border:none;background:transparent;
+            border-radius:14px;padding:13px 8px;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            font-family:inherit;font-size:13.5px;font-weight:700;
+            transition:color 0.25s ease;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .role-btn.active   { color:#fff; }
+          .role-btn.inactive { color:#B07060; }
+          .role-icon {
+            width:24px;height:24px;border-radius:50%;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;
+            transition:background 0.25s ease,transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+          }
+          .role-btn.active .role-icon   { background:rgba(255,255,255,0.22);transform:scale(1.15); }
+          .role-btn.inactive .role-icon { background:#F9DDD0; }
+          .role-dot {
+            width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.75);
+            position:absolute;bottom:9px;left:50%;
+            transform:translateX(-50%) scale(0);
+            transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1) 0.1s;
+          }
+          .role-btn.active .role-dot { transform:translateX(-50%) scale(1); }
+          .role-status-label {
+            font-size:11.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+            padding:5px 14px;border-radius:999px;
+            background:rgba(201,75,44,0.08);color:#C94B2C;display:inline-block;
+          }
+
+          /* ── DESKTOP layout — shown at ≥ 1024 px ───────────────────── */
+          .desktop-view { display: none; }
+
+          @media (min-width: 1024px) {
+            .mobile-view  { display: none !important; }
+            .desktop-view {
+              display: flex; flex-direction: column; min-height: 100vh;
+            }
+
+            .image-panel {
+              display:flex; width:50%;
+              position:relative; overflow:hidden;
+              background:${C.primaryBg};
+            }
+
+            .reg-input {
+              width:100%;display:block;
+              border-radius:8px;
+              border:1px solid ${C.border};
+              background:${C.surface};
+              padding:14px 16px;
+              font-size:16px;
+              color:${C.text};
+              outline:none;
+              transition:border-color 0.2s,box-shadow 0.2s;
+              font-family:inherit;
+            }
+            .reg-input:focus {
+              border-color:${C.primary};
+              box-shadow:0 0 0 2px ${C.primary}20;
+            }
+            .reg-input::placeholder { color:${C.textFaint}; }
+
+            .submit-btn {
+              width:100%;height:54px;
+              background:${C.primary};color:#fff;
+              font-size:16px;font-weight:700;
+              border:none;border-radius:8px;
+              cursor:pointer;transition:background 0.2s,transform 0.15s;
+              box-shadow:0 4px 12px ${C.primary}40;
+              font-family:inherit;
+              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+            }
+            .submit-btn:hover:not(:disabled) { background:${C.accent};transform:translateY(-2px); }
+            .submit-btn:active:not(:disabled) { transform:translateY(0); }
+            .submit-btn:disabled { opacity:0.65;cursor:not-allowed; }
+
+            .social-btn {
+              display:flex;align-items:center;justify-content:center;gap:8px;
+              height:48px;border:1px solid ${C.border};border-radius:8px;
+              background:transparent;color:${C.text};
+              font-size:14px;font-weight:600;cursor:pointer;
+              transition:background 0.2s;width:100%;font-family:inherit;
+              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+            }
+            .social-btn:hover:not(:disabled) { background:${C.primaryBg}; }
+            .social-btn:disabled { opacity:0.6;cursor:not-allowed; }
+
+            .header-nav { display:flex;gap:24px; }
+
+            .form-panel {
+              width:50%;
+              display:flex;flex-direction:column;
+              justify-content:center;align-items:center;
+              padding:48px;
+              background:${C.surface};
+            }
+            .form-inner { width:100%;max-width:440px; }
+          }
+
+          /* ── MOBILE layout — shown below 1024 px ───────────────────── */
+          .mobile-view {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: ${C.surfaceDim};
+          }
+
+          /* Mobile inputs */
+          .m-input {
+            width:100%;display:block;
+            border-radius:14px;
+            border:1.5px solid ${C.border};
+            background:${C.surfaceDim};
+            padding:14px 16px;
+            font-size:16px;
+            color:${C.text};
+            outline:none;
+            transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
+            font-family:inherit;
+          }
+          .m-input:focus {
+            border-color:${C.primary};
+            box-shadow:0 0 0 3px ${C.primary}18;
+            background:${C.surface};
+          }
+          .m-input::placeholder { color:${C.textFaint}; }
+
+          /* Mobile submit */
+          .m-submit {
+            width:100%;height:54px;
+            background:${C.primary};color:#fff;
+            font-size:16px;font-weight:700;
+            border:none;border-radius:999px;
+            cursor:pointer;
+            transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+            box-shadow:0 6px 20px ${C.primary}50;
+            font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .m-submit:hover:not(:disabled) {
+            background:${C.accent};transform:translateY(-2px);
+            box-shadow:0 10px 28px ${C.primary}60;
+          }
+          .m-submit:active:not(:disabled) { transform:translateY(0); }
+          .m-submit:disabled { opacity:0.65;cursor:not-allowed; }
+
+          /* Mobile social */
+          .m-social {
+            display:flex;align-items:center;justify-content:center;gap:9px;
+            height:50px;border:1.5px solid ${C.border};border-radius:14px;
+            background:transparent;color:${C.text};
+            font-size:14px;font-weight:600;cursor:pointer;
+            transition:background 0.2s,border-color 0.2s;
+            width:100%;font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .m-social:hover:not(:disabled) {
+            background:${C.primaryBg};border-color:${C.primaryBorder};
+          }
+          .m-social:disabled { opacity:0.6;cursor:not-allowed; }
+
+          /* Custom checkbox */
+          .m-check {
+            width:18px;height:18px;border-radius:5px;
+            border:1.5px solid ${C.border};
+            background:${C.surface};
+            display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;cursor:pointer;
+            transition:background 0.2s,border-color 0.2s;
+          }
+          .m-check.checked { background:${C.primary};border-color:${C.primary}; }
+
+          /* Bottom sheet */
+          .bottom-sheet {
+            background:${C.surface};
+            border-radius:28px 28px 0 0;
+            padding:22px 22px 44px;
+            margin-top:-28px;
+            position:relative;
+            z-index:2;
+            flex:1;
+          }
+
+          /* Focus ring */
+          .fr:focus-visible { outline:2px solid ${C.primary};outline-offset:2px; }
+        `}</style>
+
+        {/* ════════════════════════════════════════════════════════════════
+            DESKTOP  (≥ 1024 px) — matching login.jsx layout
+        ════════════════════════════════════════════════════════════════ */}
+        <div className="desktop-view">
+
+          {/* Header */}
+          <header style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            borderBottom: `1px solid ${C.border}`,
+            padding: '12px 20px',
+            background: C.surface, zIndex: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <LogoIcon size={24} />
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
+                Bag<span style={{ color: C.primary }}>Search</span>
+              </h2>
+            </div>
+            <nav className="header-nav">
+              {['Shop', 'Collections'].map(label => (
+                <a key={label} href="#"
+                  style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                  onMouseLeave={e => e.currentTarget.style.color = C.text}>
                   {label}
                 </a>
               ))}
-            </div>
+            </nav>
             <button
               onClick={() => navigate('/login?force=true')}
               style={{
-                background: C.primary,
-                color: C.textLight,
-                border: 'none',
-                borderRadius: 8,
-                padding: '8px 16px',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                boxShadow: `0 2px 8px ${C.primary}40`,
-                whiteSpace: 'nowrap',
+                background: C.primary, color: C.textLight, border: 'none',
+                borderRadius: 8, padding: '8px 16px',
+                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                transition: 'background 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+                WebkitTapHighlightColor: 'transparent',
               }}
               onMouseEnter={e => e.currentTarget.style.background = C.accent}
               onMouseLeave={e => e.currentTarget.style.background = C.primary}>
               Login
             </button>
-          </div>
-        </header>
+          </header>
 
-        {/* MAIN */}
-        <main style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <main style={{ flex: 1, display: 'flex' }}>
+            <div style={{ display: 'flex', width: '100%' }}>
 
-          {/* Left Hero */}
-          <div className="hero-panel" style={{
-            position: 'relative',
-            background: C.primary,
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
+              {/* Image panel */}
+              <div className="image-panel">
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
+                  backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.8,
+                }} />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `linear-gradient(to right, ${C.primary}80, transparent)`,
+                }} />
+                <div style={{
+                  position: 'relative', zIndex: 10,
+                  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                  padding: 80, color: C.textLight, width: '100%',
+                }}>
+                  <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, marginBottom: 16, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+                    Step into the future of luxury.
+                  </h1>
+                  <p style={{ fontSize: 20, fontWeight: 500, opacity: 0.9, maxWidth: 400 }}>
+                    Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
+                  </p>
+                </div>
+              </div>
+
+              {/* Form panel */}
+              <div className="form-panel">
+                <div className="form-inner">
+
+                  <div style={{ marginBottom: 28 }}>
+                    <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color: C.text, margin: 0, marginBottom: 6 }}>
+                      Create Account
+                    </h2>
+                    <p style={{ color: C.textMuted, margin: 0, fontSize: 16, lineHeight: 1.5 }}>
+                      Ready to explore or start selling with BagSearch?
+                    </p>
+                  </div>
+
+                  {/* Error Banner */}
+                  {errorMessage && (
+                    <div style={{
+                      padding: '12px 16px', background: C.dangerBg, border: `1px solid ${C.danger}40`,
+                      color: C.danger, borderRadius: 10, fontSize: 14, marginBottom: 20, lineHeight: 1.5,
+                    }}>
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {/* Role Toggle */}
+                  <div style={{ marginBottom: 24 }}>
+                    <p style={{ marginBottom: 10, fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                      I want to…
+                    </p>
+                    <div className="role-track">
+                      <div className={`role-pill ${formData.role}`}><div className="pill-shimmer" /></div>
+                      <button type="button" className={`role-btn ${formData.role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('buyer')}>
+                        <span className="role-icon">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke={formData.role === 'buyer' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M16 10a4 4 0 01-8 0"/>
+                          </svg>
+                        </span>
+                        Buy Bags
+                        <span className="role-dot" />
+                      </button>
+                      <button type="button" className={`role-btn ${formData.role === 'seller' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('seller')}>
+                        <span className="role-icon">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke={formData.role === 'seller' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                            <path d="M9 11l3-3 3 3"/>
+                          </svg>
+                        </span>
+                        Start Selling
+                        <span className="role-dot" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Registration Form */}
+                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Full Name</label>
+                        <input
+                          className="reg-input fr"
+                          placeholder="John Doe"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleChange}
+                          required
+                        />
+                        {errors.fullName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.fullName}</span>}
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Phone Number</label>
+                        <input
+                          className="reg-input fr"
+                          placeholder="+1 (555) 000-0000"
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                        />
+                        {errors.phone && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Email Address</label>
+                      <input
+                        className="reg-input fr"
+                        placeholder="name@example.com"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                      {errors.email && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Password</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          className="reg-input fr"
+                          style={{ paddingRight: 48 }}
+                          placeholder="••••••••"
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                            background: 'transparent', border: 'none', color: C.textMuted, cursor: 'pointer', padding: 4,
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{showPassword ? 'visibility_off' : 'visibility'}</span>
+                        </button>
+                      </div>
+                      {errors.password && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.password}</span>}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      <input
+                        id="terms-desktop"
+                        type="checkbox"
+                        name="terms"
+                        checked={formData.terms}
+                        onChange={handleChange}
+                        required
+                        style={{ marginTop: 3, width: 16, height: 16, accentColor: C.primary, cursor: 'pointer' }}
+                      />
+                      <label htmlFor="terms-desktop" style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5, cursor: 'pointer' }}>
+                        I agree to the <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Terms of Service</a> and <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
+                      </label>
+                    </div>
+                    {errors.terms && <span style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</span>}
+
+                    <button type="submit" className="submit-btn fr" disabled={loading} style={{ marginTop: 8 }}>
+                      {loading ? 'Creating Account…' : 'Create Account'}
+                    </button>
+                  </form>
+
+                  <div style={{ position: 'relative', margin: '24px 0' }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                      <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
+                    </div>
+                    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                      <span style={{ background: C.surface, padding: '0 12px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase' }}>Or</span>
+                    </div>
+                  </div>
+
+                  <button className="social-btn fr" onClick={handleGoogleAuth} disabled={loading} type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                  </button>
+
+                  <p style={{ textAlign: 'center', color: C.textMuted, fontSize: 15, marginTop: 24 }}>
+                    Already have an account?{' '}
+                    <span
+                      onClick={() => navigate('/login?force=true')}
+                      style={{ color: C.primary, fontWeight: 700, cursor: 'pointer', marginLeft: 2 }}
+                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
+                      Login
+                    </span>
+                  </p>
+
+                </div>
+              </div>
+
+            </div>
+          </main>
+        </div>
+
+        {/* ════════════════════════════════════════════════════════════════
+            MOBILE  (< 1024 px) — matching login.jsx layout
+        ════════════════════════════════════════════════════════════════ */}
+        <div className="mobile-view">
+
+          {/* Hero Banner (matches login structure) */}
+          <div style={{
+            position: 'relative', height: '24vh', minHeight: 180, overflow: 'hidden',
+            background: C.primary, display: 'flex', alignItems: 'flex-end', padding: '24px 22px 50px',
           }}>
             <div style={{
-              position: 'absolute', inset: 0, opacity: 0.3,
+              position: 'absolute', inset: 0,
               backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
-              backgroundSize: 'cover', backgroundPosition: 'center'
+              backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4,
             }} />
-            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.primary}E6, transparent)` }} />
-            <div style={{ position: 'relative', zIndex: 10, padding: '0 48px', color: C.textLight, maxWidth: 600 }}>
-              <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 24 }}>
-                Step into the future of luxury.
-              </h1>
-              <p style={{ fontSize: 18, fontWeight: 500, opacity: 0.9, marginBottom: 32, lineHeight: 1.6 }}>
-                Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {[
-                  { icon: 'photo_camera', label: 'Search by uploading a photo' },
-                  { icon: 'chat_bubble',  label: 'Real-time WhatsApp tracking' },
-                  { icon: 'verified',     label: 'Early access to limited drops' },
-                ].map(({ icon, label }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: '50%', fontFamily: "'Material Symbols Outlined'" }}>{icon}</span>
-                    <span style={{ fontWeight: 500 }}>{label}</span>
-                  </div>
-                ))}
-              </div>
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.primary} 15%, transparent 80%)` }} />
+            <div style={{ position: 'relative', zIndex: 5 }}>
+              <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Join BagSearch</h1>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', margin: '4px 0 0', fontWeight: 500 }}>Step into the future of luxury.</p>
             </div>
           </div>
 
-          {/* Right Form */}
-          <div className="form-panel" style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            background: C.surface,
-            overflowY: 'auto',
-          }}>
-            <div style={{ maxWidth: 480, width: '100%', display: 'flex', flexDirection: 'column', gap: 22, padding: '32px 0 40px' }}>
+          <div className="bottom-sheet">
+            <div style={{ marginBottom: 22 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.02em', marginBottom: 6 }}>
+                Create Account
+              </h2>
+              <p style={{ color: C.textMuted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>
+                Enter your details to get started.
+              </p>
+            </div>
+
+            {/* Error */}
+            {errorMessage && (
+              <div role="alert" style={{
+                padding: '10px 14px',
+                background: C.primaryBg, border: `1px solid ${C.primary}`,
+                color: C.primary, borderRadius: 10, fontSize: 14, marginBottom: 16, lineHeight: 1.5,
+              }}>
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Role toggle */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ marginBottom: 8, fontSize: 11.5, fontWeight: 700, color: C.textMuted, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                I am a…
+              </p>
+              <div className="role-track">
+                <div className={`role-pill ${formData.role}`}><div className="pill-shimmer" /></div>
+                <button type="button" className={`role-btn ${formData.role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('buyer')}>
+                  <span className="role-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                      stroke={formData.role === 'buyer' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <path d="M16 10a4 4 0 01-8 0"/>
+                    </svg>
+                  </span>
+                  Buyer
+                  <span className="role-dot" />
+                </button>
+                <button type="button" className={`role-btn ${formData.role === 'seller' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('seller')}>
+                  <span className="role-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                      stroke={formData.role === 'seller' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                      <path d="M9 11l3-3 3 3"/>
+                    </svg>
+                  </span>
+                  Seller
+                  <span className="role-dot" />
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }} noValidate>
 
               <div>
-                <h2 style={{ fontSize: 32, fontWeight: 900, color: C.text, lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 8 }}>
-                  Create your account
-                </h2>
-                <p style={{ color: C.textMuted, fontSize: 15, fontWeight: 400, margin: 0 }}>
-                  Ready to explore or start selling with BagSearch?
-                </p>
+                <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Full Name</label>
+                <input
+                  className="m-input fr"
+                  placeholder="Full Name"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.fullName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.fullName}</span>}
               </div>
 
-              {/* Error Banner */}
-              {errorMessage && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                  padding: '14px 16px',
-                  borderRadius: 12,
-                  border: `1px solid ${C.danger}40`,
-                  background: C.dangerBg,
-                }}>
-                  <div style={{
-                    flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
-                    background: '#FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span className="material-symbols-outlined" style={{ color: C.danger, fontSize: 14, fontVariationSettings: "'FILL' 1" }}>error</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#991B1B', margin: '0 0 4px' }}>Registration failed</p>
-                    <p style={{ fontSize: 12, color: '#B91C1C', lineHeight: 1.5, margin: 0 }}>{errorMessage}</p>
-                  </div>
-                  <button onClick={() => setErrorMessage('')} style={{ flexShrink: 0, background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', padding: 2 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+              <div>
+                <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Email</label>
+                <input
+                  className="m-input fr"
+                  type="email"
+                  placeholder="example@email.com"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.email && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Phone (WhatsApp)</label>
+                <input
+                  className="m-input fr"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+                {errors.phone && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="m-input fr"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    style={{ paddingRight: 48 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    style={{
+                      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: C.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 4, WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{showPassword ? 'visibility_off' : 'visibility'}</span>
                   </button>
                 </div>
-              )}
-
-              {/* Role Toggle */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ color: C.text, fontSize: 14, fontWeight: 600, margin: 0 }}>How do you want to join?</p>
-                <div className="role-track">
-                  <div className={`role-pill ${formData.role}`}>
-                    <div className="pill-shimmer" />
-                  </div>
-                  {['buyer', 'seller'].map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      className={`role-btn ${formData.role === r ? 'active' : 'inactive'}`}
-                      onClick={() => handleRoleChange(r)}
-                    >
-                      <span className="role-icon-wrap">
-                        {r === 'buyer' ? (
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                            stroke={formData.role === 'buyer' ? '#fff' : C.primary}
-                            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                            <line x1="3" y1="6" x2="21" y2="6" />
-                            <path d="M16 10a4 4 0 01-8 0" />
-                          </svg>
-                        ) : (
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                            stroke={formData.role === 'seller' ? '#fff' : C.primary}
-                            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                            <line x1="8" y1="21" x2="16" y2="21" />
-                            <line x1="12" y1="17" x2="12" y2="21" />
-                            <path d="M9 11l3-3 3 3" />
-                          </svg>
-                        )}
-                      </span>
-                      Join as {r.charAt(0).toUpperCase() + r.slice(1)}
-                      <span className="role-dot" />
-                    </button>
-                  ))}
-                </div>
-                <div>
-                  <span className="role-status-label">
-                    {formData.role === 'buyer' ? '🛍 Shopping mode' : '🏪 Store mode'}
-                  </span>
-                </div>
+                {errors.password && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.password}</span>}
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-                {/* Full Name */}
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Full Name</span>
-                  <input
-                    className="reg-input"
-                    placeholder="Enter your full name"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                  />
-                  {errors.fullName && <span style={{ color: C.danger, fontSize: 12 }}>{errors.fullName}</span>}
-                </label>
-
-                {/* Email */}
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Email Address</span>
-                  <input
-                    className="reg-input"
-                    placeholder="name@example.com"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                  {errors.email && <span style={{ color: C.danger, fontSize: 12 }}>{errors.email}</span>}
-                </label>
-
-                {/* Phone */}
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Phone Number</span>
-                    <span style={{
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px', background: C.primaryBg, borderRadius: 4,
-                      color: C.primary, fontSize: 10, fontWeight: 700,
-                      textTransform: 'uppercase', letterSpacing: '0.05em',
-                    }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 12 }}>chat</span>
-                      WhatsApp
-                    </span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 4 }}>
+                <div
+                  role="checkbox"
+                  aria-checked={formData.terms}
+                  tabIndex={0}
+                  onClick={() => setFormData(f => ({ ...f, terms: !f.terms }))}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <div className={`m-check fr${formData.terms ? ' checked' : ''}`}>
+                    {formData.terms && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                        stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
                   </div>
-                  <input
-                    className="reg-input"
-                    placeholder="+1 (555) 000-0000"
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                  />
-                  <span style={{ fontSize: 12, color: C.textMuted }}>
-                    We'll send order updates via WhatsApp.
-                  </span>
-                  {errors.phone && <span style={{ color: C.danger, fontSize: 12 }}>{errors.phone}</span>}
-                </label>
-
-                {/* Password */}
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ color: C.text, fontSize: 14, fontWeight: 600 }}>Password</span>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      className="reg-input"
-                      style={{ paddingRight: 48 }}
-                      placeholder="Create a strong password"
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                        background: 'transparent', border: 'none', color: C.textMuted, cursor: 'pointer', padding: 4,
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                      onMouseLeave={e => e.currentTarget.style.color = C.textMuted}>
-                      <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
-                    </button>
-                  </div>
-                  {errors.password && <span style={{ color: C.danger, fontSize: 12 }}>{errors.password}</span>}
-                </label>
-
-                {/* Terms */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    name="terms"
-                    checked={formData.terms}
-                    onChange={handleChange}
-                    required
-                    style={{ marginTop: 2, width: 18, height: 18, accentColor: C.primary, cursor: 'pointer', flexShrink: 0 }}
-                  />
-                  <label htmlFor="terms" style={{ fontSize: 14, color: C.text, lineHeight: 1.5, cursor: 'pointer' }}>
-                    I agree to the{' '}
-                    <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
-                       onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                       onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Terms of Service</a>
-                    {' '}and{' '}
-                    <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}
-                       onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                       onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>Privacy Policy</a>.
-                  </label>
                 </div>
-                {errors.terms && <span style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</span>}
-
-                {/* Submit */}
-                <button
-                  disabled={loading}
-                  type="submit"
-                  style={{
-                    width: '100%', height: 54,
-                    background: C.primary,
-                    color: C.textLight,
-                    fontSize: 15, fontWeight: 700,
-                    border: 'none', borderRadius: 8,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'background 0.2s, transform 0.15s',
-                    boxShadow: `0 4px 14px ${C.primary}50`,
-                    opacity: loading ? 0.7 : 1,
-                    marginTop: 4,
-                  }}
-                  onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
-                  onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = 'none'; }}}>
-                  {loading ? 'Creating Account…' : 'Create Account'}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div style={{ position: 'relative', padding: '4px 0' }}>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
-                  <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
-                </div>
-                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                  <span style={{ background: C.surface, padding: '0 16px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase' }}>
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              {/* Google */}
-              <button
-                onClick={handleGoogleAuth}
-                disabled={loading}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  height: 48,
-                  border: `1px solid ${C.border}`, borderRadius: 8,
-                  background: 'transparent', color: C.text,
-                  fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.2s', opacity: loading ? 0.7 : 1,
-                  fontFamily: 'inherit',
-                }}
-                onMouseEnter={e => !loading && (e.currentTarget.style.background = C.primaryBg)}
-                onMouseLeave={e => !loading && (e.currentTarget.style.background = 'transparent')}>
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Google
-              </button>
-
-              {/* Login link */}
-              <p style={{ textAlign: 'center', color: C.textMuted, fontSize: 14, fontWeight: 500, margin: 0 }}>
-                Already have an account?{' '}
-                <span
-                  onClick={() => navigate('/login?force=true')}
-                  style={{ color: C.primary, fontWeight: 700, cursor: 'pointer', marginLeft: 2 }}
-                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
-                  Login
+                <span style={{ fontSize: 12, color: C.textMid, fontWeight: 500, lineHeight: 1.4 }}>
+                  I agree to the <a href="#" style={{ color: C.primary, fontWeight: 700 }}>Terms</a> and <a href="#" style={{ color: C.primary, fontWeight: 700 }}>Privacy</a>.
                 </span>
-              </p>
+              </div>
 
+              <button type="submit" className="m-submit fr" disabled={loading} style={{ marginTop: 6 }}>
+                {loading ? 'Verifying…' : 'Create Account'}
+              </button>
+            </form>
+
+            <div style={{ position: 'relative', padding: '18px 0' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
+              </div>
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <span style={{ background: C.surface, padding: '0 14px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase' }}>
+                  Or
+                </span>
+              </div>
             </div>
+
+            <button className="m-social fr" onClick={handleGoogleAuth} disabled={loading} type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google
+            </button>
+
+            <p style={{ textAlign: 'center', fontSize: 14, color: C.textMuted, margin: '18px 0 0' }}>
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/login?force=true')}
+                className="fr"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: C.primary, fontWeight: 700, fontSize: 14,
+                  padding: 0, fontFamily: 'inherit',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Login
+              </button>
+            </p>
+
           </div>
-        </main>
+        </div>
 
-        {/* Mobile footer */}
-        <footer className="mobile-footer" style={{
-          padding: '16px 24px',
-          borderTop: `1px solid ${C.border}`,
-          background: C.surface,
-          textAlign: 'center',
-        }}>
-          <p style={{ color: C.textMuted, fontSize: 12, margin: 0 }}>© 2024 BagSearch. All rights reserved.</p>
-        </footer>
-
-        {/* Simple Success Toast */}
-        <SuccessToast show={showSuccess} onClose={() => setShowSuccess(false)} />
       </div>
-    </>
+    </div>
   );
 };
 

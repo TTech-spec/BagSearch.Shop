@@ -186,6 +186,16 @@ function App() {
             }
           />
 
+          {/* Vendor Details - protected behind login */}
+          <Route
+            path="/vendor/:id"
+            element={
+              <PrivateRoute>
+                <Product />
+              </PrivateRoute>
+            }
+          />
+
           {/* Create Product - protected behind login */}
           <Route
             path="/upload-product"

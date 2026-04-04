@@ -1,5 +1,5 @@
-import { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
 import { visualSearch } from './services/visualSearch';
@@ -1536,7 +1536,7 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Product(){
-  const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);
+  const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
@@ -1554,6 +1554,16 @@ export default function Product(){
   const[dismissedAds,setDismissedAds]=useState([]);
   const[mobileAuthPromptOpen,setMobileAuthPromptOpen]=useState(false);
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
+
+  // Handle vendor detail view from URL
+  useEffect(() => {
+    if (params.id && vendors.length > 0) {
+      const vendor = vendors.find(v => v.id === params.id || v.seller_id === params.id);
+      if (vendor && !selectedVendorDetail) {
+        setSelectedVendorDetail(vendor);
+      }
+    }
+  }, [params.id, vendors, selectedVendorDetail]);
 
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
   const isMobile=windowWidth<=768;
@@ -1604,13 +1614,54 @@ export default function Product(){
 
   const fetchVendors=useCallback(async(products)=>{
     try{
+      // Build base vendor list from products
+      const derived=buildVendorsFromProducts(products||[]);
+
+      // Get all product IDs grouped by seller
+      const sellerProductIds={};
+      (products||[]).forEach(p=>{
+        const sid=p.sellerId||p.seller||`seller_${p.id}`;
+        if(!sellerProductIds[sid])sellerProductIds[sid]=[];
+        if(p.id)sellerProductIds[sid].push(p.id);
+      });
+
+      // Fetch real view counts from product_views
+      const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
+      if(allProductIds.length>0){
+        const{data:viewRows}=await supabase
+          .from('product_views')
+          .select('product_id')
+          .in('product_id',allProductIds);
+
+        // Count views per product
+        const viewCountMap={};
+        (viewRows||[]).forEach(row=>{
+          viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;
+        });
+
+        // Sum views per seller
+        derived.forEach(vendor=>{
+          const pids=sellerProductIds[vendor.id]||[];
+          vendor.views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);
+        });
+      }
+
+      // Try vendors table for extra metadata (name, avatar, etc.)
       const{data,error}=await supabase.from('vendors').select('*');
       if(!error&&Array.isArray(data)&&data.length>0){
-        const normalized=data.map(v=>({id:v.id||v.seller_id||v.name,name:v.name||'Unnamed Seller',avatar:v.avatar||'👜',location:v.location||'all',rating:v.rating??4.6,reviews:v.reviews??0,views:v.views??0,products:v.products??0,joined:v.joined||'N/A',specialty:v.specialty||'Bags',badge:v.badge||'',description:v.description||'Luxe seller',tags:Array.isArray(v.tags)?v.tags:[v.specialty||'bags'],colors:Array.isArray(v.colors)&&v.colors.length>0?v.colors:['#c84b11','#f97316']}));
-        setVendors(normalized);setFilteredVendors(normalized);return normalized;
+        const metaMap=new Map(data.map(v=>[v.id||v.seller_id,v]));
+        const merged=derived.map(v=>{
+          const meta=metaMap.get(v.id);
+          if(!meta)return v;
+          return{...v,name:meta.name||v.name,avatar:meta.avatar||v.avatar,rating:meta.rating??v.rating,reviews:meta.reviews??v.reviews,badge:meta.badge||v.badge,description:meta.description||v.description};
+        });
+        setVendors(merged);setFilteredVendors(merged);return merged;
       }
-      const derived=buildVendorsFromProducts(products||[]);setVendors(derived);setFilteredVendors(derived);return derived;
-    }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendors(derived);setFilteredVendors(derived);return derived;}
+      setVendors(derived);setFilteredVendors(derived);return derived;
+    }catch(err){
+      const derived=buildVendorsFromProducts(products||[]);
+      setVendors(derived);setFilteredVendors(derived);return derived;
+    }
   },[buildVendorsFromProducts]);
 
   const fetchProducts=useCallback(async(locationId='all')=>{
@@ -2007,6 +2058,10 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [editRating, setEditRating] = useState(5);
+  const [updatingReview, setUpdatingReview] = useState(false);
   const [views, setViews] = useState([]);
   const [totalViewsCount, setTotalViewsCount] = useState(0);
   const [viewsLoading, setViewsLoading] = useState(false);
@@ -2041,31 +2096,31 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     
     try {
       setViewsLoading(true);
-      const productIds = vendorProducts.map(p => p.id).filter(Boolean);
+      const productIds = vendorProducts.map(p => p.id);
+      if (productIds.length === 0) return;
       
-      const { data: viewsData, count: viewsCount, error: viewsError } = await supabase
+      const { data, count, error } = await supabase
         .from('product_views')
         .select(`
-          id,
-          viewed_at,
-          source,
-          buyer_name,
-          buyer_phone,
+          id, 
+          viewed_at, 
+          buyer_name, 
+          buyer_phone, 
           buyer_email,
-          products:product_id(id, name, images),
-          users:buyer_id(full_name, email, phone)
+          buyer_id,
+          product_id,
+          products:product_id(id,name,images),
+          users:buyer_id(full_name,email,phone)
         `, { count: 'exact' })
         .in('product_id', productIds)
         .order('viewed_at', { ascending: false })
         .limit(20);
-      
-      if (!viewsError) {
-        setTotalViewsCount(viewsCount || 0);
-        setViews(viewsData || []);
+        
+      if (!error) {
+        setTotalViewsCount(count || 0);
+        setViews(data || []);
       } else {
-        console.error('Error fetching vendor views:', viewsError);
-        setTotalViewsCount(0);
-        setViews([]);
+        console.error('Error fetching vendor views:', error);
       }
     } catch (err) {
       console.error('Failed to fetch vendor views:', err);
@@ -2090,6 +2145,57 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     finally { setSubmittingReview(false); }
   };
 
+  const handleEditReview = (review) => {
+    setEditingReview(review.id);
+    setEditText(review.text);
+    setEditRating(review.rating);
+  };
+
+  const handleUpdateReview = async () => {
+    if (!editText.trim() || !editingReview) return;
+    setUpdatingReview(true);
+    try {
+      const { data, error } = await supabase
+        .from('seller_reviews')
+        .update({ 
+          rating: editRating, 
+          text: editText.trim()
+        })
+        .eq('id', editingReview)
+        .select();
+      
+      if (!error) {
+        const updated = data?.[0];
+        setReviews(prev => prev.map(r => r.id === editingReview ? { ...r, ...(updated || {}), rating: editRating, text: editText.trim(), updated_at: new Date().toISOString() } : r));
+        setEditingReview(null);
+        setEditText('');
+        setEditRating(5);
+      } else if (error) {
+        console.error('Error updating review:', error);
+      }
+    } catch (err) {
+      console.error('Failed to update review:', err);
+    } finally {
+      setUpdatingReview(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReview(null);
+    setEditText('');
+    setEditRating(5);
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+    try {
+      const { error } = await supabase.from('seller_reviews').delete().eq('id', reviewId);
+      if (!error) {
+        setReviews(prev => prev.filter(r => r.id !== reviewId));
+      }
+    } catch (err) { console.error('Failed to delete review:', err); }
+  };
+
   const displayName = profile?.brand_name || profile?.full_name || vendor.name;
   const displayAvatar = profile?.avatar_url
     ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="Avatar" />
@@ -2105,9 +2211,31 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         <Icon name="arrow_back" size={18} /> Back to Vendors
       </button>
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
-        <div style={{ width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0 }}>{displayAvatar}</div>
+        <div 
+          onClick={() => navigate(`/vendor/${vendor.id}`)}
+          style={{ 
+            width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0,
+            cursor:'pointer',
+            transition:'transform 0.2s ease'
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform='scale(1.05)'}
+          onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
+        >
+          {displayAvatar}
+        </div>
         <div style={{ flex:1, minWidth:200 }}>
-          <h2 style={{ fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em' }}>{displayName}</h2>
+          <h2 
+            onClick={() => navigate(`/vendor/${vendor.id}`)}
+            style={{ 
+              fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em',
+              cursor:'pointer',
+              transition:'color 0.2s ease'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color='#c84b11'}
+            onMouseLeave={e => e.currentTarget.style.color='#1a0a00'}
+          >
+            {displayName}
+          </h2>
           <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap' }}>
             {avgRating && <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icon name="star" size={16}/> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}
             <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Product{vendorProducts.length!==1?'s':''}</span>
@@ -2125,7 +2253,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
       </div>
       
       {/* Recent Views Section */}
-      <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f0d9cc',marginBottom:32 }}>
+      <div style={{ background:'white',borderRadius:24,padding:'32px 40px',marginBottom:32 }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Recent Product Views</h3>
         {viewsLoading ? (
           <div style={{ textAlign:'center',padding:'40px 0',color:'#9a6348' }}>
@@ -2237,6 +2365,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         )}
       </div>
       
+      <React.Fragment>
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f7ece4' }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Reviews & Comments</h3>
         <form onSubmit={handleSubmitReview} style={{ background:'#fdf8f5',padding:24,borderRadius:16,marginBottom:32,border:'1px solid #f0d9cc' }}>
@@ -2250,26 +2379,135 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
             {submittingReview ? 'Posting…' : 'Post Review'}
           </button>
         </form>
-        <div>
-          {reviews.length === 0
-            ? <p style={{ color:'#c4957a',fontSize:13,textAlign:'center',padding:'24px 0' }}>No reviews yet. Be the first!</p>
-            : reviews.map(r=>(
-            <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
-              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
-                <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                  <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{(r.author_name||'A').charAt(0)}</div>
-                  <div>
-                    <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author_name || 'Anonymous'}</div>
-                    <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</div>
+      </div>
+      
+      {reviews.length === 0
+        ? <p style={{ color:'#c4957a',fontSize:13,textAlign:'center',padding:'24px 0' }}>No reviews yet. Be the first!</p>
+        : reviews.map(r=>(
+          <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
+            {editingReview === r.id ? (
+              // Edit form
+              <div style={{ background:'#fdf8f5',padding:16,borderRadius:12,border:'1px solid #f0d9cc' }}>
+                <h4 style={{ fontSize:15,fontWeight:800,color:'#1a0a00',marginBottom:12 }}>Edit Your Review</h4>
+                <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:16 }}>
+                  <span style={{ fontSize:13,fontWeight:700,color:'#5c3317' }}>Rating:</span>
+                  {[1,2,3,4,5].map(star=>(
+                    <button key={star} type="button" onClick={()=>setEditRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}>
+                      <Icon name="star" size={24} style={{ color:star<=editRating?'#f97316':'#f0d9cc' }}/>
+                    </button>
+                  ))}
+                </div>
+                <textarea 
+                  value={editText} 
+                  onChange={e=>setEditText(e.target.value)} 
+                  placeholder="Update your review..." 
+                  style={{ 
+                    width:'100%',
+                    padding:16,
+                    borderRadius:12,
+                    border:'1.5px solid #f0d9cc',
+                    background:'white',
+                    minHeight:100,
+                    resize:'vertical',
+                    fontSize:14,
+                    fontFamily:'inherit',
+                    marginBottom:16,
+                    outline:'none',
+                    color:'#1a0a00' 
+                  }}
+                />
+                <div style={{ display:'flex',gap:8 }}>
+                  <button 
+                    onClick={handleUpdateReview}
+                    disabled={updatingReview}
+                    style={{ 
+                      padding:'10px 20px',
+                      background:'linear-gradient(135deg, #c84b11, #f97316)',
+                      color:'white',
+                      border:'none',
+                      borderRadius:10,
+                      fontWeight:800,
+                      fontSize:14,
+                      cursor:updatingReview?'default':'pointer',
+                      opacity:updatingReview?0.7:1 
+                    }}>
+                    {updatingReview ? 'Updating…' : 'Update Review'}
+                  </button>
+                  <button 
+                    onClick={handleCancelEdit}
+                    style={{ 
+                      padding:'10px 20px',
+                      background:'white',
+                      color:'#c84b11',
+                      border:'1.5px solid #f0d9cc',
+                      borderRadius:10,
+                      fontWeight:700,
+                      fontSize:14,
+                      cursor:'pointer' 
+                    }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Normal review display
+              <React.Fragment>
+                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                    <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{(r.author_name||'A').charAt(0)}</div>
+                    <div>
+                      <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author_name || 'Anonymous'}</div>
+                      <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>
+                        {r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}
+                        {r.updated_at && r.updated_at !== r.created_at && ' (edited)'}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+                    <div style={{ display:'flex',gap:2 }}>
+                      {[1,2,3,4,5].map(star=>(<Icon key={star} name="star" size={14} style={{ color:star<=r.rating?'#f97316':'#f0d9cc' }}/>))}
+                    </div>
+                    {user && (r.author_name === authorName || r.user_id === user?.id) && (
+                      <div style={{ display:'flex',gap:4 }}>
+                        <button
+                          onClick={()=>handleEditReview(r)}
+                          style={{ 
+                            background:'none', 
+                            border:'none', 
+                            color:'#9a6348', 
+                            cursor:'pointer', 
+                            padding:'2px',
+                            borderRadius:'2px',
+                            fontSize:12
+                          }}
+                          title="Edit review"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={()=>handleDeleteReview(r.id)}
+                          style={{ 
+                            background:'none', 
+                            border:'none', 
+                            color:'#dc2626', 
+                            cursor:'pointer', 
+                            padding:'2px',
+                            borderRadius:'2px',
+                            fontSize:12
+                          }}
+                          title="Delete review"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div style={{ display:'flex',gap:2 }}>{[1,2,3,4,5].map(star=>(<Icon key={star} name="star" size={14} style={{ color:star<=r.rating?'#f97316':'#f0d9cc' }}/>))}</div>
-              </div>
-              <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,paddingLeft:46 }}>{r.text}</p>
-            </div>
+                <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.5,margin:0 }}>{r.text}</p>
+              </React.Fragment>
+            )}</div>
           ))}
-        </div>
-      </div>
+      </React.Fragment>
     </div>
   );
 }

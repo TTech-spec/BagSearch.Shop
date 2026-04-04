@@ -11,10 +11,6 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'credentialless',
-    },
   },
   build: {
     chunkSizeWarningLimit: 1000, // Increase warning threshold to 1000 kB

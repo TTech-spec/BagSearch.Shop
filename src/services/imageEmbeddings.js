@@ -7,6 +7,8 @@ let extractorPromise = null;
 // Always fetch model files from Hugging Face CDN — never try to resolve locally
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+// Use single-threaded WASM — no SharedArrayBuffer needed, works without COEP headers
+env.backends.onnx.wasm.numThreads = 1;
 
 async function getExtractor() {
   if (!extractorPromise) {
