@@ -1,26 +1,26 @@
 /**
  * backfill_embeddings.mjs
  *
- * Generates CLIP image embeddings for all existing products that don't
- * have a row in product_image_embeddings yet, then upserts them.
+ * Generates canvas-based color histogram embeddings for all existing products
+ * that don't have a row in product_image_embeddings yet, then upserts them.
  *
  * Usage:
- *   node backfill_embeddings.mjs
+ *   node --env-file=.env backfill_embeddings.mjs
  *
- * Requires in .env:
- *   VITE_SUPABASE_URL=...
- *   VITE_SUPABASE_ANON_KEY=...
+ * Requires:
+ *   npm install canvas
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { pipeline } from '@xenova/transformers';
+import { createCanvas, loadImage } from 'canvas';
 
-// ─── Config ───────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const MODEL        = 'Xenova/clip-vit-base-patch32';
-const BATCH_SIZE   = 5;   // products processed in parallel per batch
-const DELAY_MS     = 300; // ms between batches to avoid rate limits
+const MODEL        = 'canvas-color-histogram-v1';
+const GRID         = 8;
+const COLOR_BINS   = 8;
+const BATCH_SIZE   = 8;
+const DELAY_MS     = 200;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌  Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env');
@@ -29,120 +29,94 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-let extractor = null;
-async function getExtractor() {
-  if (!extractor) {
-    console.log(`⏳  Loading CLIP model (${MODEL}) — first run downloads ~170 MB…`);
-    extractor = await pipeline('feature-extraction', MODEL);
-    console.log('✅  Model loaded');
-  }
-  return extractor;
-}
-
-function toArray(output) {
-  if (!output) return [];
-  if (Array.isArray(output)) return output;
-  if (output.data && typeof output.data.length === 'number') return Array.from(output.data);
-  return [];
+function rgbToHue(r, g, b) {
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  if (max === min) return 0;
+  const d = max - min;
+  let h;
+  if (max === r) h = ((g-b)/d + (g<b?6:0))/6;
+  else if (max === g) h = ((b-r)/d + 2)/6;
+  else h = ((r-g)/d + 4)/6;
+  return h;
 }
 
 async function generateEmbedding(imageUrl) {
   try {
-    const ext = await getExtractor();
-    const out = await ext(imageUrl, { pooling: 'mean', normalize: true });
-    return toArray(out);
+    const img = await loadImage(imageUrl);
+    const size = GRID * 16;
+    const canvas = createCanvas(size, size);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, size, size);
+    const { data } = ctx.getImageData(0, 0, size, size);
+    const vec = new Float32Array(GRID * GRID * COLOR_BINS);
+    const cellW = size / GRID, cellH = size / GRID;
+
+    for (let gy = 0; gy < GRID; gy++) {
+      for (let gx = 0; gx < GRID; gx++) {
+        const hist = new Float32Array(COLOR_BINS);
+        for (let py = 0; py < cellH; py++) {
+          for (let px = 0; px < cellW; px++) {
+            const x = Math.floor(gx*cellW+px), y = Math.floor(gy*cellH+py);
+            const i = (y*size+x)*4;
+            const r=data[i]/255, g=data[i+1]/255, b=data[i+2]/255;
+            const sat = Math.max(r,g,b)-Math.min(r,g,b);
+            const hue = rgbToHue(r,g,b);
+            const bin = Math.min(Math.floor(hue*COLOR_BINS), COLOR_BINS-1);
+            hist[bin] += sat > 0.1 ? 1 : 0.1;
+          }
+        }
+        const sum = hist.reduce((a,v)=>a+v,0)||1;
+        const base = (gy*GRID+gx)*COLOR_BINS;
+        for (let b=0;b<COLOR_BINS;b++) vec[base+b]=hist[b]/sum;
+      }
+    }
+    return Array.from(vec);
   } catch (err) {
-    console.warn(`  ⚠️  Embedding failed for ${imageUrl}: ${err.message}`);
+    console.warn(`  ⚠️  Failed: ${err.message}`);
     return [];
   }
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('\n🔍  Fetching products without embeddings…\n');
 
-  // 1. Get all product IDs that already have embeddings
-  const { data: existing, error: existErr } = await supabase
-    .from('product_image_embeddings')
-    .select('product_id');
-
-  if (existErr) {
-    console.error('❌  Could not fetch existing embeddings:', existErr.message);
-    process.exit(1);
-  }
-
-  const alreadyDone = new Set((existing || []).map(r => r.product_id));
+  const { data: existing } = await supabase.from('product_image_embeddings').select('product_id');
+  const alreadyDone = new Set((existing||[]).map(r=>r.product_id));
   console.log(`   Already embedded: ${alreadyDone.size} products`);
 
-  // 2. Fetch all products
-  const { data: products, error: prodErr } = await supabase
-    .from('products')
-    .select('id, name, images')
-    .order('created_at', { ascending: true });
+  const { data: products, error } = await supabase
+    .from('products').select('id,name,images').order('created_at',{ascending:true});
+  if (error) { console.error('❌  Could not fetch products:', error.message); process.exit(1); }
 
-  if (prodErr) {
-    console.error('❌  Could not fetch products:', prodErr.message);
-    process.exit(1);
-  }
-
-  // 3. Filter to only those missing embeddings and that have at least one image
-  const todo = (products || []).filter(p => {
+  const todo = (products||[]).filter(p => {
     if (alreadyDone.has(p.id)) return false;
     const imgs = Array.isArray(p.images) ? p.images : [];
     return imgs.length > 0 && imgs[0];
   });
 
-  if (todo.length === 0) {
-    console.log('🎉  All products already have embeddings. Nothing to do!');
-    return;
-  }
-
+  if (!todo.length) { console.log('🎉  All products already have embeddings!'); return; }
   console.log(`📦  ${todo.length} products need embeddings\n`);
 
-  let done = 0;
-  let failed = 0;
+  let done=0, failed=0;
 
-  // 4. Process in batches
-  for (let i = 0; i < todo.length; i += BATCH_SIZE) {
-    const batch = todo.slice(i, i + BATCH_SIZE);
-
+  for (let i=0; i<todo.length; i+=BATCH_SIZE) {
+    const batch = todo.slice(i, i+BATCH_SIZE);
     await Promise.all(batch.map(async (product) => {
       const imageUrl = Array.isArray(product.images) ? product.images[0] : null;
       if (!imageUrl) { failed++; return; }
-
-      process.stdout.write(`  [${done + failed + 1}/${todo.length}] ${product.name || product.id} … `);
-
+      process.stdout.write(`  [${done+failed+1}/${todo.length}] ${product.name||product.id} … `);
       const embedding = await generateEmbedding(imageUrl);
-      if (!embedding.length) {
-        process.stdout.write('SKIP (no embedding)\n');
-        failed++;
-        return;
-      }
-
+      if (!embedding.length) { process.stdout.write('SKIP\n'); failed++; return; }
       const { error: upsertErr } = await supabase
         .from('product_image_embeddings')
-        .upsert([{
-          product_id: product.id,
-          image_url:  imageUrl,
-          embedding,
-          model:      MODEL,
-        }], { onConflict: 'product_id' });
-
-      if (upsertErr) {
-        process.stdout.write(`FAIL (${upsertErr.message})\n`);
-        failed++;
-      } else {
-        process.stdout.write('✅\n');
-        done++;
-      }
+        .upsert([{product_id:product.id, image_url:imageUrl, embedding, model:MODEL}],
+          {onConflict:'product_id'});
+      if (upsertErr) { process.stdout.write(`FAIL (${upsertErr.message})\n`); failed++; }
+      else { process.stdout.write('✅\n'); done++; }
     }));
-
-    if (i + BATCH_SIZE < todo.length) await sleep(DELAY_MS);
+    if (i+BATCH_SIZE < todo.length) await sleep(DELAY_MS);
   }
 
   console.log(`\n─────────────────────────────────────`);
@@ -151,7 +125,4 @@ async function main() {
   console.log(`─────────────────────────────────────\n`);
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+main().catch(err => { console.error('Fatal:', err); process.exit(1); });

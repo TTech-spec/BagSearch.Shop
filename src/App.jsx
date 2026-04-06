@@ -196,6 +196,16 @@ function App() {
             }
           />
 
+          {/* Seller profile links - protected behind login */}
+          <Route
+            path="/seller/:slug"
+            element={
+              <PrivateRoute>
+                <Product />
+              </PrivateRoute>
+            }
+          />
+
           {/* Create Product - protected behind login */}
           <Route
             path="/upload-product"

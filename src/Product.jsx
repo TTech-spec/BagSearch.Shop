@@ -288,6 +288,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
                 </span>
                 My Profile
               </button>
+              
             )}
           </div>
         </div>
@@ -335,9 +336,9 @@ function SiteFooter({ navigate, user, handleLogout }) {
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Sellers</p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {col([
-              { label: 'Start Selling', href: '/register' },
-              { label: 'Seller Dashboard', href: '/seller-profile' },
-              { label: 'Vendor Directory', href: '/products' },
+                { label: 'Start Selling', href: '/register' },
+                { label: 'Seller Dashboard', href: '/seller-profile' },
+                { label: 'Vendor Directory', href: '/products' },
               { label: 'Pricing & Fees', href: '/' },
               { label: 'Seller Guidelines', href: '/' },
             ])}
@@ -1554,16 +1555,24 @@ export default function Product(){
   const[dismissedAds,setDismissedAds]=useState([]);
   const[mobileAuthPromptOpen,setMobileAuthPromptOpen]=useState(false);
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
+  const vendorRouteParam = params.id || params.slug || '';
 
   // Handle vendor detail view from URL
   useEffect(() => {
-    if (params.id && vendors.length > 0) {
-      const vendor = vendors.find(v => v.id === params.id || v.seller_id === params.id);
-      if (vendor && !selectedVendorDetail) {
-        setSelectedVendorDetail(vendor);
-      }
+    if (!vendorRouteParam || vendors.length === 0) return;
+
+    const normalizedParam = vendorRouteParam.toLowerCase();
+    const vendor = vendors.find(v => {
+      const vendorId = String(v.id || '').toLowerCase();
+      const vendorSlug = String(v.profile_slug || v.slug || '').toLowerCase();
+      return vendorId === normalizedParam || vendorSlug === normalizedParam;
+    });
+
+    if (vendor) {
+      setSelectedVendorDetail(vendor);
+      setActiveTab('vendorDetail');
     }
-  }, [params.id, vendors, selectedVendorDetail]);
+  }, [vendorRouteParam, vendors]);
 
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
   const isMobile=windowWidth<=768;
@@ -1614,50 +1623,69 @@ export default function Product(){
 
   const fetchVendors=useCallback(async(products)=>{
     try{
-      // Build base vendor list from products
-      const derived=buildVendorsFromProducts(products||[]);
+      // 1. Fetch ALL sellers from users table directly
+      const { data: sellerRows } = await supabase
+        .from('users')
+        .select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug')
+        .eq('role','seller');
 
-      // Get all product IDs grouped by seller
+      // 2. Build a map of seller products and views
       const sellerProductIds={};
+      const sellerProductCount={};
       (products||[]).forEach(p=>{
-        const sid=p.sellerId||p.seller||`seller_${p.id}`;
+        const sid=p.sellerId||p.user_id||p.seller_id;
+        if(!sid)return;
         if(!sellerProductIds[sid])sellerProductIds[sid]=[];
         if(p.id)sellerProductIds[sid].push(p.id);
+        sellerProductCount[sid]=(sellerProductCount[sid]||0)+1;
       });
 
-      // Fetch real view counts from product_views
+      // 3. Fetch real view counts
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
+      const viewCountMap={};
       if(allProductIds.length>0){
         const{data:viewRows}=await supabase
           .from('product_views')
           .select('product_id')
           .in('product_id',allProductIds);
-
-        // Count views per product
-        const viewCountMap={};
         (viewRows||[]).forEach(row=>{
           viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;
         });
-
-        // Sum views per seller
-        derived.forEach(vendor=>{
-          const pids=sellerProductIds[vendor.id]||[];
-          vendor.views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);
-        });
       }
 
-      // Try vendors table for extra metadata (name, avatar, etc.)
-      const{data,error}=await supabase.from('vendors').select('*');
-      if(!error&&Array.isArray(data)&&data.length>0){
-        const metaMap=new Map(data.map(v=>[v.id||v.seller_id,v]));
-        const merged=derived.map(v=>{
-          const meta=metaMap.get(v.id);
-          if(!meta)return v;
-          return{...v,name:meta.name||v.name,avatar:meta.avatar||v.avatar,rating:meta.rating??v.rating,reviews:meta.reviews??v.reviews,badge:meta.badge||v.badge,description:meta.description||v.description};
-        });
-        setVendors(merged);setFilteredVendors(merged);return merged;
-      }
-      setVendors(derived);setFilteredVendors(derived);return derived;
+      // 4. Build vendor list from all sellers
+      const allSellers=(sellerRows||[]).map(s=>{
+        const pids=sellerProductIds[s.user_id]||[];
+        const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);
+        const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];
+        return{
+          id:s.user_id,
+          name:s.brand_name||s.full_name||'Anonymous Seller',
+          avatar:'👜',
+          location:'all',
+          rating:4.6,
+          reviews:0,
+          views,
+          products:sellerProductCount[s.user_id]||0,
+          joined:'N/A',
+          specialty:cats[0]||'Bags',
+          badge:'',
+          description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,
+          tags:cats,
+          profile_slug:s.profile_slug||'',
+          colors:['#c84b11','#f97316'],
+        };
+      });
+
+      // 5. Also include sellers derived from products who may not be in users table
+      const knownIds=new Set(allSellers.map(v=>v.id));
+      const extra=buildVendorsFromProducts((products||[]).filter(p=>{
+        const sid=p.sellerId||p.user_id||p.seller_id;
+        return sid&&!knownIds.has(sid);
+      }));
+
+      const final=[...allSellers,...extra];
+      setVendors(final);setFilteredVendors(final);return final;
     }catch(err){
       const derived=buildVendorsFromProducts(products||[]);
       setVendors(derived);setFilteredVendors(derived);return derived;

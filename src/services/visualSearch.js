@@ -287,10 +287,9 @@ export const visualSearch = async (imageFile, allProducts) => {
     return embeddingMatches;
   }
 
-  // Imagga requires a server-side proxy — CORS blocks it in the browser.
-  // Return all products so the UI is never empty while embeddings are being set up.
+  // Return empty — don't show random products when no similar match found
   console.warn('No embedding matches found. Ensure the RLS policy allows anon reads on product_image_embeddings.');
-  return allProducts.slice(0, 20);
+  return [];
 };
 
 // Helper function to analyze match quality
