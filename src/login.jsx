@@ -6,6 +6,7 @@ import LogoIcon from './components/Logo.jsx';
 import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
+import { upsertUserProfile } from './services/userProfileService';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -232,9 +233,11 @@ const LoginPage = () => {
         console.error('Error fetching user profile:', JSON.stringify(profileError, null, 2));
       }
       const finalRole = profile?.role || role;
-      const { error: upsertError } = await supabase.from('users').upsert({
-        user_id: userId, email: sanitizedEmail, role: finalRole, updated_at: new Date(),
-      }, { onConflict: 'user_id' });
+      const { error: upsertError } = await upsertUserProfile({
+        userId,
+        email: sanitizedEmail,
+        role: finalRole,
+      });
       if (upsertError && upsertError.name !== 'AbortError') {
         console.error('Error saving user role:', JSON.stringify(upsertError, null, 2));
       }

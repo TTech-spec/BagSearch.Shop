@@ -3,6 +3,7 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase, ensureSupabaseReady } from './services/api';
+import { upsertUserProfile } from './services/userProfileService';
 import LogoIcon from './components/Logo.jsx';
 import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
 import { authLimiter } from './utils/rateLimiter';
@@ -245,15 +246,18 @@ const Reg = () => {
         return;
       }
 
+      const sanitizedFullName = sanitizeInput(formData.fullName);
+      const sanitizedEmail = sanitizeInput(formData.email);
+      const sanitizedPhone = sanitizeInput(formData.phone);
       const normalizedRole = (sanitizeInput(formData.role) || 'buyer').toLowerCase();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: sanitizeInput(formData.email),
+        email: sanitizedEmail,
         password: sanitizeInput(formData.password),
         options: {
           data: { 
-            full_name: sanitizeInput(formData.fullName), 
+            full_name: sanitizedFullName,
             role: normalizedRole, 
-            phone: sanitizeInput(formData.phone) 
+            phone: sanitizedPhone
           },
         },
       });
@@ -261,21 +265,32 @@ const Reg = () => {
       if (signUpError) throw signUpError;
       if (!data?.user) throw new Error('Registration successful, but no user data returned. Check your email for confirmation.');
 
-      const { error: insertError } = await supabase.from('users').upsert([{
-        user_id: data.user.id,
-        full_name: sanitizeInput(formData.fullName),
-        email: sanitizeInput(formData.email),
-        phone: sanitizeInput(formData.phone),
+      const { error: insertError } = await upsertUserProfile({
+        userId: data.user.id,
+        fullName: sanitizedFullName,
+        email: sanitizedEmail,
+        phone: sanitizedPhone,
         role: normalizedRole,
-      }], { onConflict: 'user_id' });
+      });
 
-      if (insertError) throw insertError;
+      // Don't block registration if profile upsert fails —
+      // the DB trigger handle_new_user already creates the row
+      if (insertError) {
+        console.warn('Profile upsert failed (non-fatal):', insertError.message);
+      }
 
       setShowSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      const secureError = SecureErrorHandler.handleError(error, 'registration');
-      setErrorMessage(secureError.message);
+      // If email already exists, redirect to login instead of showing a raw error
+      const msg = error?.message || '';
+      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already been registered') || error?.status === 422) {
+        setErrorMessage('An account with this email already exists. Redirecting to login…');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        const secureError = SecureErrorHandler.handleError(error, 'registration');
+        setErrorMessage(secureError.message);
+      }
     } finally {
       setLoading(false);
     }

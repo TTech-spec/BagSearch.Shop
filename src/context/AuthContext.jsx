@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from 'react';
 import { supabase } from '../services/api';
+import { upsertUserProfile } from '../services/userProfileService';
 
 export const AuthContext = createContext();
 
@@ -55,13 +56,13 @@ export const AuthProvider = ({ children }) => {
                 const role = metadata?.role || 'buyer';
                 const fullName = metadata?.full_name || metadata?.name || 'User';
                 
-                const { error: insertError } = await supabase.from('users').insert([{
-                  user_id: user.id,
-                  full_name: fullName,
+                const { error: insertError } = await upsertUserProfile({
+                  userId: user.id,
+                  fullName,
                   email: user.email,
-                  role: role,
-                  updated_at: new Date(),
-                }]);
+                  phone: metadata?.phone,
+                  role,
+                });
                 
                 if (insertError && insertError.name !== 'AbortError') {
                   console.error('Error creating user profile after OAuth:', insertError);

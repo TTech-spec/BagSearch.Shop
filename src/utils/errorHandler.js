@@ -25,8 +25,19 @@ export class SecureErrorHandler {
     };
     
     const errorType = this.categorizeError(error);
+    let message = genericErrors[errorType] || genericErrors.default;
+
+    // Give a more actionable message for known auth/database signup failures.
+    if (
+      context === 'registration' &&
+      typeof error?.message === 'string' &&
+      error.message.toLowerCase().includes('database error saving new user')
+    ) {
+      message = 'Registration failed because the user profile could not be created in the database. Please fix the Supabase users-table trigger or schema, then try again.';
+    }
+
     return {
-      message: genericErrors[errorType] || genericErrors.default,
+      message,
       type: errorType,
       timestamp: new Date().toISOString(),
       ...(import.meta.env.DEV && { details: error?.message })
