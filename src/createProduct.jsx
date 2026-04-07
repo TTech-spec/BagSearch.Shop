@@ -420,6 +420,7 @@ export default function CreateProduct() {
           border: 1.5px solid ${C.border}; border-radius: 12px;
           font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 500;
           color: ${C.text}; background: white; outline: none;
+          letter-spacing: normal; word-spacing: normal;
           transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease;
         }
         .field-input:focus {
@@ -1206,7 +1207,8 @@ export default function CreateProduct() {
                 <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
                   style={{
                     width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none",
-                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65, 
+                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65,
+                    letterSpacing: "normal", wordSpacing: "normal",
                     background: C.surface, whiteSpace: "pre-wrap", wordWrap: "break-word"
                   }}
                   placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />

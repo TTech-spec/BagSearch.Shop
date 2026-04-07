@@ -309,6 +309,14 @@ export const formatNotificationMessage = (notification) => {
         icon: 'visibility',
         color: '#3b82f6'
       };
+    case 'seller_review':
+    case 'review':
+      return {
+        title: notification.title || 'New Review',
+        message: notification.message || `${notification.buyer_name || 'Someone'} left you a review`,
+        icon: 'star',
+        color: '#f59e0b'
+      };
     case 'product_inquiry':
       return {
         title: notification.title || 'Product Inquiry',

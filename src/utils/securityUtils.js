@@ -4,7 +4,6 @@ export const sanitizeInput = (input, maxLength = 1000) => {
   if (typeof input !== 'string') return input;
   
   return input
-    .trim()
     .replace(/[<>]/g, '') // Remove potential XSS
     .replace(/javascript:/gi, '') // Remove javascript protocol
     .replace(/on\w+=/gi, '') // Remove event handlers
