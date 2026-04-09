@@ -16,6 +16,7 @@ const Sellerlisting = lazy(() => import('./Sellerlisting.jsx'));
 const CreateProduct = lazy(() => import('./createProduct.jsx'));
 const ForgotPassword = lazy(() => import('./forgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./resetPassword.jsx'));
+const VendorDetails = lazy(() => import('./vendorDetails.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -186,25 +187,9 @@ function App() {
             }
           />
 
-          {/* Vendor Details - protected behind login */}
-          <Route
-            path="/vendor/:id"
-            element={
-              <PrivateRoute>
-                <Product />
-              </PrivateRoute>
-            }
-          />
-
-          {/* Seller profile links - protected behind login */}
-          <Route
-            path="/seller/:slug"
-            element={
-              <PrivateRoute>
-                <Product />
-              </PrivateRoute>
-            }
-          />
+          {/* Vendor Details - public */}
+          <Route path="/vendor/:id" element={<VendorDetails />} />
+          <Route path="/seller/:slug" element={<VendorDetails />} />
 
           {/* Create Product - protected behind login */}
           <Route

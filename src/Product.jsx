@@ -1115,7 +1115,10 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
               const number = normalizeWhatsAppNumber(product.whatsapp || '');
               if (!number) return '';
               const productLink = `${window.location.origin}/products/${product.id}`;
-              const msg = `Hi, I'm interested in *${product.name}*\nPrice: ${product.discountedPrice ? '₦' + product.discountedPrice.toLocaleString() + ' (discounted)' : '₦' + product.price.toLocaleString()}\nProduct link: ${productLink}`;
+              const msg =
+                `Hi! I'm interested in *${product.name}* 👜\n` +
+                `💰 Price: ${product.discountedPrice ? '₦' + product.discountedPrice.toLocaleString() + ' (sale)' : '₦' + product.price.toLocaleString()}\n\n` +
+                `🔗 View product: ${productLink}`;
               return buildWhatsAppUrl(number, msg);
             })()}
             target="_blank" rel="noopener noreferrer"
@@ -1559,21 +1562,62 @@ export default function Product(){
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
   const vendorRouteParam = params.id || params.slug || '';
 
-  // Handle vendor detail view from URL
+  // Handle vendor detail view from URL — fetch directly if not in vendors list yet
   useEffect(() => {
-    if (!vendorRouteParam || vendors.length === 0) return;
+    if (!vendorRouteParam) return;
 
     const normalizedParam = vendorRouteParam.toLowerCase();
-    const vendor = vendors.find(v => {
+
+    // Try to find in already-loaded vendors first
+    const found = vendors.find(v => {
       const vendorId = String(v.id || '').toLowerCase();
       const vendorSlug = String(v.profile_slug || v.slug || '').toLowerCase();
       return vendorId === normalizedParam || vendorSlug === normalizedParam;
     });
 
-    if (vendor) {
-      setSelectedVendorDetail(vendor);
+    if (found) {
+      setSelectedVendorDetail(found);
       setActiveTab('vendorDetail');
+      return;
     }
+
+    // Not in list yet — fetch directly from Supabase by user_id
+    async function fetchVendorById() {
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url')
+          .eq('user_id', vendorRouteParam)
+          .maybeSingle();
+
+        if (data) {
+          const cats = Array.isArray(data.bag_categories) && data.bag_categories.length > 0
+            ? data.bag_categories : ['bags'];
+          const vendor = {
+            id: data.user_id,
+            name: data.brand_name || data.full_name || 'Seller',
+            avatar: '👜',
+            location: 'all',
+            rating: 4.6,
+            reviews: 0,
+            views: 0,
+            products: 0,
+            joined: 'N/A',
+            specialty: cats[0] || 'Bags',
+            badge: '',
+            description: data.brand_story || `Trusted seller of ${cats[0] || 'bags'}`,
+            tags: cats,
+            colors: ['#c84b11', '#f97316'],
+          };
+          setSelectedVendorDetail(vendor);
+          setActiveTab('vendorDetail');
+        }
+      } catch (e) {
+        console.error('Failed to fetch vendor by id:', e);
+      }
+    }
+
+    fetchVendorById();
   }, [vendorRouteParam, vendors]);
 
   const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
@@ -1787,7 +1831,7 @@ export default function Product(){
     finally{setVisualSearching(false);e.target.value='';}
   };
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
-  const handleViewVendorProducts=useCallback((vendor)=>{setSelectedVendorDetail(vendor);setActiveTab('vendorDetail');},[]);
+  const handleViewVendorProducts=useCallback((vendor)=>{navigate(`/vendor/${vendor.id}`);},[navigate]);
   const handleRequireAuth=useCallback(()=>setAuthGateOpen(true),[]);
   const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
   const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
@@ -1884,6 +1928,28 @@ export default function Product(){
       <LocationModal isOpen={locationModalOpen} onClose={()=>setLocationModalOpen(false)} selectedLocation={selectedLocation} onSelect={handleLocationChange}/>
 
       <div style={{flex:1,maxWidth:1280,margin:'0 auto',width:'100%',padding:isMobile?'24px 12px 80px':'36px 20px 80px'}}>
+
+        {/* ── VENDOR DETAIL (direct URL) — render alone, skip all other content ── */}
+        {activeTab==='vendorDetail' && selectedVendorDetail && (
+          <VendorDetailView
+            vendor={selectedVendorDetail}
+            onClose={()=>{ setSelectedVendorDetail(null); setActiveTab('vendors'); navigate('/products'); }}
+            allProducts={allProducts}
+            navigate={navigate}
+            onAddToCart={handleAddToCart}
+            isAuthed={!!user}
+            onRequireAuth={()=>setAuthGateOpen(true)}
+          />
+        )}
+
+        {activeTab==='vendorDetail' && !selectedVendorDetail && (
+          <div style={{textAlign:'center',padding:'80px 20px'}}>
+            <div style={{fontSize:48,marginBottom:16}}>🏪</div>
+            <p style={{fontSize:16,color:C.textMuted,fontWeight:600}}>Loading vendor…</p>
+          </div>
+        )}
+
+        {activeTab!=='vendorDetail' && <>
 
         {/* Hero */}
         <div style={{marginBottom:isMobile?24:30,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
@@ -2289,12 +2355,8 @@ export default function Product(){
             :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><div style={{fontSize:56,marginBottom:16}}>🏪</div><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No vendors found</h3><button onClick={()=>handleVendorSearch('')} style={{marginTop:8,padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>See All Vendors</button></div>}
         </div>}
 
-        {activeTab==='vendorDetail'&&selectedVendorDetail&&<div>
-          <VendorDetailView vendor={selectedVendorDetail} onClose={()=>{ setSelectedVendorDetail(null); setActiveTab('vendors'); }} allProducts={allProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
-        </div>}
+        </>}
       </div>
-
-      {/* ─── SITE FOOTER ─── */}
       <SiteFooter navigate={navigate} user={user} handleLogout={handleLogout} />
     </div>
   );
