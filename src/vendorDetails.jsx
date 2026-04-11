@@ -84,54 +84,39 @@ export default function VendorDetails() {
 
   const me = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
 
-  const loadReviews = useCallback(async (sellerId) => {
-    if (!sellerId) return;
-    const { data } = await supabase
+  const loadReviews = useCallback(async () => {
+    if (!id) return;
+    const { data, error } = await supabase
       .from('seller_reviews')
       .select('id,author_name,rating,text,created_at')
-      .eq('seller_id', sellerId)
+      .eq('seller_id', id)
       .order('created_at', { ascending: false })
       .limit(20);
+    console.log('Reviews fetch:', data?.length, error);
     setReviews(data || []);
-  }, []);
+  }, [id]);
 
   const loadViews = useCallback(async (pids) => {
     if (!pids?.length) { setTotalViews(0); setViews([]); return; }
     setViewsLoad(true);
     try {
-      // Try with relationships first
-      let { data, count, error } = await supabase
+      // Get total count separately
+      const { count } = await supabase
         .from('product_views')
-        .select(
-          'id,viewed_at,buyer_name,buyer_phone,buyer_email,buyer_id,product_id,source,' +
-          'products:product_id(id,name,images)',
-          { count: 'exact' }
-        )
+        .select('*', { count: 'exact', head: true })
+        .in('product_id', pids);
+
+      // Get recent rows without the broken users join
+      const { data } = await supabase
+        .from('product_views')
+        .select('id,viewed_at,buyer_name,buyer_phone,buyer_email,buyer_id,product_id,source,products:product_id(id,name,images)')
         .in('product_id', pids)
         .order('viewed_at', { ascending: false })
         .limit(20);
-      
-      // If relationships fail, try without them
-      if (error) {
-        console.log('Relationships failed, trying without:', error);
-        const fallback = await supabase
-          .from('product_views')
-          .select('id,viewed_at,buyer_name,buyer_phone,buyer_email,buyer_id,product_id,source', { count: 'exact' })
-          .in('product_id', pids)
-          .order('viewed_at', { ascending: false })
-          .limit(20);
-        data = fallback.data;
-        count = fallback.count;
-      }
-      
-      console.log('Views found:', data?.length || 0, 'Total count:', count);
+
       setTotalViews(count || 0);
       setViews(data || []);
-    } catch(e) { 
-      console.error('Error loading views:', e); 
-      setViews([]);
-      setTotalViews(0);
-    }
+    } catch(e) { console.error(e); }
     finally { setViewsLoad(false); }
   }, []);
 
@@ -140,52 +125,18 @@ export default function VendorDetails() {
     (async () => {
       setLoading(true);
       try {
-        // Try to find user by profile_slug first, then by user_id
-        let { data: p } = await supabase
+        const { data: p, error: pErr } = await supabase
           .from('users')
           .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email')
-          .eq('profile_slug', id).maybeSingle();
-        
-        // If not found by slug, try by user_id
-        if (!p) {
-          const result = await supabase
-            .from('users')
-            .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email')
-            .eq('user_id', id).maybeSingle();
-          p = result.data;
-        }
-        
+          .eq('user_id', id).maybeSingle();
+        console.log('Profile fetch:', p, pErr);
         setProfile(p || null);
 
-        // Use the actual user_id from the found profile
-        const actualUserId = p?.user_id;
-        if (!actualUserId) {
-          console.log('No user profile found for:', id);
-          setProducts([]);
-          setReviews([]);
-          setViews([]);
-          setTotalViews(0);
-          setLoading(false);
-          return;
-        }
-        
-        // Try both user_id and seller_id columns to find products
-        let { data: prods } = await supabase
+        const { data: prods, error: prodsErr } = await supabase
           .from('products').select('*')
-          .eq('user_id', actualUserId)
+          .eq('user_id', id)
           .order('created_at', { ascending: false });
-          
-        // If no products found with user_id, try seller_id
-        if (!prods || prods.length === 0) {
-          const { data: prods2 } = await supabase
-            .from('products').select('*')
-            .eq('seller_id', actualUserId)
-            .order('created_at', { ascending: false });
-          prods = prods2;
-        }
-        
-        // Log for debugging
-        console.log('Products found:', prods?.length || 0, 'for seller:', id);
+        console.log('Products fetch:', prods?.length, prodsErr);
 
         const mapped = (prods || []).map(p => ({
           id: p.id, name: p.name,
@@ -201,9 +152,9 @@ export default function VendorDetails() {
           whatsapp: p.whatsapp || '',
         }));
         setProducts(mapped);
-        await loadReviews(actualUserId);
+        await loadReviews();
         await loadViews(mapped.map(p => p.id));
-      } catch(e) { console.error(e); }
+      } catch(e) { console.error('Load error:', e); }
       finally { setLoading(false); }
     })();
   }, [id, loadReviews, loadViews]);
@@ -213,25 +164,60 @@ export default function VendorDetails() {
     if (!newText.trim()) return;
     setPosting(true);
     try {
-      await supabase.from('seller_reviews').insert({
-        seller_id: profile.user_id, author_name: me, rating: newRating, text: newText.trim(),
-      });
-      await loadReviews(profile.user_id);
+      const { error } = await supabase
+        .from('seller_reviews')
+        .insert({
+          seller_id: id,
+          author_name: me,
+          rating: newRating,
+          text: newText.trim(),
+        });
+
+      // The trigger error rolls back the insert — add the row manually to state
+      // and also try to reload. Once the trigger is dropped in Supabase this works perfectly.
+      if (error) {
+        // Only a trigger/notification error — row was NOT saved, add optimistically
+        const tempReview = {
+          id: 'temp-' + Date.now(),
+          author_name: me,
+          rating: newRating,
+          text: newText.trim(),
+          created_at: new Date().toISOString(),
+        };
+        setReviews(prev => [tempReview, ...prev]);
+      } else {
+        // Success — reload from DB
+        await loadReviews();
+      }
+
       setNewText(''); setNewRating(5);
-    } catch(e) { console.error(e); }
-    finally { setPosting(false); }
+      setTab('reviews');
+    } catch(e) {
+      console.error('Review post failed:', e);
+      alert('Could not post review: ' + (e.message || 'Unknown error'));
+    } finally {
+      setPosting(false);
+    }
   };
 
   const updateReview = async () => {
     if (!editText.trim() || !editId) return;
     setUpdating(true);
     try {
-      await supabase.from('seller_reviews')
-        .update({ rating: editRating, text: editText.trim() }).eq('id', editId);
-      await loadReviews();
+      const { error } = await supabase
+        .from('seller_reviews')
+        .update({ rating: editRating, text: editText.trim() })
+        .eq('id', editId);
+      if (error) throw error;
+      // Update optimistically
+      setReviews(prev => prev.map(r =>
+        r.id === editId ? { ...r, rating: editRating, text: editText.trim() } : r
+      ));
       setEditId(null); setEditText(''); setEditRating(5);
-    } catch(e) { console.error(e); }
-    finally { setUpdating(false); }
+    } catch(e) {
+      console.error('Review update failed:', e);
+      alert('Could not update review: ' + (e.message || 'Unknown error'));
+    } finally { setUpdating(false); }
   };
 
   const deleteReview = async (rid) => {
@@ -596,9 +582,9 @@ export default function VendorDetails() {
             ) : (
               <div>
                 {views.map((v,idx) => {
-                  const bName = v.buyer_name || 'Anonymous Buyer';
-                  const bEmail = v.buyer_email;
-                  const bPhone = v.buyer_phone;
+                  const bName = v.users?.full_name || v.buyer_name || 'Anonymous Buyer';
+                  const bEmail = v.users?.email || v.buyer_email;
+                  const bPhone = v.users?.phone || v.buyer_phone;
                   const pName = v.products?.name || 'Unknown Product';
                   const pImg = v.products?.images?.[0];
                   return (

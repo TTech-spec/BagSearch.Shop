@@ -41,7 +41,175 @@ const C = {
   whatsappBg:   '#dcfce7',
 };
 
-// ─── DUMMY ADS DATA ───────────────────────────────────────────────────────────
+// SVG Icons Library
+const Icons = {
+  ShoppingBag: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 0 1-8 0"/>
+    </svg>
+  ),
+  Search: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  Camera: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  ),
+  Cart: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1"/>
+      <circle cx="20" cy="21" r="1"/>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+    </svg>
+  ),
+  User: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+  Heart: ({ size = 20, color = 'currentColor', filled = false }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  ),
+  Star: ({ size = 20, color = 'currentColor', filled = false }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/>
+    </svg>
+  ),
+  Menu: ({ size = 24, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  ),
+  X: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  ChevronLeft: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  ),
+  ChevronRight: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  ),
+  Check: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  ),
+  Plus: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  Minus: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  Facebook: ({ size = 18, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke="none">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    </svg>
+  ),
+  Instagram: ({ size = 18, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+    </svg>
+  ),
+  Twitter: ({ size = 18, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+    </svg>
+  ),
+  MessageCircle: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </svg>
+  ),
+  Lock: ({ size = 24, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  ),
+  Eye: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ),
+  Logout: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  ),
+  ArrowRight: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+      <polyline points="12 5 19 12 12 19"/>
+    </svg>
+  ),
+  ArrowLeft: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </svg>
+  ),
+  TrendingUp: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+      <polyline points="17 6 23 6 23 12"/>
+    </svg>
+  ),
+  Sparkles: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+      <path d="M19 4L20 7L23 8L20 9L19 12L18 9L15 8L18 7L19 4Z"/>
+    </svg>
+  ),
+  Truck: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="3" width="15" height="13"/>
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+      <circle cx="5.5" cy="18.5" r="2.5"/>
+      <circle cx="18.5" cy="18.5" r="2.5"/>
+    </svg>
+  ),
+  Shield: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  ),
+  Zap: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  ),
+};
+
+// ─── DUMMY ADS DATA (updated with SVG icons) ─────────────────────────────────
 const DUMMY_ADS = [
   {
     id: 'ad1',
@@ -51,7 +219,7 @@ const DUMMY_ADS = [
     sub: 'Up to 40% off this weekend only · Free delivery nationwide',
     cta: 'Shop Now',
     badge: 'Sponsored',
-    emoji: '🛍️',
+    icon: 'shopping-bag',
     accent: '#c84b11',
     bg: 'linear-gradient(135deg,#fdf4ee 0%,#fde8d8 100%)',
     border: '#f9c4a0',
@@ -65,7 +233,7 @@ const DUMMY_ADS = [
     sub: 'Ankara-inspired designs, globally crafted',
     cta: 'Explore',
     badge: 'Ad',
-    emoji: '✨',
+    icon: 'sparkles',
     accent: '#be185d',
     bg: '#fdf2f8',
     border: '#fbcfe8',
@@ -79,7 +247,7 @@ const DUMMY_ADS = [
     sub: 'Leather care kits, dust bags & storage boxes',
     cta: 'See Products',
     badge: 'Ad',
-    emoji: '🧴',
+    icon: 'shield',
     accent: '#0f6e56',
     bg: '#e1f5ee',
     border: '#9fe1cb',
@@ -93,13 +261,51 @@ const DUMMY_ADS = [
     sub: 'Order before 2 PM — get it tonight',
     cta: 'Learn More',
     badge: 'Sponsored',
-    emoji: '🚚',
+    icon: 'truck',
     accent: '#1d4ed8',
     bg: '#eff6ff',
     border: '#bfdbfe',
     link: '#',
   },
 ];
+
+const getIconComponent = (iconName, size = 22, color = 'currentColor') => {
+  const iconMap = {
+    'shopping-bag': Icons.ShoppingBag,
+    'sparkles': Icons.Sparkles,
+    'shield': Icons.Shield,
+    'truck': Icons.Truck,
+    'search': Icons.Search,
+    'camera': Icons.Camera,
+    'cart': Icons.Cart,
+    'user': Icons.User,
+    'heart': Icons.Heart,
+    'star': Icons.Star,
+    'menu': Icons.Menu,
+    'x': Icons.X,
+    'chevron-left': Icons.ChevronLeft,
+    'chevron-right': Icons.ChevronRight,
+    'check': Icons.Check,
+    'plus': Icons.Plus,
+    'minus': Icons.Minus,
+    'facebook': Icons.Facebook,
+    'instagram': Icons.Instagram,
+    'twitter': Icons.Twitter,
+    'message-circle': Icons.MessageCircle,
+    'lock': Icons.Lock,
+    'eye': Icons.Eye,
+    'logout': Icons.Logout,
+    'arrow-right': Icons.ArrowRight,
+    'arrow-left': Icons.ArrowLeft,
+    'trending-up': Icons.TrendingUp,
+    'zap': Icons.Zap,
+  };
+  const IconComponent = iconMap[iconName];
+  if (IconComponent) {
+    return <IconComponent size={size} color={color} />;
+  }
+  return null;
+};
 
 // ─── AD BANNER (top-of-results, dismissible) ──────────────────────────────────
 function AdBanner({ ad, onDismiss }) {
@@ -128,8 +334,8 @@ function AdBanner({ ad, onDismiss }) {
         animation: 'fadeIn 0.4s ease both',
       }}
     >
-      <div style={{ width: 46, height: 46, borderRadius: 12, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, border: `1px solid ${ad.border}` }}>
-        {ad.emoji}
+      <div style={{ width: 46, height: 46, borderRadius: 12, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${ad.border}` }}>
+        {getIconComponent(ad.icon, 24, ad.accent)}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
@@ -148,7 +354,7 @@ function AdBanner({ ad, onDismiss }) {
         style={{ position: 'absolute', top: 8, right: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#bbb', lineHeight: 1, padding: 3, borderRadius: '50%', transition: 'color 0.2s' }}
         onMouseEnter={e => e.currentTarget.style.color = C.text}
         onMouseLeave={e => e.currentTarget.style.color = '#bbb'}>
-        ✕
+        <Icons.X size={12} color="currentColor" />
       </button>
     </div>
   );
@@ -181,8 +387,8 @@ function InlineAdCard({ ad }) {
         cursor: 'default',
       }}
     >
-      <div style={{ width: 54, height: 54, borderRadius: 14, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, boxShadow: `0 4px 12px ${ad.accent}18`, border: `1px solid ${ad.border}` }}>
-        {ad.emoji}
+      <div style={{ width: 54, height: 54, borderRadius: 14, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 12px ${ad.accent}18`, border: `1px solid ${ad.border}` }}>
+        {getIconComponent(ad.icon, 28, ad.accent)}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
@@ -202,7 +408,7 @@ function InlineAdCard({ ad }) {
         style={{ position: 'absolute', top: 10, right: 12, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#ccc', padding: 3, transition: 'color 0.2s' }}
         onMouseEnter={e => e.currentTarget.style.color = '#666'}
         onMouseLeave={e => e.currentTarget.style.color = '#ccc'}>
-        ✕
+        <Icons.X size={12} color="currentColor" />
       </button>
     </div>
   );
@@ -211,7 +417,7 @@ function InlineAdCard({ ad }) {
 // ─── PRODUCT GRID WITH ADS INJECTED ──────────────────────────────────────────
 function ProductGridWithAds({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
   const inlineAds = DUMMY_ADS.filter(a => a.type === 'inline');
-  const adInsertPositions = [8, 20]; // insert after row 2 (8 items) and row 5
+  const adInsertPositions = [8, 20];
 
   const nodes = [];
   let adIndex = 0;
@@ -306,13 +512,26 @@ function SiteFooter({ navigate, user, handleLogout }) {
             Nigeria's favourite marketplace for bags. Connect buyers with trusted sellers across the country.
           </p>
           <div style={{ marginTop: 18, display: 'flex', gap: 10 }}>
-            {['📘', '📸', '🐦', '💬'].map((icon, i) => (
-              <button key={i} style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
-                {icon}
-              </button>
-            ))}
+            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
+              <Icons.Facebook size={16} color="rgba(255,255,255,0.7)" />
+            </button>
+            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
+              <Icons.Instagram size={16} color="rgba(255,255,255,0.7)" />
+            </button>
+            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
+              <Icons.Twitter size={16} color="rgba(255,255,255,0.7)" />
+            </button>
+            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
+              <Icons.MessageCircle size={16} color="rgba(255,255,255,0.7)" />
+            </button>
           </div>
         </div>
 
@@ -382,14 +601,14 @@ function SiteFooter({ navigate, user, handleLogout }) {
                 style={{ padding: '9px 14px', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, color: 'white', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'opacity 0.2s', textAlign: 'center' }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                👤 Create Account
+                <Icons.User size={14} color="white" style={{ marginRight: 6 }} /> Create Account
               </button>
               <button
                 onClick={() => navigate('/login')}
                 style={{ padding: '9px 14px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
-                🔑 Login
+                <Icons.Logout size={12} color="rgba(255,255,255,0.7)" style={{ marginRight: 6 }} /> Login
               </button>
             </div>
           )}
@@ -409,7 +628,9 @@ function SiteFooter({ navigate, user, handleLogout }) {
             ])}
           </ul>
           <div style={{ marginTop: 18, background: 'rgba(37,211,102,0.1)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(37,211,102,0.2)' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#4ade80', marginBottom: 3 }}>💬 WhatsApp Support</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#4ade80', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icons.MessageCircle size={14} color="#4ade80" /> WhatsApp Support
+            </p>
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>Mon–Sat · 8AM – 8PM</p>
           </div>
         </div>
@@ -422,7 +643,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
             © {year} BagSearch Nigeria. All rights reserved.
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Made with 🧡 in Nigeria</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Made with <Icons.Heart size={10} color="#f97316" filled /> in Nigeria</span>
             <div style={{ display: 'flex', gap: 8 }}>
               {['🌍 EN', '₦ NGN'].map(t => (
                 <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>{t}</span>
@@ -488,14 +709,14 @@ const NIGERIAN_LOCATIONS = [
 ];
 
 const CATEGORIES = [
-  {id:'all',label:'All Bags',icon:'👜',color:C.primary,bg:C.primaryBg,border:C.primaryBorder},
-  {id:'tote',label:'Tote Bags',icon:'🛍️',color:'#b45309',bg:'#fef3c7',border:'#fde68a'},
-  {id:'clutch',label:'Clutches',icon:'💼',color:'#9a3412',bg:'#ffedd5',border:'#fed7aa'},
-  {id:'crossbody',label:'Crossbody',icon:'👝',color:'#c2410c',bg:'#fff7ed',border:'#fed7aa'},
-  {id:'backpack',label:'Backpacks',icon:'🎒',color:'#92400e',bg:'#fffbeb',border:'#fde68a'},
-  {id:'satchel',label:'Satchels',icon:'🗂️',color:'#c84b11',bg:'#fde8d8',border:'#f9c4a0'},
-  {id:'evening',label:'Evening',icon:'✨',color:'#be185d',bg:'#fdf2f8',border:'#fbcfe8'},
-  {id:'mini',label:'Mini Bags',icon:'💛',color:'#a16207',bg:'#fefce8',border:'#fef08a'},
+  {id:'all',label:'All Bags',icon:Icons.ShoppingBag,color:C.primary,bg:C.primaryBg,border:C.primaryBorder},
+  {id:'tote',label:'Tote Bags',icon:Icons.ShoppingBag,color:'#b45309',bg:'#fef3c7',border:'#fde68a'},
+  {id:'clutch',label:'Clutches',icon:Icons.ShoppingBag,color:'#9a3412',bg:'#ffedd5',border:'#fed7aa'},
+  {id:'crossbody',label:'Crossbody',icon:Icons.ShoppingBag,color:'#c2410c',bg:'#fff7ed',border:'#fed7aa'},
+  {id:'backpack',label:'Backpacks',icon:Icons.ShoppingBag,color:'#92400e',bg:'#fffbeb',border:'#fde68a'},
+  {id:'satchel',label:'Satchels',icon:Icons.ShoppingBag,color:'#c84b11',bg:'#fde8d8',border:'#f9c4a0'},
+  {id:'evening',label:'Evening',icon:Icons.Sparkles,color:'#be185d',bg:'#fdf2f8',border:'#fbcfe8'},
+  {id:'mini',label:'Mini Bags',icon:Icons.ShoppingBag,color:'#a16207',bg:'#fefce8',border:'#fef08a'},
 ];
 
 const CURRENCY_SYMBOL = '₦';
@@ -510,8 +731,6 @@ const WaIcon = ({ size = 16, color = 'currentColor' }) => (
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
-
-const Icon = ({name,size=22}) => <span style={{fontFamily:"'Material Symbols Outlined'",fontWeight:"normal",fontStyle:"normal",fontSize:size,lineHeight:1,display:"inline-block",textTransform:"none",letterSpacing:"normal",wordWrap:"normal",whiteSpace:"nowrap",direction:"ltr"}}>{name}</span>;
 
 function FeedbackBox({ onClose }) {
   const [phase, setPhase] = useState(0);
@@ -576,12 +795,16 @@ function FeedbackBox({ onClose }) {
         ))}
         <button onClick={handleClose} style={{ position:'absolute',top:16,right:16,width:32,height:32,borderRadius:'50%',border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,transition:'all 0.2s',zIndex:5 }}
           onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}}
-          onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>✕</button>
+          onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>
+          <Icons.X size={14} color="currentColor" />
+        </button>
         <div style={{ padding:'28px 28px 32px' }}>
           {step === 'rate' && (
             <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
               <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:20 }}>
-                <div style={{ width:48,height:48,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,boxShadow:'0 6px 18px rgba(200,75,17,0.35)' }}>💬</div>
+                <div style={{ width:48,height:48,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 18px rgba(200,75,17,0.35)' }}>
+                  <Icons.MessageCircle size={22} color="white" />
+                </div>
                 <div>
                   <h3 style={{ fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.03em',margin:0,marginBottom:2 }}>Share Your Thoughts</h3>
                   <p style={{ fontSize:13,color:C.textMuted,fontWeight:500,margin:0 }}>How's your BagSearch experience?</p>
@@ -591,9 +814,7 @@ function FeedbackBox({ onClose }) {
                 {[1,2,3,4,5].map(star => (
                   <button key={star} onMouseEnter={() => setHovRating(star)} onMouseLeave={() => setHovRating(0)} onClick={() => handleRating(star)}
                     style={{ background:'none',border:'none',cursor:'pointer',padding:4,transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',transform:(hovRating||rating)>=star?'scale(1.35) rotate(-8deg)':'scale(1)' }}>
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill={(hovRating||rating)>=star?'#f97316':'#f0d9cc'} style={{ transition:'fill 0.15s,filter 0.15s',filter:(hovRating||rating)>=star?'drop-shadow(0 2px 6px rgba(249,115,22,0.5))':'none' }}>
-                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                    </svg>
+                    <Icons.Star size={36} color={(hovRating||rating)>=star?'#f97316':'#f0d9cc'} filled={(hovRating||rating)>=star} />
                   </button>
                 ))}
               </div>
@@ -617,12 +838,14 @@ function FeedbackBox({ onClose }) {
           {step === 'comment' && (
             <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
               <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:18 }}>
-                <button onClick={() => setStep('rate')} style={{ width:32,height:32,borderRadius:10,border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0 }}>←</button>
+                <button onClick={() => setStep('rate')} style={{ width:32,height:32,borderRadius:10,border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0 }}>
+                  <Icons.ChevronLeft size={16} color="currentColor" />
+                </button>
                 <div>
                   <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.02em',margin:0,marginBottom:1 }}>Tell us more</h3>
                   <div style={{ display:'flex',gap:3 }}>
                     {[1,2,3,4,5].map(s => (
-                      <svg key={s} width="13" height="13" viewBox="0 0 24 24" fill={s<=rating?'#f97316':'#f0d9cc'}><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+                      <Icons.Star key={s} size={13} color={s<=rating?'#f97316':'#f0d9cc'} filled={s<=rating} />
                     ))}
                   </div>
                 </div>
@@ -637,13 +860,15 @@ function FeedbackBox({ onClose }) {
               <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%',padding:'14px 0',borderRadius:14,border:'none',background:submitting?C.primaryBg:'linear-gradient(135deg,#c84b11,#f97316)',color:submitting?C.primary:'white',fontWeight:900,fontSize:15,cursor:submitting?'default':'pointer',transition:'all 0.35s',boxShadow:submitting?'none':'0 6px 20px rgba(200,75,17,0.38)',display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}>
                 {submitting
                   ? <><div style={{ width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(200,75,17,0.3)',borderTopColor:C.primary,animation:'ldSpin 0.7s linear infinite' }} />Sending…</>
-                  : <>Send Feedback ✨</>}
+                  : <>Send Feedback <Icons.Sparkles size={16} color="white" /></>}
               </button>
             </div>
           )}
           {step === 'thanks' && (
             <div style={{ textAlign:'center',padding:'12px 0',animation:'feedStep 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-              <div style={{ width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',fontSize:32,boxShadow:'0 8px 28px rgba(200,75,17,0.4)',animation:'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>🎉</div>
+              <div style={{ width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',boxShadow:'0 8px 28px rgba(200,75,17,0.4)',animation:'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+                <Icons.Check size={36} color="white" />
+              </div>
               <h3 style={{ fontSize:22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:8 }}>Thank you!</h3>
               <p style={{ fontSize:14,color:C.textMuted,fontWeight:500,lineHeight:1.6,maxWidth:280,margin:'0 auto' }}>Your feedback helps us build a better BagSearch 🧡</p>
             </div>
@@ -654,19 +879,137 @@ function FeedbackBox({ onClose }) {
   );
 }
 
-function FeedbackTrigger({ onClick }) {
-  const [hov, setHov] = useState(false);
+// CREATIVE MOBILE MENU BUTTON - Floating action button that pulses and draws attention
+function MobileMenuButton({ onClick, isVisible }) {
   const [pulse, setPulse] = useState(false);
+  const [ripple, setRipple] = useState(false);
+  
+  // Pulse animation to draw attention on mobile
   useEffect(() => {
-    const t = setInterval(() => { setPulse(true); setTimeout(() => setPulse(false), 1000); }, 5000);
-    return () => clearInterval(t);
-  }, []);
+    if (!isVisible) return;
+    const interval = setInterval(() => {
+      setPulse(true);
+      setTimeout(() => setPulse(false), 800);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isVisible]);
+  
+  const handleClick = (e) => {
+    setRipple(true);
+    setTimeout(() => setRipple(false), 600);
+    onClick();
+  };
+  
   return (
-    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position:'fixed',bottom:24,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap' }}>
-      {pulse && <div style={{ position:'absolute',inset:-4,borderRadius:30,border:'2px solid rgba(249,115,22,0.6)',animation:'triggerPulse 1s ease-out both',pointerEvents:'none' }} />}
-      <span style={{ fontSize:20,display:'block',transition:'transform 0.3s',transform:hov?'rotate(-10deg) scale(1.2)':'none' }}>💬</span>
-      <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?120:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>Feedback</span>
+    <button
+      onClick={handleClick}
+      style={{
+        position: 'fixed',
+        bottom: 20,
+        left: 20,
+        zIndex: 1000,
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
+        border: 'none',
+        cursor: 'pointer',
+        boxShadow: pulse 
+          ? `0 0 0 8px rgba(200,75,17,0.2), 0 4px 20px rgba(200,75,17,0.5)`
+          : `0 4px 16px rgba(200,75,17,0.4)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transform: pulse ? 'scale(1.1)' : 'scale(1)',
+        animation: isVisible ? 'floatIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both' : 'floatOut 0.3s ease both',
+      }}
+      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+      onMouseLeave={e => e.currentTarget.style.transform = pulse ? 'scale(1.1)' : 'scale(1)'}
+    >
+      {/* Ripple effect */}
+      {ripple && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.3)',
+          animation: 'rippleOut 0.6s ease-out forwards',
+          pointerEvents: 'none',
+        }} />
+      )}
+      
+      {/* Pulse rings */}
+      {pulse && (
+        <>
+          <div style={{
+            position: 'absolute',
+            inset: -4,
+            borderRadius: '50%',
+            border: `2px solid ${C.primaryLight}`,
+            animation: 'pingRing 0.8s ease-out forwards',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: -8,
+            borderRadius: '50%',
+            border: `1.5px solid ${C.primaryLight}`,
+            animation: 'pingRing 0.8s ease-out 0.15s forwards',
+            pointerEvents: 'none',
+          }} />
+        </>
+      )}
+      
+      <Icons.Menu size={28} color="white" />
+      
+      {/* Tooltip */}
+      <span style={{
+        position: 'absolute',
+        left: 64,
+        whiteSpace: 'nowrap',
+        background: 'rgba(26,10,0,0.9)',
+        backdropFilter: 'blur(8px)',
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 700,
+        padding: '6px 12px',
+        borderRadius: 20,
+        pointerEvents: 'none',
+        opacity: 0,
+        transform: 'translateX(-8px)',
+        transition: 'all 0.2s ease',
+      }} className="menu-tooltip">
+        Menu
+      </span>
+      
+      <style>{`
+        @keyframes floatIn {
+          0% { opacity: 0; transform: scale(0) translateY(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes floatOut {
+          0% { opacity: 1; transform: scale(1) translateY(0); }
+          100% { opacity: 0; transform: scale(0) translateY(20px); }
+        }
+        @keyframes pingRing {
+          0% { opacity: 0.8; transform: scale(0.8); }
+          100% { opacity: 0; transform: scale(1.5); }
+        }
+        @keyframes rippleOut {
+          0% { opacity: 0.5; transform: scale(0.5); }
+          100% { opacity: 0; transform: scale(2); }
+        }
+        .menu-tooltip {
+          opacity: 0;
+          transform: translateX(-8px);
+          transition: all 0.2s ease;
+        }
+        button:hover .menu-tooltip {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      `}</style>
     </button>
   );
 }
@@ -679,7 +1022,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
     if (open) { 
       setPhase(1); 
       setTimeout(() => setPhase(2), 50);
-      // Spawn floating particles
       const emojis = ['👜', '🛍️', '✨', '💎', '🌟'];
       const p = Array.from({length: 8}, (_, i) => ({
         id: i,
@@ -711,7 +1053,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
       justifyContent: 'center',
       pointerEvents: visible ? 'all' : 'none'
     }}>
-      {/* Backdrop */}
       <div 
         onClick={onClose}
         style={{ 
@@ -726,7 +1067,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
         }} 
       />
       
-      {/* Floating particles */}
       {particles.map(p => (
         <div
           key={p.id}
@@ -745,7 +1085,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
         </div>
       ))}
       
-      {/* Main prompt card */}
       <div style={{ 
         position: 'relative', 
         zIndex: 2, 
@@ -760,7 +1099,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
         transition: 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)',
         overflow: 'hidden'
       }}>
-        {/* Gradient top bar */}
         <div style={{ 
           height: 6, 
           background: 'linear-gradient(90deg, #c84b11, #f97316, #ea580c, #c84b11)', 
@@ -768,7 +1106,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
           animation: 'shimGradient 3s linear infinite'
         }} />
         
-        {/* Close button */}
         <button 
           onClick={onClose}
           style={{ 
@@ -785,8 +1122,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            fontSize: 16, 
-            fontWeight: 800, 
             transition: 'all 0.2s',
             zIndex: 3
           }}
@@ -801,12 +1136,10 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             e.currentTarget.style.transform = 'scale(1)'; 
           }}
         >
-          ✕
+          <Icons.X size={16} color="currentColor" />
         </button>
         
-        {/* Content */}
         <div style={{ padding: '32px 28px 36px', textAlign: 'center' }}>
-          {/* Icon with animation */}
           <div style={{ 
             width: 80, 
             height: 80, 
@@ -816,16 +1149,14 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             alignItems: 'center', 
             justifyContent: 'center', 
             margin: '0 auto 24px', 
-            fontSize: 36, 
             boxShadow: '0 12px 32px rgba(200,75,17,0.35)',
             animation: visible ? 'bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' : 'none',
             transform: 'scale(0)',
             transitionDelay: visible ? '100ms' : '0ms'
           }}>
-            👜
+            <Icons.ShoppingBag size={40} color="white" />
           </div>
           
-          {/* Text content */}
           <h2 style={{ 
             fontSize: 24, 
             fontWeight: 900, 
@@ -853,7 +1184,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             Sign in to save favorites, get exclusive deals, and connect with sellers across Nigeria
           </p>
           
-          {/* Action buttons */}
           <div style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -929,7 +1259,6 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             </button>
           </div>
           
-          {/* Trust indicators */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -942,25 +1271,24 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
             transform: 'translateY(20px)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>🔒</span>
+              <Icons.Lock size={14} color="#16a34a" />
               <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Secure</span>
             </div>
             <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>✓</span>
+              <Icons.Check size={12} color="#16a34a" />
               <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Free</span>
             </div>
             <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>⚡</span>
+              <Icons.Zap size={14} color="#16a34a" />
               <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Quick</span>
             </div>
           </div>
         </div>
       </div>
       
-      {/* CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimGradient {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
@@ -1002,10 +1330,12 @@ function AuthGateModal({ open, onClose, navigate }) {
       <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:420,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
         <div style={{ height:6,background:"linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
         <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}>
-          <Icon name="close" size={15} />
+          <Icons.X size={15} color="currentColor" />
         </button>
         <div style={{ padding:"36px 36px 32px",textAlign:"center" }}>
-          <div style={{ width:64,height:64,borderRadius:"50%",background:"#F9DDD0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",color:"#C94B2C" }}><Icon name="lock" size={28} /></div>
+          <div style={{ width:64,height:64,borderRadius:"50%",background:"#F9DDD0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",color:"#C94B2C" }}>
+            <Icons.Lock size={28} color="#C94B2C" />
+          </div>
           <h2 style={{ fontSize:"1.5rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:8 }}>Members Only</h2>
           <p style={{ fontSize:13,color:"#888",lineHeight:1.6,marginBottom:28 }}>Sign in to unlock visual search, wishlists & more.</p>
           <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
@@ -1024,7 +1354,7 @@ function AuthGateModal({ open, onClose, navigate }) {
 
 function useScrollReveal(t=0.08){const ref=useRef(null);const[v,setV]=useState(false);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setV(true);o.disconnect();}},{threshold:t});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[t]);return[ref,v];}
 function AnimatedCount({value}){const[n,setN]=useState(0);const ref=useRef(null);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){let s=0;const timer=setInterval(()=>{s+=Math.ceil(value/55);if(s>=value){setN(value);clearInterval(timer);}else setN(s);},20);o.disconnect();}},{threshold:0.2});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[value]);return <span ref={ref}>{n.toLocaleString()}</span>;}
-const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i=>(<svg key={i} width={size} height={size} viewBox="0 0 24 24" fill={i<=Math.floor(rating)?'#f97316':'#f0d9cc'}><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>))}</div>);
+const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i=>(<Icons.Star key={i} size={size} color={i<=Math.floor(rating)?'#f97316':'#f0d9cc'} filled={i<=Math.floor(rating)} />))}</div>);
 
 function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
   const[search,setSearch]=useState('');
@@ -1036,9 +1366,12 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
       <div style={{padding:'24px 24px 18px',borderBottom:`1px solid ${C.borderLight}`}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
           <div><h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:3}}>📍 Choose Location</h3><p style={{fontSize:12,color:C.textFaint,fontWeight:500}}>Shop from sellers near you</p></div>
-          <button onClick={onClose} style={{width:36,height:36,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',fontSize:16,color:C.primary}}>✕</button>
+          <button onClick={onClose} style={{width:36,height:36,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Icons.X size={16} color={C.primary} />
+          </button>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10,background:C.surfaceDim,border:`1.5px solid ${C.border}`,borderRadius:12,padding:'10px 14px'}}>
+          <Icons.Search size={16} color={C.textFaint} />
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search city…" autoFocus style={{flex:1,border:'none',background:'transparent',fontSize:13,color:C.text,fontFamily:'inherit',fontWeight:500,outline:'none'}}/>
         </div>
       </div>
@@ -1049,7 +1382,7 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
             <button key={loc.id} onClick={()=>{onSelect(loc);onClose();}} style={{width:'100%',display:'flex',alignItems:'center',gap:12,padding:'10px 12px',borderRadius:12,border:'none',background:isSel?C.primaryBg:'transparent',cursor:'pointer',textAlign:'left',transition:'all 0.18s'}}>
               <span style={{fontSize:18}}>{loc.emoji}</span>
               <div style={{flex:1}}><div style={{fontSize:14,fontWeight:isSel?800:600,color:isSel?C.primary:C.text}}>{loc.name}</div>{loc.state&&<div style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{loc.state} State</div>}</div>
-              {isSel&&<div style={{width:20,height:20,borderRadius:'50%',background:C.primary,display:'flex',alignItems:'center',justifyContent:'center'}}><svg width="10" height="10" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div>}
+              {isSel&&<Icons.Check size={16} color={C.primary} />}
             </button>);})}
         </div>))}
       </div>
@@ -1061,7 +1394,9 @@ function CategoryPill({cat,isActive,onClick,index,count}){
   return(<button onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
     style={{display:'flex',alignItems:'center',gap:7,padding:'9px 16px',borderRadius:100,border:`1.5px solid ${isActive?cat.color:hov?cat.border:C.border}`,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,background:isActive?cat.color:hov?cat.bg:'white',boxShadow:isActive?`0 6px 18px ${cat.color}44`:hov?`0 4px 14px ${cat.color}22`:'0 1px 4px rgba(0,0,0,0.04)',transform:isActive?'translateY(-2px) scale(1.03)':hov?'translateY(-1px)':'none',transition:'all 0.28s cubic-bezier(0.34,1.56,0.64,1)',animation:`catIn 0.45s cubic-bezier(0.22,1,0.36,1) ${index*50}ms both`,position:'relative',overflow:'hidden'}}>
     {isActive&&<div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%)',animation:'shimCat 2s ease-in-out infinite',pointerEvents:'none'}}/>}
-    <span style={{fontSize:16,transform:(isActive||hov)?'scale(1.2) rotate(-5deg)':'scale(1)',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',display:'inline-block'}}>{cat.icon}</span>
+    <span style={{transform:(isActive||hov)?'scale(1.2) rotate(-5deg)':'scale(1)',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',display:'inline-block'}}>
+      {typeof cat.icon === 'function' ? cat.icon({ size: 16, color: isActive ? 'white' : (hov ? cat.color : C.textMid) }) : cat.icon}
+    </span>
     <span style={{fontSize:13,fontWeight:isActive?800:600,color:isActive?'white':hov?cat.color:C.textMid}}>{cat.label}</span>
     {count>0&&<span style={{fontSize:10,fontWeight:800,background:isActive?'rgba(255,255,255,0.25)':cat.bg,color:isActive?'white':cat.color,border:`1px solid ${isActive?'rgba(255,255,255,0.3)':cat.border}`,padding:'1px 6px',borderRadius:20}}>{count}</span>}
   </button>);
@@ -1108,7 +1443,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
         </div>
         <div style={{display:'flex',gap:6,alignItems:'stretch'}}>
           <button onClick={handleCart} style={{flex:1,minWidth:0,padding:'9px 6px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:11,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:4,whiteSpace:'nowrap',overflow:'hidden'}}>
-            {added?<><svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>:<><svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
+            {added?<><Icons.Check size={11} color="white" /><span>Added!</span></>:<><Icons.Cart size={11} color="white" /><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
           </button>
           <a
             href={(() => {
@@ -1161,8 +1496,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
           <span style={{ fontSize:15,fontWeight:900,color:C.primary }}>{formatCurrency(product.price)}</span>
           <button onClick={handleCart} style={{ width:30,height:30,borderRadius:8,border:'none',cursor:'pointer',background:added?'#16a34a':C.primary,color:'white',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.3s',transform:added?'scale(0.9)':'scale(1)' }}>
-            {added ? <svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-              : <svg width="11" height="11" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>}
+            {added ? <Icons.Check size={11} color="white" /> : <Icons.Plus size={11} color="white" />}
           </button>
         </div>
       </div>
@@ -1181,7 +1515,9 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
     <div ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
-          <div style={{ width:40,height:40,borderRadius:12,background:accentBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:`1.5px solid ${accentColor}33` }}>{icon}</div>
+          <div style={{ width:40,height:40,borderRadius:12,background:accentBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid ${accentColor}33` }}>
+            {typeof icon === 'string' ? <span style={{ fontSize:20 }}>{icon}</span> : icon}
+          </div>
           <div>
             <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:1 }}>{title}</h3>
             <p style={{ fontSize:12,color:C.textFaint,fontWeight:500 }}>{subtitle}</p>
@@ -1190,7 +1526,7 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
         <div style={{ display:'flex',alignItems:'center',gap:8 }}>
           {[{dir:-1,can:canLeft},{dir:1,can:canRight}].map(({dir,can})=>(
             <button key={dir} onClick={()=>scroll(dir)} style={{ width:34,height:34,borderRadius:'50%',border:`1.5px solid ${can?accentColor:C.border}`,background:can?accentBg:'white',color:can?accentColor:C.textFaint,cursor:can?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s',opacity:can?1:0.4 }}>
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d={dir===-1?'M15.75 19.5L8.25 12l7.5-7.5':'M8.25 4.5l7.5 7.5-7.5 7.5'}/></svg>
+              {dir === -1 ? <Icons.ChevronLeft size={14} color="currentColor" /> : <Icons.ChevronRight size={14} color="currentColor" />}
             </button>
           ))}
           <button onClick={onSeeAll} style={{ fontSize:12,fontWeight:800,color:accentColor,background:accentBg,border:`1.5px solid ${accentColor}33`,padding:'7px 14px',borderRadius:20,cursor:'pointer',transition:'all 0.2s',whiteSpace:'nowrap' }}
@@ -1268,7 +1604,9 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
     <div ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18,flexWrap:'wrap',gap:12 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
-          <div style={{ width:40,height:40,borderRadius:12,background:'#fef2f2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:'1.5px solid #fecaca',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥</div>
+          <div style={{ width:40,height:40,borderRadius:12,background:'#fef2f2',display:'flex',alignItems:'center',justifyContent:'center',border:'1.5px solid #fecaca',animation:'pulseBadge 2s ease-in-out infinite' }}>
+            <Icons.TrendingUp size={20} color="#dc2626" />
+          </div>
           <div>
             <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:1 }}>Hot Deals</h3>
             <p style={{ fontSize:12,color:C.textFaint,fontWeight:500 }}>{products.length} exclusive limited-time offer{products.length!==1?'s':''}</p>
@@ -1305,7 +1643,7 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
             </div>
             <div style={{ display:'flex',gap:isMobile?8:10,flexDirection:isSmall?'column':'row',alignItems:'stretch' }}>
               <button onClick={e=>handleCart(e,product)} style={{ flex:1,maxWidth:isSmall?'100%':220,padding:isMobile?'11px 0':'13px 0',borderRadius:12,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s',boxShadow:added?'0 4px 16px rgba(22,163,74,0.4)':'0 6px 20px rgba(200,75,17,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:7 }}>
-                {added?<><svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>:<>🛍️ Grab This Deal</>}
+                {added?<><Icons.Check size={13} color="white" />Added!</>:<><Icons.ShoppingBag size={13} color="white" /> Grab This Deal</>}
               </button>
             </div>
             <p style={{ marginTop:12,fontSize:isSmall?9:11,color:C.textFaint,fontWeight:600 }}>⚡ Only {product.quantity??'few'} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
@@ -1314,10 +1652,10 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
         {products.length > 1 && (
           <>
             <button onClick={goPrev} style={{ position:'absolute',left:isMobile?8:14,top:'50%',transform:'translateY(-50%)',width:38,height:38,borderRadius:'50%',border:'none',background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,0.12)',transition:'all 0.2s',zIndex:5 }}>
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+              <Icons.ChevronLeft size={16} color="currentColor" />
             </button>
             <button onClick={goNext} style={{ position:'absolute',right:isMobile?8:14,top:'50%',transform:'translateY(-50%)',width:38,height:38,borderRadius:'50%',border:'none',background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(0,0,0,0.12)',transition:'all 0.2s',zIndex:5 }}>
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+              <Icons.ChevronRight size={16} color="currentColor" />
             </button>
           </>
         )}
@@ -1359,9 +1697,13 @@ function CartItem({item, onUpdateQty, onRemove, index, isAuthed, onRequireAuth})
         <p style={{fontSize:11,color:C.textFaint,fontWeight:500,marginBottom:8}}>{item.seller}</p>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',background:C.surfaceDim,borderRadius:10,border:`1.5px solid ${C.border}`,overflow:'hidden'}}>
-            <button onClick={()=>item.qty>1?onUpdateQty(item.id,item.qty-1):handleRemove()} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid,display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+            <button onClick={()=>item.qty>1?onUpdateQty(item.id,item.qty-1):handleRemove()} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <Icons.Minus size={14} color={C.textMid} />
+            </button>
             <span style={{width:28,textAlign:'center',fontSize:13,fontWeight:800,color:C.text}}>{item.qty}</span>
-            <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid,display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+            <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{width:30,height:30,border:'none',background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <Icons.Plus size={14} color={C.textMid} />
+            </button>
           </div>
           <div style={{textAlign:'right'}}>
             <div style={{fontSize:16,fontWeight:900,color:C.primary}}>{formatCurrency(item.price*item.qty)}</div>
@@ -1379,7 +1721,7 @@ function CartBadge({count,onClick}){
   return(
     <button onClick={onClick} style={{position:'relative',padding:'8px 10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',gap:6,transition:'all 0.2s'}}
       onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
-      <Icon name="shopping_cart" size={20}/>
+      <Icons.Cart size={20} color="currentColor" />
       {count>0&&<div style={{position:'absolute',top:-6,right:-6,minWidth:20,height:20,background:'linear-gradient(135deg,#c84b11,#f97316)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:900,color:'white',border:'2px solid white',boxShadow:'0 2px 8px rgba(200,75,17,0.45)',transform:pop?'scale(1.5)':'scale(1)',transition:'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)'}}>{count}</div>}
     </button>
   );
@@ -1434,25 +1776,29 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
           <div style={{background:C.primaryBg,padding:'26px 26px 22px',borderBottom:`1px solid ${C.primaryBorder}`,flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:itemCount>0?16:0}}>
               <div style={{display:'flex',alignItems:'center',gap:14}}>
-                <div style={{width:50,height:50,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px rgba(200,75,17,0.4)',fontSize:20}}>🛍️</div>
+                <div style={{width:50,height:50,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px rgba(200,75,17,0.4)'}}>
+                  <Icons.ShoppingBag size={24} color="white" />
+                </div>
                 <div>
                   <h2 style={{fontSize:21,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h2>
                   <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · ${formatCurrency(total)} subtotal`:''}</p>
                 </div>
               </div>
-              <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,color:C.primary,transition:'all 0.2s'}}
-                onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>✕</button>
+              <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}}
+                onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>
+                <Icons.X size={15} color="currentColor" />
+              </button>
             </div>
             {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>🚚 Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}><Icons.Truck size={12} color={C.primary} style={{ marginRight: 4 }} /> Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span></div>
               <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
             </div>}
           </div>
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
               <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:60,paddingTop:40}}>
-                <div style={{fontSize:72,marginBottom:18}}>🛍️</div>
-                <h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:8}}>Your cart is empty</h3>
+                <Icons.ShoppingBag size={64} color={C.textFaint} />
+                <h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:8,marginTop:16}}>Your cart is empty</h3>
                 <p style={{fontSize:13,color:C.textMuted,textAlign:'center',fontWeight:500,lineHeight:1.7,maxWidth:260}}>Discover beautiful bags and add them here</p>
                 <button onClick={onClose} style={{marginTop:22,padding:'13px 28px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:14,border:'none',cursor:'pointer',fontWeight:800,fontSize:14}}>Browse Bags</button>
               </div>
@@ -1476,7 +1822,7 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
             </div>
             <button onClick={handleChatSellers}
               style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:chatted?'linear-gradient(135deg,#15803d,#16a34a)':chatting?`linear-gradient(135deg,${C.whatsappDark},${C.whatsapp})`:`linear-gradient(135deg,${C.whatsapp},#20c95a)`,color:'white',fontWeight:900,fontSize:15,transition:'all 0.5s',boxShadow:`0 8px 28px rgba(37,211,102,0.4)`,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-              {chatted?(<><svg width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Chats Opened! 🎉</>)
+              {chatted?(<><Icons.Check size={18} color="white" />Chats Opened! 🎉</>)
                 :chatting?(<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Opening WhatsApp…</>)
                 :(<><WaIcon size={18} color="white"/>Chat Sellers on WhatsApp · {formatCurrency(grand)}</>)}
             </button>
@@ -1493,9 +1839,8 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
     <header style={{ position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.97)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:`0 1px 20px rgba(200,75,17,0.07)` }}>
       <div style={{ height:3,background:`linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />
       <div style={{ maxWidth:1280,margin:'0 auto',padding:isMobile?'0 12px':'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:isMobile?56:60,gap:isMobile?8:16 }}>
-        <button className="mob-menu" onClick={()=>setIsSidebarOpen(true)} style={{ display:isMobile?'flex':'none',padding:8,borderRadius:10,border:'none',background:'transparent',cursor:'pointer',color:C.textMid,alignItems:'center',justifyContent:'center' }}>
-          <svg style={{ width:22,height:22 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
-        </button>
+        {/* Mobile menu button is now handled by the floating FAB below - removed from header to avoid duplication */}
+        <div style={{ display: isMobile ? 'none' : 'flex' }} />
         <div style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',flexShrink:0,color:C.primary }} onClick={()=>navigate('/')}>
           <LogoIcon size={isMobile?'32px':'clamp(34px, 5vw, 50px)'} />
           <span style={{ fontSize:isMobile?16:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px' }}>Bag<span style={{ color:C.primary }}>Search</span></span>
@@ -1511,13 +1856,13 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
             <div style={{ fontSize:isMobile?8:9,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,lineHeight:1.2 }}>{isMobile?'FROM':'Shopping from'}</div>
             <div style={{ fontSize:isMobile?12:13,fontWeight:800,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{selectedLocation.emoji} {isMobile?selectedLocation.name.split(' ')[0]||selectedLocation.name:selectedLocation.name}</div>
           </div>
-          {!isMobile&&<svg style={{ width:13,height:13,color:C.textFaint,flexShrink:0 }} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>}
+          {!isMobile&&<Icons.ChevronRight size={13} color={C.textFaint} />}
         </button>
         <div className="desk-act" style={{ display:isMobile?'none':'flex',alignItems:'center',gap:8 }}>
           <button onClick={handleProfileClick} style={{ padding:'8px 10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',transition:'all 0.2s' }}
             onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}}
             onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
-            <Icon name="person" size={20} />
+            <Icons.User size={20} color="currentColor" />
           </button>
           <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
           {user?(
@@ -1631,15 +1976,14 @@ export default function Product(){
 
   // Mobile auth prompt scroll trigger
   useEffect(() => {
-    if (!isMobile || user) return; // Don't show for logged-in users or desktop
+    if (!isMobile || user) return;
     
     const handleScroll = () => {
       const scrollY = window.scrollY || window.pageYOffset;
-      const threshold = 800; // Show after scrolling 800px
+      const threshold = 800;
       
       if (scrollY > threshold && !hasScrolledPastThreshold) {
         setHasScrolledPastThreshold(true);
-        // Show prompt after a small delay
         setTimeout(() => {
           setMobileAuthPromptOpen(true);
         }, 1500);
@@ -1669,13 +2013,11 @@ export default function Product(){
 
   const fetchVendors=useCallback(async(products)=>{
     try{
-      // 1. Fetch ALL sellers from users table directly
       const { data: sellerRows } = await supabase
         .from('users')
         .select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug')
         .eq('role','seller');
 
-      // 2. Build a map of seller products and views
       const sellerProductIds={};
       const sellerProductCount={};
       (products||[]).forEach(p=>{
@@ -1686,7 +2028,6 @@ export default function Product(){
         sellerProductCount[sid]=(sellerProductCount[sid]||0)+1;
       });
 
-      // 3. Fetch real view counts
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
       const viewCountMap={};
       if(allProductIds.length>0){
@@ -1699,7 +2040,6 @@ export default function Product(){
         });
       }
 
-      // 4. Build vendor list from all sellers
       const allSellers=(sellerRows||[]).map(s=>{
         const pids=sellerProductIds[s.user_id]||[];
         const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);
@@ -1723,7 +2063,6 @@ export default function Product(){
         };
       });
 
-      // 5. Also include sellers derived from products who may not be in users table
       const knownIds=new Set(allSellers.map(v=>v.id));
       const extra=buildVendorsFromProducts((products||[]).filter(p=>{
         const sid=p.sellerId||p.user_id||p.seller_id;
@@ -1846,7 +2185,6 @@ export default function Product(){
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
   const hotDealProducts = useMemo(() => allProducts.filter(p => p.discountedPrice || p.lowStock).slice(0, 10), [allProducts]);
 
-  // Top banner ad (only one, not dismissed)
   const topBannerAd = DUMMY_ADS.find(a => a.type === 'banner' && !dismissedAds.includes(a.id));
 
   return(
@@ -1856,7 +2194,6 @@ export default function Product(){
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         @keyframes wordFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
@@ -1893,12 +2230,12 @@ export default function Product(){
         @media(max-width:640px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
         @media(max-width:380px){.product-grid{gap:8px!important;}}
         @media(max-width:720px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
-        @media(max-width:768px){.desk-act{display:none!important;}.mob-menu{display:flex!important;}}
+        @media(max-width:768px){.desk-act{display:none!important;}}
         @media(max-width:640px){.hero-banner{padding:24px 20px!important;}.hero-icons{display:none!important;}}
       `}</style>
 
       {floatMsg&&<div style={{position:'fixed',bottom:32,left:'50%',zIndex:9999,background:floatMsg.type==='danger'?'linear-gradient(135deg,#dc2626,#ef4444)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',padding:'12px 22px',borderRadius:50,fontSize:13,fontWeight:800,whiteSpace:'nowrap',boxShadow:'0 12px 40px rgba(200,75,17,0.45)',animation:'floatUpMsg 2.2s ease both',pointerEvents:'none',display:'flex',alignItems:'center',gap:8}}>
-        {floatMsg.type==='danger'?<Icon name="error" size={16}/>:<svg width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>}
+        {floatMsg.type==='danger'?<Icons.X size={16} color="white" />:<Icons.Check size={13} color="white" />}
         {floatMsg.text}
       </div>}
 
@@ -1908,6 +2245,9 @@ export default function Product(){
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
       {!feedbackOpen && !cartOpen && <FeedbackTrigger onClick={() => setFeedbackOpen(true)} />}
 
+      {/* CREATIVE MOBILE MENU BUTTON - Floating action button that pulses to draw attention */}
+      {isMobile && <MobileMenuButton onClick={() => setIsSidebarOpen(true)} isVisible={headerVisible} />}
+
       <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} setLocationModalOpen={setLocationModalOpen} selectedLocation={selectedLocation} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
 
       {/* Sidebar */}
@@ -1915,12 +2255,14 @@ export default function Product(){
       <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>
           <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32}/><span style={{fontWeight:900,fontSize:17,color:C.text}}>BagSearch</span></div>
-          <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',color:C.primary,fontSize:16}}>✕</button>
+          <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Icons.X size={16} color={C.primary} />
+          </button>
         </div>
-        {(user?[{label:'Profile',icon:'person',action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:'rate_review',action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:'logout',action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:'login',action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:'person_add',action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:'shopping_cart',action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:'rate_review',action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon,label,action})=>(
+        {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':'transparent',cursor:'pointer',color:label==='Logout'?C.danger:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s'}}
             onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
-            <Icon name={icon} size={20}/>{label}
+            <IconComponent size={20} color="currentColor" />{label}
           </button>
         ))}
       </aside>
@@ -1929,7 +2271,6 @@ export default function Product(){
 
       <div style={{flex:1,maxWidth:1280,margin:'0 auto',width:'100%',padding:isMobile?'24px 12px 80px':'36px 20px 80px'}}>
 
-        {/* ── VENDOR DETAIL (direct URL) — render alone, skip all other content ── */}
         {activeTab==='vendorDetail' && selectedVendorDetail && (
           <VendorDetailView
             vendor={selectedVendorDetail}
@@ -1976,7 +2317,12 @@ export default function Product(){
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}>
                 <img src={shoppingBagImg} alt="" style={{width:38,height:38,objectFit:'contain'}}/>
               </div>
-              {['👝','🛍️'].map((e,i)=>(<div key={i} style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:`translateY(${i%2===0?-8:0}px)`}}>{e}</div>))}
+              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:'translateY(-8px)'}}>
+                <Icons.ShoppingBag size={28} color={C.primary} />
+              </div>
+              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}>
+                <Icons.Sparkles size={28} color={C.primaryLight} />
+              </div>
             </div>
           </div>
         </div>
@@ -1984,8 +2330,9 @@ export default function Product(){
         {/* Tab + Search */}
         <div style={{marginBottom:isMobile?20:26,opacity:searchVisible?1:0,transition:'opacity 0.5s ease'}}>
           <div style={{display:'inline-flex',background:'white',border:`1.5px solid ${C.border}`,borderRadius:isMobile?12:16,padding:5,gap:4,boxShadow:`0 2px 10px rgba(200,75,17,0.07)`,marginBottom:16,width:isMobile?'100%':'auto'}}>
-            {[{id:'products',label:'👜 Products',count:allProducts.length},{id:'vendors',label:'🏪 Vendors',count:vendors.length}].map(tab=>(
+            {[{id:'products',label:'Products',icon:Icons.ShoppingBag,count:allProducts.length},{id:'vendors',label:'Vendors',icon:Icons.User,count:vendors.length}].map(tab=>(
               <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{flex:isMobile?1:'none',padding:isMobile?'8px 12px':'9px 18px',borderRadius:isMobile?8:11,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,transition:'all 0.3s cubic-bezier(0.34,1.2,0.64,1)',background:activeTab===tab.id?'linear-gradient(135deg,#c84b11,#f97316)':'transparent',color:activeTab===tab.id?'white':C.textMuted,boxShadow:activeTab===tab.id?'0 4px 16px rgba(200,75,17,0.4)':'none',transform:activeTab===tab.id?'scale(1.02)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:isMobile?4:7}}>
+                <tab.icon size={isMobile?14:16} color="currentColor" />
                 {tab.label}
                 <span style={{fontSize:10,fontWeight:800,background:activeTab===tab.id?'rgba(255,255,255,0.25)':C.primaryBg,color:activeTab===tab.id?'white':C.primary,padding:'1px 7px',borderRadius:20,border:activeTab===tab.id?'1px solid rgba(255,255,255,0.3)':`1px solid ${C.primaryBorder}`}}>{tab.count}</span>
               </button>
@@ -1994,19 +2341,23 @@ export default function Product(){
 
           {activeTab==='products'?(
             <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
-              <svg style={{width:isMobile?18:20,height:isMobile?18:20,color:searchFocused?C.primary:C.textFaint,flexShrink:0,transition:'color 0.25s'}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/></svg>
+              <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
               <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:isMobile?12:13,color:C.primary,flexShrink:0}}>✕</button>}
+              {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Icons.X size={isMobile?12:13} color={C.primary} />
+              </button>}
               <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
               <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}>
-                <svg style={{width:isMobile?14:16,height:isMobile?14:16}} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
+                <Icons.Camera size={isMobile?14:16} color="white" />
               </button>
             </div>
           ):(
             <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
-              <svg style={{width:isMobile?18:20,height:isMobile?18:20,color:vendorSearchFocused?C.primary:C.textFaint,flexShrink:0}} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
+              <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
               <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer',fontSize:13,color:C.textFaint}}>✕</button>}
+              {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}>
+                <Icons.X size={13} color={C.textFaint} />
+              </button>}
               <div style={{fontSize:isMobile?11:12,fontWeight:700,color:C.primary,background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,padding:isMobile?'4px 10px':'5px 12px',borderRadius:20,whiteSpace:'nowrap'}}>{filteredVendors.length} vendors</div>
             </div>
           )}
@@ -2032,8 +2383,12 @@ export default function Product(){
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
             <div><h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2><p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p></div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-              {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>{cat.icon} {cat.label} ✕</button>;})()}
-              {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>{selectedLocation.emoji} {selectedLocation.name} ✕</button>}
+              {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                {typeof cat.icon === 'function' ? cat.icon({ size: 12, color: cat.color }) : cat.icon} {cat.label} <Icons.X size={10} color="currentColor" />
+              </button>;})()}
+              {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                {selectedLocation.emoji} {selectedLocation.name} <Icons.X size={10} color="currentColor" />
+              </button>}
               {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
@@ -2059,7 +2414,6 @@ export default function Product(){
                 boxShadow:'0 32px 80px rgba(200,75,17,0.22)',
                 position:'relative', overflow:'hidden',
               }}>
-                {/* Gradient top strip */}
                 <div style={{
                   position:'absolute', top:0, left:0, right:0, height:4,
                   background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',
@@ -2067,29 +2421,24 @@ export default function Product(){
                   animation:'shimFeedback 2.5s linear infinite',
                 }}/>
 
-                {/* Ring + image */}
                 <div style={{ position:'relative', width:180, height:180, margin:'0 auto 28px' }}>
-                  {/* Outer spinning ring */}
                   <div style={{
                     position:'absolute', inset:0, borderRadius:'50%',
                     border:'3.5px solid transparent',
                     borderTopColor:'#c84b11', borderRightColor:'#f97316',
                     animation:'vsSpin 1.1s linear infinite',
                   }}/>
-                  {/* Mid counter-spin ring */}
                   <div style={{
                     position:'absolute', inset:10, borderRadius:'50%',
                     border:'2.5px solid transparent',
                     borderTopColor:'#f9c4a0', borderLeftColor:'#f97316',
                     animation:'vsSpinR .85s linear infinite',
                   }}/>
-                  {/* Inner dashed ring */}
                   <div style={{
                     position:'absolute', inset:18, borderRadius:'50%',
                     border:'1.5px dashed rgba(200,75,17,0.2)',
                     animation:'vsSpinR 3s linear infinite',
                   }}/>
-                  {/* Image circle */}
                   <div style={{
                     position:'absolute', inset:22, borderRadius:'50%',
                     overflow:'hidden', background:'#fdf4ee',
@@ -2097,9 +2446,10 @@ export default function Product(){
                   }}>
                     {uploadedImage
                       ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#fde8d8,#fdf4ee)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42 }}>👜</div>
+                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#fde8d8,#fdf4ee)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <Icons.Camera size={32} color={C.primary} />
+                        </div>
                     }
-                    {/* Scan line */}
                     <div style={{ position:'absolute', inset:0, borderRadius:'50%', overflow:'hidden', pointerEvents:'none' }}>
                       <div style={{
                         position:'absolute', top:0, left:0, right:0, height:2,
@@ -2108,7 +2458,6 @@ export default function Product(){
                       }}/>
                     </div>
                   </div>
-                  {/* Corner dots */}
                   {[{t:-6,l:'50%',ml:-3},{t:'50%',mt:-3,r:-6},{b:-6,l:'50%',ml:-3},{t:'50%',mt:-3,l:-6}].map((s,i)=>(
                     <div key={i} style={{
                       position:'absolute', width:8, height:8, borderRadius:'50%',
@@ -2120,7 +2469,6 @@ export default function Product(){
                   ))}
                 </div>
 
-                {/* Animated dots */}
                 <div style={{ display:'flex', justifyContent:'center', gap:7, marginBottom:18 }}>
                   {[0,200,400].map((d,i)=>(
                     <div key={i} style={{
@@ -2137,7 +2485,6 @@ export default function Product(){
                   Scanning thousands of listings across Nigeria for your perfect match
                 </p>
 
-                {/* Animated tags */}
                 <div style={{ display:'flex', flexWrap:'wrap', gap:7, justifyContent:'center' }}>
                   {[
                     {l:'Matching colors', d:100},
@@ -2179,12 +2526,9 @@ export default function Product(){
                   position:'relative', overflow:'hidden',
                 }}
               >
-                {/* Green top strip */}
                 <div style={{ position:'absolute', top:0, left:0, right:0, height:4, background:'linear-gradient(90deg,#15803d,#22c55e,#15803d)' }}/>
 
-                {/* Ring + image */}
                 <div style={{ position:'relative', width:180, height:180, margin:'0 auto 28px' }}>
-                  {/* Outer ripples */}
                   <div style={{
                     position:'absolute', inset:-12, borderRadius:'50%',
                     border:'1.5px solid #dcfce7',
@@ -2195,23 +2539,22 @@ export default function Product(){
                     border:'2px solid #a7f3d0',
                     animation:'vsRipple 2s ease-out .2s infinite',
                   }}/>
-                  {/* Success ring */}
                   <div style={{
                     position:'absolute', inset:0, borderRadius:'50%',
                     border:'3.5px solid #16a34a',
                     animation:'vsSuccessPop .6s cubic-bezier(.34,1.56,.64,1) both',
                   }}/>
-                  {/* Image circle */}
                   <div style={{
                     position:'absolute', inset:8, borderRadius:'50%', overflow:'hidden',
                     background:'#f0fdf4', boxShadow:'0 8px 24px rgba(22,163,74,0.15)',
                   }}>
                     {uploadedImage
                       ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#dcfce7,#f0fdf4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42 }}>👜</div>
+                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#dcfce7,#f0fdf4)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <Icons.Camera size={32} color="#16a34a" />
+                        </div>
                     }
                   </div>
-                  {/* Checkmark badge */}
                   <div style={{
                     position:'absolute', bottom:6, right:6,
                     width:42, height:42, borderRadius:'50%',
@@ -2222,13 +2565,10 @@ export default function Product(){
                     animation:'vsCheckPop .55s cubic-bezier(.34,1.56,.64,1) .4s both',
                     transform:'scale(0)',
                   }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                    </svg>
+                    <Icons.Check size={20} color="white" />
                   </div>
                 </div>
 
-                {/* Count badge */}
                 <div style={{
                   display:'inline-block',
                   background:'#dcfce7', color:'#15803d',
@@ -2288,7 +2628,7 @@ export default function Product(){
             </div>
           )}
 
-          {/* Results grid — unchanged */}
+          {/* Results grid */}
           <div style={{position:'relative', minHeight:'auto'}}>
             {displayedProducts.length > 0
               ? <ProductGridWithAds
@@ -2301,8 +2641,8 @@ export default function Product(){
                 />
               : !visualSearching && (
                 <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
-                  <div style={{fontSize:56,marginBottom:16}}>🔍</div>
-                  <h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No bags found</h3>
+                  <Icons.Search size={56} color={C.textFaint} />
+                  <h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8,marginTop:16}}>No bags found</h3>
                   <p style={{color:C.textMuted,marginBottom:24,fontSize:14}}>Try adjusting your search or browse all bags</p>
                   <button onClick={handleClearSearch} style={{padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>View All Bags</button>
                 </div>
@@ -2315,9 +2655,9 @@ export default function Product(){
               {hotDealProducts.length > 0 && (
                 <HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
               )}
-              <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon="⭐" accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
-              <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon="✨" accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
-              {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon="💸" accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
+              <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary} />} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
+              <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d" />} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
+              {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d" />} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
                 <div style={{position:'relative'}}>
@@ -2343,16 +2683,16 @@ export default function Product(){
             <p style={{fontSize:isMobile?12:13,color:C.textMuted,fontWeight:500}}>Trusted sellers with thousands of happy customers across Nigeria</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:28}}>
-            {[{l:'Total Vendors',v:47,i:'🏪',c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:1240,i:'👜',c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:8900,i:'😊',c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:5620,i:'⭐',c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
+            {[{l:'Total Vendors',v:47,i:<Icons.User size={20} color={C.primary} />,c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:1240,i:<Icons.ShoppingBag size={20} color="#92400e" />,c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:8900,i:<Icons.Heart size={18} color="#15803d" />,c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:5620,i:<Icons.Star size={18} color="#c2410c" filled />,c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
               <div key={s.l} style={{background:'white',borderRadius:16,padding:'14px 16px',border:`1.5px solid ${s.b}`,display:'flex',alignItems:'center',gap:10,boxShadow:`0 4px 14px ${s.c}12`}}>
-                <div style={{width:38,height:38,borderRadius:11,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{s.i}</div>
+                <div style={{width:38,height:38,borderRadius:11,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.i}</div>
                 <div><div style={{fontSize:18,fontWeight:900,color:s.c,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.v}/></div><div style={{fontSize:10,color:C.textFaint,fontWeight:700,marginTop:2}}>{s.l}</div></div>
               </div>
             ))}
           </div>
           {filteredVendors.length>0
             ?<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:isMobile?16:20}}>{filteredVendors.map((v,i)=>(<VendorCard key={v.id} vendor={v} index={i} onViewProducts={handleViewVendorProducts}/>))}</div>
-            :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><div style={{fontSize:56,marginBottom:16}}>🏪</div><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8}}>No vendors found</h3><button onClick={()=>handleVendorSearch('')} style={{marginTop:8,padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>See All Vendors</button></div>}
+            :<div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}><Icons.Search size={56} color={C.textFaint} /><h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8,marginTop:16}}>No vendors found</h3><button onClick={()=>handleVendorSearch('')} style={{marginTop:8,padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>See All Vendors</button></div>}
         </div>}
 
         </>}
@@ -2372,7 +2712,7 @@ function VendorCard({vendor,index,onViewProducts}){
       style={{background:'white',borderRadius:20,overflow:'hidden',position:'relative',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,boxShadow:hov?`0 24px 60px rgba(200,75,17,0.13),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,box-shadow 0.3s,border-color 0.3s`}}>
       <div style={{height:84,background:`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,opacity:0.1,backgroundImage:'radial-gradient(circle at 20% 50%,white 1px,transparent 1px)',backgroundSize:'22px 22px'}}/>
-        {vendor.badge==='Top Rated'&&<div style={{position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.22)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.35)',borderRadius:20,padding:'3px 10px',fontSize:10,fontWeight:800,color:'white',letterSpacing:'0.05em'}}>⭐ Top Rated</div>}
+        {vendor.badge==='Top Rated'&&<div style={{position:'absolute',top:12,right:12,background:'rgba(255,255,255,0.22)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.35)',borderRadius:20,padding:'3px 10px',fontSize:10,fontWeight:800,color:'white',letterSpacing:'0.05em'}}><Icons.Star size={12} color="white" filled /> Top Rated</div>}
       </div>
       <div style={{position:'absolute',top:50,left:18,width:60,height:60,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,boxShadow:'0 4px 14px rgba(0,0,0,0.1)',border:'3px solid white',transition:'transform 0.3s',transform:hov?'scale(1.1)':'scale(1)'}}>{vendor.avatar}</div>
       <div style={{padding:'12px 18px 18px',paddingTop:20}}>
@@ -2392,9 +2732,9 @@ function VendorCard({vendor,index,onViewProducts}){
           {vendor.tags.map(tag=>(<span key={tag} style={{fontSize:10,fontWeight:700,background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'3px 9px',borderRadius:20}}>{tag}</span>))}
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:15}}>
-          {[{label:'Views',value:vendor.views,icon:'👁️'},{label:'Reviews',value:vendor.reviews,icon:'⭐'},{label:'Products',value:vendor.products,icon:'👜'}].map(s=>(
+          {[{label:'Views',value:vendor.views,icon:<Icons.Eye size={14} color={C.textFaint} />},{label:'Reviews',value:vendor.reviews,icon:<Icons.Star size={12} color={C.textFaint} />},{label:'Products',value:vendor.products,icon:<Icons.ShoppingBag size={14} color={C.textFaint} />}].map(s=>(
             <div key={s.label} style={{background:C.surfaceDim,borderRadius:11,padding:'9px 6px',textAlign:'center',border:`1px solid ${C.borderLight}`,transition:'all 0.25s',transform:hov?'translateY(-2px)':'none'}}>
-              <div style={{fontSize:14,marginBottom:2}}>{s.icon}</div>
+              <div style={{marginBottom:2}}>{s.icon}</div>
               <div style={{fontSize:13,fontWeight:900,color:C.text,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.value}/></div>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:C.textFaint,marginTop:2}}>{s.label}</div>
             </div>
@@ -2458,7 +2798,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         if (profileData) setProfile(profileData);
         await loadSellerReviews();
         
-        // Fetch views for vendor's products
         await fetchVendorViews();
       } catch (err) { console.error('Failed to load vendor data:', err); }
       finally { setLoading(false); }
@@ -2593,7 +2932,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     <div style={{ animation:'fadeIn 0.4s ease', paddingBottom:40 }}>
       <button onClick={onClose} style={{ marginBottom:16,background:'none',border:'none',color:'#c84b11',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,padding:'8px 12px',borderRadius:8,transition:'background 0.2s' }}
         onMouseEnter={e=>e.currentTarget.style.background='#fdf4ee'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
-        <Icon name="arrow_back" size={18} /> Back to Vendors
+        <Icons.ArrowLeft size={18} color="currentColor" /> Back to Vendors
       </button>
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
         <div 
@@ -2622,10 +2961,10 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
             {displayName}
           </h2>
           <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap' }}>
-            {avgRating && <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icon name="star" size={16}/> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}
+            {avgRating && <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icons.Star size={16} color="#f97316" filled /> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}
             <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Product{vendorProducts.length!==1?'s':''}</span>
             <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#3b82f6',background:'#eff6ff',padding:'4px 10px',borderRadius:20 }}>
-              <Icon name="visibility" size={16}/> {totalViewsCount} View{totalViewsCount!==1?'s':''}
+              <Icons.Eye size={16} color="#3b82f6" /> {totalViewsCount} View{totalViewsCount!==1?'s':''}
             </span>
           </div>
           {displayStory ? <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,maxWidth:600 }}>{displayStory}</p> : <p style={{ fontSize:13,color:'#c4957a',fontStyle:'italic' }}>No brand story added yet.</p>}
@@ -2666,7 +3005,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
                   gap:16,
                   alignItems:'center'
                 }}>
-                  {/* Product Image */}
                   {productImage ? (
                     <img 
                       src={productImage} 
@@ -2688,12 +3026,12 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
                       display:'flex',
                       alignItems:'center',
                       justifyContent:'center',
-                      flexShrink:0,
-                      fontSize:24
-                    }}>👜</div>
+                      flexShrink:0
+                    }}>
+                      <Icons.ShoppingBag size={24} color="#9a6348" />
+                    </div>
                   )}
                   
-                  {/* View Details */}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
                       <span style={{ 
@@ -2757,7 +3095,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           <h4 style={{ fontSize:15,fontWeight:800,color:'#1a0a00',marginBottom:12 }}>Write a Review</h4>
           <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:16 }}>
             <span style={{ fontSize:13,fontWeight:700,color:'#5c3317' }}>Rating:</span>
-            {[1,2,3,4,5].map(star=>(<button key={star} type="button" onClick={()=>setNewRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}><Icon name="star" size={24} style={{ color:star<=newRating?'#f97316':'#f0d9cc' }}/></button>))}
+            {[1,2,3,4,5].map(star=>(<button key={star} type="button" onClick={()=>setNewRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}><Icons.Star size={24} color={star<=newRating?'#f97316':'#f0d9cc'} filled={star<=newRating} /></button>))}
           </div>
           <textarea value={newReviewText} onChange={e=>setNewReviewText(e.target.value)} placeholder="Share your experience with this seller..." style={{ width:'100%',padding:16,borderRadius:12,border:'1.5px solid #f0d9cc',background:'white',minHeight:100,resize:'vertical',fontSize:14,fontFamily:'inherit',marginBottom:16,outline:'none',color:'#1a0a00' }}/>
           <button type="submit" disabled={submittingReview} style={{ padding:'12px 24px',background:'linear-gradient(135deg, #c84b11, #f97316)',color:'white',border:'none',borderRadius:10,fontWeight:800,fontSize:14,cursor:submittingReview?'default':'pointer',opacity:submittingReview?0.7:1 }}>
@@ -2771,14 +3109,13 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         : reviews.map(r=>(
           <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
             {editingReview === r.id ? (
-              // Edit form
               <div style={{ background:'#fdf8f5',padding:16,borderRadius:12,border:'1px solid #f0d9cc' }}>
                 <h4 style={{ fontSize:15,fontWeight:800,color:'#1a0a00',marginBottom:12 }}>Edit Your Review</h4>
                 <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:16 }}>
                   <span style={{ fontSize:13,fontWeight:700,color:'#5c3317' }}>Rating:</span>
                   {[1,2,3,4,5].map(star=>(
                     <button key={star} type="button" onClick={()=>setEditRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}>
-                      <Icon name="star" size={24} style={{ color:star<=editRating?'#f97316':'#f0d9cc' }}/>
+                      <Icons.Star size={24} color={star<=editRating?'#f97316':'#f0d9cc'} filled={star<=editRating} />
                     </button>
                   ))}
                 </div>
@@ -2835,7 +3172,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
                 </div>
               </div>
             ) : (
-              // Normal review display
               <React.Fragment>
                 <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
                   <div style={{ display:'flex',alignItems:'center',gap:10 }}>
@@ -2850,7 +3186,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
                   </div>
                   <div style={{ display:'flex',gap:8,alignItems:'center' }}>
                     <div style={{ display:'flex',gap:2 }}>
-                      {[1,2,3,4,5].map(star=>(<Icon key={star} name="star" size={14} style={{ color:star<=r.rating?'#f97316':'#f0d9cc' }}/>))}
+                      {[1,2,3,4,5].map(star=>(<Icons.Star key={star} size={14} color={star<=r.rating?'#f97316':'#f0d9cc'} filled={star<=r.rating} />))}
                     </div>
                     {user && (r.author_name === authorName || r.user_id === user?.id) && (
                       <div style={{ display:'flex',gap:4 }}>
@@ -2894,5 +3230,23 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           ))}
       </React.Fragment>
     </div>
+  );
+}
+
+// FeedbackTrigger component - kept for compatibility
+function FeedbackTrigger({ onClick }) {
+  const [hov, setHov] = useState(false);
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => { setPulse(true); setTimeout(() => setPulse(false), 1000); }, 5000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ position:'fixed',bottom:24,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap' }}>
+      {pulse && <div style={{ position:'absolute',inset:-4,borderRadius:30,border:'2px solid rgba(249,115,22,0.6)',animation:'triggerPulse 1s ease-out both',pointerEvents:'none' }} />}
+      <Icons.MessageCircle size={20} color="white" />
+      <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?120:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>Feedback</span>
+    </button>
   );
 }
