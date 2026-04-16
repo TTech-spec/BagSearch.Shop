@@ -61,9 +61,10 @@ const iStyle = {
 
 
 export default function VendorDetails() {
-  const { id } = useParams();
+  const { id, slug } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const sellerParam = id || slug || '';
 
   const [profile,   setProfile]   = useState(null);
   const [products,  setProducts]  = useState([]);
@@ -82,19 +83,20 @@ export default function VendorDetails() {
   const [editRating,setEditRating]= useState(5);
   const [updating,  setUpdating]  = useState(false);
 
+  const sellerId = profile?.user_id || id || '';
   const me = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
 
   const loadReviews = useCallback(async () => {
-    if (!id) return;
+    if (!sellerId) return;
     const { data, error } = await supabase
       .from('seller_reviews')
       .select('id,author_name,rating,text,created_at')
-      .eq('seller_id', id)
+      .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
       .limit(20);
     console.log('Reviews fetch:', data?.length, error);
     setReviews(data || []);
-  }, [id]);
+  }, [sellerId]);
 
   const loadViews = useCallback(async (pids) => {
     if (!pids?.length) { setTotalViews(0); setViews([]); return; }
@@ -121,20 +123,40 @@ export default function VendorDetails() {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!sellerParam) {
+      setProfile(null);
+      setProducts([]);
+      setReviews([]);
+      setViews([]);
+      setTotalViews(0);
+      setLoading(false);
+      return;
+    }
     (async () => {
       setLoading(true);
       try {
-        const { data: p, error: pErr } = await supabase
+        const isSlugRoute = !id && !!slug;
+        const profileQuery = supabase
           .from('users')
-          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email')
-          .eq('user_id', id).maybeSingle();
+          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,location,profile_slug');
+        const { data: p, error: pErr } = isSlugRoute
+          ? await profileQuery.eq('profile_slug', slug).maybeSingle()
+          : await profileQuery.eq('user_id', id).maybeSingle();
         console.log('Profile fetch:', p, pErr);
         setProfile(p || null);
 
+        const resolvedSellerId = p?.user_id || id;
+        if (!resolvedSellerId) {
+          setProducts([]);
+          setReviews([]);
+          setViews([]);
+          setTotalViews(0);
+          return;
+        }
+
         const { data: prods, error: prodsErr } = await supabase
           .from('products').select('*')
-          .eq('user_id', id)
+          .eq('user_id', resolvedSellerId)
           .order('created_at', { ascending: false });
         console.log('Products fetch:', prods?.length, prodsErr);
 
@@ -152,12 +174,19 @@ export default function VendorDetails() {
           whatsapp: p.whatsapp || '',
         }));
         setProducts(mapped);
-        await loadReviews();
+        const { data: reviewRows, error: reviewErr } = await supabase
+          .from('seller_reviews')
+          .select('id,author_name,rating,text,created_at')
+          .eq('seller_id', resolvedSellerId)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        console.log('Reviews fetch:', reviewRows?.length, reviewErr);
+        setReviews(reviewRows || []);
         await loadViews(mapped.map(p => p.id));
       } catch(e) { console.error('Load error:', e); }
       finally { setLoading(false); }
     })();
-  }, [id, loadReviews, loadViews]);
+  }, [id, slug, sellerParam, loadViews]);
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -167,7 +196,7 @@ export default function VendorDetails() {
       const { error } = await supabase
         .from('seller_reviews')
         .insert({
-          seller_id: id,
+          seller_id: sellerId || sellerParam,
           author_name: me,
           rating: newRating,
           text: newText.trim(),

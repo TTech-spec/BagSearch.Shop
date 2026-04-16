@@ -1865,6 +1865,9 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
             <Icons.User size={20} color="currentColor" />
           </button>
           <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
+          <button onClick={()=>navigate('/contact')} style={{ padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
+            onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.primary;}}
+            onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>Contact</button>
           {user?(
             <button onClick={handleLogout} style={{ padding:'8px 16px',borderRadius:10,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',color:'#dc2626',fontSize:13,fontWeight:700,transition:'all 0.2s' }}>Logout</button>
           ):(
@@ -1905,6 +1908,7 @@ export default function Product(){
   const[dismissedAds,setDismissedAds]=useState([]);
   const[mobileAuthPromptOpen,setMobileAuthPromptOpen]=useState(false);
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
+  const[vendorStats,setVendorStats]=useState({vendors:0,products:0,buyers:0,reviews:0});
   const vendorRouteParam = params.id || params.slug || '';
 
   // Handle vendor detail view from URL — fetch directly if not in vendors list yet
@@ -2011,6 +2015,19 @@ export default function Product(){
     return Array.from(map.values());
   },[]);
 
+  const countUniqueBuyers=useCallback((viewRows=[])=>{
+    const buyers=new Set();
+    viewRows.forEach(row=>{
+      const buyerKey=
+        row.buyer_id
+        || row.buyer_email
+        || row.buyer_phone
+        || (row.buyer_name ? `name:${row.buyer_name.trim().toLowerCase()}` : '');
+      if(buyerKey) buyers.add(String(buyerKey).trim().toLowerCase());
+    });
+    return buyers.size;
+  },[]);
+
   const fetchVendors=useCallback(async(products)=>{
     try{
       const { data: sellerRows } = await supabase
@@ -2030,11 +2047,13 @@ export default function Product(){
 
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
       const viewCountMap={};
+      let viewRows=[];
       if(allProductIds.length>0){
-        const{data:viewRows}=await supabase
+        const{data}=await supabase
           .from('product_views')
-          .select('product_id')
+          .select('product_id,buyer_id,buyer_email,buyer_phone,buyer_name')
           .in('product_id',allProductIds);
+        viewRows=data||[];
         (viewRows||[]).forEach(row=>{
           viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;
         });
@@ -2070,12 +2089,33 @@ export default function Product(){
       }));
 
       const final=[...allSellers,...extra];
+      const sellerIds=final.map(v=>v.id).filter(Boolean);
+      let reviewCount=0;
+      if(sellerIds.length>0){
+        const { count } = await supabase
+          .from('seller_reviews')
+          .select('id', { count: 'exact', head: true })
+          .in('seller_id', sellerIds);
+        reviewCount=count||0;
+      }
+      setVendorStats({
+        vendors:final.length,
+        products:(products||[]).length,
+        buyers:countUniqueBuyers(viewRows),
+        reviews:reviewCount,
+      });
       setVendors(final);setFilteredVendors(final);return final;
     }catch(err){
       const derived=buildVendorsFromProducts(products||[]);
+      setVendorStats({
+        vendors:derived.length,
+        products:(products||[]).length,
+        buyers:0,
+        reviews:0,
+      });
       setVendors(derived);setFilteredVendors(derived);return derived;
     }
-  },[buildVendorsFromProducts]);
+  },[buildVendorsFromProducts,countUniqueBuyers]);
 
   const fetchProducts=useCallback(async(locationId='all')=>{
     try{
@@ -2683,7 +2723,7 @@ export default function Product(){
             <p style={{fontSize:isMobile?12:13,color:C.textMuted,fontWeight:500}}>Trusted sellers with thousands of happy customers across Nigeria</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:28}}>
-            {[{l:'Total Vendors',v:47,i:<Icons.User size={20} color={C.primary} />,c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:1240,i:<Icons.ShoppingBag size={20} color="#92400e" />,c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:8900,i:<Icons.Heart size={18} color="#15803d" />,c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:5620,i:<Icons.Star size={18} color="#c2410c" filled />,c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
+            {[{l:'Total Vendors',v:vendorStats.vendors,i:<Icons.User size={20} color={C.primary} />,c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:vendorStats.products,i:<Icons.ShoppingBag size={20} color="#92400e" />,c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:vendorStats.buyers,i:<Icons.Heart size={18} color="#15803d" />,c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:vendorStats.reviews,i:<Icons.Star size={18} color="#c2410c" filled />,c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
               <div key={s.l} style={{background:'white',borderRadius:16,padding:'14px 16px',border:`1.5px solid ${s.b}`,display:'flex',alignItems:'center',gap:10,boxShadow:`0 4px 14px ${s.c}12`}}>
                 <div style={{width:38,height:38,borderRadius:11,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.i}</div>
                 <div><div style={{fontSize:18,fontWeight:900,color:s.c,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.v}/></div><div style={{fontSize:10,color:C.textFaint,fontWeight:700,marginTop:2}}>{s.l}</div></div>
