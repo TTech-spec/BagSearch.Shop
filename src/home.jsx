@@ -4,7 +4,7 @@ import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 
 // ── CRIIBB PALETTE ──
-const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search"];
+const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search", "Contact Us"];
 
 const NEW_ARRIVALS = [
   { name: "The Midnight Satchel", sub: "Italian Leather", material: "Midnight Blue", price: "$2,450", tag: "New", tagColor: "#C94B2C", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8" },
