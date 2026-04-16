@@ -1,32 +1,26 @@
-# Google Authentication Fix - Progress Tracker
+# Mobile Navbar Improvements - BlackBoxAI
 
-## ✅ TASK COMPLETE!
+## ✅ Completed Steps
+- [x] ✅ Created TODO.md ✅
 
-**Changes Made:**
-- `src/login.jsx`: Added `handleGoogleLogin`, wired to button w/ icon/loading
-- `src/context/AuthContext.jsx`: Enhanced listener to auto-fetch/store role from DB post-OAuth
-- Matches email login flow perfectly
+## ⏳ In Progress Steps
 
-**Test:**
-```
-npm run dev
-```
-Visit `/login` → Click Google → Should work!
+## 📋 Steps to Complete:
+1. [x] **Create TODO.md** ✅ **DONE**
+2. [x] **Edit src/home.jsx** 
+   - Remove cart/profile icons from header (shopping_bag, person)
+   - Icons now completely removed from mobile view ✅
+3. [x] **Edit src/Product.jsx (ResponsiveHeader)**
+   - Mobile cart/profile buttons disabled (`false && isMobile`)
+   - Location border responsive: `1px` mobile, `1.5px` desktop ✅
+4. [ ] **Test responsiveness**
+   - Resize browser to ≤768px
+   - Verify icons hidden, location border scales
+5. [ ] **attempt_completion** - Present results
 
-**Files Updated:** login.jsx, AuthContext.jsx, TODO.md
-
-
-## In Progress
-- [ ] 2. Add handleGoogleLogin function to src/login.jsx
- - [ ] 3. Attach handler to Google button in login.jsx
-- [ ] 4. Enhance AuthContext.jsx for OAuth role sync
-- [ ] 5. Optional: Add Google signup to Reg.jsx
-- [ ] 6. Test flow and clean up
-
-## Next Steps After Code
-- Run `npm run dev`
-- Test: Click Google button → Should redirect to Google OAuth → Back to app with session
-- If issues: Check Supabase dashboard logs
-
-**Notes:** User confirmed Google provider enabled in Supabase. Redirects configured.
+## 🔧 Edit Details
+**Files**: src/home.jsx, src/Product.jsx  
+**Breakpoint**: ≤768px (windowWidth <= 768)  
+**Border**: 1px mobile, 1.5px desktop  
+**Status**: Ready for edits → **Next: src/home.jsx**
 
