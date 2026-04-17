@@ -15,7 +15,6 @@ const QUICK_CHIPS = [
   'How does visual search work?',
   'How do buyers contact me?',
   'Is BagSearch free?',
-  'How do I track my order?',
   'How do I report a seller?',
 ];
 
