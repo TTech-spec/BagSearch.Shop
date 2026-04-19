@@ -7,6 +7,8 @@ import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import UnderDevelopmentBanner from './UnderDevelopmentBanner';
 import shoppingBagImg from './images/shopping-bag.png';
+import { productPath } from './utils/slugify';
+import { useSEO } from './hooks/useSEO';
 
 const BAG_COLOR_MAP = {
   black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
@@ -1410,7 +1412,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   const handleCart=(e)=>{e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
 
   return(
-    <div ref={ref} onClick={()=>navigate(`/products/${product.id}`)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    <div ref={ref} onClick={()=>navigate(productPath(product.name, product.id))} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
         <img src={product.src} alt={product.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}/>
@@ -1479,7 +1481,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   const [added, setAdded] = useState(false);
   const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
   return (
-    <div onClick={() => navigate(`/products/${product.id}`)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+    <div onClick={() => navigate(productPath(product.name, product.id))} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ background:'white',borderRadius:16,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',boxShadow:hov?`0 16px 40px rgba(200,75,17,0.13)`:'0 2px 8px rgba(0,0,0,0.04)',transform:hov?'translateY(-4px)':'none',flexShrink:0,width:200 }}>
       <div style={{ position:'relative',overflow:'hidden',height:150,background:C.primaryBg }}>
         <img src={product.src} alt={product.name} style={{ width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.5s ease',transform:hov?'scale(1.08)':'scale(1)' }} />
@@ -1627,14 +1629,14 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
       <div onMouseEnter={()=>setIsPaused(true)} onMouseLeave={()=>setIsPaused(false)}
         style={{ position:'relative',borderRadius:22,overflow:'hidden',border:`2px solid #fcd4be`,boxShadow:'0 6px 32px rgba(200,75,17,0.1)',background:'linear-gradient(135deg,#fff5f2 0%,#fff 60%)' }}>
         <div style={{ display:'flex',flexDirection:isMobile?'column':'row',transition:'opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1)',...slideStyle }}>
-          <div style={{ width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0 }} onClick={()=>navigate(`/products/${product.id}`)}>
+          <div style={{ width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0 }} onClick={()=>navigate(productPath(product.name, product.id))}>
             <img src={product.src} alt={product.name} style={{ width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease' }} onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
             <div style={{ position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmall?9:11,fontWeight:900,padding:isSmall?'2px 8px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite' }}>🔥 HOT DEAL</div>
             {products.length > 1 && <div style={{ position:'absolute',bottom:14,left:14,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',color:'white',fontSize:11,fontWeight:800,padding:'4px 10px',borderRadius:20 }}>{activeIdx+1} / {products.length}</div>}
           </div>
           <div style={{ flex:1,padding:isMobile?'20px 18px 24px':isSmall?'16px 14px':'28px 32px 28px',display:'flex',flexDirection:'column',justifyContent:'center' }}>
             <p style={{ fontSize:isSmall?9:11,fontWeight:800,letterSpacing:'0.14em',textTransform:'uppercase',color:C.primary,marginBottom:6 }}>{product.seller}</p>
-            <h4 style={{ fontSize:isMobile?'1.15rem':'clamp(1.2rem,2.5vw,1.65rem)',fontWeight:900,color:C.text,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:8,cursor:'pointer' }} onClick={()=>navigate(`/products/${product.id}`)}>{product.name}</h4>
+            <h4 style={{ fontSize:isMobile?'1.15rem':'clamp(1.2rem,2.5vw,1.65rem)',fontWeight:900,color:C.text,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:8,cursor:'pointer' }} onClick={()=>navigate(productPath(product.name, product.id))}>{product.name}</h4>
             <p style={{ fontSize:13,color:C.textMuted,fontWeight:500,lineHeight:1.6,marginBottom:16 }}>{product.sub}</p>
             <div style={{ display:'flex',alignItems:'baseline',gap:10,marginBottom:16,flexWrap:'wrap' }}>
               <span style={{ fontSize:isMobile?24:32,fontWeight:900,color:C.primary,letterSpacing:'-0.04em' }}>{formatCurrency(product.discountedPrice||product.price)}</span>
@@ -1890,6 +1892,14 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocati
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
+
+  // ── SEO for product listing page ──────────────────────────────────────────
+  useSEO({
+    title: 'Shop Luxury Designer Bags',
+    description: 'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more. Shop Chanel, Hermès, Louis Vuitton, Gucci and other top brands in Nigeria.',
+    keywords: 'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',
+    url: '/products',
+  });
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
@@ -2292,16 +2302,16 @@ export default function Product(){
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
-      <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px'}}>
+      <aside style={{position:'fixed',top:0,left:0,height:'100%',width:260,background:'white',zIndex:70,transform:isSidebarOpen?'translateX(0)':'translateX(-100%)',transition:'transform 0.32s cubic-bezier(0.4,0,0.2,1)',boxShadow:`6px 0 32px rgba(200,75,17,0.1)`,display:'flex',flexDirection:'column',padding:'24px 16px',overflowY:'auto'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>
           <div style={{display:'flex',alignItems:'center',gap:8,color:C.primary}}><LogoIcon size={32}/><span style={{fontWeight:900,fontSize:17,color:C.text}}>BagSearch</span></div>
           <button onClick={()=>setIsSidebarOpen(false)} style={{padding:8,borderRadius:9,border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
             <Icons.X size={16} color={C.primary} />
           </button>
         </div>
-        {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
-          <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':'transparent',cursor:'pointer',color:label==='Logout'?C.danger:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s'}}
-            onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
+        {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
+          <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent',cursor:'pointer',color:label==='Logout'?C.danger:label==='Contact'?C.primary:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s',width:'100%'}}
+            onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:label==='Contact'?C.primary:C.text;}}>
             <IconComponent size={20} color="currentColor" />{label}
           </button>
         ))}

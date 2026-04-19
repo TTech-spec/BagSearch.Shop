@@ -4,6 +4,8 @@ import LogoIcon from './components/Logo.jsx';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
+import { useSEO, SITE_URL } from './hooks/useSEO';
+import { slugify, extractIdFromParam, productPath } from './utils/slugify';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
 const BAG_COLOR_MAP = {
@@ -169,15 +171,30 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      if (id && ['1','2','3','4','5'].includes(id)) {
-        // mock IDs no longer supported
+
+      // Support both plain UUID and slug-based params (name--shortId)
+      const resolvedId = extractIdFromParam(id);
+      let query = supabase.from('products').select('*');
+
+      // If it looks like a short ID prefix (8 chars), match by ID prefix
+      if (resolvedId && resolvedId.length === 8 && resolvedId !== id) {
+        query = query.ilike('id', `${resolvedId}%`);
+      } else {
+        query = query.eq('id', resolvedId);
       }
-      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+
+      const { data, error } = await query.single();
       // #region agent log
       fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H2',location:'src/productDetail.jsx:fetchProduct:result',message:'Fetched product by route id',data:{routeId:id,foundProductId:data?.id||null,error:error?{message:error.message,code:error.code}:null},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
       if (error) throw error;
       if (data) {
+        // Redirect to canonical SEO-friendly URL if not already there
+        const canonicalPath = productPath(data.name, data.id);
+        if (window.location.pathname !== canonicalPath) {
+          window.history.replaceState(null, '', canonicalPath);
+        }
+
         const fmt = {
           id: data.id,
           name: data.name,
@@ -205,6 +222,9 @@ export default function ProductDetail() {
           category: data.category || "General",
           images: data.images?.length > 0 ? data.images : ['https://via.placeholder.com/600'],
           isMock: false,
+          rawPrice: parseFloat(data.price) || 0,
+          rawId: data.id,
+          slug: slugify(data.name),
         };
         setProduct(fmt);
         setSelectedColor(fmt.colors[0]);
@@ -265,6 +285,61 @@ export default function ProductDetail() {
     if (!navigator.onLine) setNetworkError(true);
     return () => { clearTimeout(t); window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
   }, []);
+
+  // ── SEO: dynamic meta tags, OG, Twitter Card, JSON-LD ──────────────────────
+  const seoKeywords = product
+    ? [
+        product.brand,
+        product.category,
+        product.name,
+        'luxury bag Nigeria',
+        'authentic designer bag',
+        'buy ' + product.brand + ' bag',
+        product.category + ' Nigeria',
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : 'luxury bags Nigeria, designer handbags';
+
+  const seoDescription = product
+    ? `Buy authentic ${product.brand} ${product.name}. ${product.description?.slice(0, 120) || ''} Available on BagSearch Nigeria.`
+    : 'Discover authentic luxury designer bags on BagSearch Nigeria.';
+
+  const seoSchema = product
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: product.description,
+        image: product.images,
+        brand: { '@type': 'Brand', name: product.brand },
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'NGN',
+          price: product.rawPrice,
+          availability: 'https://schema.org/InStock',
+          url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
+          seller: { '@type': 'Person', name: product.seller },
+        },
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: product.rating,
+          reviewCount: product.reviews,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }
+    : null;
+
+  useSEO({
+    title: product ? `${product.name} — ${product.brand}` : 'Product',
+    description: seoDescription,
+    keywords: seoKeywords,
+    image: product?.images?.[0],
+    url: product ? productPath(product.name, product.rawId) : null,
+    type: 'product',
+    schema: seoSchema,
+  });
 
   if (loading) {
     return (
@@ -537,13 +612,42 @@ export default function ProductDetail() {
       {/* ══════════════════════ MAIN ══════════════════════ */}
       <main className="main-wrap" style={{ maxWidth:1320, margin:'0 auto', padding:'24px 16px 40px' }}>
 
-        {/* Breadcrumb */}
-        <nav className="fade-in" style={{ display:'flex',alignItems:'center',gap:6,fontSize:11,color:C.textFaint,marginBottom:20,flexWrap:'wrap' }}>
-          <span style={{ cursor:'pointer' }} onMouseEnter={e=>e.target.style.color=C.primary} onMouseLeave={e=>e.target.style.color=C.textFaint}>Home</span>
-          <span>›</span>
-          <span style={{ cursor:'pointer' }}>{product.category}</span>
-          <span>›</span>
-          <span style={{ color:C.textMid, fontWeight:600 }}>{product.name}</span>
+        {/* Breadcrumb — semantic nav with structured data */}
+        <nav
+          className="fade-in"
+          aria-label="Breadcrumb"
+          style={{ display:'flex',alignItems:'center',gap:6,fontSize:11,color:C.textFaint,marginBottom:20,flexWrap:'wrap' }}
+        >
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+              { '@type': 'ListItem', position: 2, name: product.category, item: `${SITE_URL}/products?category=${encodeURIComponent(product.category)}` },
+              { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_URL}${productPath(product.name, product.rawId)}` },
+            ],
+          })}} />
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate('/')}
+            onKeyDown={e => e.key === 'Enter' && navigate('/')}
+            style={{ cursor:'pointer' }}
+            onMouseEnter={e=>e.target.style.color=C.primary}
+            onMouseLeave={e=>e.target.style.color=C.textFaint}
+          >Home</span>
+          <span aria-hidden="true">›</span>
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate(`/products?category=${encodeURIComponent(product.category)}`)}
+            onKeyDown={e => e.key === 'Enter' && navigate(`/products?category=${encodeURIComponent(product.category)}`)}
+            style={{ cursor:'pointer' }}
+            onMouseEnter={e=>e.target.style.color=C.primary}
+            onMouseLeave={e=>e.target.style.color=C.textFaint}
+          >{product.category}</span>
+          <span aria-hidden="true">›</span>
+          <span style={{ color:C.textMid, fontWeight:600 }} aria-current="page">{product.name}</span>
         </nav>
 
         {/* ══ PRODUCT GRID ══ */}
@@ -562,10 +666,14 @@ export default function ProductDetail() {
             }}>
               <img
                 src={product.images[activeImg]}
-                alt={product.name}
+                alt={`${product.brand} ${product.name} — image ${activeImg + 1} of ${product.images.length}`}
                 className={`img-zoom${imgZoom?' zoomed':''}`}
                 onClick={() => setImgZoom(z=>!z)}
+                width="800"
+                height="600"
                 style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}
+                loading="eager"
+                fetchpriority="high"
               />
               <div style={{ position:'absolute',bottom:0,left:0,right:0,height:'35%',background:'linear-gradient(to top,rgba(26,10,0,0.12),transparent)',pointerEvents:'none' }}/>
 
@@ -605,7 +713,14 @@ export default function ProductDetail() {
                     background:'transparent', cursor:'pointer', aspectRatio:'1',
                     boxShadow: activeImg===i ? `0 0 0 3px ${C.primaryBg}` : 'none',
                   }}>
-                  <img src={img} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                  <img
+                    src={img}
+                    alt={`${product.brand} ${product.name} — thumbnail ${i + 1}`}
+                    loading="lazy"
+                    width="120"
+                    height="120"
+                    style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}
+                  />
                 </button>
               ))}
             </div>
@@ -690,7 +805,7 @@ export default function ProductDetail() {
 
             {/* Description */}
             <div className="fade-in-3">
-              <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8 }}>About</p>
+              <h2 style={{ fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8 }}>About</h2>
               <p style={{ color:C.textMid,fontSize:14,lineHeight:1.75,fontWeight:500 }}>{product.description}</p>
             </div>
 
@@ -842,7 +957,7 @@ export default function ProductDetail() {
               <div key={p.id} className="card-hover"
                 style={{ background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${C.borderLight}`,animation:`floatUp 0.55s ${0.05+idx*0.07}s ease both` }}>
                 <div style={{ position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg }}>
-                  <img src={p.images?.[0]} alt={p.name} className="card-img" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                  <img src={p.images?.[0]} alt={`${p.brand || ''} ${p.name} — similar product`} className="card-img" loading="lazy" width="400" height="300" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
                   {p.lowStock && (
                     <span style={{ position:'absolute',top:9,left:9,background:C.danger,color:'white',fontSize:9,fontWeight:800,padding:'3px 9px',borderRadius:99,letterSpacing:'0.06em',textTransform:'uppercase' }}>
                       Low Stock
@@ -859,7 +974,7 @@ export default function ProductDetail() {
                   </div>
                   <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
                     <p style={{ fontSize:17,fontWeight:900,color:C.primary }}>{p.price}</p>
-                    <button onClick={() => navigate(`/products/${p.id}`)}
+                    <button onClick={() => navigate(productPath(p.name, p.id))}
                       style={{ padding:'6px 13px',background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,color:'white',fontWeight:800,fontSize:11,border:'none',borderRadius:8,cursor:'pointer',transition:'all 0.2s' }}
                       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
                       onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>

@@ -158,7 +158,7 @@ function App() {
           <Route path="/seller-products" element={<SellerProduct />} />
           <Route path="/seller-product" element={<SellerProduct />} />
 
-          {/* Product Detail page - protected behind login */}
+          {/* Product Detail page - supports both plain ID and SEO slug (name--shortId) */}
           <Route
             path="/products/:id"
             element={
