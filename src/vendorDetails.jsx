@@ -135,17 +135,36 @@ export default function VendorDetails() {
     (async () => {
       setLoading(true);
       try {
-        const isSlugRoute = !id && !!slug;
-        const profileQuery = supabase
-          .from('users')
-          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,location,profile_slug');
-        const { data: p, error: pErr } = isSlugRoute
-          ? await profileQuery.eq('profile_slug', slug).maybeSingle()
-          : await profileQuery.eq('user_id', id).maybeSingle();
+        const profileFields = 'user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,profile_slug';
+        let p = null;
+        let pErr = null;
+
+        if (sellerParam) {
+          const byUserId = await supabase
+            .from('users')
+            .select(profileFields)
+            .eq('user_id', sellerParam)
+            .maybeSingle();
+
+          p = byUserId.data || null;
+          pErr = byUserId.error || null;
+
+          // `/vendor/:id` is also used for shareable profile slugs.
+          if (!p) {
+            const bySlug = await supabase
+              .from('users')
+              .select(profileFields)
+              .eq('profile_slug', sellerParam)
+              .maybeSingle();
+
+            p = bySlug.data || null;
+            pErr = pErr || bySlug.error || null;
+          }
+        }
         console.log('Profile fetch:', p, pErr);
         setProfile(p || null);
 
-        const resolvedSellerId = p?.user_id || id;
+        const resolvedSellerId = p?.user_id || sellerParam;
         if (!resolvedSellerId) {
           setProducts([]);
           setReviews([]);
@@ -261,7 +280,7 @@ export default function VendorDetails() {
   const avg   = reviews.length > 0
     ? (reviews.reduce((s,r) => s+(r.rating||0), 0) / reviews.length).toFixed(1)
     : null;
-  const loc = LOCATIONS.find(l => l.id === (profile?.location || ''));
+  const loc = null;
 
   const TABS = [
     { id:'products', label:'Products (' + products.length + ')' },
