@@ -207,9 +207,15 @@ const Icons = {
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
     </svg>
   ),
+  MapPin: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+  ),
 };
 
-// ─── DUMMY ADS DATA (updated with SVG icons) ─────────────────────────────────
+// ─── DUMMY ADS DATA ──────────────────────────────────────────────────────────
 const DUMMY_ADS = [
   {
     id: 'ad1',
@@ -307,7 +313,7 @@ const getIconComponent = (iconName, size = 22, color = 'currentColor') => {
   return null;
 };
 
-// ─── AD BANNER (top-of-results, dismissible) ──────────────────────────────────
+// ─── AD BANNER ────────────────────────────────────────────────────────────────
 function AdBanner({ ad, onDismiss }) {
   const [hov, setHov] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -360,7 +366,7 @@ function AdBanner({ ad, onDismiss }) {
   );
 }
 
-// ─── INLINE AD CARD (appears between product rows) ────────────────────────────
+// ─── INLINE AD CARD ───────────────────────────────────────────────────────────
 function InlineAdCard({ ad }) {
   const [hov, setHov] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -414,7 +420,7 @@ function InlineAdCard({ ad }) {
   );
 }
 
-// ─── PRODUCT GRID WITH ADS INJECTED ──────────────────────────────────────────
+// ─── PRODUCT GRID WITH ADS ────────────────────────────────────────────────────
 function ProductGridWithAds({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
   const inlineAds = DUMMY_ADS.filter(a => a.type === 'inline');
   const adInsertPositions = [8, 20];
@@ -456,53 +462,39 @@ function SiteFooter({ navigate, user, handleLogout }) {
 
   return (
     <footer style={{ background: '#1a0a00', color: 'rgba(255,255,255,0.75)', marginTop: 0 }}>
-      {/* CTA strip */}
       <div style={{ background: `linear-gradient(135deg,#c84b11,#f97316)`, padding: '36px 20px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
           <div>
-            <h3 style={{ fontSize: 22, fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 6 }}>
-              Join BagSearch Today
-            </h3>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.82)', fontWeight: 500 }}>
-              Discover, save, and shop the best bags across Nigeria
-            </p>
+            <h3 style={{ fontSize: 22, fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 6 }}>Join BagSearch Today</h3>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.82)', fontWeight: 500 }}>Discover, save, and shop the best bags across Nigeria</p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {!user && (
               <>
                 <button onClick={() => navigate('/register')}
-                  style={{ padding: '12px 26px', background: 'white', color: C.primary, borderRadius: 12, border: 'none', fontWeight: 900, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', letterSpacing: '-0.01em' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)'; }}>
+                  style={{ padding: '12px 26px', background: 'white', color: C.primary, borderRadius: 12, border: 'none', fontWeight: 900, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', letterSpacing: '-0.01em' }}>
                   Create Free Account
                 </button>
                 <button onClick={() => navigate('/login')}
-                  style={{ padding: '12px 26px', background: 'rgba(255,255,255,0.18)', color: 'white', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(8px)', letterSpacing: '-0.01em' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.28)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; e.currentTarget.style.transform = 'none'; }}>
+                  style={{ padding: '12px 26px', background: 'rgba(255,255,255,0.18)', color: 'white', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', fontWeight: 800, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', backdropFilter: 'blur(8px)', letterSpacing: '-0.01em' }}>
                   Sign In
                 </button>
               </>
             )}
             {user && (
               <button onClick={() => navigate('/profile')}
-                style={{ padding: '12px 26px', background: 'white', color: C.primary, borderRadius: 12, border: 'none', fontWeight: 900, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 8 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}>
+                style={{ padding: '12px 26px', background: 'white', color: C.primary, borderRadius: 12, border: 'none', fontWeight: 900, fontSize: 14, cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 28, height: 28, borderRadius: '50%', background: C.primaryBg, border: `2px solid ${C.primaryBorder}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: C.primary }}>
                   {(user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
                 </span>
                 My Profile
               </button>
-              
             )}
           </div>
         </div>
       </div>
 
-      {/* Main footer body */}
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '52px 20px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '40px 32px' }}>
-        {/* Brand col */}
         <div style={{ gridColumn: 'span 1' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14, cursor: 'pointer' }}>
             <div style={{ color: C.primaryLight }}><LogoIcon size={32} /></div>
@@ -512,30 +504,16 @@ function SiteFooter({ navigate, user, handleLogout }) {
             Nigeria's favourite marketplace for bags. Connect buyers with trusted sellers across the country.
           </p>
           <div style={{ marginTop: 18, display: 'flex', gap: 10 }}>
-            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
-              <Icons.Facebook size={16} color="rgba(255,255,255,0.7)" />
-            </button>
-            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
-              <Icons.Instagram size={16} color="rgba(255,255,255,0.7)" />
-            </button>
-            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
-              <Icons.Twitter size={16} color="rgba(255,255,255,0.7)" />
-            </button>
-            <button style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
-              <Icons.MessageCircle size={16} color="rgba(255,255,255,0.7)" />
-            </button>
+            {[Icons.Facebook, Icons.Instagram, Icons.Twitter, Icons.MessageCircle].map((Ico, i) => (
+              <button key={i} style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.2)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}>
+                <Ico size={16} color="rgba(255,255,255,0.7)" />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Shop col */}
         <div>
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Shop</p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -550,21 +528,19 @@ function SiteFooter({ navigate, user, handleLogout }) {
           </ul>
         </div>
 
-        {/* Sellers col */}
         <div>
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Sellers</p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {col([
-                { label: 'Start Selling', href: '/register' },
-                { label: 'Seller Dashboard', href: '/seller-profile' },
-                { label: 'Vendor Directory', href: '/products' },
+              { label: 'Start Selling', href: '/register' },
+              { label: 'Seller Dashboard', href: '/seller-profile' },
+              { label: 'Vendor Directory', href: '/products' },
               { label: 'Pricing & Fees', href: '/' },
               { label: 'Seller Guidelines', href: '/' },
             ])}
           </ul>
         </div>
 
-        {/* Account col */}
         <div>
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Account</p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -583,38 +559,8 @@ function SiteFooter({ navigate, user, handleLogout }) {
               ])
             }
           </ul>
-          {/* Profile quick-card */}
-          {user ? (
-            <div style={{ marginTop: 18, background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: 'white', flexShrink: 0 }}>
-                {(user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 12, fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.user_metadata?.full_name || 'My Account'}</p>
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
-              </div>
-            </div>
-          ) : (
-            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button
-                onClick={() => navigate('/register')}
-                style={{ padding: '9px 14px', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, color: 'white', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 12, cursor: 'pointer', transition: 'opacity 0.2s', textAlign: 'center' }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                <Icons.User size={14} color="white" style={{ marginRight: 6 }} /> Create Account
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                style={{ padding: '9px 14px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
-                <Icons.Logout size={12} color="rgba(255,255,255,0.7)" style={{ marginRight: 6 }} /> Login
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Help col */}
         <div>
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 14 }}>Help</p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -636,14 +582,13 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '18px 20px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
             © {year} BagSearch Nigeria. All rights reserved.
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Made with <Icons.Heart size={10} color="#f97316" filled /> in Nigeria</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>Made with ♥ in Nigeria</span>
             <div style={{ display: 'flex', gap: 8 }}>
               {['🌍 EN', '₦ NGN'].map(t => (
                 <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>{t}</span>
@@ -793,9 +738,7 @@ function FeedbackBox({ onClose }) {
         {particles.map(p => (
           <div key={p.id} style={{ position:'absolute',top:'30%',left:`${p.x}%`,fontSize:20,zIndex:10,pointerEvents:'none',animation:`particleBurst 1s cubic-bezier(0.22,1,0.36,1) ${p.delay}ms both`,'--angle':`${p.angle}deg`,'--dist':`${p.dist}px` }}>{p.emoji}</div>
         ))}
-        <button onClick={handleClose} style={{ position:'absolute',top:16,right:16,width:32,height:32,borderRadius:'50%',border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,transition:'all 0.2s',zIndex:5 }}
-          onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}}
-          onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>
+        <button onClick={handleClose} style={{ position:'absolute',top:16,right:16,width:32,height:32,borderRadius:'50%',border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,transition:'all 0.2s',zIndex:5 }}>
           <Icons.X size={14} color="currentColor" />
         </button>
         <div style={{ padding:'28px 28px 32px' }}>
@@ -826,9 +769,7 @@ function FeedbackBox({ onClose }) {
               <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
                 {['🛍️ Great selection','🚀 Fast loading','💎 Good quality','📱 Easy to use','💸 Fair prices'].map(chip => (
                   <button key={chip} onClick={() => { setComment(chip.replace(/^[^\s]+\s/,'')); setStep('comment'); }}
-                    style={{ fontSize:12,fontWeight:700,padding:'7px 14px',borderRadius:20,border:`1.5px solid ${C.primaryBorder}`,background:C.primaryBg,color:C.primary,cursor:'pointer',transition:'all 0.2s' }}
-                    onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';e.currentTarget.style.transform='translateY(-2px)';}}
-                    onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;e.currentTarget.style.transform='none';}}>
+                    style={{ fontSize:12,fontWeight:700,padding:'7px 14px',borderRadius:20,border:`1.5px solid ${C.primaryBorder}`,background:C.primaryBg,color:C.primary,cursor:'pointer',transition:'all 0.2s' }}>
                     {chip}
                   </button>
                 ))}
@@ -852,9 +793,7 @@ function FeedbackBox({ onClose }) {
               </div>
               <div style={{ position:'relative',marginBottom:16 }}>
                 <textarea autoFocus value={comment} onChange={e => setComment(e.target.value)} placeholder="What did you love? What could be better?"
-                  style={{ width:'100%',minHeight:110,padding:'14px 16px',borderRadius:16,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:14,fontFamily:'inherit',fontWeight:500,color:C.text,resize:'none',outline:'none',transition:'border-color 0.2s,box-shadow 0.2s',lineHeight:1.6,boxSizing:'border-box' }}
-                  onFocus={e=>{e.target.style.borderColor=C.primary;e.target.style.boxShadow=`0 0 0 3px rgba(200,75,17,0.12)`;}}
-                  onBlur={e=>{e.target.style.borderColor=C.border;e.target.style.boxShadow='none';}}/>
+                  style={{ width:'100%',minHeight:110,padding:'14px 16px',borderRadius:16,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:14,fontFamily:'inherit',fontWeight:500,color:C.text,resize:'none',outline:'none',transition:'border-color 0.2s,box-shadow 0.2s',lineHeight:1.6,boxSizing:'border-box' }}/>
                 <div style={{ position:'absolute',bottom:10,right:12,fontSize:11,color:C.textFaint,fontWeight:600 }}>{comment.length}/300</div>
               </div>
               <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%',padding:'14px 0',borderRadius:14,border:'none',background:submitting?C.primaryBg:'linear-gradient(135deg,#c84b11,#f97316)',color:submitting?C.primary:'white',fontWeight:900,fontSize:15,cursor:submitting?'default':'pointer',transition:'all 0.35s',boxShadow:submitting?'none':'0 6px 20px rgba(200,75,17,0.38)',display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}>
@@ -876,141 +815,6 @@ function FeedbackBox({ onClose }) {
         </div>
       </div>
     </div>
-  );
-}
-
-// CREATIVE MOBILE MENU BUTTON - Floating action button that pulses and draws attention
-function MobileMenuButton({ onClick, isVisible }) {
-  const [pulse, setPulse] = useState(false);
-  const [ripple, setRipple] = useState(false);
-  
-  // Pulse animation to draw attention on mobile
-  useEffect(() => {
-    if (!isVisible) return;
-    const interval = setInterval(() => {
-      setPulse(true);
-      setTimeout(() => setPulse(false), 800);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isVisible]);
-  
-  const handleClick = (e) => {
-    setRipple(true);
-    setTimeout(() => setRipple(false), 600);
-    onClick();
-  };
-  
-  return (
-    <button
-      onClick={handleClick}
-      style={{
-        position: 'fixed',
-        bottom: 20,
-        left: 20,
-        zIndex: 1000,
-        width: 56,
-        height: 56,
-        borderRadius: '50%',
-        background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-        border: 'none',
-        cursor: 'pointer',
-        boxShadow: pulse 
-          ? `0 0 0 8px rgba(200,75,17,0.2), 0 4px 20px rgba(200,75,17,0.5)`
-          : `0 4px 16px rgba(200,75,17,0.4)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        transform: pulse ? 'scale(1.1)' : 'scale(1)',
-        animation: isVisible ? 'floatIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both' : 'floatOut 0.3s ease both',
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-      onMouseLeave={e => e.currentTarget.style.transform = pulse ? 'scale(1.1)' : 'scale(1)'}
-    >
-      {/* Ripple effect */}
-      {ripple && (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.3)',
-          animation: 'rippleOut 0.6s ease-out forwards',
-          pointerEvents: 'none',
-        }} />
-      )}
-      
-      {/* Pulse rings */}
-      {pulse && (
-        <>
-          <div style={{
-            position: 'absolute',
-            inset: -4,
-            borderRadius: '50%',
-            border: `2px solid ${C.primaryLight}`,
-            animation: 'pingRing 0.8s ease-out forwards',
-            pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute',
-            inset: -8,
-            borderRadius: '50%',
-            border: `1.5px solid ${C.primaryLight}`,
-            animation: 'pingRing 0.8s ease-out 0.15s forwards',
-            pointerEvents: 'none',
-          }} />
-        </>
-      )}
-      
-      <Icons.Menu size={28} color="white" />
-      
-      {/* Tooltip */}
-      <span style={{
-        position: 'absolute',
-        left: 64,
-        whiteSpace: 'nowrap',
-        background: 'rgba(26,10,0,0.9)',
-        backdropFilter: 'blur(8px)',
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 700,
-        padding: '6px 12px',
-        borderRadius: 20,
-        pointerEvents: 'none',
-        opacity: 0,
-        transform: 'translateX(-8px)',
-        transition: 'all 0.2s ease',
-      }} className="menu-tooltip">
-        Menu
-      </span>
-      
-      <style>{`
-        @keyframes floatIn {
-          0% { opacity: 0; transform: scale(0) translateY(20px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes floatOut {
-          0% { opacity: 1; transform: scale(1) translateY(0); }
-          100% { opacity: 0; transform: scale(0) translateY(20px); }
-        }
-        @keyframes pingRing {
-          0% { opacity: 0.8; transform: scale(0.8); }
-          100% { opacity: 0; transform: scale(1.5); }
-        }
-        @keyframes rippleOut {
-          0% { opacity: 0.5; transform: scale(0.5); }
-          100% { opacity: 0; transform: scale(2); }
-        }
-        .menu-tooltip {
-          opacity: 0;
-          transform: translateX(-8px);
-          transition: all 0.2s ease;
-        }
-        button:hover .menu-tooltip {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      `}</style>
-    </button>
   );
 }
 
@@ -1044,273 +848,39 @@ function MobileAuthPrompt({ open, onClose, navigate }) {
   const visible = phase === 2;
   
   return (
-    <div style={{ 
-      position: 'fixed', 
-      inset: 0, 
-      zIndex: 9999, 
-      display: 'flex', 
-      alignItems: 'flex-end', 
-      justifyContent: 'center',
-      pointerEvents: visible ? 'all' : 'none'
-    }}>
-      <div 
-        onClick={onClose}
-        style={{ 
-          position: 'absolute', 
-          inset: 0, 
-          background: 'rgba(26,10,0,0.65)', 
-          backdropFilter: 'blur(8px)', 
-          WebkitBackdropFilter: 'blur(8px)',
-          opacity: visible ? 1 : 0, 
-          transition: 'opacity 0.4s ease',
-          cursor: 'pointer'
-        }} 
-      />
-      
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: visible ? 'all' : 'none' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,10,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease', cursor: 'pointer' }} />
       {particles.map(p => (
-        <div
-          key={p.id}
-          style={{
-            position: 'absolute',
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            fontSize: p.size,
-            zIndex: 1,
-            pointerEvents: 'none',
-            animation: `floatUp ${p.duration}ms ease-out ${p.delay}ms both`,
-            opacity: 0
-          }}
-        >
-          {p.emoji}
-        </div>
+        <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, top: `${p.y}%`, fontSize: p.size, zIndex: 1, pointerEvents: 'none', animation: `floatUp ${p.duration}ms ease-out ${p.delay}ms both`, opacity: 0 }}>{p.emoji}</div>
       ))}
-      
-      <div style={{ 
-        position: 'relative', 
-        zIndex: 2, 
-        width: '100%', 
-        maxWidth: '420px', 
-        background: 'linear-gradient(135deg,#ffffff 0%,#fdf8f5 100%)', 
-        borderTopLeftRadius: 32, 
-        borderTopRightRadius: 32,
-        boxShadow: '0 -8px 32px rgba(200,75,17,0.15), 0 16px 64px rgba(26,10,0,0.2)',
-        opacity: visible ? 1 : 0, 
-        transform: visible ? 'translateY(0) scale(1)' : 'translateY(100%) scale(0.95)', 
-        transition: 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          height: 6, 
-          background: 'linear-gradient(90deg, #c84b11, #f97316, #ea580c, #c84b11)', 
-          backgroundSize: '200% 100%',
-          animation: 'shimGradient 3s linear infinite'
-        }} />
-        
-        <button 
-          onClick={onClose}
-          style={{ 
-            position: 'absolute', 
-            top: 16, 
-            right: 16, 
-            width: 36, 
-            height: 36, 
-            borderRadius: '50%', 
-            border: 'none', 
-            background: 'rgba(200,75,17,0.08)', 
-            color: '#c84b11', 
-            cursor: 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            transition: 'all 0.2s',
-            zIndex: 3
-          }}
-          onMouseEnter={e => { 
-            e.currentTarget.style.background = '#c84b11'; 
-            e.currentTarget.style.color = 'white'; 
-            e.currentTarget.style.transform = 'scale(1.1)'; 
-          }}
-          onMouseLeave={e => { 
-            e.currentTarget.style.background = 'rgba(200,75,17,0.08)'; 
-            e.currentTarget.style.color = '#c84b11'; 
-            e.currentTarget.style.transform = 'scale(1)'; 
-          }}
-        >
+      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '420px', background: 'linear-gradient(135deg,#ffffff 0%,#fdf8f5 100%)', borderTopLeftRadius: 32, borderTopRightRadius: 32, boxShadow: '0 -8px 32px rgba(200,75,17,0.15), 0 16px 64px rgba(26,10,0,0.2)', opacity: visible ? 1 : 0, transform: visible ? 'translateY(0) scale(1)' : 'translateY(100%) scale(0.95)', transition: 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)', overflow: 'hidden' }}>
+        <div style={{ height: 6, background: 'linear-gradient(90deg, #c84b11, #f97316, #ea580c, #c84b11)', backgroundSize: '200% 100%', animation: 'shimGradient 3s linear infinite' }} />
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(200,75,17,0.08)', color: '#c84b11', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', zIndex: 3 }}>
           <Icons.X size={16} color="currentColor" />
         </button>
-        
         <div style={{ padding: '32px 28px 36px', textAlign: 'center' }}>
-          <div style={{ 
-            width: 80, 
-            height: 80, 
-            borderRadius: '50%', 
-            background: 'linear-gradient(135deg,#c84b11,#f97316)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            margin: '0 auto 24px', 
-            boxShadow: '0 12px 32px rgba(200,75,17,0.35)',
-            animation: visible ? 'bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' : 'none',
-            transform: 'scale(0)',
-            transitionDelay: visible ? '100ms' : '0ms'
-          }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#c84b11,#f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 12px 32px rgba(200,75,17,0.35)' }}>
             <Icons.ShoppingBag size={40} color="white" />
           </div>
-          
-          <h2 style={{ 
-            fontSize: 24, 
-            fontWeight: 900, 
-            color: '#1a0a00', 
-            letterSpacing: '-0.03em', 
-            marginBottom: 8,
-            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
-            animationDelay: visible ? '200ms' : '0ms',
-            opacity: 0,
-            transform: 'translateY(20px)'
-          }}>
-            Welcome to BagSearch
-          </h2>
-          <p style={{ 
-            fontSize: 14, 
-            color: '#9a6348', 
-            fontWeight: 500, 
-            lineHeight: 1.6, 
-            marginBottom: 28,
-            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
-            animationDelay: visible ? '300ms' : '0ms',
-            opacity: 0,
-            transform: 'translateY(20px)'
-          }}>
+          <h2 style={{ fontSize: 24, fontWeight: 900, color: '#1a0a00', letterSpacing: '-0.03em', marginBottom: 8 }}>Welcome to BagSearch</h2>
+          <p style={{ fontSize: 14, color: '#9a6348', fontWeight: 500, lineHeight: 1.6, marginBottom: 28 }}>
             Sign in to save favorites, get exclusive deals, and connect with sellers across Nigeria
           </p>
-          
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 12,
-            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
-            animationDelay: visible ? '400ms' : '0ms',
-            opacity: 0,
-            transform: 'translateY(20px)'
-          }}>
-            <button 
-              onClick={() => { onClose(); navigate("/register"); }}
-              style={{ 
-                width: '100%', 
-                padding: '16px 0', 
-                background: 'linear-gradient(135deg,#c84b11,#f97316)', 
-                color: 'white', 
-                fontWeight: 900, 
-                fontSize: 16, 
-                border: 'none', 
-                borderRadius: 16, 
-                cursor: 'pointer', 
-                boxShadow: '0 8px 24px rgba(200,75,17,0.4)', 
-                transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={e => { 
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; 
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(200,75,17,0.5)'; 
-              }}
-              onMouseLeave={e => { 
-                e.currentTarget.style.transform = 'translateY(0) scale(1)'; 
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(200,75,17,0.4)'; 
-              }}
-            >
-              <span style={{ position: 'relative', zIndex: 1 }}>Create Free Account</span>
-              <div style={{ 
-                position: 'absolute', 
-                inset: 0, 
-                background: 'linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%)', 
-                animation: 'shimmer 2s ease-in-out infinite',
-                pointerEvents: 'none'
-              }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button onClick={() => { onClose(); navigate("/register"); }}
+              style={{ width: '100%', padding: '16px 0', background: 'linear-gradient(135deg,#c84b11,#f97316)', color: 'white', fontWeight: 900, fontSize: 16, border: 'none', borderRadius: 16, cursor: 'pointer', boxShadow: '0 8px 24px rgba(200,75,17,0.4)', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
+              Create Free Account
             </button>
-            
-            <button 
-              onClick={() => { onClose(); navigate("/login?force=true"); }}
-              style={{ 
-                width: '100%', 
-                padding: '14px 0', 
-                background: 'rgba(200,75,17,0.08)', 
-                color: '#c84b11', 
-                fontWeight: 800, 
-                fontSize: 15, 
-                border: '2px solid rgba(200,75,17,0.15)', 
-                borderRadius: 16, 
-                cursor: 'pointer', 
-                transition: 'all 0.3s',
-                backdropFilter: 'blur(8px)'
-              }}
-              onMouseEnter={e => { 
-                e.currentTarget.style.background = 'rgba(200,75,17,0.12)'; 
-                e.currentTarget.style.borderColor = 'rgba(200,75,17,0.25)'; 
-                e.currentTarget.style.transform = 'translateY(-1px)'; 
-              }}
-              onMouseLeave={e => { 
-                e.currentTarget.style.background = 'rgba(200,75,17,0.08)'; 
-                e.currentTarget.style.borderColor = 'rgba(200,75,17,0.15)'; 
-                e.currentTarget.style.transform = 'translateY(0)'; 
-              }}
-            >
+            <button onClick={() => { onClose(); navigate("/login?force=true"); }}
+              style={{ width: '100%', padding: '14px 0', background: 'rgba(200,75,17,0.08)', color: '#c84b11', fontWeight: 800, fontSize: 15, border: '2px solid rgba(200,75,17,0.15)', borderRadius: 16, cursor: 'pointer', transition: 'all 0.3s' }}>
               Already have an account? Sign In
             </button>
           </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: 16, 
-            marginTop: 24,
-            animation: visible ? 'slideInUp 0.5s ease both' : 'none',
-            animationDelay: visible ? '500ms' : '0ms',
-            opacity: 0,
-            transform: 'translateY(20px)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Icons.Lock size={14} color="#16a34a" />
-              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Secure</span>
-            </div>
-            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Icons.Check size={12} color="#16a34a" />
-              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Free</span>
-            </div>
-            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#e0d5cc' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Icons.Zap size={14} color="#16a34a" />
-              <span style={{ fontSize: 11, color: '#9a6348', fontWeight: 600 }}>Quick</span>
-            </div>
-          </div>
         </div>
       </div>
-      
       <style>{`
-        @keyframes shimGradient {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        @keyframes bounceIn {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes slideInUp {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes floatUp {
-          0% { opacity: 0; transform: translateY(0) rotate(0deg); }
-          20% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(-100px) rotate(15deg); }
-        }
+        @keyframes shimGradient { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0) rotate(0deg); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px) rotate(15deg); } }
       `}</style>
     </div>
   );
@@ -1529,9 +1099,7 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
               {dir === -1 ? <Icons.ChevronLeft size={14} color="currentColor" /> : <Icons.ChevronRight size={14} color="currentColor" />}
             </button>
           ))}
-          <button onClick={onSeeAll} style={{ fontSize:12,fontWeight:800,color:accentColor,background:accentBg,border:`1.5px solid ${accentColor}33`,padding:'7px 14px',borderRadius:20,cursor:'pointer',transition:'all 0.2s',whiteSpace:'nowrap' }}
-            onMouseEnter={e=>{e.currentTarget.style.background=accentColor;e.currentTarget.style.color='white';}}
-            onMouseLeave={e=>{e.currentTarget.style.background=accentBg;e.currentTarget.style.color=accentColor;}}>
+          <button onClick={onSeeAll} style={{ fontSize:12,fontWeight:800,color:accentColor,background:accentBg,border:`1.5px solid ${accentColor}33`,padding:'7px 14px',borderRadius:20,cursor:'pointer',transition:'all 0.2s',whiteSpace:'nowrap' }}>
             See All →
           </button>
         </div>
@@ -1685,9 +1253,7 @@ function CartItem({item, onUpdateQty, onRemove, index, isAuthed, onRequireAuth})
         {waLink && (
           <a href={waLink} target="_blank" rel="noopener noreferrer"
             onClick={e=>{ if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}}}
-            style={{ position:'absolute',bottom:-6,left:-6,width:26,height:26,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',textDecoration:'none',boxShadow:`0 3px 10px rgba(37,211,102,0.5)`,border:'2.5px solid white',transition:'all 0.25s',zIndex:2 }}
-            onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.18)';e.currentTarget.style.background=C.whatsappDark;}}
-            onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';e.currentTarget.style.background=C.whatsapp;}}>
+            style={{ position:'absolute',bottom:-6,left:-6,width:26,height:26,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',textDecoration:'none',boxShadow:`0 3px 10px rgba(37,211,102,0.5)`,border:'2.5px solid white',transition:'all 0.25s',zIndex:2 }}>
             <WaIcon size={12} color="white" />
           </a>
         )}
@@ -1784,13 +1350,12 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
                   <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount===1?'item':'items'}{itemCount>0?` · ${formatCurrency(total)} subtotal`:''}</p>
                 </div>
               </div>
-              <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}}
-                onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='white';e.currentTarget.style.color=C.primary;}}>
+              <button onClick={onClose} style={{width:38,height:38,borderRadius:'50%',border:`1.5px solid ${C.primaryBorder}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}}>
                 <Icons.X size={15} color="currentColor" />
               </button>
             </div>
             {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}><Icons.Truck size={12} color={C.primary} style={{ marginRight: 4 }} /> Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span></div>
               <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
             </div>}
           </div>
@@ -1834,51 +1399,226 @@ function CartPage({cartItems, onUpdateQty, onRemove, onClose, isAuthed, onRequir
   );
 }
 
-function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, setLocationModalOpen, selectedLocation, handleProfileClick, cartCount, setCartOpen, user, handleLogout, isMobile }) {
+// ─── LOCATION SUB-BAR (shown below nav) ──────────────────────────────────────
+function LocationSubBar({ selectedLocation, onOpen, isMobile }) {
+  const [hov, setHov] = useState(false);
   return (
-    <header style={{ position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.97)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:`0 1px 20px rgba(200,75,17,0.07)` }}>
-      <div style={{ height:3,background:`linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />
-      <div style={{ maxWidth:1280,margin:'0 auto',padding:isMobile?'0 12px':'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:isMobile?56:60,gap:isMobile?8:16 }}>
-        {/* Mobile menu button is now handled by the floating FAB below - removed from header to avoid duplication */}
-        <div style={{ display: isMobile ? 'none' : 'flex' }} />
-        <div style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',flexShrink:0,color:C.primary }} onClick={()=>navigate('/')}>
-          <LogoIcon size={isMobile?'32px':'clamp(34px, 5vw, 50px)'} />
-          <span style={{ fontSize:isMobile?16:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px' }}>Bag<span style={{ color:C.primary }}>Search</span></span>
-        </div>
-        <button onClick={()=>setLocationModalOpen(true)} style={{ flex:1,maxWidth:isMobile?'auto':250,minWidth:isMobile?120:200,display:'flex',alignItems:'center',gap:isMobile?4:8,padding:isMobile?'4px 8px':'7px 13px',borderRadius:12,border:`${isMobile?'1px':'1.5px'} solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',transition:'all 0.25s',overflow:'hidden' }}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.background=C.primaryBg;}}
-          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.surfaceDim;}}>
-          <div style={{ position:'relative',flexShrink:0,width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center' }}>
-            <div style={{ position:'absolute',width:10,height:10,borderRadius:'50%',background:C.primary,opacity:0.28,animation:'locPing 1.8s ease-out infinite' }} />
-            <div style={{ width:7,height:7,borderRadius:'50%',background:C.primary,position:'relative',zIndex:1 }} />
+    <div style={{
+      background: 'white',
+      borderBottom: `1px solid ${C.borderLight}`,
+      padding: isMobile ? '8px 12px' : '8px 20px',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <button
+          onClick={onOpen}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 14px',
+            borderRadius: 20,
+            border: `1.5px solid ${hov ? C.primaryBorder : C.border}`,
+            background: hov ? C.primaryBg : C.surfaceDim,
+            cursor: 'pointer',
+            transition: 'all 0.22s',
+          }}
+        >
+          <div style={{ position: 'relative', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ position: 'absolute', width: 10, height: 10, borderRadius: '50%', background: C.primary, opacity: 0.25, animation: 'locPing 1.8s ease-out infinite' }} />
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.primary, position: 'relative', zIndex: 1 }} />
           </div>
-          <div style={{ flex:1,textAlign:'left',minWidth:0,overflow:'hidden' }}>
-            <div style={{ fontSize:isMobile?8:9,fontWeight:700,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,lineHeight:1.2 }}>{isMobile?'FROM':'Shopping from'}</div>
-            <div style={{ fontSize:isMobile?12:13,fontWeight:800,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{selectedLocation.emoji} {isMobile?selectedLocation.name.split(' ')[0]||selectedLocation.name:selectedLocation.name}</div>
-          </div>
-          {!isMobile&&<Icons.ChevronRight size={13} color={C.textFaint} />}
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.textFaint, marginRight: 2 }}>Shopping from:</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: hov ? C.primary : C.text }}>
+            {selectedLocation.emoji} {selectedLocation.name}
+          </span>
+          <Icons.ChevronRight size={12} color={C.textFaint} />
         </button>
-        <div className="desk-act" style={{ display:isMobile?'none':'flex',alignItems:'center',gap:8 }}>
-          <button onClick={handleProfileClick} style={{ padding:'8px 10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',transition:'all 0.2s' }}
-            onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}}
-            onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
-            <Icons.User size={20} color="currentColor" />
-          </button>
-          <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
-          <button onClick={()=>navigate('/contact')} style={{ padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
-            onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.primary;}}
-            onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>Contact</button>
-          {user?(
-            <button onClick={handleLogout} style={{ padding:'8px 16px',borderRadius:10,border:'1px solid #fecaca',background:'#fef2f2',cursor:'pointer',color:'#dc2626',fontSize:13,fontWeight:700,transition:'all 0.2s' }}>Logout</button>
-          ):(
-            <div style={{ display:'flex',gap:8 }}>
-              <button onClick={()=>navigate('/login')} style={{ padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
-                onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}}
-                onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>Login</button>
-              <button onClick={()=>navigate('/register')} style={{ padding:'8px 16px',borderRadius:10,border:'none',background:C.primary,cursor:'pointer',color:'white',fontSize:13,fontWeight:700,transition:'all 0.2s',boxShadow:`0 4px 12px rgba(200,75,17,0.2)` }}
-                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';}}
-                onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>Register</button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icons.Truck size={13} color={C.success} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted }}>
+            Free delivery on orders over {formatCurrency(FREE_DELIVERY_THRESHOLD)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── RESPONSIVE HEADER (hamburger back in nav, no location bar) ───────────────
+function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handleProfileClick, cartCount, setCartOpen, user, handleLogout, isMobile }) {
+  return (
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderBottom: `1px solid ${C.borderLight}`,
+      opacity: headerVisible ? 1 : 0,
+      transform: headerVisible ? 'translateY(0)' : 'translateY(-100%)',
+      transition: 'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',
+      boxShadow: `0 1px 20px rgba(200,75,17,0.07)`,
+    }}>
+      <div style={{ height: 3, background: `linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />
+      <div style={{
+        maxWidth: 1280, margin: '0 auto',
+        padding: isMobile ? '0 12px' : '0 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        height: isMobile ? 56 : 60,
+        gap: isMobile ? 8 : 16,
+      }}>
+
+        {/* LEFT: hamburger (mobile) | logo (always) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 0 }}>
+          {/* Hamburger — always in nav now */}
+          {isMobile && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              style={{
+                width: 40, height: 40, borderRadius: 10,
+                border: `1.5px solid ${C.border}`,
+                background: C.surfaceDim,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; }}
+            >
+              <Icons.Menu size={22} color={C.primary} />
+            </button>
+          )}
+
+          {/* Logo */}
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0, color: C.primary }}
+            onClick={() => navigate('/')}
+          >
+            <LogoIcon size={isMobile ? '32px' : 'clamp(34px, 5vw, 50px)'} />
+            <span style={{ fontSize: isMobile ? 16 : 20, fontWeight: 900, color: C.text, letterSpacing: '-0.5px' }}>
+              Bag<span style={{ color: C.primary }}>Search</span>
+            </span>
+          </div>
+        </div>
+
+        {/* RIGHT: desktop actions | mobile: cart + auth buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 8 }}>
+
+          {/* Desktop actions */}
+          {!isMobile && (
+            <>
+              <button onClick={handleProfileClick}
+                style={{ padding: '8px 10px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; }}>
+                <Icons.User size={20} color="currentColor" />
+              </button>
+              <CartBadge count={cartCount} onClick={() => setCartOpen(true)} />
+              <button onClick={() => navigate('/about')}
+                style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}>
+                About Us
+              </button>
+              <button onClick={() => navigate('/contact')}
+                style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}>
+                Contact
+              </button>
+              {user ? (
+                <button onClick={handleLogout}
+                  style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #fecaca', background: '#fef2f2', cursor: 'pointer', color: '#dc2626', fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}>
+                  Logout
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => navigate('/login')}
+                    style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; }}>
+                    Login
+                  </button>
+                  <button onClick={() => navigate('/register')}
+                    style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: C.primary, cursor: 'pointer', color: 'white', fontSize: 13, fontWeight: 700, transition: 'all 0.2s', boxShadow: `0 4px 12px rgba(200,75,17,0.2)` }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+                    Register
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Mobile: cart badge always visible */}
+          {isMobile && (
+            <CartBadge count={cartCount} onClick={() => setCartOpen(true)} />
+          )}
+
+          {/* Mobile: auth buttons for unauthenticated users */}
+          {isMobile && !user && (
+            <div style={{ display: 'flex', gap: 5 }}>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '7px 11px',
+                  borderRadius: 9,
+                  border: `1.5px solid ${C.border}`,
+                  background: C.surfaceDim,
+                  cursor: 'pointer',
+                  color: C.textMid,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                style={{
+                  padding: '7px 11px',
+                  borderRadius: 9,
+                  border: 'none',
+                  background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  transition: 'all 0.2s',
+                  boxShadow: `0 3px 10px rgba(200,75,17,0.3)`,
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                Sign Up
+              </button>
             </div>
+          )}
+
+          {/* Mobile: profile button for authenticated users */}
+          {isMobile && user && (
+            <button
+              onClick={handleProfileClick}
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                border: `2px solid ${C.primaryBorder}`,
+                background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14, fontWeight: 900, color: 'white',
+                flexShrink: 0,
+              }}
+            >
+              {(user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+            </button>
           )}
         </div>
       </div>
@@ -1911,26 +1651,19 @@ export default function Product(){
   const[vendorStats,setVendorStats]=useState({vendors:0,products:0,buyers:0,reviews:0});
   const vendorRouteParam = params.id || params.slug || '';
 
-  // Handle vendor detail view from URL — fetch directly if not in vendors list yet
   useEffect(() => {
     if (!vendorRouteParam) return;
-
     const normalizedParam = vendorRouteParam.toLowerCase();
-
-    // Try to find in already-loaded vendors first
     const found = vendors.find(v => {
       const vendorId = String(v.id || '').toLowerCase();
       const vendorSlug = String(v.profile_slug || v.slug || '').toLowerCase();
       return vendorId === normalizedParam || vendorSlug === normalizedParam;
     });
-
     if (found) {
       setSelectedVendorDetail(found);
       setActiveTab('vendorDetail');
       return;
     }
-
-    // Not in list yet — fetch directly from Supabase by user_id
     async function fetchVendorById() {
       try {
         const { data } = await supabase
@@ -1938,10 +1671,8 @@ export default function Product(){
           .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url')
           .eq('user_id', vendorRouteParam)
           .maybeSingle();
-
         if (data) {
-          const cats = Array.isArray(data.bag_categories) && data.bag_categories.length > 0
-            ? data.bag_categories : ['bags'];
+          const cats = Array.isArray(data.bag_categories) && data.bag_categories.length > 0 ? data.bag_categories : ['bags'];
           const vendor = {
             id: data.user_id,
             name: data.brand_name || data.full_name || 'Seller',
@@ -1961,11 +1692,8 @@ export default function Product(){
           setSelectedVendorDetail(vendor);
           setActiveTab('vendorDetail');
         }
-      } catch (e) {
-        console.error('Failed to fetch vendor by id:', e);
-      }
+      } catch (e) { console.error('Failed to fetch vendor by id:', e); }
     }
-
     fetchVendorById();
   }, [vendorRouteParam, vendors]);
 
@@ -1978,22 +1706,15 @@ export default function Product(){
   useEffect(()=>{ const h=()=>setWindowWidth(window.innerWidth); window.addEventListener('resize',h); return()=>window.removeEventListener('resize',h); },[]);
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
 
-  // Mobile auth prompt scroll trigger
   useEffect(() => {
     if (!isMobile || user) return;
-    
     const handleScroll = () => {
       const scrollY = window.scrollY || window.pageYOffset;
-      const threshold = 800;
-      
-      if (scrollY > threshold && !hasScrolledPastThreshold) {
+      if (scrollY > 800 && !hasScrolledPastThreshold) {
         setHasScrolledPastThreshold(true);
-        setTimeout(() => {
-          setMobileAuthPromptOpen(true);
-        }, 1500);
+        setTimeout(() => { setMobileAuthPromptOpen(true); }, 1500);
       }
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile, user, hasScrolledPastThreshold]);
@@ -2018,11 +1739,7 @@ export default function Product(){
   const countUniqueBuyers=useCallback((viewRows=[])=>{
     const buyers=new Set();
     viewRows.forEach(row=>{
-      const buyerKey=
-        row.buyer_id
-        || row.buyer_email
-        || row.buyer_phone
-        || (row.buyer_name ? `name:${row.buyer_name.trim().toLowerCase()}` : '');
+      const buyerKey=row.buyer_id||row.buyer_email||row.buyer_phone||(row.buyer_name?`name:${row.buyer_name.trim().toLowerCase()}`:'');
       if(buyerKey) buyers.add(String(buyerKey).trim().toLowerCase());
     });
     return buyers.size;
@@ -2030,89 +1747,23 @@ export default function Product(){
 
   const fetchVendors=useCallback(async(products)=>{
     try{
-      const { data: sellerRows } = await supabase
-        .from('users')
-        .select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug')
-        .eq('role','seller');
-
-      const sellerProductIds={};
-      const sellerProductCount={};
-      (products||[]).forEach(p=>{
-        const sid=p.sellerId||p.user_id||p.seller_id;
-        if(!sid)return;
-        if(!sellerProductIds[sid])sellerProductIds[sid]=[];
-        if(p.id)sellerProductIds[sid].push(p.id);
-        sellerProductCount[sid]=(sellerProductCount[sid]||0)+1;
-      });
-
+      const { data: sellerRows } = await supabase.from('users').select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug').eq('role','seller');
+      const sellerProductIds={};const sellerProductCount={};
+      (products||[]).forEach(p=>{const sid=p.sellerId||p.user_id||p.seller_id;if(!sid)return;if(!sellerProductIds[sid])sellerProductIds[sid]=[];if(p.id)sellerProductIds[sid].push(p.id);sellerProductCount[sid]=(sellerProductCount[sid]||0)+1;});
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
-      const viewCountMap={};
-      let viewRows=[];
-      if(allProductIds.length>0){
-        const{data}=await supabase
-          .from('product_views')
-          .select('product_id,buyer_id,buyer_email,buyer_phone,buyer_name')
-          .in('product_id',allProductIds);
-        viewRows=data||[];
-        (viewRows||[]).forEach(row=>{
-          viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;
-        });
-      }
-
-      const allSellers=(sellerRows||[]).map(s=>{
-        const pids=sellerProductIds[s.user_id]||[];
-        const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);
-        const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];
-        return{
-          id:s.user_id,
-          name:s.brand_name||s.full_name||'Anonymous Seller',
-          avatar:'👜',
-          location:'all',
-          rating:4.6,
-          reviews:0,
-          views,
-          products:sellerProductCount[s.user_id]||0,
-          joined:'N/A',
-          specialty:cats[0]||'Bags',
-          badge:'',
-          description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,
-          tags:cats,
-          profile_slug:s.profile_slug||'',
-          colors:['#c84b11','#f97316'],
-        };
-      });
-
+      const viewCountMap={};let viewRows=[];
+      if(allProductIds.length>0){const{data}=await supabase.from('product_views').select('product_id,buyer_id,buyer_email,buyer_phone,buyer_name').in('product_id',allProductIds);viewRows=data||[];(viewRows||[]).forEach(row=>{viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;});}
+      const allSellers=(sellerRows||[]).map(s=>{const pids=sellerProductIds[s.user_id]||[];const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];return{id:s.user_id,name:s.brand_name||s.full_name||'Anonymous Seller',avatar:'👜',location:'all',rating:4.6,reviews:0,views,products:sellerProductCount[s.user_id]||0,joined:'N/A',specialty:cats[0]||'Bags',badge:'',description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,tags:cats,profile_slug:s.profile_slug||'',colors:['#c84b11','#f97316']};});
       const knownIds=new Set(allSellers.map(v=>v.id));
-      const extra=buildVendorsFromProducts((products||[]).filter(p=>{
-        const sid=p.sellerId||p.user_id||p.seller_id;
-        return sid&&!knownIds.has(sid);
-      }));
-
+      const extra=buildVendorsFromProducts((products||[]).filter(p=>{const sid=p.sellerId||p.user_id||p.seller_id;return sid&&!knownIds.has(sid);}));
       const final=[...allSellers,...extra];
-      const sellerIds=final.map(v=>v.id).filter(Boolean);
-      let reviewCount=0;
-      if(sellerIds.length>0){
-        const { count } = await supabase
-          .from('seller_reviews')
-          .select('id', { count: 'exact', head: true })
-          .in('seller_id', sellerIds);
-        reviewCount=count||0;
-      }
-      setVendorStats({
-        vendors:final.length,
-        products:(products||[]).length,
-        buyers:countUniqueBuyers(viewRows),
-        reviews:reviewCount,
-      });
+      const sellerIds=final.map(v=>v.id).filter(Boolean);let reviewCount=0;
+      if(sellerIds.length>0){const{count}=await supabase.from('seller_reviews').select('id',{count:'exact',head:true}).in('seller_id',sellerIds);reviewCount=count||0;}
+      setVendorStats({vendors:final.length,products:(products||[]).length,buyers:countUniqueBuyers(viewRows),reviews:reviewCount});
       setVendors(final);setFilteredVendors(final);return final;
     }catch(err){
       const derived=buildVendorsFromProducts(products||[]);
-      setVendorStats({
-        vendors:derived.length,
-        products:(products||[]).length,
-        buyers:0,
-        reviews:0,
-      });
+      setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:0,reviews:0});
       setVendors(derived);setFilteredVendors(derived);return derived;
     }
   },[buildVendorsFromProducts,countUniqueBuyers]);
@@ -2133,17 +1784,11 @@ export default function Product(){
         let rawColors = [];
         if (p.colors) {
           if (Array.isArray(p.colors)) rawColors = p.colors;
-          else if (typeof p.colors === 'string') {
-            try { rawColors = JSON.parse(p.colors); } catch { rawColors = [p.colors]; }
-          }
+          else if (typeof p.colors === 'string') { try { rawColors = JSON.parse(p.colors); } catch { rawColors = [p.colors]; } }
         }
         const mappedColors = rawColors.length > 0
           ? rawColors.map(c => {
-              if (typeof c === 'string') {
-                const key = c.toLowerCase().trim();
-                const hex = BAG_COLOR_MAP[key];
-                return { id: key, hex: hex || '#c84b11' };
-              }
+              if (typeof c === 'string') { const key = c.toLowerCase().trim(); const hex = BAG_COLOR_MAP[key]; return { id: key, hex: hex || '#c84b11' }; }
               const key = String(c.id || '').toLowerCase().trim();
               return { id: key, hex: c.hex || BAG_COLOR_MAP[key] || '#c84b11' };
             })
@@ -2184,29 +1829,15 @@ export default function Product(){
   const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
   const handleCategoryChange=id=>{setActiveCategory(id);setDisplayedProducts(applyFilters(searchQuery,id,selectedLocation,allProducts));setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
   const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,combined));};
-  const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false); setVisualSearchCount(0);};
+  const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false);setVisualSearchCount(0);};
   const handleImageUpload=async e=>{
     const f=e.target.files[0];if(!f)return;
     setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setVisualSearching(true);setResultsKey(k=>k+1);
     try{
       const results=await visualSearch(f,allProducts);
-      if(results.length>0){
-        setDisplayedProducts(results);
-        setVisualSearchSuccess(true);
-        setVisualSearchCount(results.length);
-        setTimeout(() => setVisualSearchSuccess(false), 3500);
-        setFloatMsg({text:`Found ${results.length} similar bags!`,type:'success'});
-      }
-      else{
-        setDisplayedProducts([]);
-        setVisualSearchSuccess(false);
-        setVisualSearchCount(0);
-        setFloatMsg({text:'No similar bags found. Try another image!',type:'info'});
-      }
-    }catch(err){
-      setFloatMsg({text:'Visual search temporarily unavailable.',type:'danger'});
-      setDisplayedProducts([]);
-    }
+      if(results.length>0){setDisplayedProducts(results);setVisualSearchSuccess(true);setVisualSearchCount(results.length);setTimeout(()=>setVisualSearchSuccess(false),3500);setFloatMsg({text:`Found ${results.length} similar bags!`,type:'success'});}
+      else{setDisplayedProducts([]);setVisualSearchSuccess(false);setVisualSearchCount(0);setFloatMsg({text:'No similar bags found. Try another image!',type:'info'});}
+    }catch(err){setFloatMsg({text:'Visual search temporarily unavailable.',type:'danger'});setDisplayedProducts([]);}
     finally{setVisualSearching(false);e.target.value='';}
   };
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
@@ -2224,7 +1855,6 @@ export default function Product(){
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
   const hotDealProducts = useMemo(() => allProducts.filter(p => p.discountedPrice || p.lowStock).slice(0, 10), [allProducts]);
-
   const topBannerAd = DUMMY_ADS.find(a => a.type === 'banner' && !dismissedAds.includes(a.id));
 
   return(
@@ -2270,7 +1900,6 @@ export default function Product(){
         @media(max-width:640px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
         @media(max-width:380px){.product-grid{gap:8px!important;}}
         @media(max-width:720px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
-        @media(max-width:768px){.desk-act{display:none!important;}}
         @media(max-width:640px){.hero-banner{padding:24px 20px!important;}.hero-icons{display:none!important;}}
       `}</style>
 
@@ -2285,10 +1914,25 @@ export default function Product(){
       {feedbackOpen && <FeedbackBox onClose={() => setFeedbackOpen(false)} />}
       {!feedbackOpen && !cartOpen && <FeedbackTrigger onClick={() => setFeedbackOpen(true)} />}
 
-      {/* CREATIVE MOBILE MENU BUTTON - Floating action button that pulses to draw attention */}
-      {isMobile && <MobileMenuButton onClick={() => setIsSidebarOpen(true)} isVisible={headerVisible} />}
+      {/* ── HEADER (hamburger now in nav, no location picker here) ── */}
+      <ResponsiveHeader
+        headerVisible={headerVisible}
+        setIsSidebarOpen={setIsSidebarOpen}
+        navigate={navigate}
+        handleProfileClick={handleProfileClick}
+        cartCount={cartCount}
+        setCartOpen={setCartOpen}
+        user={user}
+        handleLogout={handleLogout}
+        isMobile={isMobile}
+      />
 
-      <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} setLocationModalOpen={setLocationModalOpen} selectedLocation={selectedLocation} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
+      {/* ── LOCATION SUB-BAR (just below header, always visible) ── */}
+      <LocationSubBar
+        selectedLocation={selectedLocation}
+        onOpen={() => setLocationModalOpen(true)}
+        isMobile={isMobile}
+      />
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
@@ -2299,9 +1943,24 @@ export default function Product(){
             <Icons.X size={16} color={C.primary} />
           </button>
         </div>
-        {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
+        {(user?[
+          {label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},
+          {label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
+          {label:'About Us',icon:Icons.MessageCircle,action:()=>{navigate('/about');setIsSidebarOpen(false);}},
+          {label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},
+          {label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},
+          {label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}},
+        ]:[
+          {label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},
+          {label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},
+          {label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
+          {label:'About Us',icon:Icons.MessageCircle,action:()=>{navigate('/about');setIsSidebarOpen(false);}},
+          {label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},
+          {label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},
+        ]).map(({icon:IconComponent,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':'transparent',cursor:'pointer',color:label==='Logout'?C.danger:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s'}}
-            onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
+            onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}}
+            onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:C.text;}}>
             <IconComponent size={20} color="currentColor" />{label}
           </button>
         ))}
@@ -2395,9 +2054,7 @@ export default function Product(){
             <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
               <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
               <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}>
-                <Icons.X size={13} color={C.textFaint} />
-              </button>}
+              {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}><Icons.X size={13} color={C.textFaint} /></button>}
               <div style={{fontSize:isMobile?11:12,fontWeight:700,color:C.primary,background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,padding:isMobile?'4px 10px':'5px 12px',borderRadius:20,whiteSpace:'nowrap'}}>{filteredVendors.length} vendors</div>
             </div>
           )}
@@ -2433,252 +2090,48 @@ export default function Product(){
             </div>
           </div>
 
-          {/* Top Banner Ad — shown only in unfiltered browsing */}
           {!isFiltered && topBannerAd && (
             <AdBanner ad={topBannerAd} onDismiss={id => setDismissedAds(prev => [...prev, id])} />
           )}
 
-          {/* Visual Search Overlay — Analyzing */}
+          {/* Visual Search Overlay */}
           {visualSearching && (
-            <div style={{
-              position:'fixed', inset:0, zIndex:200,
-              background:'rgba(26,10,0,0.6)',
-              backdropFilter:'blur(10px)',
-              WebkitBackdropFilter:'blur(10px)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              animation:'fadeIn 0.35s ease both',
-            }}>
-              <div style={{
-                background:'white', borderRadius:28, padding:'44px 36px 40px',
-                maxWidth:360, width:'90vw', textAlign:'center',
-                boxShadow:'0 32px 80px rgba(200,75,17,0.22)',
-                position:'relative', overflow:'hidden',
-              }}>
-                <div style={{
-                  position:'absolute', top:0, left:0, right:0, height:4,
-                  background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',
-                  backgroundSize:'200% 100%',
-                  animation:'shimFeedback 2.5s linear infinite',
-                }}/>
-
-                <div style={{ position:'relative', width:180, height:180, margin:'0 auto 28px' }}>
-                  <div style={{
-                    position:'absolute', inset:0, borderRadius:'50%',
-                    border:'3.5px solid transparent',
-                    borderTopColor:'#c84b11', borderRightColor:'#f97316',
-                    animation:'vsSpin 1.1s linear infinite',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:10, borderRadius:'50%',
-                    border:'2.5px solid transparent',
-                    borderTopColor:'#f9c4a0', borderLeftColor:'#f97316',
-                    animation:'vsSpinR .85s linear infinite',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:18, borderRadius:'50%',
-                    border:'1.5px dashed rgba(200,75,17,0.2)',
-                    animation:'vsSpinR 3s linear infinite',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:22, borderRadius:'50%',
-                    overflow:'hidden', background:'#fdf4ee',
-                    boxShadow:'0 8px 24px rgba(200,75,17,0.18)',
-                  }}>
-                    {uploadedImage
-                      ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#fde8d8,#fdf4ee)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <Icons.Camera size={32} color={C.primary} />
-                        </div>
-                    }
-                    <div style={{ position:'absolute', inset:0, borderRadius:'50%', overflow:'hidden', pointerEvents:'none' }}>
-                      <div style={{
-                        position:'absolute', top:0, left:0, right:0, height:2,
-                        background:'linear-gradient(90deg,transparent 0%,rgba(200,75,17,0.9) 50%,transparent 100%)',
-                        animation:'vsScan 1.6s ease-in-out infinite',
-                      }}/>
-                    </div>
+            <div style={{ position:'fixed',inset:0,zIndex:200,background:'rgba(26,10,0,0.6)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',display:'flex',alignItems:'center',justifyContent:'center',animation:'fadeIn 0.35s ease both' }}>
+              <div style={{ background:'white',borderRadius:28,padding:'44px 36px 40px',maxWidth:360,width:'90vw',textAlign:'center',boxShadow:'0 32px 80px rgba(200,75,17,0.22)',position:'relative',overflow:'hidden' }}>
+                <div style={{ position:'absolute',top:0,left:0,right:0,height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',backgroundSize:'200% 100%',animation:'shimFeedback 2.5s linear infinite' }}/>
+                <div style={{ position:'relative',width:180,height:180,margin:'0 auto 28px' }}>
+                  <div style={{ position:'absolute',inset:0,borderRadius:'50%',border:'3.5px solid transparent',borderTopColor:'#c84b11',borderRightColor:'#f97316',animation:'vsSpin 1.1s linear infinite' }}/>
+                  <div style={{ position:'absolute',inset:10,borderRadius:'50%',border:'2.5px solid transparent',borderTopColor:'#f9c4a0',borderLeftColor:'#f97316',animation:'vsSpinR .85s linear infinite' }}/>
+                  <div style={{ position:'absolute',inset:22,borderRadius:'50%',overflow:'hidden',background:'#fdf4ee',boxShadow:'0 8px 24px rgba(200,75,17,0.18)' }}>
+                    {uploadedImage ? <img src={uploadedImage} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }}/> : <div style={{ width:'100%',height:'100%',background:'linear-gradient(135deg,#fde8d8,#fdf4ee)',display:'flex',alignItems:'center',justifyContent:'center' }}><Icons.Camera size={32} color={C.primary} /></div>}
                   </div>
-                  {[{t:-6,l:'50%',ml:-3},{t:'50%',mt:-3,r:-6},{b:-6,l:'50%',ml:-3},{t:'50%',mt:-3,l:-6}].map((s,i)=>(
-                    <div key={i} style={{
-                      position:'absolute', width:8, height:8, borderRadius:'50%',
-                      background:i%2===0?'#c84b11':'#f97316',
-                      boxShadow:`0 0 0 2px white`,
-                      animation:`vsSpin ${1.1}s linear infinite`,
-                      ...s,
-                    }}/>
-                  ))}
                 </div>
-
-                <div style={{ display:'flex', justifyContent:'center', gap:7, marginBottom:18 }}>
-                  {[0,200,400].map((d,i)=>(
-                    <div key={i} style={{
-                      width:9, height:9, borderRadius:'50%',
-                      animation:`vsDot .9s ease-in-out ${d}ms infinite`,
-                    }}/>
-                  ))}
-                </div>
-
-                <h3 style={{ fontSize:20, fontWeight:900, color:'#1a0a00', letterSpacing:'-0.03em', marginBottom:8 }}>
-                  Finding similar bags...
-                </h3>
-                <p style={{ fontSize:13, color:'#9a6348', fontWeight:500, lineHeight:1.65, marginBottom:20 }}>
-                  Scanning thousands of listings across Nigeria for your perfect match
-                </p>
-
-                <div style={{ display:'flex', flexWrap:'wrap', gap:7, justifyContent:'center' }}>
-                  {[
-                    {l:'Matching colors', d:100},
-                    {l:'Comparing shape', d:250},
-                    {l:'Checking style', d:400},
-                    {l:'Finding sellers', d:550},
-                  ].map(({l,d})=>(
-                    <span key={l} style={{
-                      fontSize:11, fontWeight:700,
-                      background:'#fdf4ee', color:'#c84b11',
-                      border:'1px solid #f9c4a0',
-                      padding:'4px 11px', borderRadius:20,
-                      animation:`vsTagIn .5s cubic-bezier(.34,1.56,.64,1) ${d}ms both`,
-                    }}>{l}</span>
-                  ))}
-                </div>
+                <h3 style={{ fontSize:20,fontWeight:900,color:'#1a0a00',letterSpacing:'-0.03em',marginBottom:8 }}>Finding similar bags...</h3>
+                <p style={{ fontSize:13,color:'#9a6348',fontWeight:500,lineHeight:1.65,marginBottom:20 }}>Scanning thousands of listings across Nigeria for your perfect match</p>
               </div>
             </div>
           )}
 
-          {/* Visual Search Success Overlay */}
           {visualSearchSuccess && !visualSearching && (
-            <div style={{
-              position:'fixed', inset:0, zIndex:200,
-              background:'rgba(26,10,0,0.55)',
-              backdropFilter:'blur(10px)',
-              WebkitBackdropFilter:'blur(10px)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              animation:'fadeIn 0.35s ease both',
-            }}
-            onClick={() => setVisualSearchSuccess(false)}
-            >
-              <div
-                onClick={e => e.stopPropagation()}
-                style={{
-                  background:'white', borderRadius:28, padding:'44px 36px 40px',
-                  maxWidth:360, width:'90vw', textAlign:'center',
-                  boxShadow:'0 32px 80px rgba(22,163,74,0.2)',
-                  position:'relative', overflow:'hidden',
-                }}
-              >
-                <div style={{ position:'absolute', top:0, left:0, right:0, height:4, background:'linear-gradient(90deg,#15803d,#22c55e,#15803d)' }}/>
-
-                <div style={{ position:'relative', width:180, height:180, margin:'0 auto 28px' }}>
-                  <div style={{
-                    position:'absolute', inset:-12, borderRadius:'50%',
-                    border:'1.5px solid #dcfce7',
-                    animation:'vsRipple2 2s ease-out .5s infinite',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:-4, borderRadius:'50%',
-                    border:'2px solid #a7f3d0',
-                    animation:'vsRipple 2s ease-out .2s infinite',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:0, borderRadius:'50%',
-                    border:'3.5px solid #16a34a',
-                    animation:'vsSuccessPop .6s cubic-bezier(.34,1.56,.64,1) both',
-                  }}/>
-                  <div style={{
-                    position:'absolute', inset:8, borderRadius:'50%', overflow:'hidden',
-                    background:'#f0fdf4', boxShadow:'0 8px 24px rgba(22,163,74,0.15)',
-                  }}>
-                    {uploadedImage
-                      ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#dcfce7,#f0fdf4)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                          <Icons.Camera size={32} color="#16a34a" />
-                        </div>
-                    }
-                  </div>
-                  <div style={{
-                    position:'absolute', bottom:6, right:6,
-                    width:42, height:42, borderRadius:'50%',
-                    background:'linear-gradient(135deg,#15803d,#22c55e)',
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    boxShadow:'0 4px 14px rgba(22,163,74,0.5)',
-                    border:'3px solid white',
-                    animation:'vsCheckPop .55s cubic-bezier(.34,1.56,.64,1) .4s both',
-                    transform:'scale(0)',
-                  }}>
-                    <Icons.Check size={20} color="white" />
-                  </div>
+            <div style={{ position:'fixed',inset:0,zIndex:200,background:'rgba(26,10,0,0.55)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',display:'flex',alignItems:'center',justifyContent:'center',animation:'fadeIn 0.35s ease both' }} onClick={() => setVisualSearchSuccess(false)}>
+              <div onClick={e => e.stopPropagation()} style={{ background:'white',borderRadius:28,padding:'44px 36px 40px',maxWidth:360,width:'90vw',textAlign:'center',boxShadow:'0 32px 80px rgba(22,163,74,0.2)',position:'relative',overflow:'hidden' }}>
+                <div style={{ position:'absolute',top:0,left:0,right:0,height:4,background:'linear-gradient(90deg,#15803d,#22c55e,#15803d)' }}/>
+                <div style={{ width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#15803d,#22c55e)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',boxShadow:'0 8px 28px rgba(22,163,74,0.4)' }}>
+                  <Icons.Check size={36} color="white" />
                 </div>
-
-                <div style={{
-                  display:'inline-block',
-                  background:'#dcfce7', color:'#15803d',
-                  border:'1px solid #a7f3d0',
-                  fontSize:13, fontWeight:800,
-                  padding:'6px 18px', borderRadius:20, marginBottom:14,
-                  animation:'vsCountIn .5s cubic-bezier(.34,1.56,.64,1) .3s both',
-                  opacity:0,
-                }}>
-                  {visualSearchCount} similar bag{visualSearchCount !== 1 ? 's' : ''} found!
-                </div>
-
-                <h3 style={{
-                  fontSize:22, fontWeight:900, color:'#1a0a00',
-                  letterSpacing:'-0.03em', marginBottom:8,
-                  animation:'vsFadeUp .45s ease .25s both', opacity:0,
-                }}>
-                  We found your match! 🎉
-                </h3>
-                <p style={{
-                  fontSize:13, color:'#9a6348', fontWeight:500, lineHeight:1.65, marginBottom:24,
-                  animation:'vsFadeUp .45s ease .38s both', opacity:0,
-                }}>
-                  Showing bags that look just like yours from trusted sellers across Nigeria
-                </p>
-
-                <div style={{ display:'flex', gap:10, justifyContent:'center', animation:'vsFadeUp .45s ease .5s both', opacity:0 }}>
-                  <button
-                    onClick={() => setVisualSearchSuccess(false)}
-                    style={{
-                      flex:1, maxWidth:200, padding:'13px 0',
-                      background:'linear-gradient(135deg,#15803d,#22c55e)',
-                      color:'white', border:'none', borderRadius:14,
-                      fontWeight:900, fontSize:14, cursor:'pointer',
-                      boxShadow:'0 6px 20px rgba(22,163,74,0.4)',
-                      transition:'all 0.25s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform='none'}
-                  >
-                    Browse Results →
-                  </button>
-                  <button
-                    onClick={() => { setVisualSearchSuccess(false); handleClearSearch(); }}
-                    style={{
-                      padding:'13px 16px', background:'#fdf4ee',
-                      color:'#c84b11', border:'1.5px solid #f9c4a0',
-                      borderRadius:14, fontWeight:700, fontSize:13, cursor:'pointer', transition:'all 0.2s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background='#fde8d8'}
-                    onMouseLeave={e => e.currentTarget.style.background='#fdf4ee'}
-                  >
-                    Clear
-                  </button>
+                <h3 style={{ fontSize:22,fontWeight:900,color:'#1a0a00',letterSpacing:'-0.03em',marginBottom:8 }}>We found your match! 🎉</h3>
+                <p style={{ fontSize:13,color:'#9a6348',fontWeight:500,lineHeight:1.65,marginBottom:24 }}>{visualSearchCount} similar bag{visualSearchCount!==1?'s':''} found from trusted sellers across Nigeria</p>
+                <div style={{ display:'flex',gap:10,justifyContent:'center' }}>
+                  <button onClick={() => setVisualSearchSuccess(false)} style={{ flex:1,maxWidth:200,padding:'13px 0',background:'linear-gradient(135deg,#15803d,#22c55e)',color:'white',border:'none',borderRadius:14,fontWeight:900,fontSize:14,cursor:'pointer',boxShadow:'0 6px 20px rgba(22,163,74,0.4)' }}>Browse Results →</button>
+                  <button onClick={() => { setVisualSearchSuccess(false); handleClearSearch(); }} style={{ padding:'13px 16px',background:'#fdf4ee',color:'#c84b11',border:'1.5px solid #f9c4a0',borderRadius:14,fontWeight:700,fontSize:13,cursor:'pointer' }}>Clear</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Results grid */}
-          <div style={{position:'relative', minHeight:'auto'}}>
+          <div style={{position:'relative',minHeight:'auto'}}>
             {displayedProducts.length > 0
-              ? <ProductGridWithAds
-                  products={displayedProducts}
-                  navigate={navigate}
-                  onAddToCart={handleAddToCart}
-                  isAuthed={!!user}
-                  onRequireAuth={() => setAuthGateOpen(true)}
-                  resultsKey={resultsKey}
-                />
+              ? <ProductGridWithAds products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={() => setAuthGateOpen(true)} resultsKey={resultsKey}/>
               : !visualSearching && (
                 <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
                   <Icons.Search size={56} color={C.textFaint} />
@@ -2692,9 +2145,7 @@ export default function Product(){
 
           {!isFiltered&&displayedProducts.length>0&&(
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
-              {hotDealProducts.length > 0 && (
-                <HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
-              )}
+              {hotDealProducts.length > 0 && <HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary} />} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d" />} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d" />} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
@@ -2705,9 +2156,7 @@ export default function Product(){
                   <h3 style={{fontSize:isMobile?'clamp(1.1rem,4vw,1.4rem)':'clamp(1.3rem,3vw,1.9rem)',fontWeight:900,color:'white',letterSpacing:'-0.03em',lineHeight:1.2,marginBottom:10}}>Sell Your Bags on BagSearch<br/><span style={{color:'#f97316'}}>Reach 10,000+ Buyers</span></h3>
                   <p style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,0.6)',fontWeight:500,maxWidth:isMobile?'100%':360}}>Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on first 30 days.</p>
                 </div>
-                <button onClick={()=>navigate('/register')} style={{position:'relative',padding:isMobile?'12px 24px':'14px 28px',background:'linear-gradient(135deg,#f97316,#c84b11)',color:'white',border:'none',borderRadius:isMobile?12:14,fontWeight:900,fontSize:isMobile?13:14,cursor:'pointer',boxShadow:'0 8px 28px rgba(200,75,17,0.5)',transition:'all 0.3s',whiteSpace:'nowrap',width:isMobile?'100%':'auto'}}
-                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
-                  onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
+                <button onClick={()=>navigate('/register')} style={{position:'relative',padding:isMobile?'12px 24px':'14px 28px',background:'linear-gradient(135deg,#f97316,#c84b11)',color:'white',border:'none',borderRadius:isMobile?12:14,fontWeight:900,fontSize:isMobile?13:14,cursor:'pointer',boxShadow:'0 8px 28px rgba(200,75,17,0.5)',transition:'all 0.3s',whiteSpace:'nowrap',width:isMobile?'100%':'auto'}}>
                   Start Selling Free →
                 </button>
               </div>
@@ -2811,20 +2260,9 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   );
 
   const loadSellerReviews = useCallback(async () => {
-    if (!normalizedVendorId) {
-      setReviews([]);
-      return [];
-    }
-
-    const { data: reviewData, error } = await supabase
-      .from('seller_reviews')
-      .select('id, seller_id, author_name, rating, text, created_at')
-      .eq('seller_id', normalizedVendorId)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
+    if (!normalizedVendorId) { setReviews([]); return []; }
+    const { data: reviewData, error } = await supabase.from('seller_reviews').select('id, seller_id, author_name, rating, text, created_at').eq('seller_id', normalizedVendorId).order('created_at', { ascending: false }).limit(20);
     if (error) throw error;
-
     const nextReviews = reviewData || [];
     setReviews(nextReviews);
     return nextReviews;
@@ -2837,7 +2275,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         const { data: profileData } = await supabase.from('users').select('brand_name, brand_story, bag_categories, avatar_url, full_name, phone').eq('user_id', normalizedVendorId).maybeSingle();
         if (profileData) setProfile(profileData);
         await loadSellerReviews();
-        
         await fetchVendorViews();
       } catch (err) { console.error('Failed to load vendor data:', err); }
       finally { setLoading(false); }
@@ -2846,47 +2283,15 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   }, [normalizedVendorId, loadSellerReviews]);
 
   const fetchVendorViews = async () => {
-    if (vendorProducts.length === 0) {
-      setTotalViewsCount(0);
-      setViews([]);
-      return;
-    }
-    
+    if (vendorProducts.length === 0) { setTotalViewsCount(0); setViews([]); return; }
     try {
       setViewsLoading(true);
       const productIds = vendorProducts.map(p => p.id);
       if (productIds.length === 0) return;
-      
-      const { data, count, error } = await supabase
-        .from('product_views')
-        .select(`
-          id, 
-          viewed_at, 
-          buyer_name, 
-          buyer_phone, 
-          buyer_email,
-          buyer_id,
-          product_id,
-          products:product_id(id,name,images),
-          users:buyer_id(full_name,email,phone)
-        `, { count: 'exact' })
-        .in('product_id', productIds)
-        .order('viewed_at', { ascending: false })
-        .limit(20);
-        
-      if (!error) {
-        setTotalViewsCount(count || 0);
-        setViews(data || []);
-      } else {
-        console.error('Error fetching vendor views:', error);
-      }
-    } catch (err) {
-      console.error('Failed to fetch vendor views:', err);
-      setTotalViewsCount(0);
-      setViews([]);
-    } finally {
-      setViewsLoading(false);
-    }
+      const { data, count, error } = await supabase.from('product_views').select(`id, viewed_at, buyer_name, buyer_phone, buyer_email, buyer_id, product_id, products:product_id(id,name,images), users:buyer_id(full_name,email,phone)`, { count: 'exact' }).in('product_id', productIds).order('viewed_at', { ascending: false }).limit(20);
+      if (!error) { setTotalViewsCount(count || 0); setViews(data || []); }
+    } catch (err) { console.error('Failed to fetch vendor views:', err); setTotalViewsCount(0); setViews([]); }
+    finally { setViewsLoading(false); }
   };
 
   const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
@@ -2896,13 +2301,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     if (!newReviewText.trim() || !normalizedVendorId) return;
     setSubmittingReview(true);
     try {
-      const payload = {
-        seller_id: normalizedVendorId,
-        author_name: authorName,
-        rating: newRating,
-        text: newReviewText.trim(),
-      };
-      const { error } = await supabase.from('seller_reviews').insert(payload);
+      const { error } = await supabase.from('seller_reviews').insert({ seller_id: normalizedVendorId, author_name: authorName, rating: newRating, text: newReviewText.trim() });
       if (error) throw error;
       await loadSellerReviews();
       setNewReviewText(''); setNewRating(5);
@@ -2910,53 +2309,22 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     finally { setSubmittingReview(false); }
   };
 
-  const handleEditReview = (review) => {
-    setEditingReview(review.id);
-    setEditText(review.text);
-    setEditRating(review.rating);
-  };
-
+  const handleEditReview = (review) => { setEditingReview(review.id); setEditText(review.text); setEditRating(review.rating); };
   const handleUpdateReview = async () => {
     if (!editText.trim() || !editingReview) return;
     setUpdatingReview(true);
     try {
-      const { data, error } = await supabase
-        .from('seller_reviews')
-        .update({ 
-          rating: editRating, 
-          text: editText.trim()
-        })
-        .eq('id', editingReview)
-        .select();
-      
-      if (!error) {
-        await loadSellerReviews();
-        setEditingReview(null);
-        setEditText('');
-        setEditRating(5);
-      } else if (error) {
-        console.error('Error updating review:', error);
-      }
-    } catch (err) {
-      console.error('Failed to update review:', err);
-    } finally {
-      setUpdatingReview(false);
-    }
+      const { error } = await supabase.from('seller_reviews').update({ rating: editRating, text: editText.trim() }).eq('id', editingReview).select();
+      if (!error) { await loadSellerReviews(); setEditingReview(null); setEditText(''); setEditRating(5); }
+    } catch (err) { console.error('Failed to update review:', err); }
+    finally { setUpdatingReview(false); }
   };
-
-  const handleCancelEdit = () => {
-    setEditingReview(null);
-    setEditText('');
-    setEditRating(5);
-  };
-
+  const handleCancelEdit = () => { setEditingReview(null); setEditText(''); setEditRating(5); };
   const handleDeleteReview = async (reviewId) => {
     if (!confirm('Are you sure you want to delete this review?')) return;
     try {
       const { error } = await supabase.from('seller_reviews').delete().eq('id', reviewId);
-      if (!error) {
-        await loadSellerReviews();
-      }
+      if (!error) await loadSellerReviews();
     } catch (err) { console.error('Failed to delete review:', err); }
   };
 
@@ -2970,42 +2338,19 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
 
   return (
     <div style={{ animation:'fadeIn 0.4s ease', paddingBottom:40 }}>
-      <button onClick={onClose} style={{ marginBottom:16,background:'none',border:'none',color:'#c84b11',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,padding:'8px 12px',borderRadius:8,transition:'background 0.2s' }}
-        onMouseEnter={e=>e.currentTarget.style.background='#fdf4ee'} onMouseLeave={e=>e.currentTarget.style.background='none'}>
+      <button onClick={onClose} style={{ marginBottom:16,background:'none',border:'none',color:'#c84b11',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,padding:'8px 12px',borderRadius:8,transition:'background 0.2s' }}>
         <Icons.ArrowLeft size={18} color="currentColor" /> Back to Vendors
       </button>
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap' }}>
-        <div 
-          onClick={() => navigate(`/vendor/${vendor.id}`)}
-          style={{ 
-            width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0,
-            cursor:'pointer',
-            transition:'transform 0.2s ease'
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform='scale(1.05)'}
-          onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
-        >
+        <div onClick={() => navigate(`/vendor/${vendor.id}`)} style={{ width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0,cursor:'pointer',transition:'transform 0.2s ease' }} onMouseEnter={e => e.currentTarget.style.transform='scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}>
           {displayAvatar}
         </div>
         <div style={{ flex:1, minWidth:200 }}>
-          <h2 
-            onClick={() => navigate(`/vendor/${vendor.id}`)}
-            style={{ 
-              fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em',
-              cursor:'pointer',
-              transition:'color 0.2s ease'
-            }}
-            onMouseEnter={e => e.currentTarget.style.color='#c84b11'}
-            onMouseLeave={e => e.currentTarget.style.color='#1a0a00'}
-          >
-            {displayName}
-          </h2>
+          <h2 onClick={() => navigate(`/vendor/${vendor.id}`)} style={{ fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em',cursor:'pointer',transition:'color 0.2s ease' }} onMouseEnter={e => e.currentTarget.style.color='#c84b11'} onMouseLeave={e => e.currentTarget.style.color='#1a0a00'}>{displayName}</h2>
           <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap' }}>
             {avgRating && <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20 }}><Icons.Star size={16} color="#f97316" filled /> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}
             <span style={{ fontSize:13,color:'#c84b11',fontWeight:800,background:'#fdf4ee',padding:'4px 10px',borderRadius:20 }}>{vendorProducts.length} Product{vendorProducts.length!==1?'s':''}</span>
-            <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#3b82f6',background:'#eff6ff',padding:'4px 10px',borderRadius:20 }}>
-              <Icons.Eye size={16} color="#3b82f6" /> {totalViewsCount} View{totalViewsCount!==1?'s':''}
-            </span>
+            <span style={{ display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#3b82f6',background:'#eff6ff',padding:'4px 10px',borderRadius:20 }}><Icons.Eye size={16} color="#3b82f6" /> {totalViewsCount} View{totalViewsCount!==1?'s':''}</span>
           </div>
           {displayStory ? <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.6,maxWidth:600 }}>{displayStory}</p> : <p style={{ fontSize:13,color:'#c4957a',fontStyle:'italic' }}>No brand story added yet.</p>}
           {displayCategories.length > 0 && <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:12 }}>{displayCategories.map(cat => (<span key={cat} style={{ fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,background:'#fde8d8',color:'#c84b11',border:'1px solid #f9c4a0' }}>{cat}</span>))}</div>}
@@ -3015,15 +2360,10 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
       <div className="product-grid" style={{ marginBottom:40 }}>
         {vendorProducts.length > 0 ? vendorProducts.map((p,i) => (<ProductCard key={p.id} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />)) : <p style={{ color:'#9a6348' }}>No products available yet.</p>}
       </div>
-      
-      {/* Recent Views Section */}
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',marginBottom:32 }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Recent Product Views</h3>
         {viewsLoading ? (
-          <div style={{ textAlign:'center',padding:'40px 0',color:'#9a6348' }}>
-            <div style={{ display:'inline-block',width:24,height:24,border:'2px solid #f0d9cc',borderTopColor:'#c84b11',borderRadius:'50%',animation:'ldSpin 0.8s linear infinite',marginBottom:12 }}></div>
-            <p style={{ fontSize:13 }}>Loading views...</p>
-          </div>
+          <div style={{ textAlign:'center',padding:'40px 0',color:'#9a6348' }}><div style={{ display:'inline-block',width:24,height:24,border:'2px solid #f0d9cc',borderTopColor:'#c84b11',borderRadius:'50%',animation:'ldSpin 0.8s linear infinite',marginBottom:12 }}></div><p style={{ fontSize:13 }}>Loading views...</p></div>
         ) : views.length === 0 ? (
           <p style={{ color:'#9a6348',fontSize:13,textAlign:'center',padding:'24px 0' }}>No product views yet.</p>
         ) : (
@@ -3034,101 +2374,23 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
               const buyerPhone = view.users?.phone || view.buyer_phone;
               const productName = view.products?.name || 'Unknown Product';
               const productImage = view.products?.images?.[0];
-              
               return (
-                <div key={view.id} style={{ 
-                  padding:'16px 20px', 
-                  background:'#fdf8f5', 
-                  borderRadius:16, 
-                  border:'1px solid #f0d9cc',
-                  display:'flex',
-                  gap:16,
-                  alignItems:'center'
-                }}>
-                  {productImage ? (
-                    <img 
-                      src={productImage} 
-                      alt={productName}
-                      style={{ 
-                        width:60, 
-                        height:60, 
-                        borderRadius:12, 
-                        objectFit:'cover',
-                        flexShrink:0
-                      }}
-                    />
-                  ) : (
-                    <div style={{ 
-                      width:60, 
-                      height:60, 
-                      borderRadius:12, 
-                      background:'#f0d9cc',
-                      display:'flex',
-                      alignItems:'center',
-                      justifyContent:'center',
-                      flexShrink:0
-                    }}>
-                      <Icons.ShoppingBag size={24} color="#9a6348" />
-                    </div>
-                  )}
-                  
-                  <div style={{ flex:1, minWidth:0 }}>
+                <div key={view.id} style={{ padding:'16px 20px',background:'#fdf8f5',borderRadius:16,border:'1px solid #f0d9cc',display:'flex',gap:16,alignItems:'center' }}>
+                  {productImage ? <img src={productImage} alt={productName} style={{ width:60,height:60,borderRadius:12,objectFit:'cover',flexShrink:0 }}/> : <div style={{ width:60,height:60,borderRadius:12,background:'#f0d9cc',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><Icons.ShoppingBag size={24} color="#9a6348" /></div>}
+                  <div style={{ flex:1,minWidth:0 }}>
                     <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
-                      <span style={{ 
-                        fontSize:14, 
-                        fontWeight:800, 
-                        color:'#1a0a00' 
-                      }}>{buyerName}</span>
-                      <span style={{ 
-                        fontSize:11, 
-                        color:'#9a6348', 
-                        background:'#f0d9cc', 
-                        padding:'2px 8px', 
-                        borderRadius:12 
-                      }}>{view.source || 'web'}</span>
+                      <span style={{ fontSize:14,fontWeight:800,color:'#1a0a00' }}>{buyerName}</span>
                     </div>
-                    <div style={{ fontSize:13,color:'#5c3317',marginBottom:2 }}>
-                      viewed <strong>{productName}</strong>
-                    </div>
-                    <div style={{ fontSize:12,color:'#9a6348' }}>
-                      {new Date(view.viewed_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                    {(buyerEmail || buyerPhone) && (
-                      <div style={{ display:'flex',gap:12,marginTop:4 }}>
-                        {buyerEmail && (
-                          <span style={{ fontSize:11,color:'#9a6348' }}>
-                            📧 {buyerEmail}
-                          </span>
-                        )}
-                        {buyerPhone && (
-                          <span style={{ fontSize:11,color:'#9a6348' }}>
-                            📞 {buyerPhone}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <div style={{ fontSize:13,color:'#5c3317',marginBottom:2 }}>viewed <strong>{productName}</strong></div>
+                    <div style={{ fontSize:12,color:'#9a6348' }}>{new Date(view.viewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                    {(buyerEmail || buyerPhone) && <div style={{ display:'flex',gap:12,marginTop:4 }}>{buyerEmail && <span style={{ fontSize:11,color:'#9a6348' }}>📧 {buyerEmail}</span>}{buyerPhone && <span style={{ fontSize:11,color:'#9a6348' }}>📞 {buyerPhone}</span>}</div>}
                   </div>
                 </div>
               );
             })}
-            
-            {views.length > 0 && (
-              <div style={{ textAlign:'center',padding:'16px 0' }}>
-                <span style={{ fontSize:12,color:'#9a6348',fontStyle:'italic' }}>
-                  Showing {Math.min(views.length, 20)} of {totalViewsCount} total views
-                </span>
-              </div>
-            )}
           </div>
         )}
       </div>
-      
-      <React.Fragment>
       <div style={{ background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f7ece4' }}>
         <h3 style={{ fontSize:20,fontWeight:800,color:'#1a0a00',marginBottom:24 }}>Reviews & Comments</h3>
         <form onSubmit={handleSubmitReview} style={{ background:'#fdf8f5',padding:24,borderRadius:16,marginBottom:32,border:'1px solid #f0d9cc' }}>
@@ -3142,138 +2404,53 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
             {submittingReview ? 'Posting…' : 'Post Review'}
           </button>
         </form>
-      </div>
-      
-      {reviews.length === 0
-        ? <p style={{ color:'#c4957a',fontSize:13,textAlign:'center',padding:'24px 0' }}>No reviews yet. Be the first!</p>
-        : reviews.map(r=>(
-          <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
-            {editingReview === r.id ? (
-              <div style={{ background:'#fdf8f5',padding:16,borderRadius:12,border:'1px solid #f0d9cc' }}>
-                <h4 style={{ fontSize:15,fontWeight:800,color:'#1a0a00',marginBottom:12 }}>Edit Your Review</h4>
-                <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:16 }}>
-                  <span style={{ fontSize:13,fontWeight:700,color:'#5c3317' }}>Rating:</span>
-                  {[1,2,3,4,5].map(star=>(
-                    <button key={star} type="button" onClick={()=>setEditRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}>
-                      <Icons.Star size={24} color={star<=editRating?'#f97316':'#f0d9cc'} filled={star<=editRating} />
-                    </button>
-                  ))}
-                </div>
-                <textarea 
-                  value={editText} 
-                  onChange={e=>setEditText(e.target.value)} 
-                  placeholder="Update your review..." 
-                  style={{ 
-                    width:'100%',
-                    padding:16,
-                    borderRadius:12,
-                    border:'1.5px solid #f0d9cc',
-                    background:'white',
-                    minHeight:100,
-                    resize:'vertical',
-                    fontSize:14,
-                    fontFamily:'inherit',
-                    marginBottom:16,
-                    outline:'none',
-                    color:'#1a0a00' 
-                  }}
-                />
-                <div style={{ display:'flex',gap:8 }}>
-                  <button 
-                    onClick={handleUpdateReview}
-                    disabled={updatingReview}
-                    style={{ 
-                      padding:'10px 20px',
-                      background:'linear-gradient(135deg, #c84b11, #f97316)',
-                      color:'white',
-                      border:'none',
-                      borderRadius:10,
-                      fontWeight:800,
-                      fontSize:14,
-                      cursor:updatingReview?'default':'pointer',
-                      opacity:updatingReview?0.7:1 
-                    }}>
-                    {updatingReview ? 'Updating…' : 'Update Review'}
-                  </button>
-                  <button 
-                    onClick={handleCancelEdit}
-                    style={{ 
-                      padding:'10px 20px',
-                      background:'white',
-                      color:'#c84b11',
-                      border:'1.5px solid #f0d9cc',
-                      borderRadius:10,
-                      fontWeight:700,
-                      fontSize:14,
-                      cursor:'pointer' 
-                    }}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <React.Fragment>
-                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
-                  <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                    <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{(r.author_name||'A').charAt(0)}</div>
-                    <div>
-                      <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author_name || 'Anonymous'}</div>
-                      <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>
-                        {r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}
-                        {r.updated_at && r.updated_at !== r.created_at && ' (edited)'}
-                      </div>
-                    </div>
+        {reviews.length === 0
+          ? <p style={{ color:'#c4957a',fontSize:13,textAlign:'center',padding:'24px 0' }}>No reviews yet. Be the first!</p>
+          : reviews.map(r=>(
+            <div key={r.id} style={{ padding:'20px 0',borderBottom:'1px solid #f7ece4' }}>
+              {editingReview === r.id ? (
+                <div style={{ background:'#fdf8f5',padding:16,borderRadius:12,border:'1px solid #f0d9cc' }}>
+                  <h4 style={{ fontSize:15,fontWeight:800,color:'#1a0a00',marginBottom:12 }}>Edit Your Review</h4>
+                  <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:16 }}>
+                    <span style={{ fontSize:13,fontWeight:700,color:'#5c3317' }}>Rating:</span>
+                    {[1,2,3,4,5].map(star=>(<button key={star} type="button" onClick={()=>setEditRating(star)} style={{ background:'none',border:'none',cursor:'pointer',padding:0 }}><Icons.Star size={24} color={star<=editRating?'#f97316':'#f0d9cc'} filled={star<=editRating} /></button>))}
                   </div>
-                  <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-                    <div style={{ display:'flex',gap:2 }}>
-                      {[1,2,3,4,5].map(star=>(<Icons.Star key={star} size={14} color={star<=r.rating?'#f97316':'#f0d9cc'} filled={star<=r.rating} />))}
-                    </div>
-                    {user && (r.author_name === authorName || r.user_id === user?.id) && (
-                      <div style={{ display:'flex',gap:4 }}>
-                        <button
-                          onClick={()=>handleEditReview(r)}
-                          style={{ 
-                            background:'none', 
-                            border:'none', 
-                            color:'#9a6348', 
-                            cursor:'pointer', 
-                            padding:'2px',
-                            borderRadius:'2px',
-                            fontSize:12
-                          }}
-                          title="Edit review"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={()=>handleDeleteReview(r.id)}
-                          style={{ 
-                            background:'none', 
-                            border:'none', 
-                            color:'#dc2626', 
-                            cursor:'pointer', 
-                            padding:'2px',
-                            borderRadius:'2px',
-                            fontSize:12
-                          }}
-                          title="Delete review"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    )}
+                  <textarea value={editText} onChange={e=>setEditText(e.target.value)} style={{ width:'100%',padding:16,borderRadius:12,border:'1.5px solid #f0d9cc',background:'white',minHeight:100,resize:'vertical',fontSize:14,fontFamily:'inherit',marginBottom:16,outline:'none',color:'#1a0a00' }}/>
+                  <div style={{ display:'flex',gap:8 }}>
+                    <button onClick={handleUpdateReview} disabled={updatingReview} style={{ padding:'10px 20px',background:'linear-gradient(135deg, #c84b11, #f97316)',color:'white',border:'none',borderRadius:10,fontWeight:800,fontSize:14,cursor:updatingReview?'default':'pointer',opacity:updatingReview?0.7:1 }}>{updatingReview ? 'Updating…' : 'Update Review'}</button>
+                    <button onClick={handleCancelEdit} style={{ padding:'10px 20px',background:'white',color:'#c84b11',border:'1.5px solid #f0d9cc',borderRadius:10,fontWeight:700,fontSize:14,cursor:'pointer' }}>Cancel</button>
                   </div>
                 </div>
-                <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.5,margin:0 }}>{r.text}</p>
-              </React.Fragment>
-            )}</div>
+              ) : (
+                <React.Fragment>
+                  <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                      <div style={{ width:36,height:36,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,color:'#c84b11',fontSize:14 }}>{(r.author_name||'A').charAt(0)}</div>
+                      <div>
+                        <div style={{ fontWeight:800,color:'#1a0a00',fontSize:13 }}>{r.author_name || 'Anonymous'}</div>
+                        <div style={{ fontSize:11,color:'#9a6348',fontWeight:600 }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''}</div>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+                      <div style={{ display:'flex',gap:2 }}>{[1,2,3,4,5].map(star=>(<Icons.Star key={star} size={14} color={star<=r.rating?'#f97316':'#f0d9cc'} filled={star<=r.rating} />))}</div>
+                      {user && (r.author_name === authorName || r.user_id === user?.id) && (
+                        <div style={{ display:'flex',gap:4 }}>
+                          <button onClick={()=>handleEditReview(r)} style={{ background:'none',border:'none',color:'#9a6348',cursor:'pointer',padding:'2px',fontSize:12 }} title="Edit review">✏️</button>
+                          <button onClick={()=>handleDeleteReview(r.id)} style={{ background:'none',border:'none',color:'#dc2626',cursor:'pointer',padding:'2px',fontSize:12 }} title="Delete review">🗑️</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p style={{ fontSize:14,color:'#5c3317',lineHeight:1.5,margin:0 }}>{r.text}</p>
+                </React.Fragment>
+              )}
+            </div>
           ))}
-      </React.Fragment>
+      </div>
     </div>
   );
 }
 
-// FeedbackTrigger component - kept for compatibility
 function FeedbackTrigger({ onClick }) {
   const [hov, setHov] = useState(false);
   const [pulse, setPulse] = useState(false);

@@ -18,6 +18,7 @@ const ForgotPassword = lazy(() => import('./forgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./resetPassword.jsx'));
 const VendorDetails = lazy(() => import('./vendorDetails.jsx'));
 const Contact = lazy(() => import('./contact.jsx'));
+const About = lazy(() => import('./about.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -190,6 +191,9 @@ function App() {
 
           {/* Contact page - public */}
           <Route path="/contact" element={<Contact />} />
+
+          {/* About page - public */}
+          <Route path="/about" element={<About />} />
 
           {/* Vendor Details - public */}
           <Route path="/vendor/:id" element={<VendorDetails />} />
