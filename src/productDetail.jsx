@@ -268,9 +268,45 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div style={{ minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.primaryPale }}>
-        <div style={{ width:40,height:40,borderRadius:'50%',border:`3px solid ${C.borderLight}`,borderTopColor:C.primary,animation:'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(180deg, #fdf4ee 0%, #fff 100%)',padding:'24px' }}>
+        <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:16,textAlign:'center' }}>
+          <div style={{ position:'relative',width:78,height:78,display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <div style={{ position:'absolute',inset:0,borderRadius:'50%',background:'radial-gradient(circle, rgba(249,115,22,0.16) 0%, rgba(249,115,22,0) 70%)',animation:'loaderPulse 1.8s ease-in-out infinite' }} />
+            <div style={{ position:'relative',width:54,height:54,display:'flex',alignItems:'center',justifyContent:'center' }}>
+              <LogoIcon size={36} />
+            </div>
+          </div>
+
+          <div>
+            <p style={{ fontSize:15,fontWeight:800,color:C.text,marginBottom:6 }}>Loading product</p>
+            <div style={{ display:'flex',justifyContent:'center',gap:6 }}>
+              {[0, 1, 2].map((dot) => (
+                <span
+                  key={dot}
+                  style={{
+                    width:8,
+                    height:8,
+                    borderRadius:'50%',
+                    background: dot === 1 ? C.primaryLight : C.primary,
+                    animation:`loaderDot 0.9s ${dot * 0.14}s ease-in-out infinite`,
+                    display:'inline-block',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes loaderPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.45; }
+            50% { transform: scale(1.08); opacity: 1; }
+          }
+          @keyframes loaderDot {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-5px); opacity: 1; }
+          }
+        `}</style>
       </div>
     );
   }

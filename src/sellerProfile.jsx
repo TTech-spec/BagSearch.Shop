@@ -4,6 +4,7 @@ import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import { deleteFromPinecone } from './services/visualSearch';
 import NotificationsDropdown from './components/NotificationsDropdown';
+import LogoIcon from './components/Logo.jsx';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
@@ -1704,8 +1705,8 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     <>
       <div style={{ padding:"24px 20px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <MS name="shopping_bag" size={18} style={{ color:"white" }}/>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:36, height:36 }}>
+            <LogoIcon size={32} />
           </div>
           <div>
             <div style={{ fontSize:14, fontWeight:900, color:"#f8fafc", letterSpacing:"-0.02em" }}>BagSearch</div>
