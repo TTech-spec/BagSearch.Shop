@@ -5,7 +5,6 @@ import { supabase } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
-import UnderDevelopmentBanner from './UnderDevelopmentBanner';
 import shoppingBagImg from './images/shopping-bag.png';
 
 const BAG_COLOR_MAP = {
@@ -1436,12 +1435,6 @@ function LocationSubBar({ selectedLocation, onOpen, isMobile }) {
           <Icons.ChevronRight size={12} color={C.textFaint} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Icons.Truck size={13} color={C.success} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: C.textMuted }}>
-            Free delivery on orders over {formatCurrency(FREE_DELIVERY_THRESHOLD)}
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -1517,6 +1510,13 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
                 <Icons.User size={20} color="currentColor" />
               </button>
               <CartBadge count={cartCount} onClick={() => setCartOpen(true)} />
+              <button onClick={() => navigate('/hot-deals')}
+                style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8 }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; }}
+                onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}>
+                <Icons.Zap size={15} color="currentColor" />
+                Hot Deals
+              </button>
               <button onClick={() => navigate('/about')}
                 style={{ padding: '8px 16px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.surfaceDim, cursor: 'pointer', color: C.textMid, fontSize: 13, fontWeight: 700, transition: 'all 0.2s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.borderColor = C.primaryBorder; e.currentTarget.style.color = C.primary; }}
@@ -1629,7 +1629,6 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
-  const[pageLoading,setPageLoading]=useState(true);
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
@@ -1860,8 +1859,6 @@ export default function Product(){
   return(
     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
 
-      <UnderDevelopmentBanner onEnter={() => setPageLoading(false)} />
-
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -1946,6 +1943,7 @@ export default function Product(){
         {(user?[
           {label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},
           {label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
+          {label:'Hot Deals',icon:Icons.Zap,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},
           {label:'About Us',icon:Icons.MessageCircle,action:()=>{navigate('/about');setIsSidebarOpen(false);}},
           {label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},
           {label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},
@@ -1954,6 +1952,7 @@ export default function Product(){
           {label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},
           {label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},
           {label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},
+          {label:'Hot Deals',icon:Icons.Zap,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},
           {label:'About Us',icon:Icons.MessageCircle,action:()=>{navigate('/about');setIsSidebarOpen(false);}},
           {label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},
           {label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},
