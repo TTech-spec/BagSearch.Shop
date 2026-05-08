@@ -257,6 +257,118 @@ function AnimatedHeading({ text, sub, ready, delay = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ─── DISCOUNT ALERT CARD ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+function DiscountAlertCard({ navigate }) {
+  const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [hov, setHov] = useState(false);
+
+  useEffect(() => {
+    // Slide in after 2.5s so it doesn't immediately block the user
+    const t = setTimeout(() => setVisible(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (dismissed) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: visible ? 20 : -320,
+        bottom: 32,
+        zIndex: 9999,
+        width: 280,
+        background: 'white',
+        borderRadius: 16,
+        border: `1.5px solid ${C.primaryBorder}`,
+        boxShadow: `0 12px 40px rgba(200,75,17,0.18), 0 4px 16px rgba(0,0,0,0.08)`,
+        overflow: 'hidden',
+        transition: 'left 0.55s cubic-bezier(0.34,1.28,0.64,1)',
+        fontFamily: "'Manrope',sans-serif",
+      }}
+    >
+      {/* Accent bar */}
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})` }} />
+
+      {/* Header */}
+      <div style={{ padding: '14px 14px 0', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+          background: C.primaryBg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'discountBounce 2s ease-in-out infinite',
+        }}>
+          <span style={{ fontSize: 18 }}>🏷️</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 12, fontWeight: 900, color: C.text, marginBottom: 2, lineHeight: 1.2 }}>
+            Boost Sales with a Discount!
+          </p>
+          <p style={{ fontSize: 10, color: C.textMuted, fontWeight: 500, lineHeight: 1.5 }}>
+            Sellers who run promos see up to <strong style={{ color: C.primary }}>3× more views</strong> on their listings.
+          </p>
+        </div>
+        <button
+          onClick={() => setDismissed(true)}
+          style={{ width: 22, height: 22, borderRadius: 6, border: 'none', background: C.surfaceDim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textFaint, flexShrink: 0, fontSize: 12, lineHeight: 1 }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.color = C.primary; }}
+          onMouseLeave={e => { e.currentTarget.style.background = C.surfaceDim; e.currentTarget.style.color = C.textFaint; }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '10px 14px 14px' }}>
+        <div style={{ background: C.primaryPale, borderRadius: 10, padding: '8px 10px', marginBottom: 10, border: `1px dashed ${C.primaryBorder}` }}>
+          <p style={{ fontSize: 10, color: C.textMid, fontWeight: 600, lineHeight: 1.5 }}>
+            💡 Add a <strong style={{ color: C.primary }}>discount price</strong> when you upload a product — it shows buyers how much they save.
+          </p>
+        </div>
+
+        {/* CTA Button — navigates to createProduct page */}
+        <button
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          onClick={() => navigate('/create-product')}
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            padding: '9px 14px',
+            borderRadius: 10,
+            border: 'none',
+            background: hov
+              ? `linear-gradient(135deg, ${C.accent}, ${C.primaryLight})`
+              : `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
+            color: 'white',
+            fontSize: 12,
+            fontWeight: 800,
+            cursor: 'pointer',
+            fontFamily: "'Manrope',sans-serif",
+            boxShadow: hov
+              ? `0 8px 24px rgba(200,75,17,0.45)`
+              : `0 4px 14px rgba(200,75,17,0.3)`,
+            transition: 'all 0.25s cubic-bezier(0.22,1,0.36,1)',
+            transform: hov ? 'translateY(-1px)' : 'none',
+          }}
+        >
+          <MS name="local_offer" size={15} style={{ color: 'white' }} />
+          Add a Discounted Product
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes discountBounce {
+          0%, 100% { transform: rotate(-6deg) scale(1); }
+          50% { transform: rotate(6deg) scale(1.12); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ─── PROFILE URL GENERATOR ────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 function ProfileURLCard({ seller, userId, ready }) {
@@ -273,7 +385,6 @@ function ProfileURLCard({ seller, userId, ready }) {
 
   const BASE_URL = typeof window !== 'undefined' ? `${window.location.origin}/seller/` : 'https://bagsearch.ng/seller/';
 
-  // Generate initial slug from seller data
   useEffect(() => {
     if (!seller) return;
     const name = seller.brand_name || seller.name || '';
@@ -282,7 +393,6 @@ function ProfileURLCard({ seller, userId, ready }) {
     setCustomSlug(generated);
   }, [seller, userId]);
 
-  // Load saved slug from DB if it exists
   useEffect(() => {
     if (!userId) return;
     supabase.from('users').select('profile_slug').eq('user_id', userId).maybeSingle()
@@ -315,7 +425,6 @@ function ProfileURLCard({ seller, userId, ready }) {
     if (err) { setSlugError(err); return; }
     setSaving(true);
     try {
-      // Check uniqueness
       const { data: existing } = await supabase
         .from('users')
         .select('user_id')
@@ -340,7 +449,6 @@ function ProfileURLCard({ seller, userId, ready }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      // Fallback
       const el = document.createElement('textarea');
       el.value = profileURL;
       document.body.appendChild(el);
@@ -365,10 +473,7 @@ function ProfileURLCard({ seller, userId, ready }) {
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   };
 
-  const shareViaInstagram = () => {
-    // Instagram doesn't support direct URL share; copy to clipboard for IG bio
-    handleCopy();
-  };
+  const shareViaInstagram = () => { handleCopy(); };
 
   const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileURL)}&color=c84b11&bgcolor=fdf4ee&margin=12`;
 
@@ -388,7 +493,6 @@ function ProfileURLCard({ seller, userId, ready }) {
         marginBottom: 24,
       }}
     >
-      {/* Header */}
       <div style={{ background: `linear-gradient(135deg, #1a0a00 0%, #2d1200 100%)`, padding: '20px 24px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -30, right: -10, width: 120, height: 120, borderRadius: '50%', background: 'rgba(200,75,17,0.15)', pointerEvents: 'none' }}/>
         <div style={{ position: 'absolute', bottom: -20, left: 40, width: 80, height: 80, borderRadius: '50%', background: 'rgba(249,115,22,0.1)', pointerEvents: 'none' }}/>
@@ -412,9 +516,7 @@ function ProfileURLCard({ seller, userId, ready }) {
         </div>
       </div>
 
-      {/* URL Display + Edit */}
       <div style={{ padding: '20px 24px' }}>
-        {/* URL Preview Box */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: 'block', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
             Your Profile URL
@@ -439,7 +541,6 @@ function ProfileURLCard({ seller, userId, ready }) {
           </div>
         </div>
 
-        {/* Custom Slug Editor */}
         {editing ? (
           <div style={{ marginBottom: 16, background: C.primaryPale, borderRadius: 14, padding: 16, border: `1.5px solid ${C.primaryBorder}` }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
@@ -499,13 +600,11 @@ function ProfileURLCard({ seller, userId, ready }) {
           </button>
         )}
 
-        {/* Share Buttons */}
         <div>
           <label style={{ display: 'block', fontSize: 10, fontWeight: 800, color: C.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>
             Share Your Profile
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {/* WhatsApp */}
             <button
               onClick={shareViaWhatsApp}
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 10, border: 'none', background: '#25D366', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(37,211,102,0.3)' }}
@@ -515,7 +614,6 @@ function ProfileURLCard({ seller, userId, ready }) {
               <WhatsAppIcon size={15}/> WhatsApp
             </button>
 
-            {/* Copy for Instagram */}
             <button
               onClick={shareViaInstagram}
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(224,100,90,0.3)' }}
@@ -525,7 +623,6 @@ function ProfileURLCard({ seller, userId, ready }) {
               <MS name="photo_camera" size={15}/> Copy for IG
             </button>
 
-            {/* QR Code */}
             <button
               onClick={() => setShowQR(v => !v)}
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${showQR ? C.primary : C.primaryBorder}`, background: showQR ? C.primaryBg : 'white', color: showQR ? C.primary : C.textMid, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' }}
@@ -537,7 +634,6 @@ function ProfileURLCard({ seller, userId, ready }) {
           </div>
         </div>
 
-        {/* QR Code Panel */}
         {showQR && (
           <div style={{ marginTop: 16, padding: 20, background: C.primaryPale, borderRadius: 14, border: `1.5px solid ${C.primaryBorder}`, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', animation: 'fadeUp 0.35s cubic-bezier(0.22,1,0.36,1)' }}>
             <div style={{ background: 'white', borderRadius: 12, padding: 10, border: `2px solid ${C.primaryBorder}`, flexShrink: 0, boxShadow: `0 4px 16px rgba(200,75,17,0.10)` }}>
@@ -579,7 +675,6 @@ function ProfileURLCard({ seller, userId, ready }) {
         )}
       </div>
 
-      {/* Footer hint */}
       <div style={{ padding: '12px 24px', background: C.surfaceDim, borderTop: `1px solid ${C.borderLight}`, display: 'flex', alignItems: 'center', gap: 8 }}>
         <MS name="info" size={14} style={{ color: C.textFaint, flexShrink: 0 }}/>
         <p style={{ fontSize: 11, color: C.textFaint, fontWeight: 500, lineHeight: 1.5 }}>
@@ -1441,6 +1536,7 @@ export default function SellerProfile() {
         @keyframes cursorBlink  {0%,100%{opacity:1}50%{opacity:0}}
         @keyframes progressPulse{0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
         @keyframes skeletonPulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
+        @keyframes discountBounce{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.12)}}
         .sidebar-desktop{display:flex!important}
         .sidebar-mobile-overlay{display:none!important}
         .main-content{margin-left:240px!important}
@@ -1680,6 +1776,9 @@ export default function SellerProfile() {
         deleting={deleting}
         deleted={deleted}
       />
+
+      {/* ── DISCOUNT ALERT CARD ── */}
+      <DiscountAlertCard navigate={navigate} />
     </div>
   );
 }
