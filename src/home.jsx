@@ -4,7 +4,7 @@ import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 
 // ── CRIIBB PALETTE ──
-const NAV_LINKS = ["New Arrivals", "Collections", "Visual Search"];
+const NAV_LINKS = ["New Arrivals", "Collections", "Hot Deals", "About Us", "Visual Search", "Contact Us"];
 
 const NEW_ARRIVALS = [
   { name: "The Midnight Satchel", sub: "Italian Leather", material: "Midnight Blue", price: "$2,450", tag: "New", tagColor: "#C94B2C", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8" },
@@ -660,6 +660,8 @@ export default function LuxeBag() {
   const handleNavClick = (link) => {
     if (link === "New Arrivals") { if (newArrivalsRef.current) newArrivalsRef.current.scrollIntoView({ behavior: "smooth" }); }
     else if (link === "Collections") navigate("/products");
+    else if (link === "Hot Deals") navigate("/hot-deals");
+    else if (link === "About Us") navigate("/about");
     else setAuthGateOpen(true);
   };
 
@@ -875,8 +877,8 @@ export default function LuxeBag() {
           </div>
           <div style={{ padding: "0 14px", flex: 1 }}>
             {NAV_LINKS.map((link) => (
-              <a key={link} onClick={() => { setSidebarOpen(false); if (link === "New Arrivals") setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350); else if (link === "Collections") setTimeout(() => navigate("/products"), 150); else setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 700, fontSize: 14, textDecoration: "none", color: link === "Visual Search" ? "#C94B2C" : "#1A0A00", background: link === "Visual Search" ? "#FFF5F2" : "transparent", cursor: "pointer", transition: "background 0.2s" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : "new_releases"} size={17} />{link}</span>
+              <a key={link} onClick={() => { setSidebarOpen(false); if (link === "New Arrivals") setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350); else if (link === "Collections") setTimeout(() => navigate("/products"), 150); else if (link === "Hot Deals") setTimeout(() => navigate("/hot-deals"), 150); else if (link === "About Us") setTimeout(() => navigate("/about"), 150); else setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 700, fontSize: 14, textDecoration: "none", color: link === "Visual Search" || link === "Hot Deals" ? "#C94B2C" : "#1A0A00", background: link === "Visual Search" || link === "Hot Deals" ? "#FFF5F2" : "transparent", cursor: "pointer", transition: "background 0.2s" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : link === "Hot Deals" ? "local_fire_department" : link === "About Us" ? "info" : "new_releases"} size={17} />{link}</span>
                 {link === "Visual Search" ? <span style={{ fontSize: 9, background: "#C94B2C", color: "white", padding: "2px 8px", borderRadius: 9999, fontWeight: 800 }}>AI</span> : <Icon name="chevron_right" size={16} />}
               </a>
             ))}

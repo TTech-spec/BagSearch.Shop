@@ -15,7 +15,6 @@ const QUICK_CHIPS = [
   'How does visual search work?',
   'How do buyers contact me?',
   'Is BagSearch free?',
-  'How do I track my order?',
   'How do I report a seller?',
 ];
 
@@ -56,7 +55,7 @@ const KNOWLEDGE_BASE = [
 
   // General
   { keys:['free','cost','fee','charge','commission'], a:'BagSearch is completely free for buyers and sellers. Listing products, browsing, and contacting sellers costs nothing.' },
-  { keys:['contact','support','help','email','whatsapp support'], a:'Email us at info@bagsearch.shop or WhatsApp us at +234 814 706 1837 (Mon–Sat, 8AM–8PM). You can also use the contact form on this page.' },
+  { keys:['contact','support','help','email','whatsapp support'], a:'Email us at info@bagsearch.shop or WhatsApp us at +234 8138734530 (Mon–Sat, 8AM–8PM). You can also use the contact form on this page.' },
   { keys:['bagsearch','what is bagsearch','about'], a:'BagSearch is a Nigerian marketplace for buying and selling bags — from luxury designer pieces to everyday totes. Sellers list their bags, buyers discover them via search or visual AI, and deals are closed via WhatsApp.' },
 ];
 
@@ -87,7 +86,7 @@ export default function Contact() {
         setAnswer(result);
         setStatus('done');
       } else {
-        setAnswer('We don\'t have a specific answer for that yet. Please contact us via WhatsApp (+234 814 706 1837) or email info@bagsearch.shop and we\'ll help you right away.');
+        setAnswer('We don\'t have a specific answer for that yet. Please contact us via WhatsApp (+234 8138734530) or email info@bagsearch.shop and we\'ll help you right away.');
         setStatus('done');
       }
     }, 400);
@@ -194,7 +193,7 @@ export default function Contact() {
             },
             {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-              label:'WhatsApp', value:'+234 814 706 1837', sub:'Mon–Sat · 8AM – 8PM',
+              label:'WhatsApp', value:'+234 8138734530', sub:'Mon–Sat · 8AM – 8PM',
               action: ()=>window.open('https://wa.me/2348147061837','_blank'),
             },
             {
