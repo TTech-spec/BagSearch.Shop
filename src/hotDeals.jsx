@@ -285,7 +285,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
           <button
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
             style={{
-              flex: 1, padding: '12px 16px', borderRadius: 14, border: 'none', cursor: 'pointer',
+              flex: 1, padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
               fontWeight: 700, fontSize: 13, fontFamily: 'inherit',
               background: isAdded ? T.successDim : T.gold,
               color: isAdded ? T.success : '#0A0A0A',
@@ -563,7 +563,7 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
           <button
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
             style={{
-              flex: 1, padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              flex: 1, padding: '10px 12px', borderRadius: 12, cursor: 'pointer',
               fontWeight: 700, fontSize: 12, fontFamily: 'inherit',
               background: isAdded ? T.successDim : `linear-gradient(135deg, ${T.flame}, #FF8C42)`,
               color: isAdded ? T.success : 'white',
