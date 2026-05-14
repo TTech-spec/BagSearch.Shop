@@ -7,6 +7,7 @@ import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { productPath } from './utils/slugify';
+import { useSEO, SITE_URL } from './hooks/useSEO';
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────────────────── */
 const T = {
@@ -176,37 +177,38 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
         border: `1px solid ${hov ? T.gold + '55' : T.borderMid}`,
         transition: 'border-color 0.4s, box-shadow 0.4s',
         boxShadow: hov
-          ? `0 0 60px rgba(212,168,83,0.12), 0 30px 80px rgba(0,0,0,0.6)`
-          : '0 4px 30px rgba(0,0,0,0.4)',
+          ? `0 0 60px rgba(200,75,17,0.1), 0 20px 60px rgba(0,0,0,0.1)`
+          : '0 4px 20px rgba(0,0,0,0.08)',
       }}
     >
-      {/* Image */}
+      {/* Image — no dark overlay, no brightness filter */}
       <div style={{ position: 'relative', height: 380, overflow: 'hidden' }}>
         <img
           src={p.src} alt={p.name} loading="lazy"
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)',
-            transform: hov ? 'scale(1.08)' : 'scale(1)',
-            filter: hov ? 'brightness(0.75)' : 'brightness(0.6)',
+            transform: hov ? 'scale(1.05)' : 'scale(1)',
           }}
-          onError={e => { e.target.src = 'https://via.placeholder.com/500x380/161616/D4A853?text=Featured'; }}
+          onError={e => { e.target.src = 'https://via.placeholder.com/500x380/fde8d8/c84b11?text=Featured'; }}
         />
 
-        {/* Gradient overlay */}
+        {/* Subtle bottom gradient only for text legibility on badges */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(10,10,10,0.98) 0%, rgba(10,10,10,0.4) 50%, transparent 100%)',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 60,
+          background: 'linear-gradient(to top, rgba(255,255,255,0.18), transparent)',
+          pointerEvents: 'none',
         }} />
 
         {/* Top badges */}
         <div style={{ position: 'absolute', top: 18, left: 18, display: 'flex', gap: 8, zIndex: 5 }}>
           {disc > 0 && (
             <span style={{
-              background: T.gold, color: '#0A0A0A',
+              background: T.gold, color: '#fff',
               fontSize: 11, fontWeight: 900, padding: '5px 14px',
               borderRadius: 100, letterSpacing: '0.06em',
               display: 'flex', alignItems: 'center', gap: 5,
+              boxShadow: '0 2px 8px rgba(200,75,17,0.3)',
             }}>
               <Ic.Tag /> -{disc}% OFF
             </span>
@@ -217,6 +219,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
               fontSize: 10, fontWeight: 700, padding: '5px 12px',
               borderRadius: 100, border: `1px solid ${T.danger}44`,
               display: 'flex', alignItems: 'center', gap: 5,
+              backdropFilter: 'blur(8px)',
             }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.danger, animation: 'blink 1.2s infinite' }} />
               Only {p.quantity} left
@@ -229,15 +232,18 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
           position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
           opacity: hov ? 1 : 0, transition: 'opacity 0.35s', zIndex: 6,
           pointerEvents: 'none',
+          background: 'rgba(253,244,238,0.25)',
+          backdropFilter: hov ? 'blur(2px)' : 'none',
         }}>
           <div style={{
-            background: 'rgba(212,168,83,0.15)', backdropFilter: 'blur(20px)',
+            background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
             border: `1px solid ${T.gold}55`,
             color: T.gold, fontSize: 11, fontWeight: 700, letterSpacing: '0.25em',
             textTransform: 'uppercase', padding: '10px 24px', borderRadius: 100,
             display: 'flex', alignItems: 'center', gap: 8,
             transform: hov ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.95)',
             transition: 'transform 0.35s',
+            boxShadow: '0 4px 20px rgba(200,75,17,0.15)',
           }}>
             View Product <Ic.ArrowUp />
           </div>
@@ -288,7 +294,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
               flex: 1, padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
               fontWeight: 700, fontSize: 13, fontFamily: 'inherit',
               background: isAdded ? T.successDim : T.gold,
-              color: isAdded ? T.success : '#0A0A0A',
+              color: isAdded ? T.success : '#fff',
               border: isAdded ? `1px solid ${T.success}44` : 'none',
               transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -314,7 +320,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
               border: `1px solid ${T.success}33`,
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#0A0A0A'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = T.successDim; e.currentTarget.style.color = T.success; }}
           >
             <WaIcon size={16} />
@@ -326,11 +332,14 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
 }
 
 /* ─── GRID CARD ──────────────────────────────────────────────────────────── */
-function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequireAuth, index }) {
+function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequireAuth, index, isMobile }) {
   const [ref, vis] = useReveal(0.07);
   const [hov, setHov] = useState(false);
   const disc = pct(p);
   const isLow = (p.quantity ?? 0) > 0 && (p.quantity ?? 0) < 5;
+
+  // Responsive image height: shorter on mobile so the card isn't too tall
+  const imgHeight = isMobile ? 150 : 200;
 
   const waHref = (() => {
     const num = normalizeWhatsAppNumber(p.whatsapp || '');
@@ -354,35 +363,31 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
         opacity: vis ? 1 : 0,
         transform: vis ? (hov ? 'translateY(-6px)' : 'translateY(0)') : 'translateY(28px)',
         transition: `opacity 0.55s ease ${(index % 6) * 70}ms, transform 0.55s ease ${(index % 6) * 70}ms, border-color 0.3s, box-shadow 0.3s`,
-        boxShadow: hov ? `0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(212,168,83,0.07)` : '0 2px 16px rgba(0,0,0,0.3)',
+        boxShadow: hov
+          ? `0 16px 40px rgba(200,75,17,0.1), 0 4px 12px rgba(0,0,0,0.06)`
+          : '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
-      {/* Image */}
-      <div style={{ position: 'relative', height: 200, overflow: 'hidden', background: T.bgPanel }}>
+      {/* Image — clean, no dark filter */}
+      <div style={{ position: 'relative', height: imgHeight, overflow: 'hidden', background: T.bgPanel }}>
         <img
           src={p.src} alt={p.name} loading="lazy"
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            transition: 'transform 0.7s ease, filter 0.4s',
-            transform: hov ? 'scale(1.08)' : 'scale(1)',
-            filter: hov ? 'brightness(0.65)' : 'brightness(0.8)',
+            transition: 'transform 0.7s ease',
+            transform: hov ? 'scale(1.06)' : 'scale(1)',
           }}
-          onError={e => { e.target.src = `https://via.placeholder.com/300x200/161616/D4A853?text=${encodeURIComponent(p.name)}`; }}
+          onError={e => { e.target.src = `https://via.placeholder.com/300x${imgHeight}/fde8d8/c84b11?text=${encodeURIComponent(p.name)}`; }}
         />
 
-        {/* Gradient */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
-          background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)',
-        }} />
-
-        {/* Badges */}
+        {/* Badges only — no gradient darkening */}
         <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 5, zIndex: 5 }}>
           {disc > 0 && (
             <span style={{
-              background: T.gold, color: '#0A0A0A',
+              background: T.gold, color: '#fff',
               fontSize: 9, fontWeight: 900, padding: '3px 9px',
               borderRadius: 100, letterSpacing: '0.06em',
+              boxShadow: '0 2px 6px rgba(200,75,17,0.35)',
             }}>-{disc}%</span>
           )}
           {isLow && (
@@ -391,6 +396,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
               fontSize: 8.5, fontWeight: 700, padding: '3px 9px',
               borderRadius: 100, border: `1px solid ${T.danger}44`,
               display: 'flex', alignItems: 'center', gap: 4,
+              backdropFilter: 'blur(6px)',
             }}>
               <span style={{ width: 4, height: 4, borderRadius: '50%', background: T.danger, animation: 'blink 1.2s infinite' }} />
               Low stock
@@ -398,34 +404,37 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
           )}
         </div>
 
-        {/* Price on image */}
-        <div style={{ position: 'absolute', bottom: 10, left: 12 }}>
-          {p.discountedPrice && <div style={{ fontSize: 9.5, color: T.inkFaint, textDecoration: 'line-through', fontWeight: 500 }}>{fmt(p.price)}</div>}
-          <div style={{ fontSize: 18, fontWeight: 800, color: disc > 0 ? T.gold : T.ink, letterSpacing: '-0.03em', lineHeight: 1 }}>{fmt(p.discountedPrice || p.price)}</div>
-        </div>
-
-        {/* Hover overlay view */}
+        {/* Hover overlay — light frosted instead of dark */}
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 6,
           opacity: hov ? 1 : 0, transition: 'opacity 0.3s', pointerEvents: 'none',
+          background: 'rgba(253,244,238,0.3)',
+          backdropFilter: hov ? 'blur(1px)' : 'none',
         }}>
           <span style={{
-            background: 'rgba(212,168,83,0.15)', backdropFilter: 'blur(12px)',
+            background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)',
             border: `1px solid ${T.gold}55`, color: T.gold,
             fontSize: 9.5, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
             padding: '6px 16px', borderRadius: 100,
+            boxShadow: '0 2px 12px rgba(200,75,17,0.12)',
           }}>View →</span>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ padding: '14px 14px 14px' }}>
+      <div style={{ padding: isMobile ? '10px 10px 12px' : '14px 14px 14px' }}>
         <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.gold, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.seller}</p>
-        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: 14, color: T.ink, marginBottom: 10, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
+        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: isMobile ? 13 : 14, color: T.ink, marginBottom: 6, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
+
+        {/* Price — moved to body (no longer overlaid on image) */}
+        <div style={{ marginBottom: 10 }}>
+          {p.discountedPrice && <div style={{ fontSize: 9.5, color: T.inkFaint, textDecoration: 'line-through', fontWeight: 500 }}>{fmt(p.price)}</div>}
+          <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: disc > 0 ? T.gold : T.ink, letterSpacing: '-0.03em', lineHeight: 1 }}>{fmt(p.discountedPrice || p.price)}</div>
+        </div>
 
         {/* Color dots */}
         {(p.colors || []).length > 0 && (
-          <div style={{ display: 'flex', gap: 4, marginBottom: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 10, alignItems: 'center' }}>
             {(p.colors || []).slice(0, 5).map((c, i) => (
               <span key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c.hex || T.gold, border: `1px solid ${T.borderMid}`, display: 'inline-block' }} />
             ))}
@@ -437,7 +446,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
           <button
             onClick={e => { e.stopPropagation(); onAddToCart(p); }}
             style={{
-              flex: 1, padding: '9px 10px', borderRadius: 11, cursor: 'pointer',
+              flex: 1, padding: isMobile ? '8px 8px' : '9px 10px', borderRadius: 11, cursor: 'pointer',
               fontWeight: 700, fontSize: 11, fontFamily: 'inherit',
               background: isAdded ? T.successDim : T.goldDim,
               color: isAdded ? T.success : T.gold,
@@ -445,7 +454,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
               transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
             }}
-            onMouseEnter={e => { if (!isAdded) { e.currentTarget.style.background = T.gold; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = T.gold; } }}
+            onMouseEnter={e => { if (!isAdded) { e.currentTarget.style.background = T.gold; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = T.gold; } }}
             onMouseLeave={e => { if (!isAdded) { e.currentTarget.style.background = T.goldDim; e.currentTarget.style.color = T.gold; e.currentTarget.style.borderColor = T.gold + '33'; } }}
           >
             {isAdded ? <><Ic.Check /> Added</> : <><Ic.Cart /> Grab</>}
@@ -465,7 +474,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
               background: T.successDim, color: T.success,
               border: `1px solid ${T.success}33`, transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#0A0A0A'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = T.successDim; e.currentTarget.style.color = T.success; }}
           >
             <WaIcon size={13} />
@@ -505,27 +514,23 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
         transition: 'border-color 0.3s, box-shadow 0.4s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
         transform: hov ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
         boxShadow: hov
-          ? `0 0 40px rgba(232,82,26,0.15), 0 28px 70px rgba(0,0,0,0.6)`
-          : '0 4px 24px rgba(0,0,0,0.35)',
+          ? `0 0 40px rgba(234,88,12,0.1), 0 20px 50px rgba(0,0,0,0.1)`
+          : '0 4px 16px rgba(0,0,0,0.06)',
         animationDelay: `${index * 80}ms`,
         animation: 'cardSlideIn 0.6s cubic-bezier(0.22,1,0.36,1) both',
       }}
     >
+      {/* Image — clean, full color */}
       <div style={{ position: 'relative', height: 240, overflow: 'hidden' }}>
         <img
           src={p.src} alt={p.name} loading="lazy"
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            transition: 'transform 0.8s ease, filter 0.4s',
-            transform: hov ? 'scale(1.1)' : 'scale(1)',
-            filter: hov ? 'brightness(0.6)' : 'brightness(0.75)',
+            transition: 'transform 0.8s ease',
+            transform: hov ? 'scale(1.08)' : 'scale(1)',
           }}
-          onError={e => { e.target.src = 'https://via.placeholder.com/260x240/161616/E8521A?text=Special'; }}
+          onError={e => { e.target.src = 'https://via.placeholder.com/260x240/fde8d8/ea580c?text=Special'; }}
         />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(10,10,10,0.95) 0%, transparent 55%)',
-        }} />
 
         {/* Top badges */}
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 5 }}>
@@ -534,30 +539,37 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
             color: 'white', fontSize: 9.5, fontWeight: 900,
             padding: '4px 12px', borderRadius: 100, letterSpacing: '0.08em',
             display: 'flex', alignItems: 'center', gap: 5,
+            boxShadow: '0 2px 8px rgba(234,88,12,0.4)',
           }}>
             ✦ SPECIAL
           </span>
-          {disc > 0 && <span style={{ background: T.flameDim, color: T.flame, fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 100, border: `1px solid ${T.flame}44` }}>-{disc}% off</span>}
-          {isLow && <span style={{ background: T.dangerDim, color: T.danger, fontSize: 8.5, fontWeight: 700, padding: '3px 9px', borderRadius: 100, border: `1px solid ${T.danger}44`, display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: T.danger, animation: 'blink 1.2s infinite' }} />Only {p.quantity} left</span>}
+          {disc > 0 && <span style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', color: T.flame, fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 100, border: `1px solid ${T.flame}44` }}>-{disc}% off</span>}
+          {isLow && <span style={{ background: T.dangerDim, color: T.danger, fontSize: 8.5, fontWeight: 700, padding: '3px 9px', borderRadius: 100, border: `1px solid ${T.danger}44`, display: 'flex', alignItems: 'center', gap: 4, backdropFilter: 'blur(6px)' }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: T.danger, animation: 'blink 1.2s infinite' }} />Only {p.quantity} left</span>}
         </div>
 
-        {/* Bottom price on image */}
-        <div style={{ position: 'absolute', bottom: 14, left: 14, right: 14, zIndex: 5 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <div>
-              {p.discountedPrice && <div style={{ fontSize: 10, color: T.inkFaint, textDecoration: 'line-through', fontWeight: 500 }}>{fmt(p.price)}</div>}
-              <div style={{ fontSize: 22, fontWeight: 800, color: disc > 0 ? T.flame : T.ink, letterSpacing: '-0.04em', lineHeight: 1 }}>{fmt(p.discountedPrice || p.price)}</div>
-            </div>
-            <div style={{ opacity: hov ? 1 : 0, transition: 'opacity 0.3s' }}>
-              <span style={{ background: 'rgba(232,82,26,0.15)', backdropFilter: 'blur(10px)', color: T.flame, fontSize: 9, fontWeight: 700, padding: '5px 12px', borderRadius: 100, border: `1px solid ${T.flame}44`, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Shop →</span>
-            </div>
-          </div>
+        {/* Hover overlay — frosted light */}
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+          padding: 14, zIndex: 5,
+          opacity: hov ? 1 : 0, transition: 'opacity 0.3s',
+          background: hov ? 'rgba(253,244,238,0.2)' : 'transparent',
+          backdropFilter: hov ? 'blur(1px)' : 'none',
+          pointerEvents: 'none',
+        }}>
+          <span style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', color: T.flame, fontSize: 9, fontWeight: 700, padding: '5px 12px', borderRadius: 100, border: `1px solid ${T.flame}44`, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Shop →</span>
         </div>
       </div>
 
+      {/* Body — price moved here for clarity without overlay */}
       <div style={{ padding: '14px 16px 16px' }}>
         <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: T.flame, marginBottom: 4 }}>{p.seller}</p>
-        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: 15, color: T.ink, marginBottom: 14, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
+        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700, fontSize: 15, color: T.ink, marginBottom: 8, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
+
+        {/* Price in body */}
+        <div style={{ marginBottom: 14 }}>
+          {p.discountedPrice && <div style={{ fontSize: 10, color: T.inkFaint, textDecoration: 'line-through', fontWeight: 500 }}>{fmt(p.price)}</div>}
+          <div style={{ fontSize: 22, fontWeight: 800, color: disc > 0 ? T.flame : T.ink, letterSpacing: '-0.04em', lineHeight: 1 }}>{fmt(p.discountedPrice || p.price)}</div>
+        </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button
@@ -589,7 +601,7 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
               background: T.successDim, color: T.success,
               border: `1px solid ${T.success}33`, transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#0A0A0A'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.success; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = T.successDim; e.currentTarget.style.color = T.success; }}
           >
             <WaIcon size={14} />
@@ -642,10 +654,10 @@ function HorizScroll({ children, loading, skeletonCount = 4, skeletonH = 380 }) 
         background: T.bgCard, border: `1px solid ${T.borderMid}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer', color: T.inkMid,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
         transition: 'all 0.2s', ...style,
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = T.gold; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = T.gold; }}
+      onMouseEnter={e => { e.currentTarget.style.background = T.gold; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = T.gold; }}
       onMouseLeave={e => { e.currentTarget.style.background = T.bgCard; e.currentTarget.style.color = T.inkMid; e.currentTarget.style.borderColor = T.borderMid; }}
     >
       {dir === 'left' ? <Ic.Left /> : <Ic.Right />}
@@ -713,7 +725,7 @@ function CountdownBlock({ h, m, s }) {
         fontSize: 28, fontWeight: 700, color: T.gold,
         letterSpacing: '-0.04em', lineHeight: 1,
         fontVariantNumeric: 'tabular-nums',
-        boxShadow: `0 0 20px rgba(212,168,83,0.08) inset`,
+        boxShadow: `0 0 20px rgba(200,75,17,0.06) inset`,
       }}>{pad(val)}</div>
       <div style={{ fontSize: 8.5, fontWeight: 600, color: T.inkFaint, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 6 }}>{label}</div>
     </div>
@@ -752,6 +764,44 @@ export default function HotDeals() {
   const parallaxRef = useParallax(0.025);
 
   const isMobile = windowWidth <= 720;
+
+  // SEO: Dynamic meta tags for Hot Deals page
+  const seoTitle = 'Hot Deals & Discounted Bags | BagSearch Nigeria';
+  const seoDescription = `Limited-time deals on authentic luxury bags. Up to 70% off on designer handbags, totes, clutches & more from verified sellers across Nigeria. Shop hot sales before they sell out!`;
+  const seoKeywords = 'hot deals, discounted bags, luxury bags sale, cheap luxury bags Nigeria, flash sale, bag deals, clearance bags, bargain bags,authentic bags on sale';
+
+  useSEO({
+    title: seoTitle,
+    description: seoDescription,
+    keywords: seoKeywords,
+    url: '/hot-deals',
+    type: 'Collection',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Hot Deals & Discounted Bags',
+      description: seoDescription,
+      url: `${SITE_URL}/hot-deals`,
+      numberOfItems: filtered.length,
+      itemListElement: filtered.slice(0, 20).map((p, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        item: {
+          '@type': 'Offer',
+          name: p.name,
+          description: p.description || 'Authentic luxury bag on sale',
+          price: p.discountedPrice || p.price,
+          priceCurrency: 'NGN',
+          availability: 'https://schema.org/InStock',
+          seller: {
+            '@type': 'Person',
+            name: p.seller
+          },
+          url: `${SITE_URL}/products/${productPath(p.name, p.id)}`
+        }
+      }))
+    }
+  });
 
   useEffect(() => {
     const h = () => setWindowWidth(window.innerWidth);
@@ -887,7 +937,7 @@ export default function HotDeals() {
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
         @keyframes orb{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,15px) scale(0.97)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(212,168,83,0.1)}50%{box-shadow:0 0 40px rgba(212,168,83,0.25)}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(200,75,17,0.1)}50%{box-shadow:0 0 40px rgba(200,75,17,0.25)}}
         .deals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;}
         @media(max-width:640px){.deals-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
         .filt-pill{
@@ -897,15 +947,15 @@ export default function HotDeals() {
           cursor:pointer;transition:all 0.2s;white-space:nowrap;letter-spacing:0.02em;
         }
         .filt-pill:hover{border-color:${T.gold}55;color:${T.gold};}
-        .filt-pill.active{background:${T.gold};color:#0A0A0A;border-color:${T.gold};}
+        .filt-pill.active{background:${T.gold};color:#fff;border-color:${T.gold};}
         div::-webkit-scrollbar{display:none}
       `}</style>
 
       {/* ── AMBIENT ORBS ── */}
       <div ref={parallaxRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '8%', left: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.04) 0%, transparent 70%)', animation: 'orb 14s ease-in-out infinite', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', top: '50%', right: '10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,82,26,0.03) 0%, transparent 70%)', animation: 'orb 18s ease-in-out infinite reverse', filter: 'blur(50px)' }} />
-        <div style={{ position: 'absolute', bottom: '15%', left: '30%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.03) 0%, transparent 70%)', animation: 'orb 22s ease-in-out infinite', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', top: '8%', left: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,75,17,0.04) 0%, transparent 70%)', animation: 'orb 14s ease-in-out infinite', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', top: '50%', right: '10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(234,88,12,0.03) 0%, transparent 70%)', animation: 'orb 18s ease-in-out infinite reverse', filter: 'blur(50px)' }} />
+        <div style={{ position: 'absolute', bottom: '15%', left: '30%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,75,17,0.03) 0%, transparent 70%)', animation: 'orb 22s ease-in-out infinite', filter: 'blur(40px)' }} />
       </div>
 
       {/* ── TOAST ── */}
@@ -918,7 +968,7 @@ export default function HotDeals() {
           borderRadius: 100, fontSize: 13, fontWeight: 600,
           animation: 'toastIn 2.4s ease both', pointerEvents: 'none',
           display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
         }}>
           <Ic.Check /> {floatMsg}
         </div>
@@ -935,7 +985,7 @@ export default function HotDeals() {
         }}>
           {[...Array(4)].map((_, i) =>
             ['Flash Sale Today Only', '₦ — Deals Up To 70% Off', '✦ Low Stock Alert', '₦ — Direct Seller Contact', 'Free Delivery ₦2,000+', '✦ New Deals Daily'].map((t, j) => (
-              <span key={`${i}-${j}`} style={{ fontSize: 11, fontWeight: 700, color: '#0A0A0A', letterSpacing: '0.15em', textTransform: 'uppercase', paddingRight: 40 }}>
+              <span key={`${i}-${j}`} style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.15em', textTransform: 'uppercase', paddingRight: 40 }}>
                 {t}
               </span>
             ))
@@ -1107,14 +1157,22 @@ export default function HotDeals() {
                     transition: 'all 0.3s',
                     animation: `fadeUp 0.6s ease ${0.1 + i * 0.1}s both`,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold + '44'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 16px 50px rgba(0,0,0,0.4)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold + '44'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(200,75,17,0.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
-                    <img src={p.src} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.6)', transition: 'transform 0.5s', transform: 'scale(1)' }}
-                      onError={e => { e.target.src = 'https://via.placeholder.com/200x120/161616/D4A853?text=Bag'; }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)' }} />
-                    {pct(p) > 0 && <span style={{ position: 'absolute', top: 8, left: 8, background: T.gold, color: '#0A0A0A', fontSize: 9, fontWeight: 900, padding: '3px 9px', borderRadius: 100 }}>-{pct(p)}%</span>}
+                  <div style={{ position: 'relative', height: isMobile ? 90 : 120, overflow: 'hidden' }}>
+                    {/* Clean image, no dark filter */}
+                    <img src={p.src} alt={p.name} loading="lazy"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                      onError={e => { e.target.src = 'https://via.placeholder.com/200x120/fde8d8/c84b11?text=Bag'; }} />
+                    {pct(p) > 0 && (
+                      <span style={{
+                        position: 'absolute', top: 8, left: 8,
+                        background: T.gold, color: '#fff',
+                        fontSize: 9, fontWeight: 900, padding: '3px 9px', borderRadius: 100,
+                        boxShadow: '0 2px 6px rgba(200,75,17,0.35)',
+                      }}>-{pct(p)}%</span>
+                    )}
                   </div>
                   <div style={{ padding: '10px 12px' }}>
                     <p style={{ fontSize: 9, color: T.gold, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 3 }}>{p.seller}</p>
@@ -1182,7 +1240,9 @@ export default function HotDeals() {
               {gridDeals.map((p, i) => (
                 <GridCard key={p.id} product={p} index={i} navigate={navigate}
                   onAddToCart={handleAddToCart} isAdded={addedSet.has(p.id)}
-                  isAuthed={!!user} onRequireAuth={() => {}} />
+                  isAuthed={!!user} onRequireAuth={() => {}}
+                  isMobile={isMobile}
+                />
               ))}
             </div>
           </div>
@@ -1198,7 +1258,7 @@ export default function HotDeals() {
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               {allDeals.length > 0 && (
-                <button onClick={clearSearch} style={{ padding: '12px 28px', background: T.gold, color: '#0A0A0A', borderRadius: 100, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'inherit' }}>
+                <button onClick={clearSearch} style={{ padding: '12px 28px', background: T.gold, color: '#fff', borderRadius: 100, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'inherit' }}>
                   Show all deals
                 </button>
               )}
@@ -1220,12 +1280,12 @@ export default function HotDeals() {
           }}>
             {/* Sell panel */}
             <div style={{
-              background: `linear-gradient(135deg, ${T.bgCard} 0%, #1A1508 100%)`,
+              background: `linear-gradient(135deg, ${T.bgCard} 0%, #fff8f4 100%)`,
               padding: isMobile ? '40px 28px' : '60px 52px',
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 36,
               position: 'relative', overflow: 'hidden',
             }}>
-              <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.08), transparent)', filter: 'blur(30px)' }} />
+              <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,75,17,0.06), transparent)', filter: 'blur(30px)' }} />
               <div>
                 <p style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: T.gold, marginBottom: 16, opacity: 0.7 }}>Sell on BagSearch</p>
                 <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? 26 : 34, fontWeight: 700, lineHeight: 1.2, color: T.ink, marginBottom: 12 }}>
@@ -1237,7 +1297,7 @@ export default function HotDeals() {
                 onClick={() => navigate('/register')}
                 style={{
                   alignSelf: 'flex-start', padding: '13px 28px',
-                  background: T.gold, color: '#0A0A0A',
+                  background: T.gold, color: '#fff',
                   borderRadius: 100, border: 'none', cursor: 'pointer',
                   fontWeight: 700, fontSize: 13, fontFamily: 'inherit',
                   transition: 'all 0.2s', letterSpacing: '0.02em',

@@ -1,18 +1,4 @@
 User-agent: *
 Allow: /
-Allow: /products
-Allow: /products/
-Allow: /vendor/
-Allow: /seller/
-Allow: /contact
 
-Disallow: /login
-Disallow: /register
-Disallow: /profile
-Disallow: /seller-profile
-Disallow: /seller-listing
-Disallow: /upload-product
-Disallow: /reset-password
-Disallow: /forgot-password
-
-Sitemap: https://bag-search-shop.vercel.app/sitemap.xml
+Sitemap: https://bagsearch.shop/sitemap.xml

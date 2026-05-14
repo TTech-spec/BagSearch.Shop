@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
+import { useSEO, SITE_URL } from './hooks/useSEO';
 
 /* ── Inline SVG icon components ── */
 const IconSearch = ({ size = 15, stroke = 'currentColor', strokeWidth = 2.5 }) => (
@@ -110,6 +111,39 @@ const BagSearchAbout = () => {
     sellers: '500+',
     states: '36',
     focus: '100%'
+  });
+
+  // SEO for About page
+  useSEO({
+    title: 'About Us | BagSearch Nigeria',
+    description: 'Learn about BagSearch, Africa\'s first AI-powered luxury bag marketplace. Our story, mission, and commitment to authentic bags and verified sellers across Nigeria.',
+    keywords: 'about BagSearch, our story, mission vision, luxury marketplace Nigeria, AI shopping, verified sellers',
+    url: '/about',
+    type: 'AboutPage',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      name: 'About BagSearch',
+      description: 'Africa\'s first AI-powered luxury bag discovery platform. Where culture meets couture.',
+      mainEntity: {
+        '@type': 'Organization',
+        name: 'BagSearch',
+        url: SITE_URL,
+        logo: `${SITE_URL}/logo.png`,
+        foundingDate: '2018',
+        foundingLocation: {
+          '@type': 'Place',
+          name: 'Lagos, Nigeria'
+        },
+        description: "Nigeria's premier marketplace for authentic luxury designer bags, powered by AI visual search.",
+        numberOfEmployees: {
+          '@type': 'QuantitativeValue',
+          minValue: 10,
+          maxValue: 50
+        },
+        sameAs: []
+      }
+    }
   });
 
   const statsRef = useRef([]);

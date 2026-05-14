@@ -174,16 +174,35 @@ export default function ProductDetail() {
 
       // Support both plain UUID and slug-based params (name--shortId)
       const resolvedId = extractIdFromParam(id);
-      let query = supabase.from('products').select('*');
+      const isShortSlugId = resolvedId && resolvedId.length === 8 && resolvedId !== id;
 
-      // If it looks like a short ID prefix (8 chars), match by ID prefix
-      if (resolvedId && resolvedId.length === 8 && resolvedId !== id) {
-        query = query.ilike('id', `${resolvedId}%`);
+      let data = null;
+      let error = null;
+
+      if (isShortSlugId) {
+        const response = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500);
+
+        error = response.error;
+        data = (response.data || []).find((item) => String(item.id || '').startsWith(resolvedId)) || null;
+
+        if (!error && !data) {
+          error = { message: `No product found for short id prefix "${resolvedId}"`, code: 'PGRST116' };
+        }
       } else {
-        query = query.eq('id', resolvedId);
+        const response = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', resolvedId)
+          .single();
+
+        data = response.data;
+        error = response.error;
       }
 
-      const { data, error } = await query.single();
       // #region agent log
       fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H2',location:'src/productDetail.jsx:fetchProduct:result',message:'Fetched product by route id',data:{routeId:id,foundProductId:data?.id||null,error:error?{message:error.message,code:error.code}:null},timestamp:Date.now()})}).catch(()=>{});
       // #endregion

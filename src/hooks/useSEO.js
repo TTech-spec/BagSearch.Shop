@@ -6,7 +6,7 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'BagSearch';
-const SITE_URL = import.meta.env.VITE_APP_URL || 'https://bag-search-shop.vercel.app';
+const SITE_URL = import.meta.env.VITE_APP_URL || 'https://bagsearch.shop';
 
 function setMeta(name, content, attr = 'name') {
   if (!content) return;

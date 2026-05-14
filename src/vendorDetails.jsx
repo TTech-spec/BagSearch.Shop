@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { useSEO, SITE_URL } from './hooks/useSEO';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -259,6 +260,57 @@ export default function VendorDetails() {
   const sellerId = profile?.user_id || id || '';
   const [myName, setMyName] = useState('');
   const me = myName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
+
+  // SEO: Build meta dynamically based on loaded profile
+  const sellerName = profile?.brand_name || profile?.full_name || 'Seller';
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((s,r) => s+(r.rating||0), 0) / reviews.length).toFixed(1)
+    : null;
+
+  useSEO({
+    title: sellerName ? `${sellerName} | Verified Seller | BagSearch` : 'Seller Profile | BagSearch',
+    description: sellerName
+      ? `Browse ${sellerName}'s authentic bag collection on BagSearch. ${products.length} products, ${avgRating || '4.9'} avg rating. Verified seller delivering across Nigeria.`
+      : 'View this verified seller\'s bag collection on BagSearch Nigeria. Authentic products, WhatsApp contact, trusted marketplace.',
+    keywords: sellerName ? `${sellerName} seller, verified seller, ${sellerName} bags, authentic bags Nigeria` : 'seller profile, verified seller, BagSearch vendors',
+    url: `/vendor/${sellerParam}`,
+    type: 'ProfilePage',
+    schema: profile ? {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: sellerName,
+      description: profile.brand_story || `Verified seller on BagSearch with ${products.length} products`,
+      image: profile.avatar_url || `${SITE_URL}/logo.png`,
+      url: `${SITE_URL}/vendor/${sellerParam}`,
+      sameAs: [],
+      aggregateRating: avgRating ? {
+        '@type': 'AggregateRating',
+        ratingValue: avgRating,
+        reviewCount: reviews.length,
+        bestRating: 5,
+        worstRating: 1
+      } : undefined,
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: `${sellerName}'s Bags`,
+        itemListElement: products.slice(0, 10).map((p, idx) => ({
+          '@type': 'Offer',
+          position: idx + 1,
+          item: {
+            '@type': 'Product',
+            name: p.name,
+            image: p.src,
+            offers: {
+              '@type': 'Offer',
+              price: p.discountedPrice || p.price,
+              priceCurrency: 'NGN',
+              availability: 'https://schema.org/InStock'
+            }
+          }
+        }))
+      }
+    } : undefined
+  });
 
   useEffect(() => {
     if (!user?.id) return;

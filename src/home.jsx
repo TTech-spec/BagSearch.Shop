@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
+import { useSEO, SITE_URL } from './hooks/useSEO';
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "Hot Deals", "About Us", "Visual Search", "Contact Us"];
@@ -656,6 +657,30 @@ export default function LuxeBag() {
   const navigate = useNavigate();
   const newArrivalsRef = useRef(null);
   const handleLoadDone = useCallback(() => setLoading(false), []);
+
+  // SEO for home/landing page
+  useSEO({
+    title: 'BagSearch — Buy & Sell Luxury Designer Bags in Nigeria',
+    description: 'Discover authentic luxury designer handbags from top sellers across Nigeria. Shop Chanel, Hermès, Louis Vuitton, Gucci and more. Visual search, WhatsApp contact, verified sellers.',
+    keywords: 'luxury bags Nigeria, designer handbags, authentic bags, buy luxury bags online, Chanel bags Nigeria, Louis Vuitton, Hermès, visual search, buy bags Nigeria',
+    url: '/',
+    type: 'WebSite',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'BagSearch',
+      url: SITE_URL,
+      description: "Nigeria's premier marketplace for authentic luxury designer bags.",
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/products?q={search_term_string}`
+        },
+        'query-input': 'required name=search_term_string'
+      }
+    }
+  });
 
   const handleNavClick = (link) => {
     if (link === "New Arrivals") { if (newArrivalsRef.current) newArrivalsRef.current.scrollIntoView({ behavior: "smooth" }); }

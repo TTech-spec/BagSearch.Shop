@@ -27,7 +27,7 @@ try {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const SITE_URL = (process.env.VITE_APP_URL || 'https://bag-search-shop.vercel.app').replace(/\/$/, '');
+const SITE_URL = (process.env.VITE_APP_URL || 'https://bagsearch.shop').replace(/\/$/, '');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
@@ -38,6 +38,9 @@ const staticRoutes = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/products', priority: '0.9', changefreq: 'hourly' },
   { path: '/contact', priority: '0.5', changefreq: 'monthly' },
+  { path: '/about', priority: '0.7', changefreq: 'monthly' },
+  { path: '/policy', priority: '0.6', changefreq: 'monthly' },
+  { path: '/hot-deals', priority: '0.8', changefreq: 'daily' },
 ];
 
 function escapeXml(str) {

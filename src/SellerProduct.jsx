@@ -545,7 +545,7 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
   // Default vendor for demo
   const [vendor, setVendor] = useState(propVendor || location.state?.vendor || {
     id: "vendor-1", name: "Luxury Bags Co.", avatar: "👜", location: "Victoria Island, Lagos",
-    rating: 4.9, reviews: 312, views: 18420, products: 47, joined: "Mar 2021",
+    rating: 4.9, reviews: 800, views: 18420, products: 47, joined: "Mar 2021",
     specialty: "Italian Leather", badge: "Top Rated",
     description: "Premium Italian leather bags crafted for the discerning buyer. Every piece is hand-stitched and comes with a certificate of authenticity. Based in Victoria Island, delivering across Nigeria.",
     tags: ["Luxury", "Leather", "Italian"], colors: ["#c84b11", "#f97316"],
@@ -1017,7 +1017,7 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
         }}>
           {[
             { label: "Profile Views", value: viewCount, icon: "👁️", suffix: "" },
-            { label: "Happy Buyers", value: reviewCount, icon: "😊", suffix: "+" },
+            { label: "Happy Buyers", value: 800, icon: "😊", suffix: "+" },
             { label: "Products Listed", value: productCount, icon: "👜", suffix: "" },
             { label: "Response Rate", value: 98, icon: "⚡", suffix: "%" },
           ].map((s, i) => (

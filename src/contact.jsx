@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
+import { useSEO, SITE_URL } from './hooks/useSEO';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -73,6 +74,47 @@ export default function Contact() {
   const [query,   setQuery]   = useState('');
   const [answer,  setAnswer]  = useState('');
   const [status,  setStatus]  = useState('idle'); // idle | loading | done | error
+
+  // SEO for contact page
+  useSEO({
+    title: 'Contact Us | BagSearch Support Nigeria',
+    description: 'Need help? Contact BagSearch support via WhatsApp (+234 8138734530) or email (info@bagsearch.shop). Available Mon–Sat 8AM–8PM. Get answers about orders, listings, and accounts.',
+    keywords: 'contact BagSearch, BagSearch support, help center, WhatsApp Nigeria, email BagSearch, customer service',
+    url: '/contact',
+    type: 'ContactPage',
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'ContactPage',
+      name: 'Contact BagSearch',
+      description: 'Reach BagSearch support via WhatsApp, email, or contact form.',
+      mainEntity: {
+        '@type': 'Organization',
+        name: 'BagSearch',
+        url: SITE_URL,
+        logo: `${SITE_URL}/logo.png`,
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            telephone: '+234-8138734530',
+            contactType: 'customer service',
+            availableLanguage: ['English'],
+            hoursAvailable: {
+              '@type': 'OpeningHoursSpecification',
+              dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+              opens: '08:00',
+              closes: '20:00'
+            }
+          },
+          {
+            '@type': 'ContactPoint',
+            email: 'info@bagsearch.shop',
+            contactType: 'customer service',
+            availableLanguage: ['English']
+          }
+        ]
+      }
+    }
+  });
 
   const doSearch = (q) => {
     const text = (q || query).trim();
