@@ -27,7 +27,7 @@ try {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const SITE_URL = (process.env.VITE_APP_URL || 'https://bagsearch.shop').replace(/\/$/, '');
+const SITE_URL = (process.env.VITE_APP_URL || 'https://www.bagsearch.shop').replace(/\/$/, '');
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
