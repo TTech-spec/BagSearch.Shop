@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary SEO -->
-    <title>BagSearch — Luxury Designer Bags in Nigeria</title>
-    <meta name="description" content="Discover authentic luxury designer handbags, shoulder bags, clutches and more. Shop Chanel, Hermès, Louis Vuitton, Gucci and other top brands on BagSearch Nigeria." />
+    <title>BagSearch | Buy & Sell Luxury Designer Bags in Nigeria</title>
+    <meta name="description" content="Buy and sell authentic luxury designer bags in Nigeria. Discover Chanel, Hermès, Louis Vuitton, Gucci, shoulder bags, clutches, totes, and more from verified sellers on BagSearch." />
     <meta name="keywords" content="luxury bags Nigeria, designer handbags, authentic bags, Chanel bags, Louis Vuitton Nigeria, Hermès bags, buy luxury bags online" />
     <meta name="robots" content="index, follow" />
     <meta name="google-site-verification" content="ea74478c515c8b88" />
@@ -16,8 +16,8 @@
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="BagSearch" />
-    <meta property="og:title" content="BagSearch — Luxury Designer Bags in Nigeria" />
-    <meta property="og:description" content="Discover authentic luxury designer handbags, shoulder bags, clutches and more. Shop top brands on BagSearch Nigeria." />
+    <meta property="og:title" content="BagSearch | Buy & Sell Luxury Designer Bags in Nigeria" />
+    <meta property="og:description" content="Buy and sell authentic luxury designer bags in Nigeria. Discover top brands, explore visual search, and connect with verified sellers on BagSearch." />
     <meta property="og:image" content="https://bagsearch.shop/og-default.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -25,12 +25,14 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="BagSearch — Luxury Designer Bags in Nigeria" />
-    <meta name="twitter:description" content="Discover authentic luxury designer handbags and more. Shop top brands on BagSearch Nigeria." />
+    <meta name="twitter:title" content="BagSearch | Buy & Sell Luxury Designer Bags in Nigeria" />
+    <meta name="twitter:description" content="Buy and sell authentic luxury designer bags in Nigeria. Shop top brands and connect with verified sellers on BagSearch." />
     <meta name="twitter:image" content="https://bagsearch.shop/og-default.jpg" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png">
+    <meta name="theme-color" content="#ffffff">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -71,10 +73,20 @@
   </head>
   <body>
     <div id="root">
-      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif;">
-        Loading BagSearch...
+      <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:linear-gradient(180deg,#fff8f4 0%,#fdf4ee 55%,#ffffff 100%);gap:14px;padding:24px;font-family:'Plus Jakarta Sans',sans-serif;">
+        <div style="width:56px;height:56px;border-radius:50%;border:4px solid #fde8d8;border-top-color:#c84b11;border-right-color:#f97316;animation:bagsearchSpin 0.9s linear infinite;box-shadow:0 8px 24px rgba(200,75,17,0.12)"></div>
+        <div style="font-size:24px;font-weight:900;letter-spacing:-0.03em;color:#1a0a00;">Bag<span style="color:#c84b11;">Search</span></div>
+        <div style="color:#9a6348;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Loading</div>
       </div>
     </div>
+    <style>
+      @keyframes bagsearchSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+    <noscript>
+      <div style="padding: 16px; background: #fff6f1; color: #1a0a00; font-family: sans-serif;">
+        BagSearch helps shoppers in Nigeria discover authentic luxury designer bags from verified sellers. Enable JavaScript to browse listings and use visual search.
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

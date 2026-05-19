@@ -201,6 +201,13 @@ const Icons = {
       <path d="M19 4L20 7L23 8L20 9L19 12L18 9L15 8L18 7L19 4Z"/>
     </svg>
   ),
+  Download: ({ size = 20, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  ),
   Truck: ({ size = 20, color = 'currentColor' }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="1" y="3" width="15" height="13"/>
@@ -1329,7 +1336,90 @@ export default function Product(){
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
+  const[deferredPrompt,setDeferredPrompt]=useState(null);
+  const[showInstallBtn,setShowInstallBtn]=useState(false);
+  const[installButtonLabel,setInstallButtonLabel]=useState('Install App');
   const[dismissedAds,setDismissedAds]=useState([]);
+
+  useEffect(() => {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+    const isMobile = isIOS || isAndroid;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    if (isStandalone) {
+      setShowInstallBtn(false);
+      return undefined;
+    }
+
+    if (isIOS) {
+      setInstallButtonLabel('Add to Home Screen');
+      setShowInstallBtn(true);
+    }
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setInstallButtonLabel('Install App');
+      setShowInstallBtn(true);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowInstallBtn(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    const mobileFallbackTimer = isMobile ? setTimeout(() => {
+      setInstallButtonLabel(isIOS ? 'Add to Home Screen' : 'Install App');
+      setShowInstallBtn(true);
+    }, 4000) : null;
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      if (mobileFallbackTimer) clearTimeout(mobileFallbackTimer);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isStandalone) {
+        alert('BagSearch is already installed on this device.');
+        setShowInstallBtn(false);
+        return;
+      }
+      let instructions = 'To install:\n\n';
+      if (isIOS) {
+        instructions += '1. Tap the Share button\n2. Select "Add to Home Screen"\n3. Tap "Add"';
+      } else if (isAndroid) {
+        instructions += 'This browser has not offered an install prompt yet.\n\nTry Chrome or Edge, then open the browser menu and select "Install App".';
+      } else {
+        instructions += 'Use Chrome or Edge and look for "Install App" in the browser menu.';
+      }
+      alert(instructions);
+      return;
+    }
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Install prompt outcome:', outcome);
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowInstallBtn(false);
+      } else {
+        console.log('User dismissed install prompt');
+      }
+    } catch (err) {
+      console.error('Install prompt error:', err);
+    }
+  };
   const[mobileAuthPromptOpen,setMobileAuthPromptOpen]=useState(false);
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
   const[vendorStats,setVendorStats]=useState({vendors:0,products:0,buyers:0,reviews:0});
@@ -1493,6 +1583,7 @@ export default function Product(){
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
+      {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp}/>}
       {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)}/>}
 
       {/* Header — NO location selector here anymore */}
@@ -1957,6 +2048,18 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           ))}
       </div>
     </div>
+  );
+}
+
+function InstallButton({ onClick, visible, label }) {
+  const [hov, setHov] = useState(false);
+  if (!visible) return null;
+  return (
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ position:'fixed',bottom:84,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#1e1b4b,#312e81)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(30,27,75,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap',animation:'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+      <Icons.Download size={20} color="white" />
+      <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?160:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>{label}</span>
+    </button>
   );
 }
 
