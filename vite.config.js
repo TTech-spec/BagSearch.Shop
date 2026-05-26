@@ -2,15 +2,25 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      'workbox-core': path.resolve(__dirname, 'node_modules/vite-plugin-pwa/node_modules/workbox-core'),
+      'workbox-precaching': path.resolve(__dirname, 'node_modules/vite-plugin-pwa/node_modules/workbox-precaching'),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       devOptions: {
         enabled: true
       },

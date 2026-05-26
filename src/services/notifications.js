@@ -7,6 +7,9 @@ const buildNotificationMessage = (buyerName, type) => {
   if (type === 'review') {
     return `${buyerName || 'Someone'} posted a review on your profile`;
   }
+  if (type === 'product_upload') {
+    return buyerName || 'A seller just uploaded a new product';
+  }
   return 'You have a new notification';
 };
 
@@ -330,6 +333,13 @@ export const formatNotificationMessage = (notification) => {
         message: notification.message || `Your product was sold`,
         icon: 'shopping_bag',
         color: '#22c55e'
+      };
+    case 'product_upload':
+      return {
+        title: notification.title || 'New Product Uploaded',
+        message: notification.message || 'A seller just uploaded a new product',
+        icon: 'campaign',
+        color: '#c84b11'
       };
     default:
       return {

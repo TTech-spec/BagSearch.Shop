@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import PushNotificationToggle from './PushNotificationToggle';
 import { 
   getSellerNotifications, 
   markNotificationAsRead, 
@@ -274,6 +275,8 @@ export default function NotificationsDropdown() {
               </button>
             )}
           </div>
+
+          <PushNotificationToggle />
 
           {/* Notifications List */}
           <div style={{

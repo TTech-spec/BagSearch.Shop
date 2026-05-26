@@ -5,6 +5,7 @@ import { supabase } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
+import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
@@ -1270,6 +1271,7 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
 
         {/* Desktop actions */}
         <div className="desk-act" style={{ display:isMobile?'none':'flex',alignItems:'center',gap:8 }}>
+          {user && <NotificationsDropdown />}
           <button onClick={handleProfileClick} style={{ padding:'8px 10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',transition:'all 0.2s' }}
             onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
             <Icons.User size={20} color="currentColor" />
@@ -1296,6 +1298,7 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
         {/* Mobile: login/register + cart (menu button moved to left) */}
         {isMobile && (
           <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+            {user ? <NotificationsDropdown /> : null}
             {!user ? (
               <>
                 <button onClick={()=>navigate('/login')}
@@ -1317,6 +1320,70 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
+function WelcomeBackBadge({ user, isMobile }) {
+  const [hov, setHov] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [exiting, setExiting] = useState(false);
+  if (!user) return null;
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
+
+  useEffect(() => {
+    setVisible(true);
+    setExiting(false);
+
+    const startExitTimer = setTimeout(() => {
+      setExiting(true);
+    }, 55000);
+
+    const hideTimer = setTimeout(() => {
+      setVisible(false);
+    }, 60000);
+
+    return () => {
+      clearTimeout(startExitTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [user?.id]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position: 'fixed',
+        top: isMobile ? 70 : 82,
+        left: isMobile ? 12 : 20,
+        zIndex: 44,
+        maxWidth: isMobile ? 'calc(100vw - 92px)' : 280,
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: `1.5px solid ${hov ? C.primaryBorder : C.borderLight}`,
+        borderRadius: 18,
+        padding: isMobile ? '10px 12px' : '12px 14px',
+        boxShadow: hov ? '0 12px 30px rgba(200,75,17,0.16)' : '0 4px 16px rgba(0,0,0,0.06)',
+        transform: hov ? 'translateY(-3px) scale(1.02)' : 'translateY(0) scale(1)',
+        transition: 'all 0.25s ease',
+        pointerEvents: 'auto',
+        overflow: 'hidden',
+        opacity: exiting ? 0 : 1,
+        animation: exiting ? 'welcomeBadgeOut 0.7s ease forwards' : 'welcomeBadgeIn 0.7s cubic-bezier(0.22,1,0.36,1) both, welcomeBadgeFloat 4s ease-in-out 0.9s infinite',
+      }}
+    >
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(110deg, transparent 25%, rgba(249,115,22,0.08) 50%, transparent 75%)', animation:'shimCat 2.8s ease-in-out infinite', pointerEvents:'none' }} />
+      <p style={{ position:'relative', fontSize: isMobile ? 10 : 11, fontWeight: 800, color: C.textFaint, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        Hi {displayName}
+      </p>
+      <p style={{ position:'relative', fontSize: isMobile ? 13 : 14, fontWeight: 800, color: C.text, lineHeight: 1.25 }}>
+        👋 Welcome back
+      </p>
+    </div>
+  );
+}
+
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
@@ -1340,13 +1407,16 @@ export default function Product(){
   const[showInstallBtn,setShowInstallBtn]=useState(false);
   const[installButtonLabel,setInstallButtonLabel]=useState('Install App');
   const[dismissedAds,setDismissedAds]=useState([]);
+  const getIsIOSDevice = () => {
+    const ua = navigator.userAgent || '';
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  };
+  const getIsAndroidDevice = () => /Android/i.test(navigator.userAgent || '');
+  const getIsStandaloneMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   useEffect(() => {
-    const ua = navigator.userAgent || '';
-    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/.test(ua);
-    const isMobile = isIOS || isAndroid;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = getIsIOSDevice();
+    const isStandalone = getIsStandaloneMode();
 
     if (isStandalone) {
       setShowInstallBtn(false);
@@ -1373,23 +1443,17 @@ export default function Product(){
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    const mobileFallbackTimer = isMobile ? setTimeout(() => {
-      setInstallButtonLabel(isIOS ? 'Add to Home Screen' : 'Install App');
-      setShowInstallBtn(true);
-    }, 4000) : null;
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      if (mobileFallbackTimer) clearTimeout(mobileFallbackTimer);
     };
   }, []);
 
   const handleInstallApp = async () => {
     if (!deferredPrompt) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isIOS = getIsIOSDevice();
+      const isAndroid = getIsAndroidDevice();
+      const isStandalone = getIsStandaloneMode();
       if (isStandalone) {
         alert('BagSearch is already installed on this device.');
         setShowInstallBtn(false);
@@ -1538,6 +1602,9 @@ export default function Product(){
         @keyframes wordFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
         @keyframes pulseBadge{0%,100%{box-shadow:0 2px 8px rgba(220,38,38,0.4)}50%{box-shadow:0 2px 18px rgba(220,38,38,0.7)}}
+        @keyframes welcomeBadgeIn{0%{opacity:0;transform:translateX(-24px) translateY(10px) scale(0.92)}60%{opacity:1;transform:translateX(4px) translateY(-2px) scale(1.03)}100%{opacity:1;transform:translateX(0) translateY(0) scale(1)}}
+        @keyframes welcomeBadgeOut{0%{opacity:1;transform:translateX(0) scale(1)}100%{opacity:0;transform:translateX(-18px) translateY(-6px) scale(0.94)}}
+        @keyframes welcomeBadgeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
         @keyframes bounceIn{0%{opacity:0;transform:scale(0.7) translateY(20px)}60%{opacity:1;transform:scale(1.06) translateY(-4px)}100%{transform:scale(1) translateY(0)}}
         @keyframes catIn{from{opacity:0;transform:translateY(14px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes shimCat{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
@@ -1583,6 +1650,7 @@ export default function Product(){
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
+      {!cartOpen&&<WelcomeBackBadge user={user} isMobile={isMobile}/>}
       {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp}/>}
       {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)}/>}
 
