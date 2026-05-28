@@ -543,7 +543,7 @@ export default function VendorDetails() {
             <div style={{display:'flex',alignItems:'flex-start',gap:20,flexWrap:'wrap'}}>
               <div style={{width:88,height:88,borderRadius:'50%',background:'rgba(255,255,255,0.1)',border:'3px solid rgba(255,255,255,0.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:38,flexShrink:0,overflow:'hidden'}}>
                 {profile.avatar_url
-                  ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="avatar"/>
+                  ? <img src={profile.avatar_url} loading="eager" style={{width:'100%',height:'100%',objectFit:'cover'}} alt="avatar"/>
                   : <IconStore size={40} style={{color:'rgba(255,255,255,0.7)'}}/>}
               </div>
               <div style={{flex:1,minWidth:200}}>
@@ -614,7 +614,7 @@ export default function VendorDetails() {
                     onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='0 12px 32px rgba(200,75,17,0.1)';e.currentTarget.style.borderColor='#f9c4a0';}}
                     onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none';e.currentTarget.style.borderColor='#f7ece4';}}>
                     <div style={{height:180,overflow:'hidden',background:'#fde8d8',position:'relative'}}>
-                      <img src={p.src} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                      <img src={p.src} alt={p.name} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
                       {p.discountLabel && (
                         <span style={{position:'absolute',top:8,left:8,background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontSize:9,fontWeight:800,padding:'3px 8px',borderRadius:20,display:'flex',alignItems:'center',gap:3}}>
                           <IconPercent size={8}/> {p.discountLabel}
@@ -876,7 +876,7 @@ export default function VendorDetails() {
                       onMouseEnter={e=>e.currentTarget.style.background='#fdf4ee'}
                       onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                       {pImg
-                        ? <img src={pImg} alt={pName} style={{width:52,height:52,borderRadius:11,objectFit:'cover',flexShrink:0,border:'1px solid #f7ece4'}}/>
+                        ? <img src={pImg} alt={pName} loading="lazy" style={{width:52,height:52,borderRadius:11,objectFit:'cover',flexShrink:0,border:'1px solid #f7ece4'}}/>
                         : <div style={{width:52,height:52,borderRadius:11,background:'#fde8d8',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,border:'1px solid #f9c4a0'}}>
                             <IconBag size={22} style={{color:C.primary}}/>
                           </div>}

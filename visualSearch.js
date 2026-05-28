@@ -1,9 +1,9 @@
 // src/services/visualSearch.js — Enhanced Visual Search with Multiple AI Services
 import { findVisualMatchesByEmbedding } from './imageEmbeddings';
 
-const IMAGGA_AUTH = 'Basic YWNjX2QyMTI3NTliZTg4MWQxMzo1ZThkYzdiNWYxNzBjNmY1NjM1MjdiYTk3NWU1MDlkMA==';
-const IMAGGA_TAGS_URL = 'https://api.imagga.com/v2/tags';
-const IMAGGA_COLORS_URL = 'https://api.imagga.com/v2/colors';
+// Imagga API integration removed - now using CLIP embeddings via imageEmbeddings.js
+// Imagga API URLs removed - using CLIP embeddings instead
+
 
 // Enhanced bag-specific keywords with more variants
 const BAG_KEYWORD_MAP = {

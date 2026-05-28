@@ -26,12 +26,12 @@ for each row execute function public.set_updated_at_product_image_embeddings();
 
 alter table public.product_image_embeddings enable row level security;
 
--- Allow authenticated users to read embeddings for product search.
+-- Allow authenticated and anon users to read embeddings for product search.
 drop policy if exists "read product image embeddings" on public.product_image_embeddings;
 create policy "read product image embeddings"
 on public.product_image_embeddings
 for select
-to authenticated
+to authenticated, anon
 using (true);
 
 -- Allow authenticated users to insert/update.

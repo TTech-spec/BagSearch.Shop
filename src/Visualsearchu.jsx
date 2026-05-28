@@ -99,7 +99,7 @@
           boxShadow:'0 8px 24px rgba(200,75,17,0.18)',
         }}>
           {uploadedImage
-            ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+            ? <img src={uploadedImage} alt="" loading="eager" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
             : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#fde8d8,#fdf4ee)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42 }}>👜</div>
           }
           {/* Scan line */}
@@ -210,7 +210,7 @@
           background:'#f0fdf4', boxShadow:'0 8px 24px rgba(22,163,74,0.15)',
         }}>
           {uploadedImage
-            ? <img src={uploadedImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+            ? <img src={uploadedImage} alt="" loading="eager" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
             : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#dcfce7,#f0fdf4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:42 }}>👜</div>
           }
         </div>

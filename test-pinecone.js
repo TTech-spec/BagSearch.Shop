@@ -1,10 +1,18 @@
 import axios from 'axios';
+// API key removed for security - use environment variable: PINECONE_API_KEY
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY || import.meta.env.VITE_PINECONE_API_KEY;
+
+if (!PINECONE_API_KEY) {
+  console.error('PINECONE_API_KEY environment variable is not set');
+  process.exit(1);
+}
+
 async function test(label, url, method = 'get') {
   try {
     const res = await axios({
       method,
       url,
-      headers: { 'Api-Key': 'pcsk_3CYBJh_Q1cP5VALa2g6W9v9mCEHYcuTY26jfeRB3hJNPWSeZUpKPThGpSRvReoT6bmaavr' }
+      headers: { 'Api-Key': PINECONE_API_KEY }
     });
     console.log(`SUCCESS [${label}]:`, JSON.stringify(res.data, null, 2).slice(0, 200));
   } catch (e) {
@@ -15,7 +23,7 @@ async function test(label, url, method = 'get') {
 async function run() {
   try {
     const res = await axios.get('https://api.pinecone.io/indexes', {
-      headers: { 'Api-Key': 'pcsk_3CYBJh_Q1cP5VALa2g6W9v9mCEHYcuTY26jfeRB3hJNPWSeZUpKPThGpSRvReoT6bmaavr' }
+      headers: { 'Api-Key': PINECONE_API_KEY }
     });
     console.log('INDEX DETAILS:', JSON.stringify(res.data, null, 2));
   } catch (e) {

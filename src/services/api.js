@@ -36,3 +36,39 @@ export const ensureSupabaseReady = () => {
 export const api = axios.create({
   baseURL: 'https://your-api-base-url.com', 
 });
+
+// 6. Server-side text search with Supabase ilike
+export async function searchProducts(query, locationId = null, category = null) {
+  try {
+    let queryBuilder = supabase
+      .from('products')
+      .select('*')
+      .eq('status', 'active');
+
+    // Apply text search with ilike (case-insensitive)
+    if (query && query.trim()) {
+      const searchTerm = `%${query.trim()}%`;
+      queryBuilder = queryBuilder.or(
+        `name.ilike.${searchTerm},brand.ilike.${searchTerm},description.ilike.${searchTerm},category.ilike.${searchTerm},sub.ilike.${searchTerm},seller.ilike.${searchTerm}`
+      );
+    }
+
+    // Apply location filter
+    if (locationId && locationId !== 'all') {
+      queryBuilder = queryBuilder.eq('location', locationId);
+    }
+
+    // Apply category filter
+    if (category && category !== 'all') {
+      queryBuilder = queryBuilder.eq('category', category);
+    }
+
+    const { data, error } = await queryBuilder;
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Search error:', error);
+    return [];
+  }
+}

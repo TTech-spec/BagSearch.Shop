@@ -584,7 +584,13 @@ function ShareProfileModal({ visible, onClose, seller }) {
 // ─── AI ASSIST (Gemini) ───────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 
-const GEMINI_API_KEY = "AIzaSyB0_vtq0N7ilNze0dnUDiLBsDkDJ1vRgbo";
+// API key removed for security - use environment variable: GEMINI_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+
+if (!GEMINI_API_KEY) {
+  console.error('GEMINI_API_KEY environment variable is not set');
+  process.exit(1);
+}
 const GEMINI_MODELS = ["gemini-1.5-flash","gemini-1.5-flash-8b","gemini-1.0-pro"];
 
 function useAIAssist() {

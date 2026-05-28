@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImage from '../images/a00b2158-82d4-4c37-8602-a33e18a7a9f2_removalai_preview.png';
+import logoImage from '../images/a00b2158-82d4-4c37-8602-a33e18a7a9f2_removalai_preview.webp';
 
 const LogoIcon = ({ size = 26 }) => (
   <span
@@ -16,6 +16,7 @@ const LogoIcon = ({ size = 26 }) => (
     <img
       src={logoImage}
       alt="BagSearch logo"
+      loading="eager"
       style={{
         width: '100%',
         height: '100%',

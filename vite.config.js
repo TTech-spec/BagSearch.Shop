@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import viteImagemin from 'vite-plugin-imagemin'
 import path from 'node:path'
 
 // https://vite.dev/config/
@@ -15,6 +16,21 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    viteImagemin({
+      gifsicle: { optimizationLevel: 7 },
+      optipng: { optimizationLevel: 7 },
+      mozjpeg: { quality: 80 },
+      pngquant: { quality: [0.8, 0.9] },
+      svgo: {
+        plugins: [
+          { name: 'removeViewBox', active: false },
+          { name: 'removeEmptyAttrs', active: true }
+        ]
+      },
+      webp: {
+        quality: 75
+      }
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
@@ -22,9 +38,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       devOptions: {
-        enabled: true
+        enabled: false
       },
-      includeAssets: ['logo.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      includeAssets: ['logo.webp', 'pwa-192x192.webp', 'pwa-512x512.webp'],
       manifest: {
         name: 'Aninri Luxe',
         short_name: 'Aninri',
@@ -36,19 +52,19 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'pwa-192x192.webp',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/webp'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-512x512.webp',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/webp'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-512x512.webp',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/webp',
             purpose: 'any maskable'
           }
         ]
@@ -63,18 +79,51 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase warning threshold to 1000 kB
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks: (id) => {
           // Vendor chunks
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-axios': ['axios'],
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-supabase';
+          }
+          if (id.includes('node_modules/axios')) {
+            return 'vendor-axios';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-motion';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          if (id.includes('node_modules/@xenova/transformers')) {
+            return 'vendor-transformers';
+          }
           // Page-specific chunks
-          'page-auth': ['./src/login.jsx', './src/Reg.jsx', './src/forgotPassword.jsx', './src/resetPassword.jsx'],
-          'page-products': ['./src/Product.jsx', './src/productDetail.jsx', './src/SellerProduct.jsx'],
-          'page-seller': ['./src/sellerProfile.jsx', './src/Sellerlisting.jsx', './src/createProduct.jsx'],
-          'page-user': ['./src/userProfile.jsx'],
+          if (id.includes('/src/login.jsx') || id.includes('/src/Reg.jsx') || id.includes('/src/forgotPassword.jsx') || id.includes('/src/resetPassword.jsx')) {
+            return 'page-auth';
+          }
+          if (id.includes('/src/Product.jsx') || id.includes('/src/productDetail.jsx') || id.includes('/src/SellerProduct.jsx')) {
+            return 'page-products';
+          }
+          if (id.includes('/src/sellerProfile.jsx') || id.includes('/src/Sellerlisting.jsx') || id.includes('/src/createProduct.jsx')) {
+            return 'page-seller';
+          }
+          if (id.includes('/src/userProfile.jsx')) {
+            return 'page-user';
+          }
+          if (id.includes('/src/home.jsx')) {
+            return 'page-home';
+          }
+          if (id.includes('/src/vendorDetails.jsx')) {
+            return 'page-vendor';
+          }
         }
       }
-    }
+    },
+    // Enable compression
+    reportCompressedSize: true,
+    // Minify CSS
+    cssMinify: true,
   },
 })

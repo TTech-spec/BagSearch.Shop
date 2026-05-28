@@ -1,6 +1,12 @@
 import axios from 'axios';
-const PINECONE_API_KEY = 'pcsk_3CYBJh_Q1cP5VALa2g6W9v9mCEHYcuTY26jfeRB3hJNPWSeZUpKPThGpSRvReoT6bmaavr';
+// API key removed for security - use environment variable: PINECONE_API_KEY
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY || import.meta.env.VITE_PINECONE_API_KEY;
 const PINECONE_INFERENCE_URL = 'https://api.pinecone.io/embed';
+
+if (!PINECONE_API_KEY) {
+  console.error('PINECONE_API_KEY environment variable is not set');
+  process.exit(1);
+}
 
 async function testEmbedding() {
   try {

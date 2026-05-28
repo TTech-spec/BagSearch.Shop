@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
-import { supabase } from './services/api';
+import { supabase, searchProducts } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
@@ -1562,12 +1562,12 @@ export default function Product(){
 
   useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
 
-  const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim())r=r.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.sub||'').toLowerCase().includes(q.toLowerCase())||(p.seller||'').toLowerCase().includes(q.toLowerCase()));if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
+  const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim()){const lowQ=q.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(lowQ)||(p.sub||'').toLowerCase().includes(lowQ)||(p.seller||'').toLowerCase().includes(lowQ)||(p.description||'').toLowerCase().includes(lowQ)||(p.brand||'').toLowerCase().includes(lowQ)||(p.category||'').toLowerCase().includes(lowQ)||(p.condition||'').toLowerCase().includes(lowQ));}if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
   const saveSearch=useCallback((q)=>{if(!user||!q.trim()||q.trim().length<2)return;clearTimeout(searchSaveTimer.current);searchSaveTimer.current=setTimeout(async()=>{try{await supabase.from('search_history').insert({user_id:user.id,query:q.trim(),type:'text'});}catch(_){}},1500);},[user]);
 
-  const handleSearch=q=>{setSearchQuery(q);setDisplayedProducts(applyFilters(q,activeCategory,selectedLocation,allProducts));setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
-  const handleCategoryChange=id=>{setActiveCategory(id);setDisplayedProducts(applyFilters(searchQuery,id,selectedLocation,allProducts));setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
-  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(applyFilters(searchQuery,activeCategory,loc,combined));};
+  const handleSearch=async q=>{setSearchQuery(q);if(q.trim()){const results=await searchProducts(q,selectedLocation.id,activeCategory);setDisplayedProducts(results);}else{const combined=await fetchProducts(selectedLocation.id);setAllProducts(combined);setDisplayedProducts(combined);}setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
+  const handleCategoryChange=async id=>{setActiveCategory(id);if(searchQuery.trim()){const results=await searchProducts(searchQuery,selectedLocation.id,id);setDisplayedProducts(results);}else{const combined=await fetchProducts(selectedLocation.id);setAllProducts(combined);setDisplayedProducts(combined);}setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
+  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);if(searchQuery.trim()){const results=await searchProducts(searchQuery,loc.id,activeCategory);setDisplayedProducts(results);}else{const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(combined);}};
   const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false);setVisualSearchCount(0);};
   const handleImageUpload=async e=>{
     const f=e.target.files[0];if(!f)return;

@@ -1,6 +1,12 @@
 // src/services/pinecone.js — Google Vision visual search
 
-const GOOGLE_VISION_API_KEY = 'AIzaSyD25zh624d0PIcqIDl9zY1Yz4Kn8ZoW2b8';
+// API key removed for security - use environment variable: GOOGLE_VISION_API_KEY
+const GOOGLE_VISION_API_KEY = process.env.GOOGLE_VISION_API_KEY || import.meta.env.VITE_GOOGLE_VISION_API_KEY;
+
+if (!GOOGLE_VISION_API_KEY) {
+  console.error('GOOGLE_VISION_API_KEY environment variable is not set');
+  process.exit(1);
+}
 const GOOGLE_VISION_URL = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`;
 
 const BAG_KEYWORD_MAP = {
