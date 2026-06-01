@@ -79,6 +79,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Increase warning threshold to 1000 kB
     rollupOptions: {
       output: {
+        // Add cache-friendly naming
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
           // Vendor chunks
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
@@ -125,5 +129,7 @@ export default defineConfig({
     reportCompressedSize: true,
     // Minify CSS
     cssMinify: true,
+    // Add cache headers for static assets
+    assetsInlineLimit: 4096, // 4KB threshold for inlining
   },
 })

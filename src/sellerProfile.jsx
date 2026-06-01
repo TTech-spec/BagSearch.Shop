@@ -301,7 +301,6 @@ function DiscountPromoCard({ navigate, visible }) {
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'none' : 'translateY(12px)',
-        transition: 'opacity 0.5s ease 200ms, transform 0.5s cubic-bezier(0.22,1,0.36,1) 200ms',
         marginBottom: 20,
         background: 'white',
         borderRadius: 16,
@@ -316,7 +315,7 @@ function DiscountPromoCard({ navigate, visible }) {
           : '0 2px 12px rgba(200,75,17,0.06)',
         position: 'relative',
         overflow: 'hidden',
-        transition: 'box-shadow 0.25s ease',
+        transition: 'opacity 0.5s ease 200ms, transform 0.5s cubic-bezier(0.22,1,0.36,1) 200ms, box-shadow 0.25s ease',
       }}
     >
       {/* left accent stripe */}
@@ -585,11 +584,10 @@ function ShareProfileModal({ visible, onClose, seller }) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 // API key removed for security - use environment variable: GEMINI_API_KEY
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error('GEMINI_API_KEY environment variable is not set');
-  process.exit(1);
 }
 const GEMINI_MODELS = ["gemini-1.5-flash","gemini-1.5-flash-8b","gemini-1.0-pro"];
 
