@@ -71,6 +71,8 @@ const policySections = [
       'Listing information such as product names, prices, photos, descriptions, inventory details, and seller contact channels.',
       'Activity information such as searches, saved preferences, product views, seller reviews, and interactions you make on the platform.',
       'Technical information such as device, browser, IP-related usage signals, and general diagnostics used to improve reliability and security.',
+      'Cookie and tracking information including browser cookies, web beacons, and similar technologies to collect information about your browsing behavior.',
+      'Advertising data including information collected through third-party advertising services like Google AdSense to serve personalized advertisements.',
     ],
   },
   {
@@ -81,6 +83,8 @@ const policySections = [
       'To personalize search results, location-aware browsing, featured recommendations, and marketplace experiences.',
       'To support communication, dispute handling, fraud prevention, service updates, and customer assistance.',
       'To analyze platform performance, fix bugs, improve features, and make the marketplace safer and easier to use.',
+      'To serve personalized advertisements through Google AdSense and other advertising partners based on your interests and browsing behavior.',
+      'To comply with legal obligations, protect against fraud, and maintain the security and integrity of our platform.',
     ],
   },
   {
@@ -89,8 +93,34 @@ const policySections = [
     points: [
       'Seller-facing contact details may be shown or used where necessary to help buyers inquire about products or complete purchases.',
       'We may share limited information with service providers that help us run the platform, such as hosting, analytics, storage, or support tools.',
+      'We may share information with third-party advertising partners, including Google, for the purpose of serving personalized advertisements.',
+      'Google may use cookies and web beacons to collect information about your activities on this website and other websites to provide personalized ads.',
       'We may disclose information when required by law, to enforce our terms, or to protect users, BagSearch, or the public from harm.',
-      'We do not treat personal information as something to be casually sold or exposed outside legitimate marketplace operations.',
+      'We do not treat personal information as something to be casually sold or exposed outside legitimate marketplace and advertising operations.',
+    ],
+  },
+  {
+    title: 'Google AdSense and Third-Party Advertising',
+    icon: <IconEye size={18} stroke="#c84b11" />,
+    points: [
+      'BagSearch uses Google AdSense to display advertisements on our website.',
+      'Google uses cookies and web beacons to collect information about your activities on this website and other websites to provide personalized ads.',
+      'You can opt out of personalized advertising by visiting Google\'s Ads Settings or the NAI\'s opt-out page.',
+      'Third-party vendors, including Google, use cookies to serve ads based on a user\'s prior visits to your website or other websites.',
+      'Users can disable cookies through their browser settings, though this may affect the functionality of our website.',
+      'We do not have access to or control over cookies placed by third-party advertisers.',
+    ],
+  },
+  {
+    title: 'Cookies and Tracking Technologies',
+    icon: <IconShield size={18} stroke="#c84b11" />,
+    points: [
+      'We use cookies and similar tracking technologies to collect information about your browsing behavior and preferences.',
+      'Cookies are small text files stored on your device that help us provide a better user experience and analyze website traffic.',
+      'Essential cookies are required for the basic functionality of the website and cannot be disabled.',
+      'Performance and analytics cookies help us understand how users interact with our website and improve our services.',
+      'Advertising cookies are used to deliver personalized advertisements and measure the effectiveness of ad campaigns.',
+      'You can manage your cookie preferences through your browser settings or by using the opt-out options provided by advertising partners.',
     ],
   },
   {
@@ -101,6 +131,20 @@ const policySections = [
       'We use practical administrative and technical safeguards, but no internet-based system can promise absolute security.',
       'Users are responsible for protecting their own login credentials and for using accurate, lawful information on the platform.',
       'If you believe your account or information has been compromised, you should contact support as soon as possible.',
+      'We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.',
+      'Regular security reviews and updates are conducted to maintain the integrity of our data protection systems.',
+    ],
+  },
+  {
+    title: 'Your Rights and Choices',
+    icon: <IconShield size={18} stroke="#c84b11" />,
+    points: [
+      'You have the right to access, update, or delete your personal information stored in our systems.',
+      'You can opt out of data collection for personalized advertising by adjusting your browser settings or using third-party opt-out tools.',
+      'You may request information about how we handle your personal data and inquire about our data processing practices.',
+      'You can withdraw consent for data processing at any time, subject to legal and contractual obligations.',
+      'You have the right to lodge a complaint with a supervisory authority if you believe our data processing practices violate applicable data protection laws.',
+      'To exercise your rights, please contact us using the information provided in the Contact section of this policy.',
     ],
   },
   {
@@ -111,6 +155,32 @@ const policySections = [
       'Buyers and sellers must use the platform respectfully and must not abuse messaging, reviews, or discovery tools.',
       'Attempted fraud, impersonation, spam, unauthorized scraping, or misuse of platform content may lead to restriction or removal.',
       'BagSearch may update listings, accounts, or access rules where necessary to protect the quality and safety of the marketplace.',
+      'Users must comply with all applicable laws and regulations when using the BagSearch platform.',
+      'Any violation of these policies may result in account suspension or termination without prior notice.',
+    ],
+  },
+  {
+    title: 'Contact Information',
+    icon: <IconMessage size={18} stroke="#c84b11" />,
+    points: [
+      'If you have questions about this Privacy Policy or our data practices, please contact us at info@bagsearch.shop.',
+      'You may also reach us via our contact form available on the BagSearch website.',
+      'We will respond to your inquiries within a reasonable timeframe, typically within 30 days.',
+      'For privacy-related concerns, please include "Privacy Inquiry" in your email subject line.',
+      'If you believe your privacy rights have been violated, you can also contact relevant data protection authorities.',
+      'Our business address and additional contact details are available upon request.',
+    ],
+  },
+  {
+    title: 'Children\'s Privacy',
+    icon: <IconShield size={18} stroke="#c84b11" />,
+    points: [
+      'BagSearch is not intended for children under the age of 13, and we do not knowingly collect personal information from children.',
+      'If we become aware that we have collected personal information from a child under 13, we will take steps to delete such information.',
+      'Parents and guardians should monitor their children\'s internet use and supervise any interactions on our platform.',
+      'If you believe we have collected information from a child under 13, please contact us immediately so we can take appropriate action.',
+      'We comply with applicable laws regarding children\'s privacy, including the Children\'s Online Privacy Protection Act (COPPA) where applicable.',
+      'We encourage parents and guardians to educate their children about safe online practices.',
     ],
   },
 ];

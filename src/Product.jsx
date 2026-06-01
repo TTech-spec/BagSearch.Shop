@@ -576,12 +576,20 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Help</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/'},{label:'Contact Us',href:'/'},{label:'Delivery Info',href:'/'},{label:'Returns Policy',href:'/'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/policy'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/'},{label:'Contact Us',href:'/contact'},{label:'Delivery Info',href:'/'},{label:'Returns Policy',href:'/'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/terms-of-service'}])}</ul>
           <div style={{ marginTop:18,background:'rgba(37,211,102,0.1)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(37,211,102,0.2)' }}>
             <p style={{ fontSize:11,fontWeight:800,color:'#4ade80',marginBottom:3,display:'flex',alignItems:'center',gap:6 }}>
               <Icons.MessageCircle size={14} color="#4ade80" /> WhatsApp Support
             </p>
-            <p style={{ fontSize:11,color:'rgba(255,255,255,0.45)',fontWeight:500 }}>Mon–Sat · 8AM – 8PM</p>
+            <p style={{ fontSize:11,color:'rgba(255,255,255,0.45)',fontWeight:500 }}>+234 813 873 4530</p>
+            <p style={{ fontSize:10,color:'rgba(255,255,255,0.35)',fontWeight:500 }}>Mon–Sat · 8AM – 8PM</p>
+          </div>
+          <div style={{ marginTop:12,background:'rgba(200,75,17,0.1)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(200,75,17,0.2)' }}>
+            <p style={{ fontSize:11,fontWeight:800,color:C.primaryLight,marginBottom:3,display:'flex',alignItems:'center',gap:6 }}>
+              Email Support
+            </p>
+            <p style={{ fontSize:11,color:'rgba(255,255,255,0.45)',fontWeight:500 }}>info@bagsearch.shop</p>
+            <p style={{ fontSize:10,color:'rgba(255,255,255,0.35)',fontWeight:500 }}>Response within 24 hours</p>
           </div>
         </div>
       </div>

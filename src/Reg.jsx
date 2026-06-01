@@ -768,7 +768,7 @@ const Reg = () => {
                         style={{ marginTop: 3, width: 16, height: 16, accentColor: C.primary, cursor: 'pointer' }}
                       />
                       <label htmlFor="terms-desktop" style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5, cursor: 'pointer' }}>
-                        I agree to the <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Terms of Service</a> and <a href="#" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
+                        I agree to the <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Terms of Service</a> and <a href="/policy" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
                       </label>
                     </div>
                     {errors.terms && <span style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</span>}
