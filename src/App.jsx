@@ -21,7 +21,7 @@ const Contact = lazy(() => import('./contact.jsx'));
 const About = lazy(() => import('./about.jsx'));
 const HotDeals = lazy(() => import('./hotDeals.jsx'));
 const Policy = lazy(() => import('./policy.jsx'));
-const PrivacyPolicy = lazy(() => import('./PrivacyPolicy.jsx'));
+const PrivacyPolicy = lazy(() => import('./policy.jsx'));
 const TermsOfService = lazy(() => import('./TermsOfService.jsx'));
 
 // Loading spinner component
@@ -243,7 +243,7 @@ function App() {
 
           <Route path="/privacy" element={<PrivacyPolicy />} />
 
-          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
 
           {/* Hot Deals page - public */}
           <Route path="/hot-deals" element={<HotDeals />} />

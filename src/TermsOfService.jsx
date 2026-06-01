@@ -17,7 +17,7 @@ function TermsOfService() {
       {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, #c84b11, #f97316)', padding: '60px 20px', textAlign: 'center', color: 'white' }}>
         <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 12, letterSpacing: '-0.03em' }}>Terms of Service</h1>
-        <p style={{ fontSize: 16, opacity: 0.9, fontWeight: 500 }}>Last updated: May 31, 2026</p>
+        <p style={{ fontSize: 16, opacity: 0.9, fontWeight: 500 }}>Last updated: June 1, 2026</p>
       </div>
 
       {/* Content */}
@@ -30,6 +30,9 @@ function TermsOfService() {
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               By accessing or using BagSearch (www.bagsearch.shop), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+            </p>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
+              By using BagSearch, you also acknowledge that you have read, understood, and agree to our <Link to="/policy" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>, which governs our data collection and use practices, including the use of cookies and advertising technologies.
             </p>
           </section>
 
@@ -45,6 +48,9 @@ function TermsOfService() {
               <li style={{ marginBottom: 8 }}><strong>Sellers:</strong> Verified vendors and individuals selling authentic luxury designer bags</li>
               <li><strong>Features:</strong> Product listings, visual search, seller verification, secure messaging, and location-based browsing</li>
             </ul>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginTop: 16 }}>
+              BagSearch uses third-party advertising services, including Google AdSense, to display advertisements on our platform. These advertisements may collect and use information about your browsing activities to serve personalized ads.
+            </p>
           </section>
 
           <section style={{ marginBottom: 32 }}>
@@ -108,7 +114,45 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              6. Prohibited Activities
+              6. Advertising and Third-Party Services
+            </h2>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
+              BagSearch uses third-party advertising services, including Google AdSense, to display advertisements on our website. By using our service, you acknowledge and agree to:
+            </p>
+            <ul style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, paddingLeft: 20, marginBottom: 12 }}>
+              <li style={{ marginBottom: 8 }}>The display of third-party advertisements on our platform</li>
+              <li style={{ marginBottom: 8 }}>The collection and use of browsing data by advertising partners for personalized advertising</li>
+              <li style={{ marginBottom: 8 }}>The use of cookies and web beacons by Google and other advertising partners</li>
+              <li style={{ marginBottom: 8 }}>That BagSearch may share certain data with advertising partners to improve ad relevance</li>
+              <li>You can opt out of personalized advertising through Google's Ads Settings or your browser settings</li>
+            </ul>
+            <div style={{ background: C.primaryBg, border: `1px solid ${C.primaryBorder}`, borderRadius: 12, padding: 16, marginTop: 16 }}>
+              <p style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>📢 Advertising Disclaimer</p>
+              <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.6 }}>
+                BagSearch does not control the content of third-party advertisements and is not responsible for the products or services promoted through ads. Please review the privacy policies of advertising partners for more information about their data practices.
+              </p>
+            </div>
+          </section>
+
+          <section style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
+              7. Cookies and Tracking Technologies
+            </h2>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
+              By using BagSearch, you consent to the use of cookies and similar tracking technologies as described in our Privacy Policy. These technologies are used for:
+            </p>
+            <ul style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, paddingLeft: 20, marginBottom: 12 }}>
+              <li style={{ marginBottom: 8 }}>Essential site functionality and user authentication</li>
+              <li style={{ marginBottom: 8 }}>Analytics and performance monitoring</li>
+              <li style={{ marginBottom: 8 }}>Personalized advertising and ad targeting</li>
+              <li style={{ marginBottom: 8 }}>Remembering user preferences and settings</li>
+              <li>You can manage cookie preferences through your browser settings</li>
+            </ul>
+          </section>
+
+          <section style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
+              8. Prohibited Activities
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               Users are strictly prohibited from:
@@ -122,6 +166,7 @@ function TermsOfService() {
               <li style={{ marginBottom: 8 }}>Using the platform for illegal activities or prohibited transactions</li>
               <li style={{ marginBottom: 8 }}>Harassing, threatening, or abusing other users</li>
               <li><strong>Spam:</strong> Sending unsolicited messages or promotional content</li>
+              <li><strong>Ad Abuse:</strong> Clicking on advertisements fraudulently or encouraging others to do so</li>
             </ul>
           </section>
 
@@ -143,7 +188,28 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              8. Intellectual Property
+              9. Transactions and Payments
+            </h2>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
+              All transactions between buyers and sellers are conducted directly between the parties. BagSearch acts as a marketplace platform and does not:
+            </p>
+            <ul style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, paddingLeft: 20, marginBottom: 12 }}>
+              <li style={{ marginBottom: 8 }}>Process payments or hold funds on behalf of users</li>
+              <li style={{ marginBottom: 8 }}>Guarantee transactions or provide payment protection</li>
+              <li style={{ marginBottom: 8 }}>Intervolve in payment disputes between buyers and sellers</li>
+              <li style={{ marginBottom: 8 }}>Offer refunds or chargebacks for completed transactions</li>
+            </ul>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginTop: 12 }}>
+              <strong>For Buyers:</strong> We recommend using secure payment methods and verifying seller reputation before making payments.
+            </p>
+            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7 }}>
+              <strong>For Sellers:</strong> Clearly state your preferred payment methods and delivery terms in your listings.
+            </p>
+          </section>
+
+          <section style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
+              10. Intellectual Property
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               All content on BagSearch, including but not limited to text, graphics, logos, images, and software, is the property of BagSearch or its content suppliers and is protected by intellectual property laws.
@@ -155,13 +221,13 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              9. Privacy Policy
+              11. Privacy Policy
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
-              Your use of BagSearch is also governed by our Privacy Policy, which describes how we collect, use, and protect your personal information. Please review our Privacy Policy carefully.
+              Your use of BagSearch is also governed by our Privacy Policy, which describes how we collect, use, and protect your personal information, including data collection for advertising purposes. Please review our Privacy Policy carefully.
             </p>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7 }}>
-              <Link to="/privacy" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
+              <Link to="/policy" style={{ color: C.primary, textDecoration: 'none', fontWeight: 600 }}>
                 View our Privacy Policy →
               </Link>
             </p>
@@ -169,7 +235,7 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              10. Disclaimer of Warranties
+              12. Disclaimer of Warranties
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               BagSearch provides the platform "as is" and "as available" without any warranties, expressed or implied, including but not limited to:
@@ -186,7 +252,7 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              11. Limitation of Liability
+              13. Limitation of Liability
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               To the fullest extent permitted by law, BagSearch shall not be liable for:
@@ -203,7 +269,7 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              12. Account Termination
+              14. Account Termination
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               BagSearch reserves the right to suspend or terminate your account at any time, with or without cause, with or without notice. Reasons for termination may include:
@@ -223,7 +289,7 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              13. Modifications to Terms
+              15. Modifications to Terms
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               BagSearch reserves the right to modify these terms at any time. We will notify users of significant changes by:
@@ -240,7 +306,7 @@ function TermsOfService() {
 
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              14. Governing Law
+              16. Governing Law
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7 }}>
               These Terms of Service shall be governed by and construed in accordance with the laws of Nigeria. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the Nigerian courts.
@@ -249,7 +315,7 @@ function TermsOfService() {
 
           <section>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 16, letterSpacing: '-0.02em' }}>
-              15. Contact Information
+              17. Contact Information
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
               If you have any questions about these Terms of Service, please contact us:
