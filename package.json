@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "vite-plugin-imagemin": "^0.6.1"
+  }
+}
