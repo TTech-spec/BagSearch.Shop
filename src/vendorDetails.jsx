@@ -19,10 +19,10 @@ const BAG_COLOR_MAP = {
 };
 
 const LOCATIONS = [
+  {id:'lagos',name:'Lagos State'},
   {id:'lagos-island',name:'Lagos Island'},
   {id:'lekki',name:'Lekki'},
   {id:'victoria-island',name:'Victoria Island'},
-  {id:'ikeja',name:'Ikeja'},
   {id:'abuja',name:'Abuja'},
   {id:'port-harcourt',name:'Port Harcourt'},
   {id:'kano',name:'Kano'},

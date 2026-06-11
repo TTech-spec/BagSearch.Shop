@@ -644,9 +644,10 @@ function useWordCycle(phrases, intervalMs = 2400) {
 }
 
 const NIGERIAN_LOCATIONS = [
-  {id:'all',name:'All Nigeria',emoji:'🇳🇬',state:''},{id:'lagos-island',name:'Lagos Island',emoji:'🏙️',state:'Lagos'},
+  {id:'all',name:'All Nigeria',emoji:'🇳🇬',state:''},{id:'lagos',name:'Lagos State',emoji:'🌊',state:'Lagos'},
+  {id:'lagos-island',name:'Lagos Island',emoji:'🏙️',state:'Lagos'},
   {id:'lagos-mainland',name:'Lagos Mainland',emoji:'🌆',state:'Lagos'},{id:'victoria-island',name:'Victoria Island',emoji:'💎',state:'Lagos'},
-  {id:'lekki',name:'Lekki',emoji:'🌴',state:'Lagos'},{id:'ikeja',name:'Ikeja',emoji:'✈️',state:'Lagos'},
+  {id:'lekki',name:'Lekki',emoji:'🌴',state:'Lagos'},
   {id:'abuja',name:'Abuja',emoji:'🏛️',state:'FCT'},{id:'wuse',name:'Wuse',emoji:'🏢',state:'FCT'},
   {id:'kano',name:'Kano',emoji:'🌅',state:'Kano'},{id:'ibadan',name:'Ibadan',emoji:'🌇',state:'Oyo'},
   {id:'port-harcourt',name:'Port Harcourt',emoji:'⚓',state:'Rivers'},{id:'enugu',name:'Enugu',emoji:'⛰️',state:'Enugu'},
@@ -1587,17 +1588,18 @@ export default function Product(){
       const sellerIds=final.map(v=>v.id).filter(Boolean);
       let reviewCount=0;
       if(sellerIds.length>0){const{count}=await supabase.from('seller_reviews').select('id',{count:'exact',head:true}).in('seller_id',sellerIds);reviewCount=count||0;}
-      setVendorStats({vendors:final.length + 40,products:(products||[]).length,buyers:800,reviews:reviewCount});
+      setVendorStats({vendors:final.length,products:(products||[]).length,buyers:800,reviews:reviewCount});
       setVendors(final);setFilteredVendors(final);return final;
-    }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendorStats({vendors:derived.length + 40,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
+    }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
   },[buildVendorsFromProducts,countUniqueBuyers]);
 
   const fetchProducts=useCallback(async(locationId='all')=>{
     try{
+      const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];
       let query=supabase.from('products').select('*');
-      if(locationId&&locationId!=='all')query=query.eq('location',locationId);
+      if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}
       let{data,error}=await query.order('created_at',{ascending:false});
-      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all')query=query.eq('location',locationId);const retry=await query.order('created_at',{ascending:false});if(retry.error)throw retry.error;data=retry.data;}
+      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:false});if(retry.error)throw retry.error;data=retry.data;}
       return(data||[]).map(p=>{
         let rawColors=[];
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
@@ -1610,7 +1612,7 @@ export default function Product(){
 
   useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
 
-  const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim()){const lowQ=q.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(lowQ)||(p.sub||'').toLowerCase().includes(lowQ)||(p.seller||'').toLowerCase().includes(lowQ)||(p.description||'').toLowerCase().includes(lowQ)||(p.brand||'').toLowerCase().includes(lowQ)||(p.category||'').toLowerCase().includes(lowQ)||(p.condition||'').toLowerCase().includes(lowQ));}if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all')r=r.filter(p=>p.location===loc.id);return r;},[]);
+  const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim()){const lowQ=q.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(lowQ)||(p.sub||'').toLowerCase().includes(lowQ)||(p.seller||'').toLowerCase().includes(lowQ)||(p.description||'').toLowerCase().includes(lowQ)||(p.brand||'').toLowerCase().includes(lowQ)||(p.category||'').toLowerCase().includes(lowQ)||(p.condition||'').toLowerCase().includes(lowQ));}if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all'){const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];if(loc.id==='lagos')r=r.filter(p=>LAGOS_IDS.includes(p.location));else r=r.filter(p=>p.location===loc.id);}return r;},[]);
   const saveSearch=useCallback((q)=>{if(!user||!q.trim()||q.trim().length<2)return;clearTimeout(searchSaveTimer.current);searchSaveTimer.current=setTimeout(async()=>{try{await supabase.from('search_history').insert({user_id:user.id,query:q.trim(),type:'text'});}catch(_){}},1500);},[user]);
 
   const handleSearch=async q=>{setSearchQuery(q);if(q.trim()){const results=await searchProducts(q,selectedLocation.id,activeCategory);setDisplayedProducts(results);}else{const combined=await fetchProducts(selectedLocation.id);setAllProducts(combined);setDisplayedProducts(combined);}setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};

@@ -73,7 +73,7 @@ const NIGERIAN_LOCATIONS = [
   { id: 'birnin-kebbi', label: 'Birnin Kebbi', state: 'Kebbi', emoji: '🌽' },
   { id: 'lokoja', label: 'Lokoja', state: 'Kogi', emoji: '🚢' },
   { id: 'ilorin', label: 'Ilorin', state: 'Kwara', emoji: '🪡' },
-  { id: 'ikeja', label: 'Ikeja', state: 'Lagos', emoji: '🌆' },
+  { id: 'lagos', label: 'Lagos', state: 'Lagos', emoji: '🌊' },
   { id: 'lafia', label: 'Lafia', state: 'Nasarawa', emoji: '🪨' },
   { id: 'minna', label: 'Minna', state: 'Niger', emoji: '🌻' },
   { id: 'abeokuta', label: 'Abeokuta', state: 'Ogun', emoji: '🪨' },
