@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-Host: www.bagsearch.shop
-Sitemap: https://www.bagsearch.shop/sitemap.xml
+Sitemap: https://bag-search-shop.vercel.app/sitemap.xml
