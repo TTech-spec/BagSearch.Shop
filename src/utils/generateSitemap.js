@@ -37,10 +37,12 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const staticRoutes = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/products', priority: '0.9', changefreq: 'hourly' },
-  { path: '/contact', priority: '0.5', changefreq: 'monthly' },
-  { path: '/about', priority: '0.7', changefreq: 'monthly' },
-  { path: '/policy', priority: '0.6', changefreq: 'monthly' },
   { path: '/hot-deals', priority: '0.8', changefreq: 'daily' },
+  { path: '/about', priority: '0.7', changefreq: 'monthly' },
+  { path: '/contact', priority: '0.5', changefreq: 'monthly' },
+  { path: '/policy', priority: '0.6', changefreq: 'monthly' },
+  { path: '/privacy', priority: '0.5', changefreq: 'monthly' },
+  { path: '/terms-of-service', priority: '0.5', changefreq: 'monthly' },
 ];
 
 function escapeXml(str) {
@@ -57,6 +59,19 @@ function isSchemaMismatch(message) {
     lowered.includes('could not find') ||
     lowered.includes('column')
   );
+}
+
+async function fetchVendors() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/users?select=user_id,profile_slug,brand_name,full_name,updated_at,created_at&role=eq.seller`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 async function fetchProducts() {
@@ -94,9 +109,9 @@ async function fetchProducts() {
 }
 
 async function generate() {
-  console.log('Fetching products from Supabase...');
+  console.log('Fetching products and vendors from Supabase...');
 
-  const products = await fetchProducts();
+  const [products, vendors] = await Promise.all([fetchProducts(), fetchVendors()]);
   const today = new Date().toISOString().split('T')[0];
 
   const urls = [
@@ -115,6 +130,18 @@ async function generate() {
         priority: '0.8',
       };
     }),
+    ...vendors
+      .filter((v) => v.profile_slug || v.user_id)
+      .map((vendor) => {
+        const slug = vendor.profile_slug || vendor.user_id;
+        const lastModified = vendor.updated_at || vendor.created_at || today;
+        return {
+          loc: `${SITE_URL}/seller/${encodeURIComponent(slug)}`,
+          lastmod: lastModified.split('T')[0],
+          changefreq: 'weekly',
+          priority: '0.7',
+        };
+      }),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -134,7 +161,7 @@ ${urls
   const outPath = resolve(__dirname, '../../public/sitemap.xml');
   writeFileSync(outPath, xml, 'utf-8');
 
-  console.log(`Created sitemap.xml with ${urls.length} URLs (${products.length} products + ${staticRoutes.length} static)`);
+  console.log(`Created sitemap.xml with ${urls.length} URLs (${staticRoutes.length} static + ${products.length} products + ${vendors.length} vendors)`);
   console.log(outPath);
 }
 

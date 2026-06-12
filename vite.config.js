@@ -42,9 +42,9 @@ export default defineConfig({
       },
       includeAssets: ['logo.webp', 'pwa-192x192.webp', 'pwa-512x512.webp'],
       manifest: {
-        name: 'Aninri Luxe',
-        short_name: 'Aninri',
-        description: 'Luxury Bag Search and Shop',
+        name: 'BagSearch',
+        short_name: 'BagSearch',
+        description: 'Buy & sell authentic luxury designer bags in Nigeria',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',

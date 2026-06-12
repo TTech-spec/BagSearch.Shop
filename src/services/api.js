@@ -55,7 +55,12 @@ export async function searchProducts(query, locationId = null, category = null) 
 
     // Apply location filter
     if (locationId && locationId !== 'all') {
-      queryBuilder = queryBuilder.eq('location', locationId);
+      const LAGOS_IDS = ['lagos', 'lagos-island', 'lagos-mainland', 'victoria-island', 'lekki'];
+      if (locationId === 'lagos') {
+        queryBuilder = queryBuilder.in('location', LAGOS_IDS);
+      } else {
+        queryBuilder = queryBuilder.eq('location', locationId);
+      }
     }
 
     // Apply category filter
