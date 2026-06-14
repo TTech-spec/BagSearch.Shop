@@ -1,0 +1,65 @@
+# BagSearch — Nigeria's Luxury Bag Marketplace
+
+> BagSearch (bagsearch.shop) is Nigeria's premier online marketplace for buying and selling authentic luxury designer bags and handbags. It is also Africa's first AI-powered bag discovery platform.
+
+## What is BagSearch?
+
+BagSearch is a dedicated e-commerce marketplace focused exclusively on bags and handbags in Nigeria. Unlike general marketplaces, BagSearch specialises in one category — bags — making discovery faster and more accurate for buyers and giving sellers a targeted audience.
+
+The platform features AI-powered visual search: users can upload a photo of any bag and instantly find visually similar listings from verified Nigerian sellers.
+
+## Key Features
+
+- **Visual/Image Search**: Upload any bag photo to find similar products using AI
+- **Buy Luxury Bags**: Browse authentic Chanel, Hermès, Louis Vuitton, Gucci, Dior, Valentino, Balenciaga, Zara, Coach, and more
+- **Sell Your Bags**: Free listing for sellers; premium boost plans to increase visibility
+- **Hot Deals**: Discounted luxury bags updated daily
+- **Verified Sellers**: All sellers are Nigerian-based and verified
+- **WhatsApp Integration**: Contact sellers directly via WhatsApp
+- **Push Notifications**: Get alerts on new listings and deals
+
+## Who Uses BagSearch?
+
+- **Buyers** in Nigeria looking for authentic, affordable, or luxury bags without visiting multiple shops
+- **Sellers** — from market traders to luxury boutiques — who want a targeted platform to reach bag buyers
+- **Fashion enthusiasts** searching for specific styles, brands, or visual matches
+
+## Statistics
+
+- 10,000+ active buyers
+- 500+ trusted sellers
+- All 36 states of Nigeria covered
+- Bag-focused platform (100% bags only)
+
+## Brands Available
+
+Chanel, Hermès, Louis Vuitton (LV), Gucci, Christian Dior, Valentino, Balenciaga, Zara, Coach, JW Pei, Polene, Jacquemus, Bottega, Ferragamo, and many more.
+
+## Mission
+
+Making buying and selling bags easier, smarter, and more profitable for everyone in Nigeria and across Africa.
+
+## Vision
+
+To become Africa's leading bag marketplace — a growing ecosystem around one product category, powered by technology and driven by real market needs.
+
+## Founding
+
+- Founded: 2024
+- Location: Lagos, Nigeria
+- Website: https://www.bagsearch.shop
+
+## Pages
+
+- [Home](https://www.bagsearch.shop/): Browse and search all bag listings
+- [Products](https://www.bagsearch.shop/products): Full product catalogue
+- [Hot Deals](https://www.bagsearch.shop/hot-deals): Discounted luxury bags
+- [About](https://www.bagsearch.shop/about): About BagSearch
+- [Contact](https://www.bagsearch.shop/contact): Get in touch
+- [Sell on BagSearch](https://www.bagsearch.shop/register): Create a seller account
+
+## Contact
+
+- Website: https://www.bagsearch.shop
+- Contact page: https://www.bagsearch.shop/contact
+- WhatsApp: Available Mon–Sat 8AM–8PM (contact page)
