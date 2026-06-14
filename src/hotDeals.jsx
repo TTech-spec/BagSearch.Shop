@@ -8,6 +8,7 @@ import { supabase } from './services/api';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { productPath } from './utils/slugify';
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 /* ─── DESIGN TOKENS ─────────────────────────────────────────────────────── */
 const T = {
@@ -184,7 +185,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
       {/* Image — no dark overlay, no brightness filter */}
       <div style={{ position: 'relative', height: 380, overflow: 'hidden' }}>
         <img
-          src={p.src} alt={p.name} loading="lazy"
+          src={getOptimizedImageUrl(p.src, IMG_SIZES.hero.width, IMG_SIZES.hero.height)} alt={p.name} loading="lazy"
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)',
@@ -371,7 +372,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
       {/* Image — clean, no dark filter */}
       <div style={{ position: 'relative', height: imgHeight, overflow: 'hidden', background: T.bgPanel }}>
         <img
-          src={p.src} alt={p.name} loading="lazy"
+          src={getOptimizedImageUrl(p.src, IMG_SIZES.card.width, IMG_SIZES.card.height)} alt={p.name} loading="lazy"
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.7s ease',

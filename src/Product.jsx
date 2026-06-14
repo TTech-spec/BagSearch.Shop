@@ -9,6 +9,7 @@ import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
+import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 const BAG_COLOR_MAP = {
   black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
@@ -1109,13 +1110,13 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
         style={{position:'relative',borderRadius:22,overflow:'hidden',border:`2px solid #fcd4be`,boxShadow:'0 6px 32px rgba(200,75,17,0.1)',background:'linear-gradient(135deg,#fff5f2 0%,#fff 60%)'}}>
         <div style={{display:'flex',flexDirection:isMobile?'column':'row',transition:'opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1)',...slideStyle}}>
           <div style={{width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0}} onClick={()=>navigate(productPath(product.name,product.id))}>
-            <img 
-              src={product.src} 
-              alt={product.name} 
+            <img
+              src={product.srcHero||product.src}
+              alt={product.name}
               loading="lazy"
               decoding="async"
-              style={{width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease'}} 
-              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'} 
+              style={{width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease'}}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
               onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
             <div style={{position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmall?9:11,fontWeight:900,padding:isSmall?'2px 8px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite'}}>🔥 HOT DEAL</div>
             {products.length>1&&<div style={{position:'absolute',bottom:14,left:14,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',color:'white',fontSize:11,fontWeight:800,padding:'4px 10px',borderRadius:20}}>{activeIdx+1} / {products.length}</div>}
@@ -1163,11 +1164,13 @@ function CartItem({item,onUpdateQty,onRemove,index,isAuthed,onRequireAuth}){
   return(
     <div style={{display:'flex',gap:13,background:'white',borderRadius:16,padding:14,border:`1.5px solid ${C.borderLight}`,boxShadow:`0 2px 10px rgba(200,75,17,0.05)`,opacity:removing?0:vis?1:0,transform:removing?'translateX(60px) scale(0.9)':vis?'translateX(0) scale(1)':'translateX(-20px) scale(0.97)',transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',maxHeight:removing?0:200,overflow:'hidden'}}>
       <div style={{position:'relative',flexShrink:0}}>
-        <img 
-          src={item.src} 
-          alt={item.name} 
+        <img
+          src={getOptimizedImageUrl(item.src,IMG_SIZES.thumb.width,IMG_SIZES.thumb.height)}
+          alt={item.name}
           loading="lazy"
           decoding="async"
+          width={72}
+          height={72}
           style={{width:72,height:72,objectFit:'cover',borderRadius:12,display:'block',border:`1px solid ${C.borderLight}`}}/>
         {waLink&&(<a href={waLink} target="_blank" rel="noopener noreferrer"
           onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}}}
@@ -1605,7 +1608,8 @@ export default function Product(){
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
         const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[]; 
         const qty=p.quantity!=null?parseInt(p.quantity):null;
-        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''};
+        const rawSrc=p.images?.length>0?p.images[0]:'https://via.placeholder.com/400';
+        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height),srcHero:getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height),srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''};
       });
     }catch(err){console.error('Failed to load products:',err);return[];}
   },[mapCategory]);
