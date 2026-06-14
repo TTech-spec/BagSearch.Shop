@@ -341,13 +341,15 @@ export default function ProductDetail() {
           url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
           seller: { '@type': 'Person', name: product.seller },
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: product.rating,
-          reviewCount: product.reviews,
-          bestRating: 5,
-          worstRating: 1,
-        },
+        ...(product.reviews > 0 && product.rating ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: product.rating,
+            reviewCount: product.reviews,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        } : {}),
       }
     : null;
 

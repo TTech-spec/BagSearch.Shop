@@ -10,13 +10,7 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NE
 const isKeyValid = (key) => key && key.length > 20;
 
 if (!supabaseUrl || !isKeyValid(supabaseKey)) {
-  console.error(
-    'CRITICAL: Supabase credentials missing or invalid in .env file.', 
-    { url: supabaseUrl ? 'configured' : 'missing', keyLength: supabaseKey ? supabaseKey.length : 0 }
-  );
-} else {
-  // Removed sensitive key logging for security
-  console.log('Supabase initialized successfully');
+  throw new Error('Supabase credentials missing. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
 }
 
 // 3. Initialize Supabase

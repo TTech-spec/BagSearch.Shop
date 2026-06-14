@@ -8,6 +8,7 @@ import LogoIcon from './components/Logo.jsx';
 import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
+import { useSEO } from './hooks/useSEO';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -158,6 +159,7 @@ const SuccessCard = ({ show, onClose }) => {
 };
 
 const Reg = () => {
+  useSEO({ title: 'Create Account | BagSearch', noindex: true });
   const navigate = useNavigate();
   const { login, setLoading, loading } = useContext(AuthContext);
   const [pageLoading, setPageLoading] = useState(true);

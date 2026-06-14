@@ -38,20 +38,24 @@ export function useSEO({
   url,
   type = 'website',
   schema,
+  noindex = false,
 }) {
   useEffect(() => {
     const fullTitle = title || SITE_NAME;
     const canonicalUrl = url ? `${SITE_URL}${url}` : SITE_URL;
     const ogImage = image || `${SITE_URL}/og-default.jpg`;
+    const robotsContent = noindex ? 'noindex, nofollow' : 'index, follow';
 
     // ── Basic ──────────────────────────────────────────────────────────────
     document.title = fullTitle;
     setMeta('description', description);
     setMeta('keywords', keywords);
-    setMeta('robots', 'index, follow');
+    setMeta('robots', robotsContent);
 
-    // ── Canonical ──────────────────────────────────────────────────────────
-    setLink('canonical', canonicalUrl);
+    // ── Canonical (only set when indexable) ────────────────────────────────
+    if (!noindex) {
+      setLink('canonical', canonicalUrl);
+    }
 
     // ── Open Graph ─────────────────────────────────────────────────────────
     setMeta('og:type', type, 'property');
@@ -72,7 +76,7 @@ export function useSEO({
     // ── JSON-LD Schema ─────────────────────────────────────────────────────
     const schemaId = 'seo-jsonld';
     let schemaEl = document.getElementById(schemaId);
-    if (schema) {
+    if (schema && !noindex) {
       if (!schemaEl) {
         schemaEl = document.createElement('script');
         schemaEl.id = schemaId;
@@ -85,12 +89,12 @@ export function useSEO({
     }
 
     return () => {
-      // Reset to defaults on unmount
       document.title = SITE_NAME;
+      setMeta('robots', 'index, follow');
       const schemaScript = document.getElementById(schemaId);
       if (schemaScript) schemaScript.remove();
     };
-  }, [title, description, keywords, image, url, type, schema]);
+  }, [title, description, keywords, image, url, type, schema, noindex]);
 }
 
 export { SITE_URL, SITE_NAME };
