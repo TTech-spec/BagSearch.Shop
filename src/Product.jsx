@@ -230,94 +230,15 @@ const Icons = {
   ),
 };
 
-// Google AdSense Configuration
-const ADSENSE_CLIENT_ID = 'ca-pub-6332230508786505';
-const ADSENSE_AD_SLOT = '6606653408';
-
-// ─── GOOGLE ADSENSE COMPONENT ─────────────────────────────────────────────────────
-const GoogleAdSense = React.memo(function GoogleAdSense({ style }) {
-  const adRef = useRef(null);
-
-  useEffect(() => {
-    // Load AdSense script if not already loaded
-    if (!window.adsbygoogle || !window.adsbygoogle.loaded) {
-      const script = document.createElement('script');
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adsbygoogle.loaded = true;
-    }
-
-    // Push the ad when component mounts
-    if (window.adsbygoogle && adRef.current) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        console.error('AdSense error:', e);
-      }
-    }
-  }, []);
-
+// ─── PRODUCT GRID ─────────────────────────────────────────────────────────────
+const ProductGrid = React.memo(function ProductGrid({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
   return (
-    <ins
-      ref={adRef}
-      className="adsbygoogle"
-      style={{ display: 'block', ...style }}
-      data-ad-client={ADSENSE_CLIENT_ID}
-      data-ad-slot={ADSENSE_AD_SLOT}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
-    />
-  );
-});
-
-
-
-// ─── AD BANNER ────────────────────────────────────────────────────────────────
-const AdBanner = React.memo(function AdBanner({ onDismiss }) {
-  const [dismissed, setDismissed] = useState(false);
-  if (dismissed) return null;
-  return (
-    <div style={{ marginBottom:20, position:'relative' }}>
-      <GoogleAdSense />
-      <button onClick={()=>{ setDismissed(true); onDismiss&&onDismiss(); }} style={{ position:'absolute',top:8,right:10,background:'white',border:'1px solid #ddd',cursor:'pointer',fontSize:13,color:'#999',lineHeight:1,padding:6,borderRadius:'50%',transition:'color 0.2s',zIndex:1 }}
-        onMouseEnter={e=>e.currentTarget.style.color=C.text} onMouseLeave={e=>e.currentTarget.style.color='#999'}>
-        <Icons.X size={12} color="currentColor" />
-      </button>
+    <div key={resultsKey} className="product-grid">
+      {products.map((p, i) => (
+        <ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />
+      ))}
     </div>
   );
-});
-
-// ─── INLINE AD CARD ───────────────────────────────────────────────────────────
-const InlineAdCard = React.memo(function InlineAdCard() {
-  const [dismissed, setDismissed] = useState(false);
-  if (dismissed) return null;
-  return (
-    <div style={{ gridColumn:'1 / -1', position:'relative', padding:'20px', background:'#f9f9f9', borderRadius:16, margin:'20px 0' }}>
-      <GoogleAdSense />
-      <button onClick={()=>setDismissed(true)} style={{ position:'absolute',top:10,right:12,background:'white',border:'1px solid #ddd',cursor:'pointer',fontSize:12,color:'#ccc',padding:6,transition:'color 0.2s',borderRadius:'50%',zIndex:1 }}
-        onMouseEnter={e=>e.currentTarget.style.color='#666'} onMouseLeave={e=>e.currentTarget.style.color='#ccc'}>
-        <Icons.X size={12} color="currentColor" />
-      </button>
-    </div>
-  );
-});
-
-// ─── PRODUCT GRID WITH ADS ────────────────────────────────────────────────────
-const ProductGridWithAds = React.memo(function ProductGridWithAds({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
-  const adInsertPositions = [8, 20];
-  const nodes = [];
-  let adIndex = 0;
-  products.forEach((p, i) => {
-    nodes.push(<ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />);
-    if (adInsertPositions.includes(i + 1) && adIndex < 2) { // Show max 2 inline ads
-      nodes.push(<InlineAdCard key={`inline-ad-${adIndex}`} />);
-      adIndex++;
-    }
-  });
-  return <div key={resultsKey} className="product-grid">{nodes}</div>;
 });
 
 // ─── LOCATION CONTEXT BAR (new creative placement below hero) ─────────────────
@@ -1447,7 +1368,7 @@ export default function Product(){
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
   const[visualSearchCount,setVisualSearchCount]=useState(0);
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);const[searchFocused,setSearchFocused]=useState(false);
-  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(false);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
+  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
@@ -1457,8 +1378,6 @@ export default function Product(){
   const[deferredPrompt,setDeferredPrompt]=useState(null);
   const[showInstallBtn,setShowInstallBtn]=useState(false);
   const[installButtonLabel,setInstallButtonLabel]=useState('Install App');
-  const[dismissedAds,setDismissedAds]=useState([]);
-  const[topBannerDismissed,setTopBannerDismissed]=useState(false);
   const getIsIOSDevice = () => {
     const ua = navigator.userAgent || '';
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1645,7 +1564,6 @@ export default function Product(){
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
   const hotDealProducts=useMemo(()=>allProducts.filter(p=>p.discountedPrice||p.lowStock).slice(0,10),[allProducts]);
-  const showTopBannerAd=!topBannerDismissed;
 
    return(
      <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
@@ -1762,7 +1680,7 @@ export default function Product(){
                 <br style={{display:isMobile?'block':'none'}}/>
                 <span style={{color:C.primary,display:'inline-block',minWidth:isMobile?'8ch':'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
               </h1>
-              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Search bags or browse vendors — discover luxury across Nigeria</p>
+              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers</p>
             </div>
             <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><img src={shoppingBagImg} alt="" loading="lazy" decoding="async" style={{width:38,height:38,objectFit:'contain'}}/></div>
@@ -1829,7 +1747,7 @@ export default function Product(){
 
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
             <div>
-              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2>
+              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Luxury Designer Bags'}</h2>
               <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
             </div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
@@ -1842,8 +1760,6 @@ export default function Product(){
               {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
-
-          {!isFiltered&&showTopBannerAd&&(<AdBanner onDismiss={()=>setTopBannerDismissed(true)}/>)}
 
           {/* Visual Search overlays (unchanged) */}
           {visualSearching&&(
@@ -1865,7 +1781,7 @@ export default function Product(){
           {/* Results */}
           <div style={{position:'relative',minHeight:'auto'}}>
             {displayedProducts.length>0
-              ?<ProductGridWithAds products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
+              ?<ProductGrid products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
               :!visualSearching&&(
                 <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
                   <Icons.Search size={56} color={C.textFaint} />

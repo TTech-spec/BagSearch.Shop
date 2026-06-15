@@ -2,36 +2,139 @@ import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
-import { useSEO, SITE_URL } from './hooks/useSEO';
+import { useSEO, SITE_URL } from "./hooks/useSEO";
 
-// ── CRIIBB PALETTE ──
-const NAV_LINKS = ["New Arrivals", "Collections", "Hot Deals", "About Us", "Visual Search", "Contact Us"];
+// ─── PALETTE & DATA ───────────────────────────────────────────────
+// Minimal editorial palette: near-black text, off-white surfaces,
+// single warm-terracotta accent (#C94B2C), fine hairline rules.
+// No colour noise — the bags do the visual work.
+
+const NAV_LINKS = [
+  "New Arrivals",
+  "Collections",
+  "Hot Deals",
+  "About Us",
+  "Visual Search",
+  "Contact Us",
+];
 
 const NEW_ARRIVALS = [
-  { name: "The Midnight Satchel", sub: "Italian Leather", material: "Midnight Blue", price: "$2,450", tag: "New", tagColor: "#C94B2C", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8" },
-  { name: "Ivory Essential Tote", sub: "Vegan Leather", material: "Ivory White", price: "$1,800", tag: "Eco", tagColor: "#8B4513", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo" },
-  { name: "Azure Mini Crossbody", sub: "Napa Leather", material: "Azure Blue", price: "$1,250", tag: "Limited", tagColor: "#7A2E0E", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk" },
-  { name: "Onyx Evening Clutch", sub: "Polished Suede", material: "Onyx Black", price: "$3,100", tag: "Exclusive", tagColor: "#C94B2C", accent: "#C94B2C", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E" },
+  {
+    name: "The Midnight Satchel",
+    sub: "Italian Leather",
+    material: "Midnight Blue",
+    price: "$2,450",
+    tag: "New",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8",
+  },
+  {
+    name: "Ivory Essential Tote",
+    sub: "Vegan Leather",
+    material: "Ivory White",
+    price: "$1,800",
+    tag: "Eco",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB2iIgrfiMmBYx39D4_vHqJgAshrgoMIswLRfc2TNvfzLU12RyRG8nYTV1JSaGLpieTiA4SFxSz28wVJu8RVEbJzuVBbJbm6Gj5XK9oEHZunRQAVk_1t0P2NjMKC3plNviwYC5tcEKM-Va_JQwOW6RTDFxwhgZ-7Nrxc3I_zAk8i6QRqKlYvomRE5405JaFLrDywqdjnveGzzlneGcygTz_tQjdyk0NKuib_RBkzl9yaB4TmD9ec64_I1ha5hAbnVobuns0GjFuACo",
+  },
+  {
+    name: "Azure Mini Crossbody",
+    sub: "Napa Leather",
+    material: "Azure Blue",
+    price: "$1,250",
+    tag: "Limited",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCWO3irJ8GaADXHeVY-yLkBtsMwf3aoWwrPn6wqNY6K3DQq5LRcnFU6uJLYrYogD3twAiyFOntXJo8lQB3TyvMSVyRVC83zW6fHePyMWWYMM7uMNr0NFSVsU5mMhmgLZLRetdBuW-wV7IZDu8YwfunNKPxxcKjQYjjrdIwnPqXIVJzFMkZQjSnuYmsGn-3_UCSVtFpy_q12OcXgiujP6FAg01qNspjZ-dZzUa6E-_Vu12dwOpIL1c7srZV9Y8-FziRBfEBc_BMZ3xk",
+  },
+  {
+    name: "Onyx Evening Clutch",
+    sub: "Polished Suede",
+    material: "Onyx Black",
+    price: "$3,100",
+    tag: "Exclusive",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E",
+  },
 ];
 
 const HERO_SLIDES = [
-  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4I73hqMmV64iEPGtSEJ3mNAbQtvPBqQQ22x1JA6F2E-E4U0-SmUat1vO0Z0c7l1142DjBBzcn-afis9xsHhMBa7rnrhdTWhV7aq8FUXyZDIlxADoYFJcdrsprs-bYJQOcAqih5olePRiw0nJPBPNpLCL32-aAsv9zAtqbGV6bFBMK5ypVAi4i0E2wq4chZKL5jOOJyPh6HoEXvJKPkNeXbHs-Kqqip9Cgq3VAIn0gqtoVtmGQwzvnFhaifm9ecmgYdWkGPqlRExE", badge: "Shop Bags with Your Camera.", title: "Shop Bags", subtitle: "with Your Camera.", desc: "Point, shoot, discover.", accent: "#C94B2C" },
-  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8", badge: "Snap. Shop. Buy in Seconds.", title: "Snap. Shop.", subtitle: "Buy in Seconds.", desc: "Snap, chat, checkout.", accent: "#C94B2C" },
-  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E", badge: "Find Any Bag. Upload a Photo.", title: "Find Any Bag.", subtitle: "Upload a Photo.", desc: "AI matches in seconds.", accent: "#E06040" },
-  { image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks", badge: "New Season", title: "See It.", subtitle: "Message It. Get It.", desc: "Avant-garde meets timeless.", accent: "#C94B2C" },
+  {
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC4I73hqMmV64iEPGtSEJ3mNAbQtvPBqQQ22x1JA6F2E-E4U0-SmUat1vO0Z0c7l1142DjBBzcn-afis9xsHhMBa7rnrhdTWhV7aq8FUXyZDIlxADoYFJcdrsprs-bYJQOcAqih5olePRiw0nJPBPNpLCL32-aAsv9zAtqbGV6bFBMK5ypVAi4i0E2wq4chZKL5jOOJyPh6HoEXvJKPkNeXbHs-Kqqip9Cgq3VAIn0gqtoVtmGQwzvnFhaifm9ecmgYdWkGPqlRExE",
+    eyebrow: "AI visual search",
+    title: "Find any bag",
+    subtitle: "from a photo.",
+    desc: "Upload any image — screenshot, street snap, wishlist save — and find similar luxury bags in seconds.",
+  },
+  {
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBbc5dxE3grW8p08E8TtaWN5L8YARMDRthJf6pzKLJE7uj3eaIfhldAvqZBwEJ869mgq48jOcjGej6zLtlrV4spzEjXI3d3TnAtGQYDXhni_ERAbMCU5__dE5BTSySucF66-Tam-NPTm_L4wqZ4ri_euRX9gy3LOCm6Q8qwFgqFbplPdoz-wl2wnadQozRro5HBbjY0oG7WHOAFumWG3QkohBlRJf0LbZVdQs-EXHx9fofCLvfgCPZD96qWxLrXQCkDmEa1lpUdDF8",
+    eyebrow: "New arrivals",
+    title: "Snap it.",
+    subtitle: "Shop it instantly.",
+    desc: "Thousands of verified luxury pieces. Point your camera, discover your next bag.",
+  },
+  {
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks",
+    eyebrow: "New season",
+    title: "See it.",
+    subtitle: "Own it. Today.",
+    desc: "Africa's first AI-powered luxury bag marketplace. Born in Lagos, loved globally.",
+  },
+  {
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC4l4XxqEhg8z3Flsf7ZlIUFWrALv7ps665xW56yrgFRslzAdD8YE8CoGD-eHc5CacM6ltr04XU04cFLCpo8kDWGQ_weuz7LJtzNEiwKXnDPmS1dFGrUin6u_w_KTD22tWJNcoIDmUEnnpE16CoUlghbfJ2e8VbxUV9NMUovHe1m0JdZmWvgSoLg7m8tCVCrIoUA2AMfdq2nGHljOnIjvN70QLD3Fj3DB2ZrxBERaq5OsNIfnX3c1t8u90vZG9fObqWGRCJkS7Lu1E",
+    eyebrow: "Verified authentic",
+    title: "Every bag.",
+    subtitle: "Verified. Trusted.",
+    desc: "Every piece on BagSearch is authenticated before it reaches your door. No exceptions.",
+  },
 ];
 
 const CATEGORIES = [
-  { name: "Totes", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAB_04xZTrV_Axg5yh0aNoGtHkizuTQo3SF-rYUV5xHrdz2QAfuc_E3QpohCkJx72_wJmx5kKMARTx7yZj9T7XbopFKU2jb3nT3E_R8V82Qpjy5F1P7K2BNrsFZn3NUfOgqiv4ZvNpZZZBugimt03IllFL_K3-44e7EOI8D1uHvxCvrF5H9KS0PrnpfRu-4vlaZCcQoUs039FLRLoqMQx7oLUHbcJE8ZI4XGodOfLN38iAbfbL08bY4b88JCWrknI_h37H8Ub7GL9M" },
-  { name: "Clutches", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDRKbAqBYrOUO3jIvjP1j08WGuBx56oYQaLKAutycdNOyAtQnkNixGe5TfDJNsstxy2JXEi5uB0tPnzgN8BA7rNsSMUzu96BO_K7Mph6mrR-nU01QTgb6J0N_oFLuFM8H2quw9WHwR_ecgfA26VFn7jyb9mFtVB7UpAnSrLXvVRnwNLo9Kz8wrRlZYfaXrtGA-jVPJhFvFvnbG6ME8qCcDyRZgf5Tt75mXh6Wsh4YEzYnu1-c3qNjGgFFKmq9iHdB51CwJyxzPlqFE" },
-  { name: "Backpacks", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTJ4J6N-ArK8lzcROZ_oL1YMMjkKvimYUMaZqKi-Rgdsh7h58Hi1kp8kq1vbsAqt4IhQ_Hq2u6SI6pHK2y6150BqxGMgw0CEXtITU8TTc5A9mMeSoirH7eSIsrHF0g07ScCFcwit_kundXpdrKnZR7aF3WPbeXMUtXz-MJfilgYtDnITqsgadWQtq9CFhIVkmkg3I_ispNHccqZo1jfjTrLrvlmgl_z0XwtM90T2yECR1G_6F07j7O4pZ5ELaWo3EP0uYxCwVzjwg" },
+  {
+    name: "Totes",
+    count: "240+ pieces",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAB_04xZTrV_Axg5yh0aNoGtHkizuTQo3SF-rYUV5xHrdz2QAfuc_E3QpohCkJx72_wJmx5kKMARTx7yZj9T7XbopFKU2jb3nT3E_R8V82Qpjy5F1P7K2BNrsFZn3NUfOgqiv4ZvNpZZZBugimt03IllFL_K3-44e7EOI8D1uHvxCvrF5H9KS0PrnpfRu-4vlaZCcQoUs039FLRLoqMQx7oLUHbcJE8ZI4XGodOfLN38iAbfbL08bY4b88JCWrknI_h37H8Ub7GL9M",
+  },
+  {
+    name: "Clutches",
+    count: "180+ pieces",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDRKbAqBYrOUO3jIvjP1j08WGuBx56oYQaLKAutycdNOyAtQnkNixGe5TfDJNsstxy2JXEi5uB0tPnzgN8BA7rNsSMUzu96BO_K7Mph6mrR-nU01QTgb6J0N_oFLuFM8H2quw9WHwR_ecgfA26VFn7jyb9mFtVB7UpAnSrLXvVRnwNLo9Kz8wrRlZYfaXrtGA-jVPJhFvFvnbG6ME8qCcDyRZgf5Tt75mXh6Wsh4YEzYnu1-c3qNjGgFFKmq9iHdB51CwJyxzPlqFE",
+  },
+  {
+    name: "Backpacks",
+    count: "120+ pieces",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTJ4J6N-ArK8lzcROZ_oL1YMMjkKvimYUMaZqKi-Rgdsh7h58Hi1kp8kq1vbsAqt4IhQ_Hq2u6SI6pHK2y6150BqxGMgw0CEXtITU8TTc5A9mMeSoirH7eSIsrHF0g07ScCFcwit_kundXpdrKnZR7aF3WPbeXMUtXz-MJfilgYtDnITqsgadWQtq9CFhIVkmkg3I_ispNHccqZo1jfjTrLrvlmgl_z0XwtM90T2yECR1G_6F07j7O4pZ5ELaWo3EP0uYxCwVzjwg",
+  },
 ];
 
 const TRENDING = [
-  { name: "Crimson Structured Bag", label: "Popular Choice", price: "$3,200", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8" },
-  { name: "Minimalist Sand Tote", label: "Editor's Pick", price: "$1,950", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_sKNiKX7NJOoRuxirNhqYW2CVrSgjx_0rJlgl3Xgtd91hKF7Al_wJ5OcwAsQIoSjiNyJH4zyPL7xJu9ggym4aGrZJU-PpyBDYb8bURs1qfYfAJy2fK4zkBJDV24R6XOCHKVAq9BLsgcTb-NRNTTgiNb5lp0QftxV3I0Ra86dQ1lfhnbt-4bsxZFh1_0DOBjY_hudNpjkjfW6SnC5bbsWRyT1tAjx5pqimCUzaGawdNf7r6dcOKx6rDKjvnabQan2CQfRkkURf7VLY" },
-  { name: "Emerald Suede Clutch", label: "New Trend", price: "$2,100", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks" },
-  { name: "Urban Heritage Pack", label: "Best Seller", price: "$1,600", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhRkGSg7Va0LHjp_dhl_1nOfsT69AcfKsT87IGMf4WFKySlhwVu2YbM24F5LEXYXeQBi910qpL7m28onkj1Ukw53DQt0ks4kIQDe7u2XhHh9t45Cw2n7rfXt7GEO2Ul4cyPv1NtKePCqQpbg_tJvMtGLm4gnLgyDIc5efzDZA4edimRL8upoZdtbsG9nn1R5J0GH70OTXUXJu3iZgne1KYmDSGHSi8use1KRPU6wE0OfE5HnQRIFnufOyMqHZ8ZFsXNLydzWxthDg" },
+  {
+    name: "Crimson Structured Bag",
+    label: "Popular Choice",
+    price: "$3,200",
+    brand: "House of Lagos",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBzVp1X2BUmdMSacdYElQUo1EI0AX_HNnADAw0PqFaM21IZLnoz6FHGphS31RK7sGzuTWcAkDVJK3MffDwMu8j08stgkWwTOSMv3b22bG7UdLKwQkzxfBWXdCbaYcDRjP2fiM9QzE9eq4RxVtFRxag3qQJ2IGsQveOf1NFHld9r4KFty1XXBbtDWXmK0y3PRdfG7CU6avgFtgyBtBegIo7AgdFiUMuXSmQvxDuP-jxNqqjbzKXoD16k_L5VQOm2xKo5TPfiEegqZd8",
+  },
+  {
+    name: "Minimalist Sand Tote",
+    label: "Editor's Pick",
+    price: "$1,950",
+    brand: "Studio Abuja",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuC_sKNiKX7NJOoRuxirNhqYW2CVrSgjx_0rJlgl3Xgtd91hKF7Al_wJ5OcwAsQIoSjiNyJH4zyPL7xJu9ggym4aGrZJU-PpyBDYb8bURs1qfYfAJy2fK4zkBJDV24R6XOCHKVAq9BLsgcTb-NRNTTgiNb5lp0QftxV3I0Ra86dQ1lfhnbt-4bsxZFh1_0DOBjY_hudNpjkjfW6SnC5bbsWRyT1tAjx5pqimCUzaGawdNf7r6dcOKx6rDKjvnabQan2CQfRkkURf7VLY",
+  },
+  {
+    name: "Emerald Suede Clutch",
+    label: "New Trend",
+    price: "$2,100",
+    brand: "Noir Collective",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCcg56F_DA96gyH4Qnn6HhtIQZg7j8Y-X-H26B-1tl1HH3zYd0gbXh6UEFuBAa6fYHGH_-uSFoWDW9L7EmOMDLxqLhto4HyEJ5cb_kLqV6Cz_Xiti8CQBt4vgQxSafQQeDwiHBqMU68IHcKK8ds7wEBEfiAVdBDo7X12rND_v0ld_dvrVGASk3-MRsEoqItztHOJwZ_hfoKbAgY51yYUnLyBiTCOzAJBbnEh_Tts5z4O_7DukjxsT5UHq_Q2PdAVXFYOMk3kiPviks",
+  },
+  {
+    name: "Urban Heritage Pack",
+    label: "Best Seller",
+    price: "$1,600",
+    brand: "Kente & Co.",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhRkGSg7Va0LHjp_dhl_1nOfsT69AcfKsT87IGMf4WFKySlhwVu2YbM24F5LEXYXeQBi910qpL7m28onkj1Ukw53DQt0ks4kIQDe7u2XhHh9t45Cw2n7rfXt7GEO2Ul4cyPv1NtKePCqQpbg_tJvMtGLm4gnLgyDIc5efzDZA4edimRL8upoZdtbsG9nn1R5J0GH70OTXUXJu3iZgne1KYmDSGHSi8use1KRPU6wE0OfE5HnQRIFnufOyMqHZ8ZFsXNLydzWxthDg",
+  },
 ];
 
 const BLOG_FALLBACK = [
@@ -43,444 +146,1160 @@ const BLOG_FALLBACK = [
   { id: "6", title: "Visual Search: The Future of Shopping", desc: "You see a bag on Instagram. You want it. Visual AI makes that journey from desire to checkout a matter of seconds.", img: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&auto=format&fit=crop&q=80", source: "BagSearch Tech", date: "2024-11-05", cat: "Technology" },
 ];
 
-// Using shared LogoIcon from components/Logo.jsx
+// ─── GLOBAL STYLES ────────────────────────────────────────────────
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
 
-const Icon = ({ name, size = 22 }) => (
-  <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", wordWrap: "normal", whiteSpace: "nowrap", direction: "ltr" }}>{name}</span>
-);
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ─── AUTH GATE MODAL ─── */
-function AuthGateModal({ open, onClose, navigate }) {
-  const [phase, setPhase] = useState(0);
-  useEffect(() => {
-    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
-    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
-  }, [open]);
-  if (phase === 0) return null;
-  const visible = phase === 2;
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,10,0,0.55)", backdropFilter: "blur(8px)", opacity: visible ? 1 : 0, transition: "opacity 0.35s ease" }} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 420, background: "#FFFFFF", border: "1px solid rgba(201,75,44,0.15)", borderRadius: 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(26,10,0,0.18)", opacity: visible ? 1 : 0, transform: visible ? "translateY(0) scale(1)" : "translateY(32px) scale(0.95)", transition: "opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-        <div style={{ height: 6, background: "linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
-        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", border: "1px solid #E8D5CC", background: "#FFF5F2", color: "#999", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; e.currentTarget.style.color = "#C94B2C"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; e.currentTarget.style.color = "#999"; }}><Icon name="close" size={15} /></button>
-        <div style={{ padding: "36px 36px 32px", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "#C94B2C", animation: visible ? "authFloat 3s ease-in-out infinite" : "none" }}><Icon name="lock" size={28} /></div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.04em", marginBottom: 8, fontFamily: "'Outfit', sans-serif" }}>Members Only</h2>
-          <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, marginBottom: 28 }}>Sign in to unlock visual search, wishlists & more.</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-            {[{ icon: "image_search", label: "Visual Search" }, { icon: "favorite", label: "Wishlist" }, { icon: "notifications", label: "Alerts" }].map(({ icon, label }) => (
-              <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 9999, background: "#F9DDD0", fontSize: 10, fontWeight: 700, color: "#C94B2C" }}><Icon name={icon} size={12} /> {label}</span>
-            ))}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={() => { onClose(); navigate("/register"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 14, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 6px 20px rgba(201,75,44,0.35)" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>Create Free Account</button>
-            <button onClick={() => { onClose(); navigate("/login?force=true"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer" }} onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; }}>Already a member? Sign In</button>
-          </div>
-        </div>
-        <div style={{ padding: "12px 36px", borderTop: "1px solid #F5EAE5", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#FDFAFA" }}>
-          <LogoIcon /><span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
-        </div>
-      </div>
-      <style>{`@keyframes authFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }`}</style>
-    </div>
-  );
-}
+  /* Scroll reveal */
+  .sr { opacity: 0; transform: translateY(28px); transition: opacity 0.75s ease, transform 0.75s ease; }
+  .sr.in { opacity: 1; transform: translateY(0); }
+  .sr-scale { opacity: 0; transform: scale(0.96); transition: opacity 0.75s ease, transform 0.75s ease; }
+  .sr-scale.in { opacity: 1; transform: scale(1); }
+  .sr-left { opacity: 0; transform: translateX(-28px); transition: opacity 0.75s ease, transform 0.75s ease; }
+  .sr-left.in { opacity: 1; transform: translateX(0); }
+  .d1 { transition-delay: 0.08s; }
+  .d2 { transition-delay: 0.16s; }
+  .d3 { transition-delay: 0.24s; }
+  .d4 { transition-delay: 0.32s; }
 
-/* ─── LUXURY LOADER ─── */
+  /* Hero animations */
+  @keyframes heroSlideUp {
+    from { opacity: 0; transform: translateY(36px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes heroBgIn {
+    from { opacity: 0; transform: scale(1.04); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes heroBgOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.97); }
+  }
+  @keyframes heroProgressBar {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+  @keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes loaderPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+  }
+  @keyframes spinRing {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes logoBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  @keyframes marqueeTick {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @keyframes countOrbit {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to   { background-position: 200% 0; }
+  }
+  @keyframes blogFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Nav links */
+  .nav-lnk { font-size: 13px; font-weight: 500; text-decoration: none; color: #1A0A00; letter-spacing: -0.01em; cursor: pointer; transition: color 0.2s; position: relative; }
+  .nav-lnk::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1px; background: #C94B2C; transition: width 0.25s ease; }
+  .nav-lnk:hover { color: #C94B2C; }
+  .nav-lnk:hover::after { width: 100%; }
+
+  /* Product card hover */
+  .pc { cursor: pointer; }
+  .pc:hover .pc-img { transform: scale(1.06); }
+  .pc-img { transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* Blog card */
+  .blog-card { transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); cursor: pointer; }
+  .blog-card:hover { transform: translateY(-6px); }
+  .blog-card:hover .blog-img { transform: scale(1.05); }
+  .blog-img { transition: transform 0.6s cubic-bezier(0.22,1,0.36,1); }
+
+  /* Upload zone drag state */
+  .upload-zone.drag { border-color: #C94B2C; background: rgba(201,75,44,0.03); }
+
+  /* Footer links */
+  .ft-lnk { font-size: 13px; color: rgba(249,221,208,0.55); text-decoration: none; font-weight: 400; transition: color 0.2s; display: block; margin-bottom: 10px; }
+  .ft-lnk:hover { color: #F9DDD0; }
+
+  /* Sidebar links */
+  .sb-lnk { display: flex; justify-content: space-between; align-items: center; padding: 11px 12px; border-radius: 10px; margin-bottom: 2px; font-weight: 500; font-size: 14px; text-decoration: none; color: #1A0A00; cursor: pointer; transition: background 0.18s; }
+  .sb-lnk:hover { background: rgba(201,75,44,0.06); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    .sr, .sr-scale, .sr-left { opacity: 1 !important; transform: none !important; }
+  }
+
+  /* Responsive breakpoints */
+  @media (max-width: 900px) {
+    .desktop-nav { display: none !important; }
+    .mob-menu { display: flex !important; }
+    .hero-split { grid-template-columns: 1fr !important; }
+    .hero-photowall { display: none !important; }
+    .cat-grid { grid-template-columns: 1fr !important; }
+    .trend-grid { grid-template-columns: repeat(2,1fr) !important; }
+    .arrivals-grid { grid-template-columns: 1fr !important; }
+    .arrivals-img { border-radius: 16px 16px 0 0 !important; aspect-ratio: 3/2 !important; }
+    .arrivals-panel { border-radius: 0 0 16px 16px !important; }
+    .about-grid { grid-template-columns: 1fr !important; }
+    .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+    .ft-grid { grid-template-columns: 1fr 1fr !important; }
+    .ft-brand-col { grid-column: span 2 !important; }
+    .vs-content { max-width: 100% !important; padding: 36px 24px !important; }
+    .vs-img { opacity: 0.18 !important; }
+  }
+  @media (max-width: 540px) {
+    .trend-grid { grid-template-columns: 1fr !important; }
+    .ft-grid { grid-template-columns: 1fr !important; }
+    .ft-brand-col { grid-column: span 1 !important; }
+    .blog-featured-grid { grid-template-columns: 1fr !important; }
+    .blog-featured-img { height: 220px !important; }
+    .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+  }
+`;
+
+// ─── LUXURY LOADER ────────────────────────────────────────────────
 function LuxuryLoader({ onDone }) {
   const [phase, setPhase] = useState(0);
   const [progress, setProgress] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setPhase(1), 400); return () => clearTimeout(t); }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPhase(1), 300);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     if (phase !== 1) return;
     let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 4 + 1.5;
-      if (p >= 100) { p = 100; clearInterval(interval); setProgress(100); setTimeout(() => setPhase(2), 600); setTimeout(() => onDone(), 1400); }
-      else setProgress(Math.min(p, 100));
-    }, 40);
-    return () => clearInterval(interval);
+    const iv = setInterval(() => {
+      p += Math.random() * 5 + 2;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(iv);
+        setProgress(100);
+        setTimeout(() => setPhase(2), 500);
+        setTimeout(() => onDone(), 1200);
+      } else {
+        setProgress(Math.min(p, 100));
+      }
+    }, 38);
+    return () => clearInterval(iv);
   }, [phase, onDone]);
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#F9DDD0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: phase === 2 ? "opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s" : "none", opacity: phase === 2 ? 0 : 1, transform: phase === 2 ? "translateY(-4%)" : "none", pointerEvents: phase === 2 ? "none" : "all" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", width: "70vw", height: "70vw", maxWidth: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,75,44,0.18) 0%, transparent 65%)", transform: "translate(-50%,-50%)", animation: "loaderPulse 2.4s ease-in-out infinite" }} />
-      <div style={{ position: "relative", width: 100, height: 100, marginBottom: 36 }}>
-        <svg width="100" height="100" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0, animation: "spinRing 2.5s linear infinite" }}>
-          <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(201,75,44,0.15)" strokeWidth="1.5" />
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#C94B2C" strokeWidth="2" strokeDasharray={`${2 * Math.PI * 44 * progress / 100} ${2 * Math.PI * 44 * (1 - progress / 100)}`} strokeLinecap="round" style={{ transition: "stroke-dasharray 0.1s ease", transformOrigin: "50px 50px" }} />
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "#FAF7F4",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        opacity: phase === 2 ? 0 : 1,
+        transform: phase === 2 ? "translateY(-3%)" : "none",
+        transition: phase === 2 ? "opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s" : "none",
+        pointerEvents: phase === 2 ? "none" : "all",
+      }}
+    >
+      {/* Ambient orb */}
+      <div style={{ position: "absolute", top: "50%", left: "50%", width: "60vw", height: "60vw", maxWidth: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,75,44,0.12) 0%, transparent 65%)", transform: "translate(-50%,-50%)", animation: "loaderPulse 2.4s ease-in-out infinite" }} />
+
+      {/* Spinner + logo */}
+      <div style={{ position: "relative", width: 88, height: 88, marginBottom: 32 }}>
+        <svg width="88" height="88" viewBox="0 0 88 88" style={{ position: "absolute", inset: 0, animation: "spinRing 2.6s linear infinite" }}>
+          <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(201,75,44,0.1)" strokeWidth="1.5" />
+          <circle
+            cx="44" cy="44" r="38" fill="none" stroke="#C94B2C" strokeWidth="1.5"
+            strokeDasharray={`${2 * Math.PI * 38 * progress / 100} ${2 * Math.PI * 38}`}
+            strokeLinecap="round"
+            style={{ transformOrigin: "44px 44px", transition: "stroke-dasharray 0.1s ease" }}
+          />
         </svg>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", animation: phase === 1 ? "logoBreathe 1.8s ease-in-out infinite" : "none" }}><LogoIcon /></div>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", animation: phase === 1 ? "logoBreathe 1.8s ease-in-out infinite" : "none" }}>
+          <LogoIcon />
+        </div>
       </div>
-      <div style={{ fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: "#1A0A00", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.04em", marginBottom: 6, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.3s" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></div>
-      <p style={{ fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(26,10,0,0.35)", marginBottom: 40, fontWeight: 700, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.6s" }}>Luxury Redefined</p>
-      <div style={{ width: "min(220px,60vw)", height: 2, background: "rgba(26,10,0,0.08)", borderRadius: 2, overflow: "hidden", opacity: phase >= 1 ? 1 : 0 }}>
-        <div style={{ height: "100%", background: "#C94B2C", width: `${progress}%`, transition: "width 0.1s ease", borderRadius: 2 }} />
+
+      {/* Wordmark */}
+      <div style={{ fontSize: "clamp(2rem,5vw,2.6rem)", fontWeight: 300, color: "#1A0A00", fontFamily: "'DM Serif Display', serif", letterSpacing: "0.02em", marginBottom: 4, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.3s" }}>
+        Bag<span style={{ color: "#C94B2C", fontStyle: "italic" }}>Search</span>
       </div>
-      <div style={{ fontSize: 10, letterSpacing: "0.2em", color: "rgba(26,10,0,0.3)", marginTop: 10, fontWeight: 700, opacity: phase >= 1 ? 1 : 0 }}>{Math.round(progress)}%</div>
-      <style>{`
-        @keyframes loaderPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.5} 50%{transform:translate(-50%,-50%) scale(1.12);opacity:1} }
-        @keyframes spinRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes logoBreathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-      `}</style>
+      <p style={{ fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(26,10,0,0.3)", marginBottom: 36, fontWeight: 500, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.5s" }}>
+        Luxury Redefined
+      </p>
+
+      {/* Progress bar */}
+      <div style={{ width: "min(200px,55vw)", height: 1, background: "rgba(26,10,0,0.08)", borderRadius: 1, overflow: "hidden", opacity: phase >= 1 ? 1 : 0 }}>
+        <div style={{ height: "100%", background: "#C94B2C", width: `${progress}%`, transition: "width 0.1s ease" }} />
+      </div>
     </div>
   );
 }
 
-/* ─── TYPEWRITER H1 ─── */
-function TypewriterH1({ title, subtitle, accentColor = "#C94B2C", id }) {
-  const [titleText, setTitleText] = useState("");
-  const [subtitleText, setSubtitleText] = useState("");
-  const [phase, setPhase] = useState("title");
-  const [showCursor, setShowCursor] = useState(true);
-  useEffect(() => { setTitleText(""); setSubtitleText(""); setPhase("title"); }, [id]);
+// ─── AUTH GATE MODAL ──────────────────────────────────────────────
+function AuthGateModal({ open, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);
+
   useEffect(() => {
-    if (phase !== "title") return;
-    if (titleText.length < title.length) { const t = setTimeout(() => setTitleText(title.slice(0, titleText.length + 1)), 55); return () => clearTimeout(t); }
-    else { const t = setTimeout(() => setPhase("subtitle"), 180); return () => clearTimeout(t); }
-  }, [phase, titleText, title]);
-  useEffect(() => {
-    if (phase !== "subtitle") return;
-    if (subtitleText.length < subtitle.length) { const t = setTimeout(() => setSubtitleText(subtitle.slice(0, subtitleText.length + 1)), 62); return () => clearTimeout(t); }
-    else setPhase("done");
-  }, [phase, subtitleText, subtitle]);
-  useEffect(() => { const t = setInterval(() => setShowCursor(c => !c), 530); return () => clearInterval(t); }, []);
-  const cursor = (v) => <span style={{ display: "inline-block", width: 3, height: "0.75em", background: accentColor, marginLeft: 4, verticalAlign: "middle", borderRadius: 2, opacity: v ? 1 : 0, transition: "opacity 0.12s" }} />;
+    if (open) {
+      setPhase(1);
+      const t = setTimeout(() => setPhase(2), 20);
+      return () => clearTimeout(t);
+    } else {
+      setPhase(3);
+      const t = setTimeout(() => setPhase(0), 380);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  if (phase === 0) return null;
+  const vis = phase === 2;
+
   return (
-    <h1 style={{ fontSize: "clamp(2.8rem,8vw,5.5rem)", fontWeight: 300, color: "white", lineHeight: 1.15, maxWidth: 640, marginBottom: 24, fontFamily: "'Outfit', sans-serif" }}>
-      <span style={{ display: "block", minHeight: "1.12em" }}>{titleText}{phase === "title" && cursor(showCursor)}</span>
-      <em style={{ display: "block", fontWeight: 800, fontStyle: "italic", color: accentColor, minHeight: "1.12em", opacity: phase === "title" && subtitleText.length === 0 ? 0 : 1, transition: "opacity 0.15s, color 0.5s" }}>
-        {subtitleText}{(phase === "subtitle" || phase === "done") && cursor(showCursor)}
-      </em>
-    </h1>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,10,0,0.5)", backdropFilter: "blur(10px)", opacity: vis ? 1 : 0, transition: "opacity 0.35s ease" }} />
+      <div style={{
+        position: "relative", zIndex: 1, width: "100%", maxWidth: 400,
+        background: "#FFFFFF", borderRadius: 20, overflow: "hidden",
+        border: "1px solid rgba(201,75,44,0.12)",
+        opacity: vis ? 1 : 0,
+        transform: vis ? "translateY(0) scale(1)" : "translateY(28px) scale(0.96)",
+        transition: "opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)",
+      }}>
+        {/* Accent bar */}
+        <div style={{ height: 3, background: "#C94B2C" }} />
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{ position: "absolute", top: 14, right: 14, width: 30, height: 30, borderRadius: "50%", border: "1px solid rgba(201,75,44,0.15)", background: "#FFF5F2", color: "#999", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; e.currentTarget.style.color = "#C94B2C"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; e.currentTarget.style.color = "#999"; }}
+        >✕</button>
+
+        <div style={{ padding: "36px 32px 28px", textAlign: "center" }}>
+          {/* Icon */}
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 24 }}>🔒</div>
+
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 300, color: "#1A0A00", fontFamily: "'DM Serif Display', serif", marginBottom: 8 }}>
+            Members only
+          </h2>
+          <p style={{ fontSize: 13, color: "rgba(26,10,0,0.45)", lineHeight: 1.65, marginBottom: 24 }}>
+            Sign in to unlock visual search, wishlists, and more.
+          </p>
+
+          {/* Feature pills */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+            {["📷 Visual Search", "❤️ Wishlist", "🔔 Alerts"].map(label => (
+              <span key={label} style={{ padding: "4px 12px", borderRadius: 9999, background: "#F9DDD0", fontSize: 11, fontWeight: 500, color: "#C94B2C" }}>{label}</span>
+            ))}
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              onClick={() => { onClose(); navigate("/register"); }}
+              style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 600, fontSize: 14, border: "none", borderRadius: 10, cursor: "pointer", transition: "all 0.25s" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.filter = "brightness(0.9)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.filter = "none"; }}
+            >
+              Create free account
+            </button>
+            <button
+              onClick={() => { onClose(); navigate("/login?force=true"); }}
+              style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 500, fontSize: 13, border: "1px solid rgba(201,75,44,0.2)", borderRadius: 10, cursor: "pointer", transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#F9DDD0"}
+              onMouseLeave={e => e.currentTarget.style.background = "#FFF5F2"}
+            >
+              Already a member? Sign in
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "12px 32px", borderTop: "1px solid #F5EAE5", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#FDFAFA" }}>
+          <LogoIcon />
+          <span style={{ fontSize: 12, fontWeight: 300, color: "#1A0A00", fontFamily: "'DM Serif Display', serif" }}>
+            Bag<span style={{ color: "#C94B2C", fontStyle: "italic" }}>Search</span>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
-/* ─── HERO CAROUSEL ─── */
-function HeroCarousel({ navigate, newArrivalsRef, onAuthGate }) {
+// ─── HERO SECTION ─────────────────────────────────────────────────
+// Signature element: split hero — editorial upload panel left,
+// mosaic lifestyle photo wall right. Typewriter headline with
+// a blinking cursor. Slide transitions on the photo wall.
+function HeroSection({ navigate, newArrivalsRef, onAuthGate }) {
   const [active, setActive] = useState(0);
-  const [prev, setPrev] = useState(null);
   const [animating, setAnimating] = useState(false);
-  const [dir, setDir] = useState(1);
+  const [textVisible, setTextVisible] = useState(true);
+  const [dragOver, setDragOver] = useState(false);
   const autoRef = useRef(null);
-  const [textKey, setTextKey] = useState(0);
+  const fileInputRef = useRef(null);
+
+  // Typewriter state
+  const [typed, setTyped] = useState({ title: "", sub: "" });
+  const [twPhase, setTwPhase] = useState("title");
+  const [cursor, setCursor] = useState(true);
+
+  const slide = HERO_SLIDES[active];
+
   const goTo = useCallback((idx) => {
     if (animating || idx === active) return;
-    setDir(idx > active ? 1 : -1); setPrev(active); setAnimating(true); setActive(idx); setTextKey(k => k + 1);
-    setTimeout(() => { setPrev(null); setAnimating(false); }, 900);
+    setTextVisible(false);
+    setAnimating(true);
+    setTimeout(() => {
+      setActive(idx);
+      setTyped({ title: "", sub: "" });
+      setTwPhase("title");
+      setTextVisible(true);
+      setAnimating(false);
+    }, 420);
   }, [active, animating]);
+
   const next = useCallback(() => goTo((active + 1) % HERO_SLIDES.length), [active, goTo]);
   const back = useCallback(() => goTo((active - 1 + HERO_SLIDES.length) % HERO_SLIDES.length), [active, goTo]);
-  useEffect(() => { autoRef.current = setInterval(next, 5500); return () => clearInterval(autoRef.current); }, [next]);
-  const resetAuto = () => { clearInterval(autoRef.current); autoRef.current = setInterval(next, 5500); };
-  const slide = HERO_SLIDES[active];
-  const prevSlide = prev !== null ? HERO_SLIDES[prev] : null;
-  return (
-    <section style={{ position: "relative", minHeight: "88vh", overflow: "hidden" }}>
-      {prevSlide && <div key={`prev-bg-${prev}`} style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 100%), url('${prevSlide.image}')`, backgroundSize: "cover", backgroundPosition: "center", animation: `heroBgExit${dir > 0 ? "L" : "R"} 0.9s cubic-bezier(0.77,0,0.175,1) forwards`, zIndex: 1 }} />}
-      <div key={`bg-${active}`} style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 100%), url('${slide.image}')`, backgroundSize: "cover", backgroundPosition: "center", animation: animating ? `heroBgEnter${dir > 0 ? "R" : "L"} 0.9s cubic-bezier(0.77,0,0.175,1) forwards` : "none", zIndex: 2 }} />
-      <div style={{ position: "relative", zIndex: 10, maxWidth: 1280, margin: "0 auto", padding: "120px 24px 100px", display: "flex", flexDirection: "column", minHeight: "88vh", justifyContent: "center" }}>
-        <span key={`badge-${textKey}`} style={{ display: "inline-block", padding: "6px 18px", marginBottom: 28, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", borderRadius: 9999, border: `1px solid ${slide.accent}80`, color: slide.accent, width: "fit-content", animation: "heroTextIn 0.6s cubic-bezier(0.22,1,0.36,1) both" }}>{slide.badge}</span>
-        <TypewriterH1 key={`tw-${textKey}`} title={slide.title} subtitle={slide.subtitle} accentColor={slide.accent} id={textKey} />
-        <p key={`desc-${textKey}`} style={{ fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "#F9DDD0", maxWidth: 440, fontWeight: 300, lineHeight: 1.7, marginBottom: 44, animation: "heroTextIn 0.7s cubic-bezier(0.22,1,0.36,1) 0.25s both", opacity: 0.85 }}>{slide.desc}</p>
-        <div key={`btns-${textKey}`} style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 56, animation: "heroTextIn 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s both" }}>
-          <button onClick={() => onAuthGate()} style={{ padding: "15px 28px", background: slide.accent, color: "white", fontWeight: 700, borderRadius: 10, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 15, boxShadow: `0 8px 24px ${slide.accent}55`, transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.filter = "brightness(0.88)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.filter = "none"; }}><Icon name="camera" size={20} /> Try Visual Search</button>
-          <button onClick={() => navigate("/login?force=true")} style={{ padding: "15px 28px", color: "white", fontWeight: 700, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", cursor: "pointer", fontSize: 15 }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.16)"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}>Sign In</button>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => { back(); resetAuto(); }} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.18)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}><Icon name="arrow_back" size={18} /></button>
-            <button onClick={() => { next(); resetAuto(); }} style={{ width: 44, height: 44, borderRadius: "50%", background: slide.accent, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white", boxShadow: `0 4px 16px ${slide.accent}66` }} onMouseEnter={e => { e.currentTarget.style.filter = "brightness(0.88)"; e.currentTarget.style.transform = "scale(1.08)"; }} onMouseLeave={e => { e.currentTarget.style.filter = "none"; e.currentTarget.style.transform = "none"; }}><Icon name="arrow_forward" size={18} /></button>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {HERO_SLIDES.map((s, i) => (<button key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ width: active === i ? 32 : 6, height: 6, borderRadius: 3, background: active === i ? slide.accent : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)" }} />))}
-          </div>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.15em", fontWeight: 700, marginLeft: "auto" }}>{String(active + 1).padStart(2, "0")} / {String(HERO_SLIDES.length).padStart(2, "0")}</span>
-        </div>
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "rgba(255,255,255,0.06)" }}>
-          <div key={`prog-${active}`} style={{ height: "100%", background: slide.accent, animation: "heroProgress 5.5s linear forwards" }} />
-        </div>
-      </div>
-      <style>{`
-        @keyframes heroBgExitL { from{transform:translateX(0) scale(1);opacity:1} to{transform:translateX(-6%) scale(0.98);opacity:0} }
-        @keyframes heroBgExitR { from{transform:translateX(0) scale(1);opacity:1} to{transform:translateX(6%) scale(0.98);opacity:0} }
-        @keyframes heroBgEnterR { from{transform:translateX(5%) scale(0.98);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
-        @keyframes heroBgEnterL { from{transform:translateX(-5%) scale(0.98);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
-        @keyframes heroTextIn { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes heroProgress { from{width:0%} to{width:100%} }
-      `}</style>
-    </section>
-  );
-}
-
-/* ─── NEW ARRIVALS ─── */
-function NewArrivalsSection({ navigate, sectionRef }) {
-  const [active, setActive] = useState(0);
-  const [prevIdx, setPrevIdx] = useState(null);
-  const [dir, setDir] = useState(1);
-  const [animating, setAnimating] = useState(false);
-  const [liked, setLiked] = useState(new Set());
-  const [visible, setVisible] = useState(false);
-  const ref = useRef(null);
-  const autoRef = useRef(null);
-  const setRefs = useCallback((node) => { ref.current = node; if (sectionRef) sectionRef.current = node; }, [sectionRef]);
-  useEffect(() => { const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.08 }); if (ref.current) obs.observe(ref.current); return () => obs.disconnect(); }, []);
-  const goTo = useCallback((idx) => { if (animating || idx === active) return; setDir(idx > active ? 1 : -1); setPrevIdx(active); setAnimating(true); setActive(idx); setTimeout(() => { setPrevIdx(null); setAnimating(false); }, 650); }, [active, animating]);
-  const next = useCallback(() => goTo((active + 1) % NEW_ARRIVALS.length), [active, goTo]);
-  const back = useCallback(() => goTo((active - 1 + NEW_ARRIVALS.length) % NEW_ARRIVALS.length), [active, goTo]);
-  useEffect(() => { autoRef.current = setInterval(next, 4800); return () => clearInterval(autoRef.current); }, [next]);
-  const resetAuto = () => { clearInterval(autoRef.current); autoRef.current = setInterval(next, 4800); };
-  const item = NEW_ARRIVALS[active];
-  const prevItem = prevIdx !== null ? NEW_ARRIVALS[prevIdx] : null;
-  return (
-    <section ref={setRefs} style={{ background: "#FFFFFF", position: "relative", overflow: "hidden", padding: "72px 0 60px" }}>
-      <div style={{ position: "absolute", top: "50%", right: "-5%", width: "40vw", height: "40vw", maxWidth: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,221,208,0.5) 0%, transparent 70%)", transform: "translateY(-50%)", pointerEvents: "none" }} />
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 28px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 44, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.7s ease, transform 0.7s ease" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}><div style={{ width: 20, height: 3, background: "#C94B2C", borderRadius: 2 }} /><span style={{ fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Just Landed</span></div>
-            <h2 style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em", lineHeight: 1, fontFamily: "'Outfit', sans-serif" }}>New Arrivals</h2>
-          </div>
-          <a href="#" onClick={e => { e.preventDefault(); navigate("/products"); }} style={{ color: "#C94B2C", fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, borderBottom: "1.5px solid #C94B2C", paddingBottom: 3 }}>All Pieces <Icon name="north_east" size={13} /></a>
-        </div>
-        <div className="arrivals-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: 6, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(30px)", transition: "opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s" }}>
-          <div className="arrivals-img" style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", borderRadius: "16px 0 0 16px", cursor: "pointer" }} onClick={() => navigate("/register")}>
-            {prevItem && <img src={prevItem.src} alt={prevItem.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: `exitImg${dir > 0 ? "L" : "R"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` }} />}
-            <img key={`img-${active}`} src={item.src} alt={item.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: animating ? `enterImg${dir > 0 ? "R" : "L"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` : "none" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.45) 100%)" }} />
-            <div style={{ position: "absolute", top: 16, left: 16, background: "#C94B2C", color: "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 4 }}>{item.tag}</div>
-            <button onClick={e => { e.stopPropagation(); setLiked(s => { const n = new Set(s); n.has(active) ? n.delete(active) : n.add(active); return n; }); }} style={{ position: "absolute", top: 12, right: 12, width: 38, height: 38, borderRadius: "50%", background: liked.has(active) ? "#C94B2C" : "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", color: liked.has(active) ? "white" : "#C94B2C" }}><Icon name={liked.has(active) ? "favorite" : "favorite_border"} size={17} /></button>
-          </div>
-          <div className="arrivals-panel" style={{ background: "#F9DDD0", borderRadius: "0 16px 16px 0", padding: "40px 36px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "#C94B2C" }} />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 24 }}>{[item.sub, item.material].map(c => (<span key={c} style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C94B2C", border: "1px solid rgba(201,75,44,0.3)", padding: "4px 10px", borderRadius: 4, background: "rgba(255,255,255,0.5)" }}>{c}</span>))}</div>
-              <div style={{ overflow: "hidden", marginBottom: 12 }}><h3 key={`n-${active}`} style={{ fontSize: "clamp(1.4rem,2.5vw,2rem)", fontWeight: 800, color: "#1A0A00", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.02em", lineHeight: 1.15, animation: "slideUp 0.55s cubic-bezier(0.22,1,0.36,1) both" }}>{item.name}</h3></div>
-              <div style={{ overflow: "hidden", marginBottom: 28 }}><p key={`d-${active}`} style={{ color: "#7A4030", fontSize: 13, lineHeight: 1.6, animation: "slideUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.06s both" }}>Premium {item.sub.toLowerCase()}. {item.material} finish.</p></div>
-              <div key={`p-${active}`} style={{ marginBottom: 28, animation: "slideUp 0.55s cubic-bezier(0.22,1,0.36,1) 0.12s both" }}>
-                <span style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "#B07060", display: "block", marginBottom: 4 }}>Price</span>
-                <span style={{ fontSize: "clamp(1.7rem,3vw,2.4rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.03em", fontFamily: "'Outfit', sans-serif" }}>{item.price}</span>
-              </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
-                <button onClick={() => navigate("/register")} style={{ flex: 1, minWidth: 100, padding: "12px 16px", background: "#C94B2C", color: "#fff", fontWeight: 800, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", border: "none", borderRadius: 50, cursor: "pointer", boxShadow: "0 6px 20px rgba(201,75,44,0.35)" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>Add to Bag</button>
-                <button onClick={() => navigate("/register")} style={{ padding: "12px 16px", background: "white", color: "#C94B2C", fontWeight: 800, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", border: "1.5px solid #C94B2C", borderRadius: 50, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = "#FFF5F2"} onMouseLeave={e => e.currentTarget.style.background = "white"}>View</button>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", gap: 6 }}>{NEW_ARRIVALS.map((_, i) => (<button key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ width: active === i ? 24 : 6, height: 6, borderRadius: 3, background: active === i ? "#C94B2C" : "rgba(201,75,44,0.2)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.4s" }} />))}</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { back(); resetAuto(); }} style={{ width: 36, height: 36, borderRadius: "50%", background: "white", border: "1.5px solid rgba(201,75,44,0.25)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#C94B2C" }} onMouseEnter={e => e.currentTarget.style.background = "#F9DDD0"} onMouseLeave={e => e.currentTarget.style.background = "white"}><Icon name="arrow_back" size={15} /></button>
-                  <button onClick={() => { next(); resetAuto(); }} style={{ width: 36, height: 36, borderRadius: "50%", background: "#C94B2C", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white", boxShadow: "0 4px 14px rgba(201,75,44,0.4)" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}><Icon name="arrow_forward" size={15} /></button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 10, overflowX: "auto", paddingBottom: 2, opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.4s" }}>
-          {NEW_ARRIVALS.map((a, i) => (<div key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ flexShrink: 0, width: active === i ? 104 : 60, height: 60, borderRadius: 10, overflow: "hidden", cursor: "pointer", transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)", outline: active === i ? "2.5px solid #C94B2C" : "2.5px solid transparent", outlineOffset: 2 }}><img src={a.src} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: active === i ? "brightness(1)" : "brightness(0.5) saturate(0.3)", transition: "filter 0.4s" }} /></div>))}
-        </div>
-      </div>
-      <style>{`
-        @keyframes exitImgL { from{transform:translateX(0) scale(1);opacity:1} to{transform:translateX(-7%) scale(0.97);opacity:0} }
-        @keyframes exitImgR { from{transform:translateX(0) scale(1);opacity:1} to{transform:translateX(7%) scale(0.97);opacity:0} }
-        @keyframes enterImgR { from{transform:translateX(5%) scale(0.97);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
-        @keyframes enterImgL { from{transform:translateX(-5%) scale(0.97);opacity:0} to{transform:translateX(0) scale(1);opacity:1} }
-        @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        @media(max-width:680px){
-          .arrivals-grid{grid-template-columns:1fr!important}
-          .arrivals-img{border-radius:16px 16px 0 0!important;aspect-ratio:3/2!important}
-          .arrivals-panel{border-radius:0 0 16px 16px!important;padding:24px 20px!important}
-        }
-      `}</style>
-    </section>
-  );
-}
-
-/* ─── ABOUT US SECTION ─── */
-function AboutUsSection() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [countUp, setCountUp] = useState(false);
-  const [counts, setCounts] = useState({ bags: 0, members: 0, countries: 0, years: 0 });
-  const [orbitAngle, setOrbitAngle] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const sectionRef = useRef(null);
 
   useEffect(() => {
-    let frame;
-    const animate = () => { setOrbitAngle(a => (a + 0.4) % 360); frame = requestAnimationFrame(animate); };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
+    autoRef.current = setInterval(next, 6000);
+    return () => clearInterval(autoRef.current);
+  }, [next]);
+
+  const resetAuto = () => {
+    clearInterval(autoRef.current);
+    autoRef.current = setInterval(next, 6000);
+  };
+
+  // Typewriter
+  useEffect(() => {
+    const title = slide.title;
+    const sub = slide.subtitle;
+    if (twPhase === "title") {
+      if (typed.title.length < title.length) {
+        const t = setTimeout(() => setTyped(p => ({ ...p, title: title.slice(0, p.title.length + 1) })), 52);
+        return () => clearTimeout(t);
+      } else {
+        const t = setTimeout(() => setTwPhase("sub"), 160);
+        return () => clearTimeout(t);
+      }
+    }
+    if (twPhase === "sub") {
+      if (typed.sub.length < sub.length) {
+        const t = setTimeout(() => setTyped(p => ({ ...p, sub: sub.slice(0, p.sub.length + 1) })), 58);
+        return () => clearTimeout(t);
+      } else {
+        setTwPhase("done");
+      }
+    }
+  }, [twPhase, typed, slide]);
+
+  useEffect(() => {
+    const iv = setInterval(() => setCursor(c => !c), 520);
+    return () => clearInterval(iv);
   }, []);
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      onAuthGate();
+    }
+  };
+
+  // Photo wall cells
+  const wallCells = [
+    { label: "Totes", bg: "#f5f0eb", row: "span 2" },
+    { label: "Shoulder", bg: "#eeeaf4" },
+    { label: "Clutch", bg: "#e8f0f5" },
+    { label: "Mini bag", bg: "#f5ece8" },
+    { label: "Crossbody", bg: "#edf5e8" },
+  ];
+
+  return (
+    <section style={{ position: "relative", overflow: "hidden", background: "#FAF7F4" }}>
+      {/* Full-bleed bg image for mobile */}
+      <div
+        key={`hero-bg-${active}`}
+        style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `url('${slide.image}')`,
+          backgroundSize: "cover", backgroundPosition: "center",
+          opacity: 0,
+          animation: "heroBgIn 0.55s ease forwards",
+          zIndex: 0,
+        }}
+      />
+      <div style={{ position: "absolute", inset: 0, background: "rgba(250,247,244,0.92)", zIndex: 1 }} />
+
+      <div className="hero-split" style={{ position: "relative", zIndex: 2, maxWidth: 1400, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "92vh" }}>
+
+        {/* ── LEFT: Editorial upload panel ── */}
+        <div style={{ padding: "80px 48px 60px 48px", display: "flex", flexDirection: "column", justifyContent: "center", borderRight: "0.5px solid rgba(26,10,0,0.08)" }}>
+
+          {/* Eyebrow */}
+          <div
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              marginBottom: 24,
+              opacity: textVisible ? 1 : 0,
+              transform: textVisible ? "none" : "translateY(8px)",
+              transition: "opacity 0.4s ease, transform 0.4s ease",
+            }}
+          >
+            <div style={{ width: 16, height: 1, background: "#C94B2C" }} />
+            <span style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>
+              {slide.eyebrow}
+            </span>
+          </div>
+
+          {/* Typewriter headline */}
+          <h1
+            style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: "clamp(2.6rem,5vw,4.2rem)",
+              fontWeight: 400,
+              color: "#1A0A00",
+              lineHeight: 1.12,
+              marginBottom: 18,
+              minHeight: "2.4em",
+              opacity: textVisible ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
+          >
+            <span style={{ display: "block" }}>
+              {typed.title}
+              {twPhase === "title" && (
+                <span style={{ display: "inline-block", width: 2, height: "0.75em", background: "#C94B2C", marginLeft: 3, verticalAlign: "middle", animation: "cursorBlink 0.9s step-end infinite" }} />
+              )}
+            </span>
+            <em style={{ display: "block", color: "#C94B2C", fontStyle: "italic" }}>
+              {typed.sub}
+              {(twPhase === "sub" || twPhase === "done") && (
+                <span style={{ display: "inline-block", width: 2, height: "0.75em", background: "#C94B2C", marginLeft: 3, verticalAlign: "middle", animation: "cursorBlink 0.9s step-end infinite" }} />
+              )}
+            </em>
+          </h1>
+
+          {/* Desc */}
+          <p
+            style={{
+              fontSize: 14, color: "rgba(26,10,0,0.5)", lineHeight: 1.75,
+              maxWidth: 360, marginBottom: 36,
+              opacity: textVisible ? 1 : 0,
+              transform: textVisible ? "none" : "translateY(8px)",
+              transition: "opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s",
+            }}
+          >
+            {slide.desc}
+          </p>
+
+          {/* Upload zone — the hero's main interactive moment */}
+          <div
+            className={`upload-zone${dragOver ? " drag" : ""}`}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            style={{
+              border: `1px solid ${dragOver ? "#C94B2C" : "rgba(26,10,0,0.12)"}`,
+              borderRadius: 14,
+              padding: "22px 20px",
+              background: dragOver ? "rgba(201,75,44,0.03)" : "rgba(255,255,255,0.7)",
+              backdropFilter: "blur(4px)",
+              transition: "border-color 0.2s, background 0.2s",
+              marginBottom: 28,
+            }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={() => onAuthGate()}
+            />
+            {/* Upload btn */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                width: "100%", padding: "12px 16px",
+                background: "#1A0A00", color: "white",
+                border: "none", borderRadius: 10,
+                fontSize: 13, fontWeight: 500,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                marginBottom: 12,
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#C94B2C"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#1A0A00"; }}
+            >
+              <span>📷</span> Upload a bag photo
+            </button>
+
+            {/* Or divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(26,10,0,0.1)" }} />
+              <span style={{ fontSize: 11, color: "rgba(26,10,0,0.3)" }}>or paste URL</span>
+              <div style={{ flex: 1, height: "0.5px", background: "rgba(26,10,0,0.1)" }} />
+            </div>
+
+            {/* URL row */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
+                placeholder="https://example.com/bag.jpg"
+                style={{
+                  flex: 1, border: "0.5px solid rgba(26,10,0,0.12)", borderRadius: 8,
+                  padding: "9px 12px", fontSize: 12, color: "#1A0A00",
+                  background: "rgba(255,255,255,0.8)", outline: "none", fontFamily: "inherit",
+                }}
+              />
+              <button
+                onClick={() => onAuthGate()}
+                style={{
+                  padding: "9px 16px", background: "#C94B2C", color: "white",
+                  border: "none", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  transition: "filter 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.filter = "brightness(0.88)"}
+                onMouseLeave={e => e.currentTarget.style.filter = "none"}
+              >
+                Search
+              </button>
+            </div>
+
+            <p style={{ fontSize: 11, color: "rgba(26,10,0,0.3)", textAlign: "center", marginTop: 10 }}>
+              PNG, JPG or WEBP · Up to 10 MB · Free, no account needed
+            </p>
+          </div>
+
+          {/* Slide controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button
+              onClick={() => { back(); resetAuto(); }}
+              style={{ width: 36, height: 36, borderRadius: "50%", border: "0.5px solid rgba(26,10,0,0.15)", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#1A0A00", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#1A0A00"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#1A0A00"; }}
+              aria-label="Previous slide"
+            >←</button>
+            <button
+              onClick={() => { next(); resetAuto(); }}
+              style={{ width: 36, height: 36, borderRadius: "50%", background: "#C94B2C", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "white", transition: "all 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.filter = "brightness(0.88)"}
+              onMouseLeave={e => e.currentTarget.style.filter = "none"}
+              aria-label="Next slide"
+            >→</button>
+
+            {/* Dot indicators */}
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {HERO_SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => { goTo(i); resetAuto(); }}
+                  aria-label={`Go to slide ${i + 1}`}
+                  style={{
+                    width: active === i ? 24 : 6, height: 6, borderRadius: 3,
+                    background: active === i ? "#C94B2C" : "rgba(26,10,0,0.15)",
+                    border: "none", cursor: "pointer", padding: 0,
+                    transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Counter */}
+            <span style={{ fontSize: 11, color: "rgba(26,10,0,0.3)", fontWeight: 500, marginLeft: "auto", letterSpacing: "0.1em" }}>
+              {String(active + 1).padStart(2, "0")} / {String(HERO_SLIDES.length).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ height: "0.5px", background: "rgba(26,10,0,0.06)", marginTop: 16, borderRadius: 1, overflow: "hidden" }}>
+            <div key={`prog-${active}`} style={{ height: "100%", background: "#C94B2C", animation: "heroProgressBar 6s linear forwards" }} />
+          </div>
+        </div>
+
+        {/* ── RIGHT: Lifestyle photo wall ── */}
+        <div
+          className="hero-photowall"
+          style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gridTemplateRows: "repeat(2,1fr)", gap: 3, background: "rgba(26,10,0,0.06)" }}
+        >
+          {/* Large hero image — takes 2 rows */}
+          <div
+            key={`hero-img-${active}`}
+            style={{
+              gridRow: "span 2",
+              position: "relative", overflow: "hidden",
+              animation: "heroBgIn 0.55s ease forwards",
+            }}
+          >
+            <img
+              src={slide.image}
+              alt={slide.title}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.4) 0%, transparent 50%)" }} />
+            <div style={{ position: "absolute", bottom: 14, left: 14 }}>
+              <span style={{ fontSize: 10, background: "#C94B2C", color: "white", padding: "3px 9px", borderRadius: 4, fontWeight: 600, letterSpacing: "0.06em" }}>
+                {HERO_SLIDES[active].eyebrow.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Remaining 4 bag category cells */}
+          {wallCells.slice(1).map((cell, i) => (
+            <div
+              key={cell.label}
+              style={{
+                background: cell.bg,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                position: "relative", cursor: "pointer",
+                transition: "filter 0.2s",
+              }}
+              onClick={() => navigate("/products")}
+              onMouseEnter={e => e.currentTarget.style.filter = "brightness(0.94)"}
+              onMouseLeave={e => e.currentTarget.style.filter = "none"}
+            >
+              <span style={{ fontSize: 28 }}>
+                {["👜", "👝", "💼", "🎒"][i]}
+              </span>
+              <span style={{ fontSize: 10, color: "rgba(26,10,0,0.45)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {cell.label}
+              </span>
+              {i === 0 && (
+                <span style={{ position: "absolute", bottom: 8, right: 8, fontSize: 9, background: "rgba(26,10,0,0.08)", border: "0.5px solid rgba(26,10,0,0.1)", borderRadius: 20, padding: "2px 8px", color: "rgba(26,10,0,0.4)" }}>
+                  Trending
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats ticker */}
+      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 0, borderTop: "0.5px solid rgba(26,10,0,0.08)" }}>
+        {[
+          { num: "500K+", label: "bags indexed" },
+          { num: "200+", label: "brands" },
+          { num: "98%", label: "match accuracy" },
+          { num: "Free", label: "always" },
+        ].map((s, i) => (
+          <div
+            key={s.num}
+            style={{
+              flex: 1, padding: "18px 24px", textAlign: "center",
+              borderRight: i < 3 ? "0.5px solid rgba(26,10,0,0.08)" : "none",
+              background: "rgba(255,255,255,0.5)",
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 600, color: "#1A0A00", fontFamily: "'DM Serif Display', serif", fontStyle: "italic" }}>{s.num}</div>
+            <div style={{ fontSize: 11, color: "rgba(26,10,0,0.4)", marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── NEW ARRIVALS ─────────────────────────────────────────────────
+function NewArrivalsSection({ navigate, sectionRef }) {
+  const [active, setActive] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [dir, setDir] = useState(1);
+  const [liked, setLiked] = useState(new Set());
+  const [visible, setVisible] = useState(false);
+  const innerRef = useRef(null);
+  const autoRef = useRef(null);
+
+  const setRefs = useCallback((node) => {
+    innerRef.current = node;
+    if (sectionRef) sectionRef.current = node;
+  }, [sectionRef]);
+
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setCountUp(true); setVisible(true); } }, { threshold: 0.1 });
-    if (sectionRef.current) obs.observe(sectionRef.current);
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.08 });
+    if (innerRef.current) obs.observe(innerRef.current);
     return () => obs.disconnect();
   }, []);
 
+  const goTo = useCallback((idx) => {
+    if (animating || idx === active) return;
+    setDir(idx > active ? 1 : -1);
+    setAnimating(true);
+    setActive(idx);
+    setTimeout(() => setAnimating(false), 500);
+  }, [active, animating]);
+
+  const next = useCallback(() => goTo((active + 1) % NEW_ARRIVALS.length), [active, goTo]);
+  const back = useCallback(() => goTo((active - 1 + NEW_ARRIVALS.length) % NEW_ARRIVALS.length), [active, goTo]);
+
   useEffect(() => {
-    if (!countUp) return;
-    const targets = { bags: 12000, members: 48000, countries: 34, years: 6 };
-    const durations = { bags: 2200, members: 2400, countries: 1600, years: 1200 };
-    Object.keys(targets).forEach(key => {
-      const start = Date.now();
-      const tick = () => {
-        const elapsed = Date.now() - start;
-        const progress = Math.min(elapsed / durations[key], 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setCounts(c => ({ ...c, [key]: Math.round(targets[key] * eased) }));
-        if (progress < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    });
-  }, [countUp]);
+    autoRef.current = setInterval(next, 4800);
+    return () => clearInterval(autoRef.current);
+  }, [next]);
 
-  const tabs = [
-    { label: "Our Story", icon: "auto_stories", content: "Born in Lagos, BagSearch set out to solve a problem every fashion-forward Nigerian knew too well: finding the perfect luxury bag was an exercise in frustration. We built an AI-first discovery platform that understands your style before you do.", highlight: "Lagos-born. Globally loved." },
-    { label: "Our Mission", icon: "flag", content: "We believe luxury shouldn't be a treasure hunt. Using computer vision and proprietary AI models, we've made finding your dream bag as easy as taking a photo. Point. Shoot. Discover. That's the BagSearch promise.", highlight: "AI-first luxury discovery." },
-    { label: "Our Values", icon: "diamond", content: "Authenticity over everything. Every piece on BagSearch is verified, every seller is vetted, and every transaction is protected. We're not just a marketplace — we're the guardian of your luxury journey.", highlight: "Verified. Trusted. Premium." },
-  ];
+  const resetAuto = () => {
+    clearInterval(autoRef.current);
+    autoRef.current = setInterval(next, 4800);
+  };
 
-  const orbitItems = ["👜", "💼", "👝", "🎒", "👛"];
+  const item = NEW_ARRIVALS[active];
 
   return (
-    <section ref={sectionRef} style={{ position: "relative", overflow: "hidden", background: "#1A0A00", padding: "100px 0" }}>
-      <style>{`
-        @keyframes morphBlob { 0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%} 50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%} }
-        @keyframes aboutGlow { 0%,100%{box-shadow:0 0 30px rgba(201,75,44,0.2)} 50%{box-shadow:0 0 60px rgba(201,75,44,0.5)} }
-        @keyframes scanLine { from{top:-2px} to{top:100%} }
-        @keyframes marqueeScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        @keyframes aboutFadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes spinSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        .about-tab:hover { background:rgba(201,75,44,0.1)!important; color:#F9DDD0!important; }
-        .about-stat:hover { transform:translateY(-6px)!important; box-shadow:0 20px 40px rgba(201,75,44,0.2)!important; }
-        @media(max-width:768px){
-          .about-main-grid{grid-template-columns:1fr!important}
-          .about-orbit{display:none!important}
-          .about-stats{grid-template-columns:repeat(2,1fr)!important}
-          .about-tabs-row{flex-wrap:wrap!important}
-        }
-        @media(max-width:480px){
-          .about-stats{grid-template-columns:repeat(2,1fr)!important}
-          .about-inner{padding:32px 20px!important}
-        }
-      `}</style>
+    <section ref={setRefs} style={{ padding: "88px 0 72px", background: "#FFFFFF", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 32px" }}>
 
-      {/* Animated grid bg */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(201,75,44,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,75,44,0.04) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-      {/* Scan line */}
-      <div style={{ position: "absolute", left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, rgba(201,75,44,0.25), transparent)", animation: "scanLine 5s linear infinite", zIndex: 1 }} />
-      {/* Blob */}
-      <div style={{ position: "absolute", top: "10%", right: "5%", width: 380, height: 380, background: "radial-gradient(circle, rgba(201,75,44,0.12) 0%, transparent 70%)", animation: "morphBlob 9s ease-in-out infinite", pointerEvents: "none" }} />
-
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px", position: "relative", zIndex: 2 }}>
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 64, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(24px)", transition: "opacity 0.8s ease, transform 0.8s ease" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", background: "rgba(201,75,44,0.1)", border: "1px solid rgba(201,75,44,0.25)", borderRadius: 9999, marginBottom: 20 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C94B2C", display: "block", animation: "aboutGlow 2s ease-in-out infinite" }} />
-            <span style={{ fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Est. 2018 · Lagos, Nigeria</span>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 48,
+          opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)",
+          transition: "opacity 0.7s ease, transform 0.7s ease",
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 16, height: 1, background: "#C94B2C" }} />
+              <span style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>Just landed</span>
+            </div>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 400, color: "#1A0A00", letterSpacing: "-0.02em", lineHeight: 1 }}>
+              New Arrivals
+            </h2>
           </div>
-          <h2 style={{ fontSize: "clamp(3rem,7vw,5.5rem)", fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.05em", fontFamily: "'Outfit', sans-serif", marginBottom: 16, background: "linear-gradient(135deg, #FFFFFF 30%, #F9DDD0 60%, #C94B2C 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-            We Are<br /><span style={{ fontWeight: 200, letterSpacing: "-0.03em" }}>BagSearch</span>
-          </h2>
-          <p style={{ fontSize: 15, color: "rgba(249,221,208,0.85)", maxWidth: 460, margin: "0 auto", lineHeight: 1.7 }}>Africa's first AI-powered luxury bag discovery platform. Where culture meets couture.</p>
+          <a
+            onClick={e => { e.preventDefault(); navigate("/products"); }}
+            href="#"
+            style={{ fontSize: 11, color: "#C94B2C", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none", borderBottom: "1px solid #C94B2C", paddingBottom: 2, display: "flex", alignItems: "center", gap: 4 }}
+          >
+            All pieces ↗
+          </a>
         </div>
 
-        {/* Main grid */}
-        <div className="about-main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, marginBottom: 40 }}>
-          {/* Left */}
-          <div className="about-inner" style={{ padding: "0 4px" }}>
-            {/* Tabs */}
-            <div className="about-tabs-row" style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-              {tabs.map((tab, i) => (
-                <button key={i} className="about-tab" onClick={() => setActiveTab(i)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 9999, fontSize: 11, fontWeight: 800, cursor: "pointer", border: "1px solid", letterSpacing: "0.05em", transition: "all 0.3s", background: activeTab === i ? "rgba(201,75,44,0.12)" : "transparent", color: activeTab === i ? "#F9DDD0" : "rgba(249,221,208,0.35)", borderColor: activeTab === i ? "rgba(201,75,44,0.45)" : "rgba(201,75,44,0.15)" }}>
-                  <Icon name={tab.icon} size={13} /> {tab.label}
-                </button>
-              ))}
-            </div>
-            {/* Tab content */}
-            <div key={activeTab} style={{ animation: "aboutFadeUp 0.4s ease both", marginBottom: 28 }}>
-              <div style={{ display: "inline-block", padding: "4px 12px", background: "rgba(201,75,44,0.12)", borderRadius: 4, marginBottom: 14 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#C94B2C", letterSpacing: "0.15em", textTransform: "uppercase" }}>{tabs[activeTab].highlight}</span>
-              </div>
-              <p style={{ fontSize: 15, color: "rgba(249,221,208,0.88)", lineHeight: 1.8, fontWeight: 300 }}>{tabs[activeTab].content}</p>
-            </div>
-            {/* Terminal */}
-            <div style={{ background: "rgba(201,75,44,0.05)", border: "1px solid rgba(201,75,44,0.12)", borderRadius: 12, padding: "18px 20px", fontFamily: "monospace" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                {["#FF5F56", "#FFBD2E", "#27C93F"].map(c => <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "block" }} />)}
-                <span style={{ fontSize: 10, color: "rgba(249,221,208,0.15)", marginLeft: 6 }}>bagsearch/config</span>
-              </div>
-              {[{ k: "founded", v: '"Lagos, Nigeria — 2018"' }, { k: "tech", v: '"Vision AI + React"' }, { k: "verified", v: "true" }, { k: "ai_search", v: '"enabled"' }].map(({ k, v }, i) => (
-                <div key={k} style={{ display: "flex", gap: 8, marginBottom: 3, animation: `aboutFadeUp 0.4s ease ${i * 0.07}s both` }}>
-                  <span style={{ color: "#C94B2C", fontSize: 11 }}>{k}:</span>
-                  <span style={{ color: "rgba(249,221,208,0.75)", fontSize: 11 }}>{v},</span>
-                </div>
-              ))}
-              <span style={{ color: "rgba(249,221,208,0.15)", fontSize: 11 }}>{"}"}</span>
-              <span style={{ display: "inline-block", width: 2, height: 12, background: "#C94B2C", marginLeft: 2, verticalAlign: "middle", animation: "blink 1s step-end infinite" }} />
-            </div>
+        {/* Main 2-col layout */}
+        <div
+          className="arrivals-grid"
+          style={{
+            display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 4,
+            opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(24px)",
+            transition: "opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s",
+          }}
+        >
+          {/* Image */}
+          <div
+            className="arrivals-img"
+            style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", borderRadius: "14px 0 0 14px", cursor: "pointer" }}
+            onClick={() => navigate("/register")}
+          >
+            <img
+              key={`arr-img-${active}`}
+              src={item.src}
+              alt={item.name}
+              style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                animation: `heroBgIn 0.5s ease forwards`,
+              }}
+            />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, transparent 50%, rgba(26,10,0,0.45))" }} />
+            <div style={{ position: "absolute", top: 14, left: 14, background: "#C94B2C", color: "white", fontSize: 9, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 4 }}>{item.tag}</div>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setLiked(s => { const n = new Set(s); n.has(active) ? n.delete(active) : n.add(active); return n; });
+              }}
+              style={{ position: "absolute", top: 12, right: 12, width: 34, height: 34, borderRadius: "50%", background: liked.has(active) ? "#C94B2C" : "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.25s", fontSize: 14 }}
+            >
+              {liked.has(active) ? "❤️" : "🤍"}
+            </button>
           </div>
 
-          {/* Right: orbit visual */}
-          <div className="about-orbit" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
-            <div style={{ position: "relative", width: 260, height: 260 }}>
-              <div style={{ position: "absolute", inset: -20, border: "1px solid rgba(201,75,44,0.08)", borderRadius: "50%", animation: "spinSlow 22s linear infinite" }} />
-              <div style={{ position: "absolute", inset: 0, border: "1px dashed rgba(201,75,44,0.15)", borderRadius: "50%", animation: "spinSlow 16s linear infinite reverse" }} />
-              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 90, height: 90, borderRadius: "50%", background: "linear-gradient(135deg, rgba(201,75,44,0.25) 0%, rgba(201,75,44,0.05) 100%)", border: "1px solid rgba(201,75,44,0.35)", display: "flex", alignItems: "center", justifyContent: "center", animation: "aboutGlow 3s ease-in-out infinite" }}>
-                <span style={{ fontSize: 28, fontFamily: "'Outfit', sans-serif", fontWeight: 900, color: "#C94B2C" }}>B</span>
+          {/* Info panel */}
+          <div
+            className="arrivals-panel"
+            style={{ background: "#FAF7F4", borderRadius: "0 14px 14px 0", padding: "44px 40px", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden" }}
+          >
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "#C94B2C" }} />
+
+            <div>
+              {/* Material tags */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
+                {[item.sub, item.material].map(t => (
+                  <span key={t} style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C94B2C", border: "0.5px solid rgba(201,75,44,0.25)", padding: "3px 9px", borderRadius: 4, background: "rgba(201,75,44,0.04)" }}>
+                    {t}
+                  </span>
+                ))}
               </div>
-              {orbitItems.map((item, i) => {
-                const angle = (orbitAngle + i * 72) * (Math.PI / 180);
-                const radius = 110;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                return (
-                  <div key={i} style={{ position: "absolute", top: "50%", left: "50%", transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`, width: 40, height: 40, borderRadius: "50%", background: "rgba(249,221,208,0.06)", border: "1px solid rgba(201,75,44,0.18)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{item}</div>
-                );
-              })}
-              {[{ label: "AI-Powered", icon: "auto_awesome", top: "2%", right: "-35%" }, { label: "Verified", icon: "verified", bottom: "8%", left: "-28%" }, { label: "24/7", icon: "support_agent", top: "42%", right: "-32%" }].map(({ label, icon, ...pos }) => (
-                <div key={label} style={{ position: "absolute", ...pos, display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", background: "rgba(26,10,0,0.85)", backdropFilter: "blur(8px)", border: "1px solid rgba(201,75,44,0.2)", borderRadius: 9999, whiteSpace: "nowrap", boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
-                  <span style={{ color: "#C94B2C" }}><Icon name={icon} size={11} /></span>
-                  <span style={{ color: "#F9DDD0", fontSize: 10, fontWeight: 700 }}>{label}</span>
+
+              {/* Name */}
+              <h3
+                key={`name-${active}`}
+                style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.4rem,2.2vw,2rem)", fontWeight: 400, color: "#1A0A00", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: 12, animation: "heroSlideUp 0.5s ease both" }}
+              >
+                {item.name}
+              </h3>
+              <p style={{ fontSize: 13, color: "rgba(26,10,0,0.45)", lineHeight: 1.7, marginBottom: 28 }}>
+                Premium {item.sub.toLowerCase()}. {item.material} finish. Handcrafted for the discerning collector.
+              </p>
+
+              {/* Price */}
+              <div style={{ marginBottom: 32 }}>
+                <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(26,10,0,0.3)", display: "block", marginBottom: 4 }}>Price</span>
+                <span key={`price-${active}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.7rem,3vw,2.4rem)", fontStyle: "italic", color: "#1A0A00", animation: "heroSlideUp 0.5s ease 0.08s both" }}>
+                  {item.price}
+                </span>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => navigate("/register")}
+                  style={{ flex: 1, padding: "12px 16px", background: "#1A0A00", color: "white", fontWeight: 500, fontSize: 12, letterSpacing: "0.05em", border: "none", borderRadius: 50, cursor: "pointer", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#C94B2C"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#1A0A00"}
+                >
+                  Add to bag
+                </button>
+                <button
+                  onClick={() => navigate("/register")}
+                  style={{ padding: "12px 18px", background: "white", color: "#1A0A00", fontWeight: 500, fontSize: 12, letterSpacing: "0.05em", border: "0.5px solid rgba(26,10,0,0.2)", borderRadius: 50, cursor: "pointer", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#1A0A00"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(26,10,0,0.2)"; }}
+                >
+                  View
+                </button>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 28 }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                {NEW_ARRIVALS.map((_, i) => (
+                  <button key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ width: active === i ? 22 : 6, height: 6, borderRadius: 3, background: active === i ? "#C94B2C" : "rgba(201,75,44,0.2)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.35s" }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => { back(); resetAuto(); }} style={{ width: 32, height: 32, borderRadius: "50%", background: "white", border: "0.5px solid rgba(26,10,0,0.15)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.background = "#1A0A00"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "inherit"; }}>←</button>
+                <button onClick={() => { next(); resetAuto(); }} style={{ width: 32, height: 32, borderRadius: "50%", background: "#C94B2C", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "white", transition: "filter 0.2s" }} onMouseEnter={e => e.currentTarget.style.filter = "brightness(0.88)"} onMouseLeave={e => e.currentTarget.style.filter = "none"}>→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Thumbnails */}
+        <div style={{ display: "flex", gap: 8, marginTop: 8, opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.4s" }}>
+          {NEW_ARRIVALS.map((a, i) => (
+            <div
+              key={i}
+              onClick={() => { goTo(i); resetAuto(); }}
+              style={{ flexShrink: 0, width: active === i ? 96 : 56, height: 56, borderRadius: 8, overflow: "hidden", cursor: "pointer", transition: "width 0.4s cubic-bezier(0.4,0,0.2,1)", outline: active === i ? "2px solid #C94B2C" : "2px solid transparent", outlineOffset: 2 }}
+            >
+              <img src={a.src} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: active === i ? "brightness(1)" : "brightness(0.55) saturate(0.25)", transition: "filter 0.35s" }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SHOP BY CATEGORY ─────────────────────────────────────────────
+function CategorySection({ navigate }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.08 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} style={{ padding: "88px 32px", background: "#FAF7F4" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{
+          display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 48,
+          opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)",
+          transition: "opacity 0.7s ease, transform 0.7s ease",
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 16, height: 1, background: "#C94B2C" }} />
+              <span style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>Browse</span>
+            </div>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,3.5vw,2.8rem)", fontWeight: 400, color: "#1A0A00" }}>
+              Shop by category
+            </h2>
+          </div>
+          <div style={{ width: 32, height: 1, background: "rgba(26,10,0,0.12)" }} />
+        </div>
+
+        <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+          {CATEGORIES.map((cat, i) => (
+            <div
+              key={cat.name}
+              className="pc sr-scale"
+              style={{
+                position: "relative", height: 340, borderRadius: 14, overflow: "hidden",
+                opacity: visible ? 1 : 0, transform: visible ? "scale(1)" : "scale(0.96)",
+                transition: `opacity 0.7s ease ${i * 0.1 + 0.1}s, transform 0.7s ease ${i * 0.1 + 0.1}s`,
+              }}
+              onClick={() => navigate("/products")}
+            >
+              <img src={cat.src} alt={cat.name} className="pc-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.72) 0%, transparent 55%)" }} />
+              <div style={{ position: "absolute", bottom: 22, left: 22 }}>
+                <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 400, color: "white", marginBottom: 6 }}>{cat.name}</h3>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.15em", fontWeight: 500, borderBottom: "1px solid #C94B2C", paddingBottom: 2 }}>
+                  {cat.count}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── VISUAL SEARCH CTA ────────────────────────────────────────────
+function VisualSearchCTA({ navigate, onAuthGate }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} style={{ padding: "0 32px 88px", maxWidth: 1280, margin: "0 auto" }}>
+      <div
+        style={{
+          background: "#1A0A00", borderRadius: 16, overflow: "hidden",
+          position: "relative", minHeight: 320, display: "flex", alignItems: "center",
+          opacity: visible ? 1 : 0, transform: visible ? "none" : "scale(0.97)",
+          transition: "opacity 0.8s ease, transform 0.8s ease",
+        }}
+      >
+        {/* Right image */}
+        <div
+          className="vs-img"
+          style={{ position: "absolute", right: 0, top: 0, width: "44%", height: "100%" }}
+        >
+          <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" alt="Visual Search" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #1A0A00 0%, rgba(26,10,0,0.6) 50%, transparent 80%)" }} />
+        </div>
+
+        <div
+          className="vs-content"
+          style={{ padding: "56px 56px", position: "relative", zIndex: 2, maxWidth: "56%" }}
+        >
+          <span style={{ fontSize: 9, background: "rgba(201,75,44,0.2)", border: "0.5px solid rgba(201,75,44,0.35)", color: "#C94B2C", borderRadius: 4, padding: "4px 10px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", display: "inline-block", marginBottom: 20 }}>AI Powered</span>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 400, color: "white", lineHeight: 1.2, marginBottom: 16 }}>
+            Find it.<br /><em style={{ color: "#C94B2C", fontStyle: "italic" }}>Instantly.</em>
+          </h2>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 32, maxWidth: 320 }}>
+            Upload any photo. Our AI matches it to thousands of luxury pieces in seconds.
+          </p>
+          <button
+            onClick={() => onAuthGate()}
+            style={{ padding: "13px 26px", background: "white", color: "#1A0A00", fontWeight: 600, borderRadius: 50, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, transition: "all 0.25s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#C94B2C"; e.currentTarget.style.color = "white"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.color = "#1A0A00"; }}
+          >
+            <span>📷</span> Launch AI search
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── TRENDING ─────────────────────────────────────────────────────
+function TrendingSection({ navigate }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.08 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} style={{ padding: "0 32px 88px", maxWidth: 1280, margin: "0 auto" }}>
+      <div style={{
+        display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36,
+        opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)",
+        transition: "opacity 0.7s ease, transform 0.7s ease",
+      }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 16, height: 1, background: "#C94B2C" }} />
+            <span style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>Right now</span>
+          </div>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,3.5vw,2.8rem)", fontWeight: 400, color: "#1A0A00" }}>Trending now</h2>
+        </div>
+        <div style={{ width: 32, height: 1, background: "rgba(26,10,0,0.12)" }} />
+      </div>
+
+      <div className="trend-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18 }}>
+        {TRENDING.map((item, i) => (
+          <div
+            key={item.name}
+            className="pc"
+            style={{
+              opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(24px)",
+              transition: `opacity 0.7s ease ${i * 0.1}s, transform 0.7s ease ${i * 0.1}s`,
+            }}
+            onClick={() => navigate("/register")}
+          >
+            <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 12, overflow: "hidden", marginBottom: 14, background: "#FAF7F4", border: "0.5px solid rgba(26,10,0,0.06)" }}>
+              <img src={item.src} alt={item.name} className="pc-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "28px 10px 10px", background: "linear-gradient(to top, rgba(26,10,0,0.5) 0%, transparent)" }}>
+                <span style={{ fontSize: 9, background: "white", color: "#1A0A00", padding: "2px 8px", borderRadius: 20, fontWeight: 600 }}>{item.label}</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "#C94B2C", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{item.brand}</div>
+                <h4 style={{ fontSize: 13, fontWeight: 500, color: "#1A0A00", lineHeight: 1.35 }}>{item.name}</h4>
+              </div>
+              <span style={{ fontFamily: "'DM Serif Display', serif", fontStyle: "italic", fontSize: 16, color: "#1A0A00", whiteSpace: "nowrap" }}>{item.price}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── ABOUT SECTION ────────────────────────────────────────────────
+function AboutSection() {
+  const [visible, setVisible] = useState(false);
+  const [counts, setCounts] = useState({ bags: 0, members: 0, countries: 0, years: 0 });
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        setVisible(true);
+        const targets = { bags: 12000, members: 48000, countries: 34, years: 6 };
+        Object.keys(targets).forEach(key => {
+          const start = Date.now();
+          const dur = key === "years" ? 1200 : key === "countries" ? 1400 : 2000;
+          const tick = () => {
+            const p = Math.min((Date.now() - start) / dur, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setCounts(c => ({ ...c, [key]: Math.round(targets[key] * eased) }));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+    }, { threshold: 0.1 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <section ref={ref} style={{ background: "#1A0A00", padding: "96px 0", overflow: "hidden", position: "relative" }}>
+      {/* Subtle grid bg */}
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(201,75,44,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,75,44,0.03) 1px, transparent 1px)", backgroundSize: "56px 56px" }} />
+
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", position: "relative", zIndex: 1 }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 72, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(24px)", transition: "opacity 0.8s ease, transform 0.8s ease" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "rgba(201,75,44,0.1)", border: "0.5px solid rgba(201,75,44,0.2)", borderRadius: 4, marginBottom: 20 }}>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C94B2C" }} />
+            <span style={{ fontSize: 9, letterSpacing: "0.25em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>Est. 2018 · Lagos, Nigeria</span>
+          </div>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(3rem,7vw,5.5rem)", fontWeight: 400, color: "white", letterSpacing: "-0.03em", lineHeight: 0.95, marginBottom: 16 }}>
+            We are<br /><em style={{ color: "#C94B2C" }}>BagSearch</em>
+          </h2>
+          <p style={{ fontSize: 14, color: "rgba(249,221,208,0.55)", maxWidth: 440, margin: "0 auto", lineHeight: 1.75 }}>
+            Africa's first AI-powered luxury bag discovery platform. Where culture meets couture.
+          </p>
+        </div>
+
+        {/* Two-col content */}
+        <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 48, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s" }}>
+          <div>
+            <p style={{ fontSize: 15, color: "rgba(249,221,208,0.8)", lineHeight: 1.85, marginBottom: 20, fontWeight: 300 }}>
+              Born in Lagos, BagSearch set out to solve a problem every fashion-forward Nigerian knew too well: finding the perfect luxury bag was an exercise in frustration. We built an AI-first discovery platform that understands your style before you do.
+            </p>
+            <p style={{ fontSize: 15, color: "rgba(249,221,208,0.5)", lineHeight: 1.85, fontWeight: 300 }}>
+              Authenticity over everything. Every piece on BagSearch is verified, every seller vetted, and every transaction protected. We're not just a marketplace — we're the guardian of your luxury journey.
+            </p>
+          </div>
+          <div>
+            {/* Terminal card */}
+            <div style={{ background: "rgba(201,75,44,0.04)", border: "0.5px solid rgba(201,75,44,0.12)", borderRadius: 12, padding: "20px 22px", fontFamily: "monospace" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+                {["#FF5F56", "#FFBD2E", "#27C93F"].map(c => <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "block" }} />)}
+                <span style={{ fontSize: 10, color: "rgba(249,221,208,0.15)", marginLeft: 6 }}>bagsearch / about</span>
+              </div>
+              {[
+                { k: "founded", v: '"Lagos, Nigeria — 2018"' },
+                { k: "tech", v: '"Vision AI + React"' },
+                { k: "verified_sellers", v: "true" },
+                { k: "ai_search", v: '"enabled"' },
+                { k: "delivery", v: '"Nigeria-wide"' },
+              ].map(({ k, v }, i) => (
+                <div key={k} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                  <span style={{ color: "#C94B2C", fontSize: 11 }}>{k}:</span>
+                  <span style={{ color: "rgba(249,221,208,0.65)", fontSize: 11 }}>{v},</span>
                 </div>
               ))}
+              <span style={{ display: "inline-block", width: 2, height: 11, background: "#C94B2C", marginLeft: 2, verticalAlign: "middle", animation: "cursorBlink 1s step-end infinite" }} />
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="about-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 48, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s" }}>
-          {[{ val: counts.bags.toLocaleString(), label: "Luxury Bags", suffix: "+", icon: "shopping_bag" }, { val: counts.members.toLocaleString(), label: "Members", suffix: "+", icon: "group" }, { val: counts.countries, label: "Countries", suffix: "", icon: "public" }, { val: counts.years, label: "Years", suffix: "+", icon: "workspace_premium" }].map((s, i) => (
-            <div key={i} className="about-stat" style={{ padding: "22px 18px", background: "rgba(201,75,44,0.05)", border: "1px solid rgba(201,75,44,0.1)", borderRadius: 14, textAlign: "center", position: "relative", overflow: "hidden", transition: "transform 0.3s ease, box-shadow 0.3s ease" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #C94B2C, transparent)", opacity: 0.4 }} />
-              <div style={{ color: "#C94B2C", marginBottom: 8, opacity: 0.6 }}><Icon name={s.icon} size={20} /></div>
-              <div style={{ fontSize: "clamp(1.5rem,2.5vw,2rem)", fontWeight: 900, color: "#F9DDD0", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.val}{s.suffix}</div>
-              <div style={{ fontSize: 10, color: "rgba(249,221,208,0.55)", marginTop: 5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>{s.label}</div>
+        <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s" }}>
+          {[
+            { val: counts.bags.toLocaleString() + "+", label: "Luxury bags" },
+            { val: counts.members.toLocaleString() + "+", label: "Members" },
+            { val: counts.countries, label: "Countries" },
+            { val: counts.years + "+", label: "Years" },
+          ].map((s, i) => (
+            <div
+              key={s.label}
+              style={{ padding: "22px 16px", background: "rgba(201,75,44,0.04)", border: "0.5px solid rgba(201,75,44,0.1)", borderRadius: 12, textAlign: "center", position: "relative", overflow: "hidden" }}
+            >
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "rgba(201,75,44,0.2)" }} />
+              <div style={{ fontFamily: "'DM Serif Display', serif", fontStyle: "italic", fontSize: "clamp(1.6rem,2.5vw,2.2rem)", color: "#F9DDD0", lineHeight: 1, marginBottom: 6 }}>{s.val}</div>
+              <div style={{ fontSize: 10, color: "rgba(249,221,208,0.4)", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Marquee */}
-        <div style={{ overflow: "hidden", padding: "16px 0", borderTop: "1px solid rgba(201,75,44,0.08)", borderBottom: "1px solid rgba(201,75,44,0.08)", marginBottom: 48 }}>
-          <div style={{ display: "flex", animation: "marqueeScroll 20s linear infinite", width: "max-content" }}>
+        <div style={{ overflow: "hidden", padding: "28px 0 0", borderTop: "0.5px solid rgba(201,75,44,0.08)", marginTop: 48 }}>
+          <div style={{ display: "flex", animation: "marqueeTick 22s linear infinite", width: "max-content" }}>
             {["Luxury Redefined", "AI-Powered", "Lagos Born", "Global Luxury", "Verified Authentic", "Fashion Forward", "Luxury Redefined", "AI-Powered", "Lagos Born", "Global Luxury", "Verified Authentic", "Fashion Forward"].map((t, i) => (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 16, fontSize: 11, fontWeight: 700, color: i % 2 === 0 ? "rgba(249,221,208,0.15)" : "rgba(201,75,44,0.4)", letterSpacing: "0.15em", textTransform: "uppercase", marginRight: 32, whiteSpace: "nowrap" }}>
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 16, fontSize: 11, fontWeight: 400, color: i % 2 === 0 ? "rgba(249,221,208,0.12)" : "rgba(201,75,44,0.35)", letterSpacing: "0.18em", textTransform: "uppercase", marginRight: 28, whiteSpace: "nowrap" }}>
                 {t} <span style={{ width: 3, height: 3, background: "#C94B2C", borderRadius: "50%", opacity: 0.4 }} />
               </span>
             ))}
-          </div>
-        </div>
-
-        {/* CTA Row */}
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-          <div>
-            <h3 style={{ fontSize: "clamp(1.1rem,2vw,1.5rem)", fontWeight: 800, color: "#F9DDD0", letterSpacing: "-0.03em", marginBottom: 6, fontFamily: "'Outfit', sans-serif" }}>Built by fashion lovers, for fashion lovers.</h3>
-            <p style={{ fontSize: 13, color: "rgba(249,221,208,0.6)" }}>A team of 40+ designers, engineers & AI researchers in Lagos & London.</p>
-          </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button style={{ padding: "11px 22px", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: 9999, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, boxShadow: "0 6px 20px rgba(201,75,44,0.35)", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}><Icon name="work" size={13} /> Join Our Team</button>
-            <button style={{ padding: "11px 22px", background: "transparent", color: "rgba(249,221,208,0.5)", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", border: "1px solid rgba(249,221,208,0.12)", borderRadius: 9999, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(249,221,208,0.3)"; e.currentTarget.style.color = "#F9DDD0"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(249,221,208,0.12)"; e.currentTarget.style.color = "rgba(249,221,208,0.5)"; }}>Press & Media</button>
           </div>
         </div>
       </div>
@@ -488,98 +1307,110 @@ function AboutUsSection() {
   );
 }
 
-/* ─── BLOG SECTION ─── */
+// ─── BLOG SECTION ─────────────────────────────────────────────────
 function BlogSection() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [filter, setFilter] = useState("All");
   const [visible, setVisible] = useState(false);
-  const sectionRef = useRef(null);
-  const NEWSDATA_KEY = "253cbe2827b44031a3e551bb6c1c4ea3";
+  const ref = useRef(null);
   const categories = ["All", "Fashion", "Luxury", "Style", "Tech"];
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.05 });
-    if (sectionRef.current) obs.observe(sectionRef.current);
+    if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
 
   useEffect(() => {
-    const fetchNews = async () => {
+    const fetchPosts = async () => {
       setLoading(true);
       try {
         const q = filter === "All" ? "luxury fashion bags" : filter === "Fashion" ? "fashion bags style" : filter === "Luxury" ? "luxury designer handbags" : filter === "Style" ? "fashion style trends" : "AI fashion technology";
-        const res = await fetch(`https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&q=${encodeURIComponent(q)}&language=en&category=entertainment,lifestyle&image=1`);
+        const res = await fetch(`https://newsdata.io/api/1/news?apikey=253cbe2827b44031a3e551bb6c1c4ea3&q=${encodeURIComponent(q)}&language=en&category=entertainment,lifestyle&image=1`);
         const data = await res.json();
         if (data.status === "success" && data.results) {
           const valid = data.results.filter(a => a.image_url && a.title && a.description).slice(0, 6);
           setPosts(valid.length >= 3 ? valid : BLOG_FALLBACK);
         } else throw new Error("no results");
-      } catch { setPosts(BLOG_FALLBACK); }
-      finally { setLoading(false); }
+      } catch {
+        setPosts(BLOG_FALLBACK);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchNews();
+    fetchPosts();
   }, [filter]);
 
-  const fmtDate = (d) => { try { return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); } catch { return d; } };
-  const readTime = (desc) => Math.max(2, Math.ceil((desc?.split(" ")?.length || 80) / 200)) + " min";
+  const fmtDate = (d) => { try { return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return ""; } };
+  const readTime = (desc) => Math.max(2, Math.ceil((desc?.split(" ")?.length || 80) / 200)) + " min read";
 
   return (
-    <section ref={sectionRef} style={{ background: "#FFFFFF", position: "relative", overflow: "hidden", padding: "96px 0 80px" }}>
-      <style>{`
-        @keyframes blogIn { from{opacity:0;transform:translateY(28px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-        @keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
-        @keyframes dotBounce { 0%,80%,100%{transform:scale(0);opacity:0} 40%{transform:scale(1);opacity:1} }
-        .blog-card { transition:transform 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease; cursor:pointer; }
-        .blog-card:hover { transform:translateY(-8px)!important; box-shadow:0 24px 48px rgba(201,75,44,0.1)!important; }
-        .blog-img { transition:transform 0.7s cubic-bezier(0.22,1,0.36,1); }
-        .blog-card:hover .blog-img { transform:scale(1.07)!important; }
-        .blog-filter { transition:all 0.25s ease; }
-        .blog-filter:hover { background:rgba(201,75,44,0.08)!important; color:#C94B2C!important; }
-        @media(max-width:768px){
-          .blog-featured{grid-template-columns:1fr!important}
-          .blog-featured-img{height:240px!important}
-          .blog-grid{grid-template-columns:1fr!important}
-          .blog-filters-row{overflow-x:auto!important}
-        }
-        @media(max-width:640px){
-          .blog-newsletter{flex-direction:column!important;gap:20px!important}
-          .blog-newsletter-input{flex-direction:column!important}
-          .blog-newsletter-input input{border-right:1.5px solid rgba(201,75,44,0.2)!important;border-bottom:none!important;border-radius:9999px!important}
-          .blog-newsletter-input button{border-radius:9999px!important}
-        }
-      `}</style>
+    <section ref={ref} style={{ background: "#FFFFFF", padding: "96px 32px 80px", overflow: "hidden", position: "relative" }}>
+      {/* Ambient orb */}
+      <div style={{ position: "absolute", top: -80, right: -60, width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,221,208,0.6) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-      {/* Decorative orbs */}
-      <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,221,208,0.7) 0%, transparent 65%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: -60, left: -40, width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(249,221,208,0.4) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 1280, margin: "0 auto", position: "relative", zIndex: 1 }}>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px", position: "relative", zIndex: 1 }}>
         {/* Header */}
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 20, marginBottom: 40, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)", transition: "opacity 0.8s ease, transform 0.8s ease" }}>
+        <div style={{
+          display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, marginBottom: 40, flexWrap: "wrap",
+          opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(20px)",
+          transition: "opacity 0.8s ease, transform 0.8s ease",
+        }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}><div style={{ width: 20, height: 3, background: "#C94B2C", borderRadius: 2 }} /><span style={{ fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Editorial</span></div>
-            <h2 style={{ fontSize: "clamp(2rem,4.5vw,3.5rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.05em", lineHeight: 0.95, fontFamily: "'Outfit', sans-serif" }}>The BagSearch<br /><span style={{ fontWeight: 200, letterSpacing: "-0.03em" }}>Journal</span></h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 16, height: 1, background: "#C94B2C" }} />
+              <span style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600 }}>Editorial</span>
+            </div>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 400, color: "#1A0A00", lineHeight: 0.95 }}>
+              The BagSearch<br /><em style={{ fontStyle: "italic", color: "rgba(26,10,0,0.4)" }}>Journal</em>
+            </h2>
           </div>
-          <a href="#" style={{ color: "#C94B2C", fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, borderBottom: "1.5px solid #C94B2C", paddingBottom: 3 }}>All Stories <Icon name="north_east" size={13} /></a>
+          <a href="#" style={{ fontSize: 11, color: "#C94B2C", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none", borderBottom: "1px solid #C94B2C", paddingBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
+            All stories ↗
+          </a>
         </div>
 
         {/* Filters */}
-        <div className="blog-filters-row" style={{ display: "flex", gap: 8, marginBottom: 40, flexWrap: "wrap", opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.1s" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 40, flexWrap: "wrap", opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.1s" }}>
           {categories.map(cat => (
-            <button key={cat} className="blog-filter" onClick={() => setFilter(cat)} style={{ padding: "8px 18px", borderRadius: 9999, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", border: "none", background: filter === cat ? "#C94B2C" : "rgba(26,10,0,0.06)", color: filter === cat ? "white" : "rgba(26,10,0,0.4)", boxShadow: filter === cat ? "0 6px 20px rgba(201,75,44,0.3)" : "none", transition: "all 0.25s ease" }}>{cat}</button>
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              style={{
+                padding: "7px 16px", borderRadius: 4, fontSize: 11, fontWeight: 600,
+                letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
+                border: "0.5px solid",
+                background: filter === cat ? "#1A0A00" : "transparent",
+                color: filter === cat ? "white" : "rgba(26,10,0,0.4)",
+                borderColor: filter === cat ? "#1A0A00" : "rgba(26,10,0,0.12)",
+                transition: "all 0.2s",
+              }}
+            >
+              {cat}
+            </button>
           ))}
-          {loading && <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 14px" }}>{[0,1,2].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "#C94B2C", display: "block", animation: `dotBounce 1.2s ease-in-out ${i*0.15}s infinite` }} />)}</div>}
+          {loading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 12px" }}>
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "#C94B2C", display: "block", animation: `countOrbit 1.2s ease-in-out ${i * 0.15}s infinite` }} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Skeleton */}
         {loading && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 20 }}>
-            {[1,2,3].map(i => (
-              <div key={i} style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(26,10,0,0.06)" }}>
-                <div style={{ height: 200, background: "linear-gradient(90deg,#f5f5f5 25%,#ececec 50%,#f5f5f5 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s linear infinite" }} />
-                <div style={{ padding: 18 }}>{[80,100,60].map((w,j) => <div key={j} style={{ height: j===0?9:12, width:`${w}%`, background: "linear-gradient(90deg,#f5f5f5 25%,#ececec 50%,#f5f5f5 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s linear infinite", borderRadius: 4, marginBottom: 10 }} />)}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 18 }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ borderRadius: 12, overflow: "hidden", border: "0.5px solid rgba(26,10,0,0.06)" }}>
+                <div style={{ height: 180, background: "linear-gradient(90deg,#f5f5f5 25%,#ececec 50%,#f5f5f5 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s linear infinite" }} />
+                <div style={{ padding: 16 }}>
+                  {[80, 100, 60].map((w, j) => (
+                    <div key={j} style={{ height: j === 0 ? 8 : 11, width: `${w}%`, background: "linear-gradient(90deg,#f5f5f5 25%,#ececec 50%,#f5f5f5 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.5s linear infinite", borderRadius: 3, marginBottom: 10 }} />
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -588,41 +1419,53 @@ function BlogSection() {
         {!loading && posts.length > 0 && (
           <>
             {/* Featured post */}
-            <div className="blog-featured" style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", borderRadius: 20, overflow: "hidden", marginBottom: 20, boxShadow: "0 8px 32px rgba(26,10,0,0.07)", opacity: visible ? 1 : 0, animation: visible ? "blogIn 0.7s ease both" : "none", cursor: "pointer" }} onMouseEnter={() => setHoveredCard("featured")} onMouseLeave={() => setHoveredCard(null)}>
-              <div className="blog-featured-img" style={{ position: "relative", height: 400, overflow: "hidden" }}>
+            <div
+              className="blog-featured-grid"
+              style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", borderRadius: 14, overflow: "hidden", marginBottom: 18, border: "0.5px solid rgba(26,10,0,0.07)", animation: visible ? "blogFadeUp 0.7s ease both" : "none", cursor: "pointer" }}
+            >
+              <div className="blog-featured-img" style={{ position: "relative", height: 360, overflow: "hidden" }}>
                 <img src={posts[0].image_url || posts[0].img || BLOG_FALLBACK[0].img} alt={posts[0].title} className="blog-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = BLOG_FALLBACK[0].img; }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, rgba(26,10,0,0.25))" }} />
-                <div style={{ position: "absolute", top: 18, left: 18, background: "#C94B2C", color: "white", fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 4 }}>{posts[0].category?.[0] || posts[0].cat || "Featured"}</div>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 50%, rgba(26,10,0,0.2))" }} />
+                <span style={{ position: "absolute", top: 16, left: 16, background: "#C94B2C", color: "white", fontSize: 9, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 4 }}>
+                  {posts[0].category?.[0] || posts[0].cat || "Featured"}
+                </span>
               </div>
               <div style={{ background: "#1A0A00", padding: "36px 32px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <span style={{ fontSize: 9, color: "#C94B2C", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12, display: "block" }}>Editor's Pick</span>
-                <h3 style={{ fontSize: "clamp(1.1rem,1.6vw,1.4rem)", fontWeight: 800, color: "#F9DDD0", lineHeight: 1.3, letterSpacing: "-0.03em", marginBottom: 14, fontFamily: "'Outfit', sans-serif" }}>{(posts[0].title || "").slice(0, 80)}{(posts[0].title || "").length > 80 ? "…" : ""}</h3>
-                <p style={{ fontSize: 13, color: "rgba(249,221,208,0.45)", lineHeight: 1.7, marginBottom: 22, fontWeight: 300 }}>{((posts[0].description || posts[0].desc) || "").slice(0, 130)}…</p>
+                <span style={{ fontSize: 9, color: "#C94B2C", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12, display: "block" }}>Editor's pick</span>
+                <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.1rem,1.6vw,1.4rem)", fontWeight: 400, color: "#F9DDD0", lineHeight: 1.35, marginBottom: 14 }}>
+                  {(posts[0].title || "").slice(0, 80)}{(posts[0].title || "").length > 80 ? "…" : ""}
+                </h3>
+                <p style={{ fontSize: 13, color: "rgba(249,221,208,0.4)", lineHeight: 1.75, marginBottom: 22, fontWeight: 300 }}>
+                  {((posts[0].description || posts[0].desc) || "").slice(0, 130)}…
+                </p>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                  <span style={{ fontSize: 11, color: "rgba(249,221,208,0.25)" }}>{posts[0].source_id || posts[0].source} · {readTime(posts[0].description || posts[0].desc)}</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#C94B2C", fontSize: 12, fontWeight: 700 }}>Read <Icon name="arrow_forward" size={13} /></div>
+                  <span style={{ fontSize: 11, color: "rgba(249,221,208,0.22)" }}>{posts[0].source_id || posts[0].source} · {readTime(posts[0].description || posts[0].desc)}</span>
+                  <span style={{ color: "#C94B2C", fontSize: 12, fontWeight: 600 }}>Read ↗</span>
                 </div>
               </div>
             </div>
 
             {/* Cards grid */}
-            <div className="blog-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
               {posts.slice(1).map((post, i) => (
-                <article key={post.article_id || post.id || i} className="blog-card" onMouseEnter={() => setHoveredCard(i)} onMouseLeave={() => setHoveredCard(null)} style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(26,10,0,0.07)", background: "#FFFFFF", opacity: visible ? 1 : 0, animation: visible ? `blogIn 0.6s ease ${0.1 + i * 0.08}s both` : "none" }}>
-                  <div style={{ position: "relative", height: 196, overflow: "hidden" }}>
+                <article
+                  key={post.article_id || post.id || i}
+                  className="blog-card"
+                  style={{ borderRadius: 12, overflow: "hidden", border: "0.5px solid rgba(26,10,0,0.07)", background: "#FFFFFF", animation: visible ? `blogFadeUp 0.6s ease ${0.1 + i * 0.08}s both` : "none" }}
+                >
+                  <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
                     <img src={post.image_url || post.img || BLOG_FALLBACK[i + 1]?.img} alt={post.title} className="blog-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { e.target.src = BLOG_FALLBACK[Math.min(i + 1, BLOG_FALLBACK.length - 1)].img; }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.45) 0%, transparent 55%)" }} />
-                    <span style={{ position: "absolute", bottom: 10, left: 10, background: "rgba(26,10,0,0.65)", backdropFilter: "blur(4px)", color: "#F9DDD0", fontSize: 9, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 4 }}>{post.category?.[0] || post.cat || "Editorial"}</span>
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.4) 0%, transparent 55%)" }} />
+                    <span style={{ position: "absolute", bottom: 9, left: 9, background: "rgba(26,10,0,0.6)", backdropFilter: "blur(4px)", color: "rgba(249,221,208,0.9)", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 3 }}>
+                      {post.category?.[0] || post.cat || "Editorial"}
+                    </span>
                   </div>
-                  <div style={{ padding: "18px" }}>
-                    <h3 style={{ fontSize: "clamp(0.85rem,1.3vw,0.95rem)", fontWeight: 800, color: "#1A0A00", lineHeight: 1.4, marginBottom: 8, letterSpacing: "-0.02em", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title}</h3>
-                    <p style={{ fontSize: 12, color: "rgba(26,10,0,0.42)", lineHeight: 1.65, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.description || post.desc}</p>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid rgba(26,10,0,0.05)" }}>
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#1A0A00" }}>{(post.source_id || post.source || "Editorial").slice(0, 18)}</div>
-                        <div style={{ fontSize: 9, color: "rgba(26,10,0,0.28)", marginTop: 1 }}>{fmtDate(post.pubDate || post.date)} · {readTime(post.description || post.desc)}</div>
-                      </div>
-                      <div style={{ width: 30, height: 30, borderRadius: "50%", background: hoveredCard === i ? "#C94B2C" : "rgba(201,75,44,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: hoveredCard === i ? "white" : "#C94B2C", transition: "all 0.3s", flexShrink: 0 }}><Icon name="arrow_forward" size={13} /></div>
+                  <div style={{ padding: 18 }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 500, color: "#1A0A00", lineHeight: 1.4, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.title}</h3>
+                    <p style={{ fontSize: 12, color: "rgba(26,10,0,0.4)", lineHeight: 1.65, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.description || post.desc}</p>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "0.5px solid rgba(26,10,0,0.06)" }}>
+                      <span style={{ fontSize: 11, color: "rgba(26,10,0,0.3)" }}>{fmtDate(post.pubDate || post.date)} · {readTime(post.description || post.desc)}</span>
+                      <span style={{ fontSize: 12, color: "#C94B2C" }}>↗</span>
                     </div>
                   </div>
                 </article>
@@ -632,15 +1475,15 @@ function BlogSection() {
         )}
 
         {/* Newsletter */}
-        <div className="blog-newsletter" style={{ marginTop: 60, padding: "44px 48px", background: "linear-gradient(135deg, #F9DDD0 0%, #F5C4A8 100%)", borderRadius: 20, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(16px)", transition: "opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s" }}>
+        <div style={{ marginTop: 60, padding: "40px 44px", background: "#FAF7F4", borderRadius: 14, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24, border: "0.5px solid rgba(26,10,0,0.06)" }}>
           <div>
-            <span style={{ fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800, display: "block", marginBottom: 8 }}>Newsletter</span>
-            <h3 style={{ fontSize: "clamp(1.2rem,2vw,1.6rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em", marginBottom: 4, fontFamily: "'Outfit', sans-serif" }}>Style drops, delivered weekly.</h3>
-            <p style={{ fontSize: 13, color: "rgba(26,10,0,0.45)", maxWidth: 300 }}>Curated luxury news, new arrivals, and AI insights — straight to your inbox.</p>
+            <span style={{ fontSize: 9, letterSpacing: "0.25em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 600, display: "block", marginBottom: 8 }}>Newsletter</span>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.2rem,2vw,1.5rem)", fontWeight: 400, color: "#1A0A00", marginBottom: 4 }}>Style drops, delivered weekly.</h3>
+            <p style={{ fontSize: 13, color: "rgba(26,10,0,0.4)", maxWidth: 300 }}>Curated luxury news, new arrivals, and AI insights.</p>
           </div>
-          <div className="blog-newsletter-input" style={{ display: "flex", gap: 0, width: "min(400px,100%)" }}>
-            <input placeholder="your@email.com" style={{ flex: 1, padding: "13px 18px", border: "1.5px solid rgba(201,75,44,0.2)", borderRight: "none", borderRadius: "9999px 0 0 9999px", fontSize: 13, color: "#1A0A00", background: "rgba(255,255,255,0.7)", outline: "none", fontFamily: "inherit" }} />
-            <button style={{ padding: "13px 22px", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", border: "none", borderRadius: "0 9999px 9999px 0", cursor: "pointer", whiteSpace: "nowrap" }}>Subscribe</button>
+          <div style={{ display: "flex", gap: 0, width: "min(380px,100%)" }}>
+            <input placeholder="your@email.com" style={{ flex: 1, padding: "12px 16px", border: "0.5px solid rgba(26,10,0,0.15)", borderRight: "none", borderRadius: "4px 0 0 4px", fontSize: 13, color: "#1A0A00", background: "white", outline: "none", fontFamily: "inherit" }} />
+            <button style={{ padding: "12px 20px", background: "#1A0A00", color: "white", fontWeight: 600, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", border: "none", borderRadius: "0 4px 4px 0", cursor: "pointer", transition: "background 0.2s", whiteSpace: "nowrap" }} onMouseEnter={e => e.currentTarget.style.background = "#C94B2C"} onMouseLeave={e => e.currentTarget.style.background = "#1A0A00"}>Subscribe</button>
           </div>
         </div>
       </div>
@@ -648,8 +1491,8 @@ function BlogSection() {
   );
 }
 
-/* ─── MAIN ─── */
-export default function LuxeBag() {
+// ─── MAIN EXPORT ──────────────────────────────────────────────────
+export default function Home() {
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -658,263 +1501,201 @@ export default function LuxeBag() {
   const newArrivalsRef = useRef(null);
   const handleLoadDone = useCallback(() => setLoading(false), []);
 
-  // SEO for home/landing page
   useSEO({
-    title: 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria',
-    description: 'Buy and sell authentic luxury designer bags in Nigeria. Discover Chanel, Hermès, Louis Vuitton, Gucci, shoulder bags, clutches, and more from verified sellers on BagSearch.',
-    keywords: 'luxury bags Nigeria, designer handbags, authentic bags, buy luxury bags online, Chanel bags Nigeria, Louis Vuitton, Hermès, shoulder bags, clutches, verified sellers',
-    url: '/',
-    type: 'website',
+    title: "BagSearch | Buy & Sell Luxury Designer Bags in Nigeria",
+    description: "Buy and sell authentic luxury designer bags in Nigeria. Discover Chanel, Hermès, Louis Vuitton, Gucci, and more from verified sellers on BagSearch.",
+    keywords: "luxury bags Nigeria, designer handbags, authentic bags, buy luxury bags online",
+    url: "/",
+    type: "website",
     schema: {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'BagSearch',
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "BagSearch",
       url: SITE_URL,
       description: "Nigeria's premier marketplace for authentic luxury designer bags.",
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${SITE_URL}/products?q={search_term_string}`
-        },
-        'query-input': 'required name=search_term_string'
-      }
-    }
+    },
   });
 
+  // Intersection observer for scroll reveals
+  useEffect(() => {
+    if (loading) return;
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("in"); }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll(".sr,.sr-scale,.sr-left").forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, [loading]);
+
   const handleNavClick = (link) => {
-    if (link === "New Arrivals") { if (newArrivalsRef.current) newArrivalsRef.current.scrollIntoView({ behavior: "smooth" }); }
+    if (link === "New Arrivals") newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" });
     else if (link === "Collections") navigate("/products");
     else if (link === "Hot Deals") navigate("/hot-deals");
     else if (link === "About Us") navigate("/about");
     else setAuthGateOpen(true);
   };
 
-  const handleProfileClick = () => {
-    if (!user) { setAuthGateOpen(true); return; }
-    navigate("/products");
-  };
-
-  useEffect(() => {
-    if (loading) return;
-    const obs = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }); }, { threshold: 0.12 });
-    document.querySelectorAll(".scroll-reveal,.scroll-reveal-scale,.scroll-reveal-left").forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, [loading]);
-
   return (
-    <div style={{ minHeight: "100vh", background: "#F5F0EE", fontFamily: "'Manrope', sans-serif", color: "#1A0A00" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .card-img{transition:transform 0.5s ease;}
-        .product-card:hover .card-img{transform:scale(1.06);}
-        .nav-link:hover{color:#C94B2C!important;}
-        .icon-btn:hover{background:#F9DDD0!important;}
-        .sidebar-link:hover{background:rgba(201,75,44,0.06)!important;}
-        @media(max-width:768px){
-          .desktop-nav{display:none!important}.mobile-menu-btn{display:flex!important}.desktop-icons{display:none!important}
-          .category-grid{grid-template-columns:1fr!important}
-          .trending-grid{grid-template-columns:repeat(2,1fr)!important}
-          .footer-grid{grid-template-columns:1fr 1fr!important}.footer-brand{grid-column:span 2!important}
-        }
-        @media(max-width:640px){
-          .visual-search-container{min-height:400px!important}
-          .visual-search-content{max-width:100%!important;padding:32px 20px!important;text-align:center!important}
-          .visual-search-image{width:100%!important;opacity:0.2!important}
-          .visual-search-button{width:100%!important;justify-content:center!important}
-        }
-        @media(max-width:480px){
-          .visual-search-title{font-size:24px!important}
-          .footer-grid{grid-template-columns:1fr!important}.footer-brand{grid-column:span 1!important}
-        }
-        .scroll-reveal{opacity:0;transform:translateY(32px);transition:opacity 0.7s ease,transform 0.7s ease;}
-        .scroll-reveal.visible{opacity:1;transform:translateY(0);}
-        .scroll-reveal-scale{opacity:0;transform:scale(0.93);transition:opacity 0.7s ease,transform 0.7s ease;}
-        .scroll-reveal-scale.visible{opacity:1;transform:scale(1);}
-        .scroll-reveal-left{opacity:0;transform:translateX(-32px);transition:opacity 0.7s ease,transform 0.7s ease;}
-        .scroll-reveal-left.visible{opacity:1;transform:translateX(0);}
-        .delay-1{transition-delay:0.08s}.delay-2{transition-delay:0.16s}.delay-3{transition-delay:0.24s}
-        .footer-link:hover{color:#F9DDD0!important;}
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "#FAF7F4", fontFamily: "'Inter', sans-serif", color: "#1A0A00" }}>
+      <style>{GLOBAL_CSS}</style>
 
       <LuxuryLoader onDone={handleLoadDone} />
 
       <div style={{ opacity: loading ? 0 : 1, transition: "opacity 0.6s ease", pointerEvents: loading ? "none" : "all" }}>
 
-        {/* HEADER */}
-        <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(201,75,44,0.12)" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LogoIcon size={34} />
-              <span style={{ fontSize: 20, fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
+        {/* ── HEADER ── */}
+        <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(250,247,244,0.92)", backdropFilter: "blur(12px)", borderBottom: "0.5px solid rgba(26,10,0,0.08)" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+
+            {/* Logo */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => navigate("/")}>
+              <LogoIcon size={30} />
+              <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 400, color: "#1A0A00", letterSpacing: "0.01em" }}>
+                Bag<em style={{ color: "#C94B2C", fontStyle: "italic" }}>Search</em>
+              </span>
             </div>
-            <nav className="desktop-nav" style={{ display: "flex", gap: 36 }}>
+
+            {/* Desktop nav */}
+            <nav className="desktop-nav" style={{ display: "flex", gap: 32 }}>
               {NAV_LINKS.map(link => (
-                <a key={link} onClick={() => handleNavClick(link)} className="nav-link" style={{ fontSize: 13, fontWeight: 700, textDecoration: "none", color: "#1A0A00", display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s", cursor: "pointer", letterSpacing: "-0.01em" }}>
+                <a
+                  key={link}
+                  onClick={() => handleNavClick(link)}
+                  className="nav-lnk"
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}
+                >
                   {link}
-                  {link === "Visual Search" && <span style={{ fontSize: 9, background: "#C94B2C", color: "white", padding: "2px 7px", borderRadius: 9999, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>AI</span>}
+                  {link === "Visual Search" && (
+                    <span style={{ fontSize: 8, background: "#C94B2C", color: "white", padding: "2px 6px", borderRadius: 2, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>AI</span>
+                  )}
                 </a>
               ))}
             </nav>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              {["search"].map(ic => (
-                <button key={ic} className="icon-btn desktop-icons" style={{ padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", transition: "background 0.2s" }} onClick={() => ic === "search" ? navigate("/products") : null}><Icon name={ic} /></button>
-              ))}
-              <button className="mobile-menu-btn icon-btn" onClick={() => setSidebarOpen(true)} style={{ display: "none", padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", alignItems: "center", color: "#1A0A00" }}><Icon name="menu" /></button>
+
+            {/* Right controls */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={() => navigate("/products")}
+                style={{ padding: "7px 9px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "#1A0A00", fontSize: 18, lineHeight: 1, transition: "color 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.color = "#C94B2C"}
+                onMouseLeave={e => e.currentTarget.style.color = "#1A0A00"}
+                aria-label="Search"
+              >
+                🔍
+              </button>
+              {user ? (
+                <button onClick={() => navigate("/products")} style={{ padding: "8px 18px", background: "#1A0A00", color: "white", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#C94B2C"} onMouseLeave={e => e.currentTarget.style.background = "#1A0A00"}>
+                  My account
+                </button>
+              ) : (
+                <button onClick={() => navigate("/login?force=true")} style={{ padding: "8px 18px", background: "#1A0A00", color: "white", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#C94B2C"} onMouseLeave={e => e.currentTarget.style.background = "#1A0A00"}>
+                  Sign in
+                </button>
+              )}
+              {/* Mobile menu */}
+              <button className="mob-menu" onClick={() => setSidebarOpen(true)} style={{ display: "none", padding: 8, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", alignItems: "center", color: "#1A0A00", fontSize: 20 }} aria-label="Open menu">
+                ☰
+              </button>
             </div>
           </div>
         </header>
 
+        {/* ── MAIN ── */}
         <main>
-          <HeroCarousel navigate={navigate} newArrivalsRef={newArrivalsRef} onAuthGate={() => setAuthGateOpen(true)} />
+          <HeroSection navigate={navigate} newArrivalsRef={newArrivalsRef} onAuthGate={() => setAuthGateOpen(true)} />
           <NewArrivalsSection navigate={navigate} sectionRef={newArrivalsRef} />
-
-          {/* SHOP BY CATEGORY */}
-          <section style={{ padding: "72px 24px", background: "#F9DDD0" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-              <div style={{ marginBottom: 48, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-                <h2 className="scroll-reveal" style={{ fontSize: "clamp(1.8rem,3.5vw,2.6rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em", fontFamily: "'Outfit', sans-serif" }}>Shop by Category</h2>
-                <div style={{ width: 40, height: 3, background: "#C94B2C", borderRadius: 2 }} />
-              </div>
-              <div className="category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-                {CATEGORIES.map((cat, i) => (
-                  <div key={cat.name} className={`product-card scroll-reveal-scale delay-${i + 1}`} style={{ position: "relative", height: 360, borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
-                    <img src={cat.src} alt={cat.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.75) 0%, transparent 55%)" }} />
-                    <div style={{ position: "absolute", bottom: 24, left: 24 }}>
-                      <h3 style={{ fontSize: 20, fontWeight: 800, color: "white", marginBottom: 8 }}>{cat.name}</h3>
-                      <span style={{ fontSize: 10, color: "#F9DDD0", textTransform: "uppercase", letterSpacing: "0.2em", fontWeight: 800, borderBottom: "2px solid #C94B2C", paddingBottom: 2 }}>Explore</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* VISUAL SEARCH CTA */}
-          <section style={{ padding: "80px 24px", maxWidth: 1280, margin: "0 auto" }}>
-            <div className="scroll-reveal-scale visual-search-container" style={{ background: "#C94B2C", borderRadius: 20, overflow: "hidden", position: "relative", minHeight: 340, display: "flex", alignItems: "center" }}>
-              <div className="visual-search-image" style={{ position: "absolute", right: 0, top: 0, width: "48%", height: "100%" }}>
-                <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" alt="Visual Search" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(201,75,44,0.8) 0%, rgba(201,75,44,0.4) 50%, transparent 80%)" }} />
-              </div>
-              <div style={{ position: "absolute", right: "48%", top: "-40px", width: 200, height: 200, borderRadius: "50%", background: "rgba(249,221,208,0.1)" }} />
-              <div style={{ position: "absolute", right: "38%", bottom: "-60px", width: 280, height: 280, borderRadius: "50%", background: "rgba(249,221,208,0.07)" }} />
-              <div className="scroll-reveal-left visual-search-content" style={{ padding: "52px 52px", position: "relative", zIndex: 2, color: "white", maxWidth: "52%", width: "100%" }}>
-                <div style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", borderRadius: 9999, padding: "4px 14px", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 20 }}>AI POWERED</div>
-                <h2 className="visual-search-title" style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 900, marginBottom: 16, lineHeight: 1.2, letterSpacing: "-0.04em", fontFamily: "'Outfit', sans-serif" }}>Find it. Instantly.</h2>
-                <p style={{ fontSize: 14, color: "rgba(255,245,242,0.95)", marginBottom: 32, lineHeight: 1.65, maxWidth: 320 }}>Upload any photo. Our AI matches it to the closest luxury pieces in seconds.</p>
-                <button onClick={() => navigate("/register?force=true")} className="visual-search-button" style={{ padding: "13px 26px", background: "white", color: "#C94B2C", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, boxShadow: "0 8px 24px rgba(0,0,0,0.2)", transition: "all 0.3s" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 14px 36px rgba(0,0,0,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}>
-                  <Icon name="add_a_photo" size={18} /> Launch AI Search
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* TRENDING */}
-          <section style={{ padding: "0 24px 80px", maxWidth: 1280, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36 }}>
-              <h2 className="scroll-reveal" style={{ fontSize: "clamp(1.8rem,3.5vw,2.6rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.04em", fontFamily: "'Outfit', sans-serif" }}>Trending Now</h2>
-              <div style={{ width: 40, height: 3, background: "#C94B2C", borderRadius: 2 }} />
-            </div>
-            <div className="trending-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 20 }}>
-              {TRENDING.map((item, i) => (
-                <div key={item.name} className={`product-card scroll-reveal delay-${i + 1}`} style={{ cursor: "pointer" }}>
-                  <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 14, overflow: "hidden", marginBottom: 14, background: "#F9DDD0" }}>
-                    <img src={item.src} alt={item.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                    <div>
-                      <h4 style={{ fontWeight: 800, fontSize: 13, marginBottom: 2, color: "#1A0A00" }}>{item.name}</h4>
-                      <p style={{ fontSize: 11, color: "#C94B2C", fontWeight: 700 }}>{item.label}</p>
-                    </div>
-                    <span style={{ color: "#1A0A00", fontWeight: 900, fontSize: 14, whiteSpace: "nowrap", fontFamily: "'Outfit', sans-serif" }}>{item.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ─── ABOUT US ─── */}
-          <AboutUsSection />
-
-          {/* ─── BLOG / JOURNAL ─── */}
+          <CategorySection navigate={navigate} />
+          <VisualSearchCTA navigate={navigate} onAuthGate={() => setAuthGateOpen(true)} />
+          <TrendingSection navigate={navigate} />
+          <AboutSection />
           <BlogSection />
         </main>
 
-        {/* FOOTER */}
-        <footer style={{ background: "#1A0A00", padding: "64px 24px 36px" }}>
+        {/* ── FOOTER ── */}
+        <footer style={{ background: "#1A0A00", padding: "72px 32px 36px" }}>
           <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-            <div className="footer-grid scroll-reveal" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
-              <div className="footer-brand">
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <div className="ft-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
+              <div className="ft-brand-col">
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, cursor: "pointer" }} onClick={() => navigate("/")}>
                   <LogoIcon />
-                  <span style={{ fontSize: 18, fontWeight: 900, color: "white", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
+                  <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "white" }}>
+                    Bag<em style={{ color: "#C94B2C", fontStyle: "italic" }}>Search</em>
+                  </span>
                 </div>
-                <p style={{ color: "rgba(249,221,208,0.65)", lineHeight: 1.7, maxWidth: 260, marginBottom: 24, fontSize: 13 }}>Luxury craftsmanship. Intelligent discovery. Africa's first AI-powered luxury bag marketplace.</p>
-        <div style={{ display: "flex", gap: 10 }}>
-          {["shopping_bag", "person"].map(ic => (
-            <button key={ic} style={{ padding: 9, borderRadius: "50%", border: "none", background: "rgba(201,75,44,0.15)", color: "#F9DDD0", cursor: "pointer", transition: "background 0.2s" }} onClick={() => { ic === "person" ? handleProfileClick() : setAuthGateOpen(true); }} onMouseEnter={e => e.currentTarget.style.background = "rgba(201,75,44,0.3)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(201,75,44,0.15)"}><Icon name={ic} size={18} /></button>
-          ))}
-        </div>
+                <p style={{ color: "rgba(249,221,208,0.45)", lineHeight: 1.8, maxWidth: 250, marginBottom: 24, fontSize: 13, fontWeight: 300 }}>
+                  Luxury craftsmanship. Intelligent discovery. Africa's first AI-powered luxury bag marketplace.
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["🛍️", "👤"].map((ic, i) => (
+                    <button key={i} onClick={() => setAuthGateOpen(true)} style={{ width: 36, height: 36, borderRadius: "50%", border: "0.5px solid rgba(201,75,44,0.2)", background: "rgba(201,75,44,0.06)", color: "#F9DDD0", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(201,75,44,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(201,75,44,0.06)"}>
+                      {ic}
+                    </button>
+                  ))}
+                </div>
               </div>
               {[
                 { title: "Shop", links: ["New Arrivals", "Best Sellers", "Tote Bags", "Crossbody", "Visual Search"] },
                 { title: "Company", links: ["About Us", "Blog", "Careers", "Press", "Partnerships"] },
-                { title: "Support", links: ["Shipping", "Returns", "Contact Us", "Size Guide", "Privacy Policy"] }
+                { title: "Support", links: ["Shipping", "Returns", "Contact Us", "Size Guide", "Privacy Policy"] },
               ].map(col => (
                 <div key={col.title}>
-                  <h5 style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 20, color: "#C94B2C" }}>{col.title}</h5>
-                  <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <h5 style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 20, color: "#C94B2C" }}>{col.title}</h5>
+                  <ul style={{ listStyle: "none" }}>
                     {col.links.map(link => (
-                      <li key={link}>
-                        <a href="#" className="footer-link" style={{ fontSize: 13, color: "rgba(249,221,208,0.6)", textDecoration: "none", transition: "color 0.2s", fontWeight: 500 }}>{link}</a>
-                      </li>
+                      <li key={link}><a href="#" className="ft-lnk">{link}</a></li>
                     ))}
                   </ul>
                 </div>
               ))}
             </div>
-            <div style={{ paddingTop: 24, borderTop: "1px solid rgba(201,75,44,0.18)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-              <p style={{ fontSize: 12, color: "rgba(249,221,208,0.45)", fontWeight: 500 }}>© 2024 BagSearch International. All rights reserved.</p>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+
+            <div style={{ paddingTop: 24, borderTop: "0.5px solid rgba(201,75,44,0.1)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <p style={{ fontSize: 12, color: "rgba(249,221,208,0.3)", fontWeight: 300 }}>© 2024 BagSearch International. All rights reserved.</p>
+              <div style={{ display: "flex", gap: 20 }}>
                 {["Terms", "Privacy", "Cookies"].map(l => (
-                  <a key={l} href="#" style={{ fontSize: 11, color: "rgba(249,221,208,0.3)", textDecoration: "none", fontWeight: 600, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "rgba(249,221,208,0.65)"} onMouseLeave={e => e.currentTarget.style.color = "rgba(249,221,208,0.3)"}>{l}</a>
+                  <a key={l} href="#" style={{ fontSize: 11, color: "rgba(249,221,208,0.25)", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "rgba(249,221,208,0.6)"} onMouseLeave={e => e.currentTarget.style.color = "rgba(249,221,208,0.25)"}>{l}</a>
                 ))}
               </div>
             </div>
           </div>
         </footer>
 
-        {/* SIDEBAR OVERLAY */}
-        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(26,10,0,0.4)", zIndex: 60, opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "all" : "none", transition: "opacity 0.3s ease" }} />
+        {/* ── SIDEBAR OVERLAY ── */}
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(26,10,0,0.4)", zIndex: 60, opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "all" : "none", transition: "opacity 0.3s ease", backdropFilter: sidebarOpen ? "blur(4px)" : "none" }} />
 
-        {/* SIDEBAR */}
-        <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 290, background: "white", zIndex: 70, display: "flex", flexDirection: "column", boxShadow: "8px 0 40px rgba(26,10,0,0.12)", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", borderRight: "1px solid rgba(201,75,44,0.1)" }}>
-          <div style={{ height: 4, background: "linear-gradient(90deg, #C94B2C, #E8856A)" }} />
-          <div style={{ padding: "20px 20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}><LogoIcon /><span style={{ fontWeight: 900, fontSize: 18, color: "#1A0A00", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span></div>
-            <button onClick={() => setSidebarOpen(false)} style={{ padding: 7, borderRadius: "50%", border: "1px solid rgba(201,75,44,0.15)", background: "#FFF5F2", cursor: "pointer", display: "flex", color: "#C94B2C" }}><Icon name="close" size={18} /></button>
+        {/* ── SIDEBAR ── */}
+        <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 280, background: "white", zIndex: 70, display: "flex", flexDirection: "column", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", borderRight: "0.5px solid rgba(26,10,0,0.06)" }}>
+          <div style={{ height: 2, background: "#C94B2C" }} />
+          <div style={{ padding: "18px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "0.5px solid rgba(26,10,0,0.06)", marginBottom: 16 }}>
+            <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#1A0A00" }}>Bag<em style={{ color: "#C94B2C" }}>Search</em></span>
+            <button onClick={() => setSidebarOpen(false)} style={{ width: 28, height: 28, borderRadius: "50%", border: "0.5px solid rgba(26,10,0,0.12)", background: "#FAF7F4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>✕</button>
           </div>
-          <div style={{ padding: "0 14px", flex: 1 }}>
-            {NAV_LINKS.map((link) => (
-              <a key={link} onClick={() => { setSidebarOpen(false); if (link === "New Arrivals") setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350); else if (link === "Collections") setTimeout(() => navigate("/products"), 150); else if (link === "Hot Deals") setTimeout(() => navigate("/hot-deals"), 150); else if (link === "About Us") setTimeout(() => navigate("/about"), 150); else setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 700, fontSize: 14, textDecoration: "none", color: link === "Visual Search" || link === "Hot Deals" ? "#C94B2C" : "#1A0A00", background: link === "Visual Search" || link === "Hot Deals" ? "#FFF5F2" : "transparent", cursor: "pointer", transition: "background 0.2s" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : link === "Hot Deals" ? "local_fire_department" : link === "About Us" ? "info" : "new_releases"} size={17} />{link}</span>
-                {link === "Visual Search" ? <span style={{ fontSize: 9, background: "#C94B2C", color: "white", padding: "2px 8px", borderRadius: 9999, fontWeight: 800 }}>AI</span> : <Icon name="chevron_right" size={16} />}
+          <div style={{ padding: "0 12px", flex: 1 }}>
+            {NAV_LINKS.map(link => (
+              <a
+                key={link}
+                className="sb-lnk"
+                onClick={() => {
+                  setSidebarOpen(false);
+                  setTimeout(() => handleNavClick(link), 150);
+                }}
+              >
+                <span style={{ color: link === "Visual Search" ? "#C94B2C" : "inherit" }}>{link}</span>
+                {link === "Visual Search" ? (
+                  <span style={{ fontSize: 8, background: "#C94B2C", color: "white", padding: "2px 6px", borderRadius: 2, fontWeight: 700 }}>AI</span>
+                ) : (
+                  <span style={{ fontSize: 12, color: "rgba(26,10,0,0.3)" }}>›</span>
+                )}
               </a>
             ))}
-            <div style={{ height: 1, background: "rgba(201,75,44,0.1)", margin: "16px 0" }} />
-            {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }) => (
-              <a key={label} onClick={() => { setSidebarOpen(false); setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 600, fontSize: 14, textDecoration: "none", color: "#555", cursor: "pointer" }}><Icon name={icon} size={18} /> {label}</a>
-            ))}
           </div>
-          <div style={{ padding: "20px 20px 24px" }}>
-            <button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", fontSize: 14, marginBottom: 10, boxShadow: "0 6px 20px rgba(201,75,44,0.35)" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>Sign In</button>
-            <p style={{ textAlign: "center", fontSize: 9, color: "rgba(26,10,0,0.2)", fontStyle: "italic", letterSpacing: "0.15em", textTransform: "uppercase" }}>Luxury Redefined</p>
+          <div style={{ padding: "16px 20px 24px", borderTop: "0.5px solid rgba(26,10,0,0.06)" }}>
+            <button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "12px 0", background: "#1A0A00", color: "white", fontWeight: 500, borderRadius: 8, border: "none", cursor: "pointer", fontSize: 14, marginBottom: 10, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#C94B2C"} onMouseLeave={e => e.currentTarget.style.background = "#1A0A00"}>
+              Sign in
+            </button>
+            <button onClick={() => { setSidebarOpen(false); navigate("/register"); }} style={{ width: "100%", padding: "11px 0", background: "transparent", color: "#1A0A00", fontWeight: 500, borderRadius: 8, border: "0.5px solid rgba(26,10,0,0.15)", cursor: "pointer", fontSize: 14, transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.background = "#1A0A00"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#1A0A00"; }}>
+              Create account
+            </button>
           </div>
         </aside>
 

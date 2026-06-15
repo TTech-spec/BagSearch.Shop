@@ -402,7 +402,7 @@ function EditDrawer({ listing, onClose, onSaved }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, overflow: "hidden", border: "2px solid rgba(255,255,255,0.6)", flexShrink: 0 }}>
-                  <img src={listing.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={listing.image} alt={listing.title || 'Product listing'} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 <div>
                   <p style={{ fontSize: 10, fontWeight: 700, color: C.brand, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>Editing</p>

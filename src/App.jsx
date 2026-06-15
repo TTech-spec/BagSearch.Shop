@@ -4,6 +4,7 @@ import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 
 // Lazy load route components for better code splitting
+const NotFound = lazy(() => import('./NotFound.jsx'));
 const Reg = lazy(() => import('./Reg.jsx'));
 const Login = lazy(() => import('./login.jsx'));
 const Home = lazy(() => import('./home.jsx'));
@@ -272,8 +273,8 @@ function App() {
             }
           />
 
-          {/* Fallback unknown routes -> home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Custom 404 page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </Router>
