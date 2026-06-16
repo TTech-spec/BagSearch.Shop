@@ -6,6 +6,7 @@ import CookieConsent from './components/CookieConsent.jsx';
 
 // Lazy load route components for better code splitting
 const Home = lazy(() => import('./home.jsx'));
+const NotFound = lazy(() => import('./NotFound.jsx'));
 const Reg = lazy(() => import('./Reg.jsx'));
 const Login = lazy(() => import('./login.jsx'));
 const Product = lazy(() => import('./Product.jsx'));
@@ -274,8 +275,8 @@ function App() {
             }
           />
 
-          {/* Fallback unknown routes -> home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Custom 404 page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </Router>

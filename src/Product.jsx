@@ -9,6 +9,7 @@ import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
+import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 const BAG_COLOR_MAP = {
   black:'#1A1A1A',white:'#F5F5F0',beige:'#D4B896',camel:'#C19A6B',tan:'#A67C52',
@@ -229,94 +230,15 @@ const Icons = {
   ),
 };
 
-// Google AdSense Configuration
-const ADSENSE_CLIENT_ID = 'ca-pub-6332230508786505';
-const ADSENSE_AD_SLOT = '6606653408';
-
-// ─── GOOGLE ADSENSE COMPONENT ─────────────────────────────────────────────────────
-const GoogleAdSense = React.memo(function GoogleAdSense({ style }) {
-  const adRef = useRef(null);
-
-  useEffect(() => {
-    // Load AdSense script if not already loaded
-    if (!window.adsbygoogle || !window.adsbygoogle.loaded) {
-      const script = document.createElement('script');
-      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adsbygoogle.loaded = true;
-    }
-
-    // Push the ad when component mounts
-    if (window.adsbygoogle && adRef.current) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        console.error('AdSense error:', e);
-      }
-    }
-  }, []);
-
+// ─── PRODUCT GRID ─────────────────────────────────────────────────────────────
+const ProductGrid = React.memo(function ProductGrid({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
   return (
-    <ins
-      ref={adRef}
-      className="adsbygoogle"
-      style={{ display: 'block', ...style }}
-      data-ad-client={ADSENSE_CLIENT_ID}
-      data-ad-slot={ADSENSE_AD_SLOT}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
-    />
-  );
-});
-
-
-
-// ─── AD BANNER ────────────────────────────────────────────────────────────────
-const AdBanner = React.memo(function AdBanner({ onDismiss }) {
-  const [dismissed, setDismissed] = useState(false);
-  if (dismissed) return null;
-  return (
-    <div style={{ marginBottom:20, position:'relative' }}>
-      <GoogleAdSense />
-      <button onClick={()=>{ setDismissed(true); onDismiss&&onDismiss(); }} style={{ position:'absolute',top:8,right:10,background:'white',border:'1px solid #ddd',cursor:'pointer',fontSize:13,color:'#999',lineHeight:1,padding:6,borderRadius:'50%',transition:'color 0.2s',zIndex:1 }}
-        onMouseEnter={e=>e.currentTarget.style.color=C.text} onMouseLeave={e=>e.currentTarget.style.color='#999'}>
-        <Icons.X size={12} color="currentColor" />
-      </button>
+    <div key={resultsKey} className="product-grid">
+      {products.map((p, i) => (
+        <ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />
+      ))}
     </div>
   );
-});
-
-// ─── INLINE AD CARD ───────────────────────────────────────────────────────────
-const InlineAdCard = React.memo(function InlineAdCard() {
-  const [dismissed, setDismissed] = useState(false);
-  if (dismissed) return null;
-  return (
-    <div style={{ gridColumn:'1 / -1', position:'relative', padding:'20px', background:'#f9f9f9', borderRadius:16, margin:'20px 0' }}>
-      <GoogleAdSense />
-      <button onClick={()=>setDismissed(true)} style={{ position:'absolute',top:10,right:12,background:'white',border:'1px solid #ddd',cursor:'pointer',fontSize:12,color:'#ccc',padding:6,transition:'color 0.2s',borderRadius:'50%',zIndex:1 }}
-        onMouseEnter={e=>e.currentTarget.style.color='#666'} onMouseLeave={e=>e.currentTarget.style.color='#ccc'}>
-        <Icons.X size={12} color="currentColor" />
-      </button>
-    </div>
-  );
-});
-
-// ─── PRODUCT GRID WITH ADS ────────────────────────────────────────────────────
-const ProductGridWithAds = React.memo(function ProductGridWithAds({ products, navigate, onAddToCart, isAuthed, onRequireAuth, resultsKey }) {
-  const adInsertPositions = [8, 20];
-  const nodes = [];
-  let adIndex = 0;
-  products.forEach((p, i) => {
-    nodes.push(<ProductCard key={`${p.id}-${resultsKey}`} product={p} index={i} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} />);
-    if (adInsertPositions.includes(i + 1) && adIndex < 2) { // Show max 2 inline ads
-      nodes.push(<InlineAdCard key={`inline-ad-${adIndex}`} />);
-      adIndex++;
-    }
-  });
-  return <div key={resultsKey} className="product-grid">{nodes}</div>;
 });
 
 // ─── LOCATION CONTEXT BAR (new creative placement below hero) ─────────────────
@@ -1109,13 +1031,13 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
         style={{position:'relative',borderRadius:22,overflow:'hidden',border:`2px solid #fcd4be`,boxShadow:'0 6px 32px rgba(200,75,17,0.1)',background:'linear-gradient(135deg,#fff5f2 0%,#fff 60%)'}}>
         <div style={{display:'flex',flexDirection:isMobile?'column':'row',transition:'opacity 0.38s ease, transform 0.38s cubic-bezier(0.22,1,0.36,1)',...slideStyle}}>
           <div style={{width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0}} onClick={()=>navigate(productPath(product.name,product.id))}>
-            <img 
-              src={product.src} 
-              alt={product.name} 
+            <img
+              src={product.srcHero||product.src}
+              alt={product.name}
               loading="lazy"
               decoding="async"
-              style={{width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease'}} 
-              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'} 
+              style={{width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease'}}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
               onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
             <div style={{position:'absolute',top:14,left:14,background:'#dc2626',color:'white',fontSize:isSmall?9:11,fontWeight:900,padding:isSmall?'2px 8px':'4px 12px',borderRadius:20,letterSpacing:'0.05em',boxShadow:'0 3px 10px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite'}}>🔥 HOT DEAL</div>
             {products.length>1&&<div style={{position:'absolute',bottom:14,left:14,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',color:'white',fontSize:11,fontWeight:800,padding:'4px 10px',borderRadius:20}}>{activeIdx+1} / {products.length}</div>}
@@ -1163,11 +1085,13 @@ function CartItem({item,onUpdateQty,onRemove,index,isAuthed,onRequireAuth}){
   return(
     <div style={{display:'flex',gap:13,background:'white',borderRadius:16,padding:14,border:`1.5px solid ${C.borderLight}`,boxShadow:`0 2px 10px rgba(200,75,17,0.05)`,opacity:removing?0:vis?1:0,transform:removing?'translateX(60px) scale(0.9)':vis?'translateX(0) scale(1)':'translateX(-20px) scale(0.97)',transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',maxHeight:removing?0:200,overflow:'hidden'}}>
       <div style={{position:'relative',flexShrink:0}}>
-        <img 
-          src={item.src} 
-          alt={item.name} 
+        <img
+          src={getOptimizedImageUrl(item.src,IMG_SIZES.thumb.width,IMG_SIZES.thumb.height)}
+          alt={item.name}
           loading="lazy"
           decoding="async"
+          width={72}
+          height={72}
           style={{width:72,height:72,objectFit:'cover',borderRadius:12,display:'block',border:`1px solid ${C.borderLight}`}}/>
         {waLink&&(<a href={waLink} target="_blank" rel="noopener noreferrer"
           onClick={e=>{if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();}}}
@@ -1444,7 +1368,7 @@ export default function Product(){
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
   const[visualSearchCount,setVisualSearchCount]=useState(0);
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);const[searchFocused,setSearchFocused]=useState(false);
-  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(false);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
+  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
@@ -1454,8 +1378,6 @@ export default function Product(){
   const[deferredPrompt,setDeferredPrompt]=useState(null);
   const[showInstallBtn,setShowInstallBtn]=useState(false);
   const[installButtonLabel,setInstallButtonLabel]=useState('Install App');
-  const[dismissedAds,setDismissedAds]=useState([]);
-  const[topBannerDismissed,setTopBannerDismissed]=useState(false);
   const getIsIOSDevice = () => {
     const ua = navigator.userAgent || '';
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1605,7 +1527,8 @@ export default function Product(){
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
         const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[]; 
         const qty=p.quantity!=null?parseInt(p.quantity):null;
-        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:p.images?.length>0?p.images[0]:'https://via.placeholder.com/400',brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''};
+        const rawSrc=p.images?.length>0?p.images[0]:'https://via.placeholder.com/400';
+        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height),srcHero:getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height),srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''};
       });
     }catch(err){console.error('Failed to load products:',err);return[];}
   },[mapCategory]);
@@ -1641,7 +1564,6 @@ export default function Product(){
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
   const hotDealProducts=useMemo(()=>allProducts.filter(p=>p.discountedPrice||p.lowStock).slice(0,10),[allProducts]);
-  const showTopBannerAd=!topBannerDismissed;
 
    return(
      <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
@@ -1758,7 +1680,7 @@ export default function Product(){
                 <br style={{display:isMobile?'block':'none'}}/>
                 <span style={{color:C.primary,display:'inline-block',minWidth:isMobile?'8ch':'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
               </h1>
-              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Search bags or browse vendors — discover luxury across Nigeria</p>
+              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers</p>
             </div>
             <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><img src={shoppingBagImg} alt="" loading="lazy" decoding="async" style={{width:38,height:38,objectFit:'contain'}}/></div>
@@ -1825,7 +1747,7 @@ export default function Product(){
 
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
             <div>
-              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Bags'}</h2>
+              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Luxury Designer Bags'}</h2>
               <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
             </div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
@@ -1838,8 +1760,6 @@ export default function Product(){
               {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
-
-          {!isFiltered&&showTopBannerAd&&(<AdBanner onDismiss={()=>setTopBannerDismissed(true)}/>)}
 
           {/* Visual Search overlays (unchanged) */}
           {visualSearching&&(
@@ -1861,7 +1781,7 @@ export default function Product(){
           {/* Results */}
           <div style={{position:'relative',minHeight:'auto'}}>
             {displayedProducts.length>0
-              ?<ProductGridWithAds products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
+              ?<ProductGrid products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
               :!visualSearching&&(
                 <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
                   <Icons.Search size={56} color={C.textFaint} />

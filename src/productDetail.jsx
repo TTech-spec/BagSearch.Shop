@@ -6,6 +6,7 @@ import { AuthContext } from './context/AuthContext';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { slugify, extractIdFromParam, productPath } from './utils/slugify';
+import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
 const BAG_COLOR_MAP = {
@@ -340,13 +341,15 @@ export default function ProductDetail() {
           url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
           seller: { '@type': 'Person', name: product.seller },
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: product.rating,
-          reviewCount: product.reviews,
-          bestRating: 5,
-          worstRating: 1,
-        },
+        ...(product.reviews > 0 && product.rating ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: product.rating,
+            reviewCount: product.reviews,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        } : {}),
       }
     : null;
 
@@ -720,7 +723,7 @@ export default function ProductDetail() {
               boxShadow:`0 8px 40px rgba(200,75,17,0.1)`,
             }}>
               <img
-                src={product.images[activeImg]}
+                src={getOptimizedImageUrl(product.images[activeImg], IMG_SIZES.detail.width, IMG_SIZES.detail.height)}
                 alt={`${product.brand} ${product.name} — image ${activeImg + 1} of ${product.images.length}`}
                 className={`img-zoom${imgZoom?' zoomed':''}`}
                 onClick={() => setImgZoom(z=>!z)}
@@ -1012,7 +1015,7 @@ export default function ProductDetail() {
               <div key={p.id} className="card-hover"
                 style={{ background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${C.borderLight}`,animation:`floatUp 0.55s ${0.05+idx*0.07}s ease both` }}>
                 <div style={{ position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg }}>
-                  <img src={p.images?.[0]} alt={`${p.brand || ''} ${p.name} — similar product`} className="card-img" loading="lazy" width="400" height="300" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
+                  <img src={getOptimizedImageUrl(p.images?.[0], IMG_SIZES.card.width, IMG_SIZES.card.height)} alt={`${p.brand || ''} ${p.name} — similar product`} className="card-img" loading="lazy" width="400" height="300" style={{ width:'100%',height:'100%',objectFit:'cover',display:'block' }}/>
                   {p.lowStock && (
                     <span style={{ position:'absolute',top:9,left:9,background:C.danger,color:'white',fontSize:9,fontWeight:800,padding:'3px 9px',borderRadius:99,letterSpacing:'0.06em',textTransform:'uppercase' }}>
                       Low Stock

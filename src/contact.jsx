@@ -231,7 +231,7 @@ export default function Contact() {
           {[
             {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-              label:'Email', value:'info@bagsearch.shop', sub:'Reply within 24 hours',
+              label:'Email', value:<a href="mailto:info@bagsearch.shop" style={{color:'inherit',textDecoration:'none'}}><span>info</span><span>&#64;</span><span>bagsearch.shop</span></a>, sub:'Reply within 24 hours',
             },
             {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,

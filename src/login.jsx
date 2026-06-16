@@ -7,6 +7,7 @@ import { sanitizeInput, validateRequired, validateEmail } from './utils/security
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { upsertUserProfile } from './services/userProfileService';
+import { useSEO } from './hooks/useSEO';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -178,6 +179,7 @@ const EyeIcon = ({ open }) => open ? (
 
 // ─── LOGIN PAGE ───────────────────────────────────────────────────────────────
 const LoginPage = () => {
+  useSEO({ title: 'Log In | BagSearch', noindex: true });
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const [email, setEmail]               = useState('');

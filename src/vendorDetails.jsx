@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -326,7 +327,6 @@ export default function VendorDetails() {
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
       .limit(20);
-    console.log('Reviews fetch:', data?.length, error);
     setReviews(data || []);
   }, [sellerId]);
 
@@ -364,7 +364,6 @@ export default function VendorDetails() {
           .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email')
           .eq('user_id', id || slug)
           .maybeSingle();
-        console.log('Profile fetch:', p, pErr);
         setProfile(p || null);
         const resolvedSellerId = p?.user_id || id;
         if (!resolvedSellerId) {
@@ -374,13 +373,12 @@ export default function VendorDetails() {
           .from('products').select('*')
           .eq('user_id', resolvedSellerId)
           .order('created_at', { ascending: false });
-        console.log('Products fetch:', prods?.length, prodsErr);
         const mapped = (prods || []).map(p => ({
           id: p.id, name: p.name,
           price: parseFloat(p.price),
           discountedPrice: p.discounted_price ? parseFloat(p.discounted_price) : null,
           discountLabel: p.discount_label || null,
-          src: p.images?.[0] || 'https://via.placeholder.com/400',
+          src: getOptimizedImageUrl(p.images?.[0] || 'https://via.placeholder.com/400', IMG_SIZES.card.width, IMG_SIZES.card.height),
           colors: (Array.isArray(p.colors) ? p.colors : []).map(c =>
             typeof c === 'string'
               ? { id:c, hex: BAG_COLOR_MAP[c.toLowerCase()] || '#c84b11' }
@@ -395,7 +393,6 @@ export default function VendorDetails() {
           .eq('seller_id', resolvedSellerId)
           .order('created_at', { ascending: false })
           .limit(20);
-        console.log('Reviews fetch:', reviewRows?.length, reviewErr);
         setReviews(reviewRows || []);
         await loadViews(mapped.map(p => p.id));
       } catch(e) { console.error('Load error:', e); }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import LogoIcon from './components/Logo.jsx';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from './services/api';
+import { useSEO } from './hooks/useSEO';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -24,6 +25,7 @@ const C = {
 };
 
 const ForgotPassword = () => {
+  useSEO({ title: 'Reset Password | BagSearch', noindex: true });
   const navigate = useNavigate();
   const [method, setMethod] = useState('phone');
   const [identifier, setIdentifier] = useState('');

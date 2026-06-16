@@ -76,23 +76,30 @@ export default defineConfig({
     port: 5173,
   },
   build: {
-    chunkSizeWarningLimit: 1000, // Increase warning threshold to 1000 kB
+    target: 'es2020',
+    chunkSizeWarningLimit: 600,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn', 'console.info'],
+      },
+    },
+    cssMinify: true,
+    reportCompressedSize: true,
+    assetsInlineLimit: 4096,
     rollupOptions: {
       output: {
-        // Add cache-friendly naming
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
-          // Vendor chunks
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
             return 'vendor-react';
           }
           if (id.includes('node_modules/@supabase')) {
             return 'vendor-supabase';
-          }
-          if (id.includes('node_modules/axios')) {
-            return 'vendor-axios';
           }
           if (id.includes('node_modules/framer-motion')) {
             return 'vendor-motion';
@@ -100,10 +107,6 @@ export default defineConfig({
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
           }
-          if (id.includes('node_modules/@xenova/transformers')) {
-            return 'vendor-transformers';
-          }
-          // Page-specific chunks
           if (id.includes('/src/login.jsx') || id.includes('/src/Reg.jsx') || id.includes('/src/forgotPassword.jsx') || id.includes('/src/resetPassword.jsx')) {
             return 'page-auth';
           }
@@ -125,11 +128,5 @@ export default defineConfig({
         }
       }
     },
-    // Enable compression
-    reportCompressedSize: true,
-    // Minify CSS
-    cssMinify: true,
-    // Add cache headers for static assets
-    assetsInlineLimit: 4096, // 4KB threshold for inlining
   },
 })

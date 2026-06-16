@@ -186,200 +186,10 @@ async function uploadImageToCloudinary(file, userId) {
   }
 }
 
-// ─── Ad Gate Modal ────────────────────────────────────────────────────────────
-function AdGateModal({ onComplete, onClose }) {
-  const [countdown, setCountdown] = useState(5);
-  const [adLoaded, setAdLoaded] = useState(false);
-  const [canProceed, setCanProceed] = useState(false);
-  const adRef = useRef(null);
-
-  useEffect(() => {
-    // Inject AdSense script if not already present
-    if (!document.querySelector('script[src*="pagead2.googlesyndication.com"]')) {
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6332230508786505';
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
-    }
-
-    // Push ad after a short delay to ensure script is loaded
-    const pushTimer = setTimeout(() => {
-      try {
-        if (adRef.current) {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-          setAdLoaded(true);
-        }
-      } catch (e) {
-        // Ad blocker or other issue — still allow after countdown
-        setAdLoaded(true);
-      }
-    }, 600);
-
-    return () => clearTimeout(pushTimer);
-  }, []);
-
-  useEffect(() => {
-    if (!adLoaded) return;
-    if (countdown <= 0) {
-      setCanProceed(true);
-      return;
-    }
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown, adLoaded]);
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(26,10,0,0.72)', backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '20px',
-      animation: 'fadeIn 0.25s ease both',
-    }}>
-      <div style={{
-        background: C.surface, borderRadius: 24, width: '100%', maxWidth: 480,
-        boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
-        overflow: 'hidden',
-        animation: 'adModalIn 0.4s cubic-bezier(0.22,1,0.36,1) both',
-      }}>
-
-        {/* Header */}
-        <div style={{
-          background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%)`,
-          padding: '20px 24px',
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: 'rgba(255,255,255,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22,
-          }}>📸</div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>
-              Unlock Photo Upload
-            </div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', marginTop: 2 }}>
-              Watch a short ad to upload your bag photos — it's free!
-            </div>
-          </div>
-        </div>
-
-        {/* Ad container */}
-        <div style={{ padding: '20px 24px 0' }}>
-          <div style={{
-            background: C.surfaceDim, borderRadius: 12,
-            border: `1.5px solid ${C.border}`,
-            minHeight: 120, overflow: 'hidden',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            position: 'relative',
-          }}>
-            {!adLoaded && (
-              <div style={{ padding: '30px 20px', textAlign: 'center' }}>
-                <div style={{
-                  width: 32, height: 32, border: `3px solid ${C.borderLight}`,
-                  borderTopColor: C.primary, borderRadius: '50%',
-                  animation: 'spin 0.7s linear infinite',
-                  margin: '0 auto 10px',
-                }} />
-                <p style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>Loading ad…</p>
-              </div>
-            )}
-            <ins
-              ref={adRef}
-              className="adsbygoogle"
-              style={{ display: 'block', width: '100%', minHeight: 100 }}
-              data-ad-client="ca-pub-6332230508786505"
-              data-ad-slot="5492352056"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            />
-          </div>
-
-          {/* Info row */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '10px 2px 0',
-          }}>
-            <MS name="info" size={14} style={{ color: C.textFaint, flexShrink: 0 }} />
-            <p style={{ fontSize: 11, color: C.textMuted }}>
-              This ad supports free listing on BagSearch. Thank you for your support!
-            </p>
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div style={{
-          padding: '16px 24px 20px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-          borderTop: `1px solid ${C.borderLight}`, marginTop: 16,
-          flexWrap: 'wrap',
-        }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: '10px 18px', borderRadius: 10,
-              border: `1.5px solid ${C.border}`,
-              background: 'white', color: C.textMuted,
-              fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              fontFamily: "'Manrope', sans-serif",
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.color = C.primary; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            disabled={!canProceed}
-            onClick={onComplete}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 24px', borderRadius: 10,
-              border: 'none',
-              background: canProceed ? C.primary : C.textFaint,
-              color: 'white', fontSize: 13, fontWeight: 800,
-              cursor: canProceed ? 'pointer' : 'not-allowed',
-              fontFamily: "'Manrope', sans-serif",
-              transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
-              boxShadow: canProceed ? `0 4px 14px ${C.primary}80` : 'none',
-              transform: canProceed ? 'scale(1)' : 'scale(0.97)',
-            }}
-            onMouseEnter={e => { if (canProceed) { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)'; } }}
-            onMouseLeave={e => { if (canProceed) { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = 'scale(1)'; } }}
-          >
-            {canProceed ? (
-              <><MS name="photo_camera" size={16} /> Upload Photo</>
-            ) : (
-              <>
-                <div style={{
-                  width: 18, height: 18, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 900,
-                }}>{countdown}</div>
-                Please wait…
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function CreateProduct() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
-
-  // ── Ad gate state ──
-  const [showAdModal, setShowAdModal] = useState(false);
-  const [adUnlocked, setAdUnlocked] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', brand: '', category: '',
@@ -435,22 +245,8 @@ export default function CreateProduct() {
     setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
   };
 
-  // ── Intercept upload area click — show ad modal first ──
   const handleUploadAreaClick = () => {
-    if (adUnlocked) {
-      // Already watched ad this session — allow directly
-      fileInputRef.current.click();
-    } else {
-      setShowAdModal(true);
-    }
-  };
-
-  // ── Called when user completes the ad ──
-  const handleAdComplete = () => {
-    setShowAdModal(false);
-    setAdUnlocked(true);
-    // Trigger the file picker right after
-    setTimeout(() => fileInputRef.current?.click(), 100);
+    fileInputRef.current.click();
   };
 
   const processFile = (file) => {
@@ -481,10 +277,6 @@ export default function CreateProduct() {
     e.preventDefault(); setDragOver(false);
     const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
     if (!file) return;
-    if (!adUnlocked) {
-      setShowAdModal(true);
-      return;
-    }
     processFile(file);
   };
 
@@ -714,19 +506,6 @@ export default function CreateProduct() {
         .savings-badge { animation: savingsPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
         .discount-tag-icon { animation: tagWiggle 1.4s ease-in-out infinite; display: inline-block; }
 
-        /* Upload area locked state */
-        .upload-area-locked {
-          position: relative;
-        }
-        .upload-area-locked::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 14px;
-          border: 2px dashed ${C.primaryLight};
-          pointer-events: none;
-        }
-
         @media (max-width: 768px) {
           .create-title { font-size: 28px !important; }
         }
@@ -735,14 +514,6 @@ export default function CreateProduct() {
           .create-title { font-size: 24px !important; }
         }
       `}</style>
-
-      {/* ── AD GATE MODAL ── */}
-      {showAdModal && (
-        <AdGateModal
-          onComplete={handleAdComplete}
-          onClose={() => setShowAdModal(false)}
-        />
-      )}
 
       {/* ── HEADER ── */}
       <header style={{
@@ -875,19 +646,6 @@ export default function CreateProduct() {
           {/* ── SECTION 1: Images ── */}
           <FormSection icon="photo_camera" title="Upload Photos" subtitle="Add up to 10 clear photos" delay={0.35} mounted={mounted}>
 
-            {/* Ad unlock badge — shown after ad watched */}
-            {adUnlocked && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 7,
-                padding: '7px 14px', borderRadius: 10, marginBottom: 12,
-                background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
-                animation: 'scaleIn 0.3s ease both',
-              }}>
-                <MS name="verified" size={15} style={{ color: C.primary }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>Upload unlocked — thank you for watching!</span>
-              </div>
-            )}
-
             <div
               onDragOver={e => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
@@ -902,39 +660,21 @@ export default function CreateProduct() {
               }}>
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
 
-              {/* Lock icon overlay when not yet unlocked */}
-              {!adUnlocked && (
-                <div style={{
-                  position: 'absolute', top: 10, right: 12,
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px', borderRadius: 20,
-                  background: C.text, color: 'white',
-                  fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase',
-                }}>
-                  <MS name="lock" size={12} style={{ color: 'white' }} />
-                  Watch ad to unlock
-                </div>
-              )}
-
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
                 background: images.length > 0 ? C.successBg : C.primaryPale,
                 margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center",
                 animation: dragOver ? "bounce 0.6s ease infinite" : images.length === 0 ? "uploadPulse 2s ease-in-out infinite" : "none"
               }}>
-                <MS name={adUnlocked ? (images.length > 0 ? "check_circle" : "cloud_upload") : "play_circle"} size={30} style={{ color: C.primary }} />
+                <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: C.primary }} />
               </div>
               <p style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 5 }}>
                 {images.length > 0
                   ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add another?`
-                  : adUnlocked
-                  ? "Drag & drop or click to upload"
-                  : "Click to watch a short ad & unlock uploads"}
+                  : "Drag & drop or click to upload"}
               </p>
               <p style={{ fontSize: 12, color: C.textMuted }}>
-                {adUnlocked
-                  ? "One photo at a time · up to 10 total (Front, Back, Inside, Serial Number)"
-                  : "Free to list — just watch a quick ad first 🙏"}
+                One photo at a time · up to 10 total (Front, Back, Inside, Serial Number)
               </p>
             </div>
 
