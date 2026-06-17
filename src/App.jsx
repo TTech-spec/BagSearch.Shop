@@ -5,7 +5,7 @@ import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 
 // Lazy load route components for better code splitting
-const Home = lazy(() => import('./home.jsx'));
+// const Home = lazy(() => import('./home.jsx')); // home.jsx preserved but no longer the landing page
 const NotFound = lazy(() => import('./NotFound.jsx'));
 const Reg = lazy(() => import('./Reg.jsx'));
 const Login = lazy(() => import('./login.jsx'));
@@ -157,9 +157,8 @@ function LoginRoute() {
   const [searchParams] = useSearchParams();
   const force = searchParams.get('force') === 'true';
   
-  // If user is logged in and force parameter is not set, redirect to products
   if (user && !force) {
-    return <Navigate to="/products" replace />;
+    return <Navigate to="/" replace />;
   }
   
   return <Login />;
@@ -169,11 +168,9 @@ function RegRoute() {
   return <Reg />;
 }
 
-// Root route - show landing page for guests, redirect to products for logged-in users
+// Root route — Product.jsx is now the landing page for all visitors
 function RootRoute() {
-  const { loading, user } = useContext(AuthContext);
-  if (loading) return <LoadingSpinner />;
-  return user ? <Navigate to="/products" replace /> : <Home />;
+  return <Product />;
 }
 
 function App() {
