@@ -27,7 +27,7 @@ export default function CookieConsent() {
       bottom: 0,
       left: 0,
       right: 0,
-      zIndex: 99999,
+      zIndex: 2147483647,
       background: 'white',
       borderTop: '1.5px solid #f0d9cc',
       boxShadow: '0 -8px 32px rgba(200,75,17,0.12)',
