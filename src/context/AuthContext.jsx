@@ -39,22 +39,33 @@ export const AuthProvider = ({ children }) => {
         // Handle post-login logic (especially for OAuth)
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
           const user = session.user;
-          // Small delay to let login.jsx finish its tasks if this was a password login
+          const isOAuth = user.app_metadata?.provider !== 'email';
+          const oauthMode = sessionStorage.getItem('oauth_mode');
+
           setTimeout(async () => {
             try {
-              // Check if profile exists
               const { data: profile, error: profileError } = await supabase
                 .from('users')
-                .select('*')
+                .select('user_id')
                 .eq('user_id', user.id)
                 .single();
 
               if (profileError && profileError.code === 'PGRST116') {
-                // Profile doesn't exist, create it
+                if (isOAuth && oauthMode === 'login') {
+                  // Google user logging in but has no BagSearch account — block them
+                  sessionStorage.removeItem('oauth_mode');
+                  await supabase.auth.signOut();
+                  sessionStorage.setItem(
+                    'auth_error',
+                    'This Google account is not registered on BagSearch. Please sign up first.'
+                  );
+                  window.location.href = '/login';
+                  return;
+                }
+                // Email/password or Google registration: create profile
                 const metadata = user.user_metadata;
                 const role = metadata?.role || 'buyer';
                 const fullName = metadata?.full_name || metadata?.name || 'User';
-
                 const { upsertUserProfile } = await import('../services/userProfileService');
                 const { error: insertError } = await upsertUserProfile({
                   userId: user.id,
@@ -63,13 +74,13 @@ export const AuthProvider = ({ children }) => {
                   phone: metadata?.phone,
                   role,
                 });
-                
                 if (insertError && insertError.name !== 'AbortError') {
-                  console.error('Error creating user profile after OAuth:', insertError);
+                  console.error('Error creating user profile:', insertError);
                 }
               } else if (profileError && profileError.name !== 'AbortError') {
                 console.error('Error checking profile existence:', profileError);
               }
+              sessionStorage.removeItem('oauth_mode');
             } catch (err) {
               if (err.name !== 'AbortError') {
                 console.error('Error in post-auth profile check:', err);

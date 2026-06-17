@@ -25,6 +25,7 @@ const HotDeals = lazy(() => import('./hotDeals.jsx'));
 const Policy = lazy(() => import('./policy.jsx'));
 const PrivacyPolicy = lazy(() => import('./policy.jsx'));
 const TermsOfService = lazy(() => import('./TermsOfService.jsx'));
+const AuthCallback = lazy(() => import('./AuthCallback.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -147,10 +148,7 @@ function AuthListener() {
 
 function PrivateRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
-  // Only allow access if logged in and not loading
-  if (loading) {
-    return null; // Or a loading spinner
-  }
+  if (loading) return <LoadingSpinner />;
   return user ? children : <Navigate to="/login" replace />;
 }
 
@@ -174,7 +172,7 @@ function RegRoute() {
 // Root route - show landing page for guests, redirect to products for logged-in users
 function RootRoute() {
   const { loading, user } = useContext(AuthContext);
-  if (loading) return null;
+  if (loading) return <LoadingSpinner />;
   return user ? <Navigate to="/products" replace /> : <Home />;
 }
 
@@ -189,6 +187,9 @@ function App() {
         <Routes>
           {/* Default route -> Home (public landing page) or Products (if logged in) */}
           <Route path="/" element={<RootRoute />} />
+
+          {/* OAuth callback — shows spinner while Supabase processes the auth hash */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Registration route */}
           <Route path="/register" element={<RegRoute />} />

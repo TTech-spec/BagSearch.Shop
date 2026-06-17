@@ -194,6 +194,14 @@ const LoginPage = () => {
 
   const handleLoaderDone = useCallback(() => setPageLoading(false), []);
 
+  useEffect(() => {
+    const stored = sessionStorage.getItem('auth_error');
+    if (stored) {
+      setErrorMsg(stored);
+      sessionStorage.removeItem('auth_error');
+    }
+  }, []);
+
   // ── Auth handlers — 100% unchanged ────────────────────────────────────────
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -265,10 +273,11 @@ const LoginPage = () => {
         setErrorMsg(secureError.message);
         return;
       }
+      sessionStorage.setItem('oauth_mode', 'login');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/products`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
           data: { role: sanitizeInput(role) },
         },

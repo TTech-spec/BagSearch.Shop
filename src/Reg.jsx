@@ -303,10 +303,11 @@ const Reg = () => {
       setLoading(true);
       setErrorMessage('');
       const normalizedRole = (formData.role || 'buyer').toLowerCase();
+      sessionStorage.setItem('oauth_mode', 'register');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/products`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
           data: { role: normalizedRole }
         },
