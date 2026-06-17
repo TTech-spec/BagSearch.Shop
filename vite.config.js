@@ -9,8 +9,8 @@ import path from 'node:path'
 export default defineConfig({
   resolve: {
     alias: {
-      'workbox-core': path.resolve(__dirname, 'node_modules/vite-plugin-pwa/node_modules/workbox-core'),
-      'workbox-precaching': path.resolve(__dirname, 'node_modules/vite-plugin-pwa/node_modules/workbox-precaching'),
+      'workbox-core': path.resolve(__dirname, 'node_modules/workbox-core'),
+      'workbox-precaching': path.resolve(__dirname, 'node_modules/workbox-precaching'),
     },
   },
   plugins: [
