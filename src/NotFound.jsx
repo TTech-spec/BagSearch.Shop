@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
+import { useSEO } from './hooks/useSEO';
 
 export default function NotFound() {
   const navigate = useNavigate();
+  useSEO({ title: 'Page Not Found | BagSearch', noindex: true });
 
   return (
     <div style={{

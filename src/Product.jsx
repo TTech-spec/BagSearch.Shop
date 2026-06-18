@@ -840,14 +840,15 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   const loc=NIGERIAN_LOCATIONS.find(l=>l.id===product.location);
   const handleCart=(e)=>{e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
   return(
-    <div ref={ref} onClick={()=>navigate(productPath(product.name,product.id))} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
+    <a href={productPath(product.name,product.id)} ref={ref} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
-        <img 
-          src={product.src} 
-          alt={product.name} 
+        <img
+          src={product.src}
+          alt={product.brand ? `${product.brand} ${product.name}` : product.name}
           loading="lazy"
           decoding="async"
+          width="400" height="300"
           style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}/>
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,transparent 55%,rgba(26,10,0,0.3) 100%)',opacity:hov?1:0,transition:'opacity 0.4s'}}/>
         <div style={{position:'absolute',top:10,left:10,display:'flex',flexDirection:'column',gap:5,alignItems:'flex-start',zIndex:2}}>
@@ -897,7 +898,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
           </a>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -906,14 +907,15 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   const [added, setAdded] = useState(false);
   const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
   return (
-    <div onClick={()=>navigate(productPath(product.name,product.id))} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ background:'white',borderRadius:16,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',boxShadow:hov?`0 16px 40px rgba(200,75,17,0.13)`:'0 2px 8px rgba(0,0,0,0.04)',transform:hov?'translateY(-4px)':'none',flexShrink:0,width:200 }}>
+    <a href={productPath(product.name,product.id)} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{ display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:16,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',boxShadow:hov?`0 16px 40px rgba(200,75,17,0.13)`:'0 2px 8px rgba(0,0,0,0.04)',transform:hov?'translateY(-4px)':'none',flexShrink:0,width:200 }}>
       <div style={{ position:'relative',overflow:'hidden',height:150,background:C.primaryBg }}>
-        <img 
-          src={product.src} 
-          alt={product.name} 
+        <img
+          src={product.src}
+          alt={product.brand ? `${product.brand} ${product.name}` : product.name}
           loading="lazy"
           decoding="async"
+          width="200" height="150"
           style={{ width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.5s ease',transform:hov?'scale(1.08)':'scale(1)' }} />
         {badge&&<span style={{ position:'absolute',top:8,left:8,background:badgeColor||C.primary,color:'white',fontSize:9,fontWeight:800,letterSpacing:'0.1em',textTransform:'uppercase',padding:'3px 8px',borderRadius:20 }}>{badge}</span>}
       </div>
@@ -932,7 +934,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
           </button>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -1033,9 +1035,10 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
           <div style={{width:isMobile?'100%':'42%',minHeight:isMobile?220:300,position:'relative',overflow:'hidden',background:C.primaryBg,flexShrink:0}} onClick={()=>navigate(productPath(product.name,product.id))}>
             <img
               src={product.srcHero||product.src}
-              alt={product.name}
+              alt={product.brand ? `${product.brand} ${product.name}` : product.name}
               loading="lazy"
               decoding="async"
+              width="800" height="600"
               style={{width:'100%',height:isMobile?240:'100%',objectFit:'cover',display:'block',cursor:'pointer',transition:'transform 0.5s ease'}}
               onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
               onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}/>
@@ -1359,7 +1362,7 @@ function WelcomeBackBadge({ user, isMobile }) {
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
-  useSEO({ title:'Shop Luxury Designer Bags',description:'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more. Shop Chanel, Hermès, Louis Vuitton, Gucci and other top brands in Nigeria.',keywords:'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',url:'/products' });
+  useSEO({ title:'Shop Luxury Designer Bags in Nigeria | BagSearch',description:'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more. Shop Chanel, Hermès, Louis Vuitton, Gucci and other top brands in Nigeria.',keywords:'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',url:'/products' });
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
@@ -1970,7 +1973,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   };
 
   const displayName = profile?.brand_name || profile?.full_name || vendor.name;
-  const displayAvatar = profile?.avatar_url ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt="Avatar"/> : <span style={{fontSize:48}}>🏪</span>;
+  const displayAvatar = profile?.avatar_url ? <img src={profile.avatar_url} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} alt={profile.brand_name ? `${profile.brand_name} seller profile photo` : 'Seller profile photo'} loading="lazy" decoding="async"/> : <span style={{fontSize:48}}>🏪</span>;
   const displayStory = profile?.brand_story || null;
   const displayCategories = profile?.bag_categories || [];
   const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : null;

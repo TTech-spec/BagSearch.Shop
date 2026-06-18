@@ -661,7 +661,7 @@ export default function LuxeBag() {
   // SEO for home/landing page
   useSEO({
     title: 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria',
-    description: 'Buy and sell authentic luxury designer bags in Nigeria. Discover Chanel, Hermès, Louis Vuitton, Gucci, shoulder bags, clutches, and more from verified sellers on BagSearch.',
+    description: 'BagSearch is an AI-powered marketplace — upload any photo to instantly find matching bags from trusted vendors. Discover handbags, backpacks, travel bags and more. Free for vendors to list.',
     keywords: 'luxury bags Nigeria, designer handbags, authentic bags, buy luxury bags online, Chanel bags Nigeria, Louis Vuitton, Hermès, shoulder bags, clutches, verified sellers',
     url: '/',
     type: 'website',
@@ -670,7 +670,7 @@ export default function LuxeBag() {
       '@type': 'WebSite',
       name: 'BagSearch',
       url: SITE_URL,
-      description: "Nigeria's premier marketplace for authentic luxury designer bags.",
+      description: "BagSearch is an AI-powered marketplace that helps users find bags by uploading a photo. Vendors list for free and connect directly with buyers.",
       potentialAction: {
         '@type': 'SearchAction',
         target: {

@@ -130,7 +130,7 @@ const BagSearchAbout = () => {
         name: 'BagSearch',
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
-        foundingDate: '2018',
+        foundingDate: '2024',
         foundingLocation: {
           '@type': 'Place',
           name: 'Lagos, Nigeria'
@@ -141,7 +141,11 @@ const BagSearchAbout = () => {
           minValue: 10,
           maxValue: 50
         },
-        sameAs: []
+        sameAs: [
+          'https://www.facebook.com/bagsearch',
+          'https://www.instagram.com/bagsearch',
+          'https://twitter.com/bagsearch'
+        ]
       }
     }
   });

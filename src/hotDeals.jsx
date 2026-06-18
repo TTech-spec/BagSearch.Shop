@@ -165,11 +165,15 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
   })();
 
   return (
-    <div
+    <a
+      href={productPath(p.name, p.id)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      onClick={() => navigate(productPath(p.name, p.id))}
+      onClick={(e) => { e.preventDefault(); navigate(productPath(p.name, p.id)); }}
       style={{
+        display: 'block',
+        textDecoration: 'none',
+        color: 'inherit',
         position: 'relative',
         borderRadius: 24,
         overflow: 'hidden',
@@ -185,7 +189,9 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
       {/* Image — no dark overlay, no brightness filter */}
       <div style={{ position: 'relative', height: 380, overflow: 'hidden' }}>
         <img
-          src={getOptimizedImageUrl(p.src, IMG_SIZES.hero.width, IMG_SIZES.hero.height)} alt={p.name} loading="lazy"
+          src={getOptimizedImageUrl(p.src, IMG_SIZES.hero.width, IMG_SIZES.hero.height)}
+          alt={p.brand ? `${p.brand} ${p.name} — luxury bag Nigeria` : `${p.name} — luxury bag Nigeria`}
+          loading="lazy" decoding="async" width={IMG_SIZES.hero.width} height={IMG_SIZES.hero.height}
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)',
@@ -328,7 +334,7 @@ function SpotlightCard({ product: p, onAddToCart, isAdded, isAuthed, onRequireAu
           </a>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -372,7 +378,9 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
       {/* Image — clean, no dark filter */}
       <div style={{ position: 'relative', height: imgHeight, overflow: 'hidden', background: T.bgPanel }}>
         <img
-          src={getOptimizedImageUrl(p.src, IMG_SIZES.card.width, IMG_SIZES.card.height)} alt={p.name} loading="lazy"
+          src={getOptimizedImageUrl(p.src, IMG_SIZES.card.width, IMG_SIZES.card.height)}
+          alt={p.brand ? `${p.brand} ${p.name} — buy in Nigeria` : `${p.name} — buy in Nigeria`}
+          loading="lazy" decoding="async" width={IMG_SIZES.card.width} height={IMG_SIZES.card.height}
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.7s ease',
@@ -524,7 +532,9 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
       {/* Image — clean, full color */}
       <div style={{ position: 'relative', height: 240, overflow: 'hidden' }}>
         <img
-          src={p.src} alt={p.name} loading="lazy"
+          src={getOptimizedImageUrl(p.src, IMG_SIZES.card.width, IMG_SIZES.card.height)}
+          alt={p.brand ? `${p.brand} ${p.name} — luxury bag` : `${p.name} — luxury bag`}
+          loading="lazy" decoding="async" width={IMG_SIZES.card.width} height={IMG_SIZES.card.height}
           style={{
             width: '100%', height: '100%', objectFit: 'cover', display: 'block',
             transition: 'transform 0.8s ease',
@@ -786,18 +796,20 @@ export default function HotDeals() {
       itemListElement: filtered.slice(0, 20).map((p, idx) => ({
         '@type': 'ListItem',
         position: idx + 1,
+        url: `${SITE_URL}${productPath(p.name, p.id)}`,
         item: {
-          '@type': 'Offer',
+          '@type': 'Product',
           name: p.name,
           description: p.description || 'Authentic luxury bag on sale',
-          price: p.discountedPrice || p.price,
-          priceCurrency: 'NGN',
-          availability: 'https://schema.org/InStock',
-          seller: {
-            '@type': 'Person',
-            name: p.seller
+          image: p.src,
+          ...(p.brand && { brand: { '@type': 'Brand', name: p.brand } }),
+          offers: {
+            '@type': 'Offer',
+            price: p.discountedPrice || p.price,
+            priceCurrency: 'NGN',
+            availability: 'https://schema.org/InStock',
+            seller: { '@type': 'Person', name: p.seller },
           },
-          url: `${SITE_URL}/products/${productPath(p.name, p.id)}`
         }
       }))
     }

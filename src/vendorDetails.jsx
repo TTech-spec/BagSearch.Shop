@@ -274,7 +274,7 @@ export default function VendorDetails() {
       ? `Browse ${sellerName}'s authentic bag collection on BagSearch. ${products.length} products, ${avgRating || '4.9'} avg rating. Verified seller delivering across Nigeria.`
       : 'View this verified seller\'s bag collection on BagSearch Nigeria. Authentic products, WhatsApp contact, trusted marketplace.',
     keywords: sellerName ? `${sellerName} seller, verified seller, ${sellerName} bags, authentic bags Nigeria` : 'seller profile, verified seller, BagSearch vendors',
-    url: `/vendor/${sellerParam}`,
+    url: `/seller/${sellerParam}`,
     type: 'ProfilePage',
     schema: profile ? {
       '@context': 'https://schema.org',
@@ -282,7 +282,7 @@ export default function VendorDetails() {
       name: sellerName,
       description: profile.brand_story || `Verified seller on BagSearch with ${products.length} products`,
       image: profile.avatar_url || `${SITE_URL}/logo.png`,
-      url: `${SITE_URL}/vendor/${sellerParam}`,
+      url: `${SITE_URL}/seller/${sellerParam}`,
       sameAs: [],
       aggregateRating: avgRating ? {
         '@type': 'AggregateRating',
@@ -540,7 +540,7 @@ export default function VendorDetails() {
             <div style={{display:'flex',alignItems:'flex-start',gap:20,flexWrap:'wrap'}}>
               <div style={{width:88,height:88,borderRadius:'50%',background:'rgba(255,255,255,0.1)',border:'3px solid rgba(255,255,255,0.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:38,flexShrink:0,overflow:'hidden'}}>
                 {profile.avatar_url
-                  ? <img src={profile.avatar_url} loading="eager" style={{width:'100%',height:'100%',objectFit:'cover'}} alt="avatar"/>
+                  ? <img src={profile.avatar_url} loading="eager" decoding="async" width="88" height="88" style={{width:'100%',height:'100%',objectFit:'cover'}} alt={name ? `${name} seller profile photo on BagSearch` : 'Seller profile photo on BagSearch'}/>
                   : <IconStore size={40} style={{color:'rgba(255,255,255,0.7)'}}/>}
               </div>
               <div style={{flex:1,minWidth:200}}>

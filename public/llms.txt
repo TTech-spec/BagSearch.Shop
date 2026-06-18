@@ -1,65 +1,94 @@
 # BagSearch — Nigeria's Luxury Bag Marketplace
 
-> BagSearch (bagsearch.shop) is Nigeria's premier online marketplace for buying and selling authentic luxury designer bags and handbags. It is also Africa's first AI-powered bag discovery platform.
+> BagSearch (bagsearch.shop) is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors. Founded in Lagos in 2024, it serves buyers and sellers across all 36 Nigerian states.
 
 ## What is BagSearch?
 
-BagSearch is a dedicated e-commerce marketplace focused exclusively on bags and handbags in Nigeria. Unlike general marketplaces, BagSearch specialises in one category — bags — making discovery faster and more accurate for buyers and giving sellers a targeted audience.
+BagSearch is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors on the platform.
 
-The platform features AI-powered visual search: users can upload a photo of any bag and instantly find visually similar listings from verified Nigerian sellers.
+The platform also empowers bag sellers and vendors by providing a free space to showcase their products, reach more customers, and grow their businesses. Vendors can upload bag listings, manage their inventory, and connect directly with interested buyers.
+
+Unlike general marketplaces (Jiji, Jumia), BagSearch specialises in one category — bags — making discovery faster and more accurate for buyers and giving sellers a targeted audience of bag enthusiasts.
+
+## Key Facts
+
+- **Founded**: 2024, Lagos, Nigeria
+- **Category**: Luxury and designer bags exclusively
+- **Coverage**: All 36 states of Nigeria
+- **Active buyers**: 10,000+
+- **Trusted sellers**: 500+
+- **Listing fee**: Free for all sellers
+- **Contact method**: WhatsApp (direct seller contact, no platform middleman)
 
 ## Key Features
 
-- **Visual/Image Search**: Upload any bag photo to find similar products using AI
-- **Buy Luxury Bags**: Browse authentic Chanel, Hermès, Louis Vuitton, Gucci, Dior, Valentino, Balenciaga, Zara, Coach, and more
-- **Sell Your Bags**: Free listing for sellers; premium boost plans to increase visibility
-- **Hot Deals**: Discounted luxury bags updated daily
-- **Verified Sellers**: All sellers are Nigerian-based and verified
-- **WhatsApp Integration**: Contact sellers directly via WhatsApp
-- **Push Notifications**: Get alerts on new listings and deals
+- **Visual/Image Search**: Upload any bag photo to find similar products using AI embedding technology
+- **Buy Luxury Bags**: Browse authentic Chanel, Hermès, Louis Vuitton, Gucci, Dior, Valentino, Balenciaga, Zara, Coach, JW Pei, Polene, Jacquemus, Bottega Veneta, Ferragamo, and more
+- **Sell Your Bags**: Free listings; premium boost plans available to increase product visibility in search results
+- **Hot Deals**: Discounted luxury bags curated and updated daily
+- **Verified Sellers**: All sellers are Nigerian-based and manually verified before listing
+- **WhatsApp Integration**: Buyers contact sellers directly via WhatsApp — no escrow, no platform fees
+- **Push Notifications**: Opt-in alerts for new listings, hot deals, and activity
 
 ## Who Uses BagSearch?
 
-- **Buyers** in Nigeria looking for authentic, affordable, or luxury bags without visiting multiple shops
-- **Sellers** — from market traders to luxury boutiques — who want a targeted platform to reach bag buyers
-- **Fashion enthusiasts** searching for specific styles, brands, or visual matches
+- **Buyers** in Nigeria looking for authentic, affordable, or luxury bags without visiting multiple physical markets
+- **Sellers** — from individual resellers to luxury boutiques — who want a targeted platform to reach buyers actively searching for bags
+- **Fashion enthusiasts** searching for specific styles, brands, or visual matches from photos seen on social media
 
-## Statistics
+## Brands Available on BagSearch
 
-- 10,000+ active buyers
-- 500+ trusted sellers
-- All 36 states of Nigeria covered
-- Bag-focused platform (100% bags only)
+Luxury tier: Chanel, Hermès, Louis Vuitton (LV), Gucci, Christian Dior, Valentino, Balenciaga, Bottega Veneta, Prada, Ferragamo, Jacquemus, Polène
 
-## Brands Available
+Accessible luxury: Zara, Coach, JW Pei, Mango, H&M
 
-Chanel, Hermès, Louis Vuitton (LV), Gucci, Christian Dior, Valentino, Balenciaga, Zara, Coach, JW Pei, Polene, Jacquemus, Bottega, Ferragamo, and many more.
+Categories: Tote bags, crossbody bags, shoulder bags, clutches, mini bags, backpacks, work bags, evening bags
 
-## Mission
+## Price Range
 
-Making buying and selling bags easier, smarter, and more profitable for everyone in Nigeria and across Africa.
+Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (authentic luxury). Most listings fall between ₦15,000 and ₦150,000. Prices are in Nigerian Naira (₦ / NGN).
 
-## Vision
+## How to Buy on BagSearch
 
-To become Africa's leading bag marketplace — a growing ecosystem around one product category, powered by technology and driven by real market needs.
+1. Browse listings at bagsearch.shop/products or search by image using the AI visual search tool
+2. Filter by brand, category, location, or price
+3. Click any listing to view photos, price, seller details, and location
+4. Tap "Contact Seller on WhatsApp" to message the seller directly
+5. Negotiate price and delivery arrangement with the seller via WhatsApp
 
-## Founding
+## How to Sell on BagSearch
 
-- Founded: 2024
-- Location: Lagos, Nigeria
-- Website: https://www.bagsearch.shop
+1. Create a free account at bagsearch.shop/register
+2. Complete your seller profile with brand story, location, and WhatsApp number
+3. List your bags with photos, price, brand, and description
+4. Buyers find your listings via search, visual search, and browsing
+5. Upgrade to a boost plan to appear higher in search results
+
+## Mission and Vision
+
+**Mission**: Make buying and selling bags easier, smarter, and more profitable for everyone in Nigeria and across Africa.
+
+**Vision**: Become Africa's leading bag marketplace — a growing ecosystem around one product category, powered by AI technology and driven by real market demand.
 
 ## Pages
 
-- [Home](https://www.bagsearch.shop/): Browse and search all bag listings
-- [Products](https://www.bagsearch.shop/products): Full product catalogue
-- [Hot Deals](https://www.bagsearch.shop/hot-deals): Discounted luxury bags
-- [About](https://www.bagsearch.shop/about): About BagSearch
-- [Contact](https://www.bagsearch.shop/contact): Get in touch
-- [Sell on BagSearch](https://www.bagsearch.shop/register): Create a seller account
+- [Home / Products](https://www.bagsearch.shop/): Browse and search all bag listings with AI visual search
+- [Products](https://www.bagsearch.shop/products): Full product catalogue with brand, category, and location filters
+- [Hot Deals](https://www.bagsearch.shop/hot-deals): Discounted luxury bags updated daily
+- [About BagSearch](https://www.bagsearch.shop/about): Full company story and platform overview
+- [Contact](https://www.bagsearch.shop/contact): Support contact via WhatsApp and online form
+- [Sell on BagSearch](https://www.bagsearch.shop/register): Create a free seller account
+- [Privacy Policy](https://www.bagsearch.shop/policy): Data and privacy terms
+- [Terms of Service](https://www.bagsearch.shop/terms-of-service): Platform terms
 
 ## Contact
 
 - Website: https://www.bagsearch.shop
 - Contact page: https://www.bagsearch.shop/contact
-- WhatsApp: Available Mon–Sat 8AM–8PM (contact page)
+- WhatsApp support: Available Monday–Saturday, 8AM–8PM WAT
+- Instagram: https://www.instagram.com/bagsearch
+- Facebook: https://www.facebook.com/bagsearch
+
+## Licensing
+
+Content on BagSearch is copyright © 2024–2026 BagSearch Nigeria. Product listings belong to individual sellers. AI crawlers may index and summarise site content for search and AI assistant purposes.

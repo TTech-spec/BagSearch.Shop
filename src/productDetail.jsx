@@ -123,9 +123,6 @@ export default function ProductDetail() {
     console.log('User email:', user?.email);
     console.log('User metadata:', user?.user_metadata);
     
-    // #region agent log
-    fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H1-H2',location:'src/productDetail.jsx:logView:start',message:'About to insert product view',data:{productId:product.id,buyerId:user?.id||null,buyerEmail:user?.email||null,isMock:!!product?.isMock},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const logView = async () => {
       try {
         const viewData = {
@@ -159,9 +156,6 @@ export default function ProductDetail() {
           console.log('Product view inserted successfully');
         }
         
-        // #region agent log
-        fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H1',location:'src/productDetail.jsx:logView:result',message:'product_views insert finished',data:{productId:product.id,buyerId:user?.id||null,error:error?{message:error.message,code:error.code,details:error.details,hint:error.hint}:null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
       } catch (err) { 
         console.error('Failed to log product view:', err); 
       }
@@ -204,9 +198,6 @@ export default function ProductDetail() {
         error = response.error;
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H2',location:'src/productDetail.jsx:fetchProduct:result',message:'Fetched product by route id',data:{routeId:id,foundProductId:data?.id||null,error:error?{message:error.message,code:error.code}:null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       if (error) throw error;
       if (data) {
         // Redirect to canonical SEO-friendly URL if not already there
@@ -328,33 +319,36 @@ export default function ProductDetail() {
   const seoSchema = product
     ? {
         '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: product.name,
-        description: product.description,
-        image: product.images,
-        brand: { '@type': 'Brand', name: product.brand },
-        offers: {
-          '@type': 'Offer',
-          priceCurrency: 'NGN',
-          price: product.rawPrice,
-          availability: 'https://schema.org/InStock',
-          url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
-          seller: { '@type': 'Person', name: product.seller },
-        },
-        ...(product.reviews > 0 && product.rating ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: product.rating,
-            reviewCount: product.reviews,
-            bestRating: 5,
-            worstRating: 1,
+        '@graph': [
+          {
+            '@type': 'Product',
+            name: product.name,
+            description: product.description,
+            image: product.images,
+            brand: { '@type': 'Brand', name: product.brand },
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'NGN',
+              price: product.rawPrice,
+              availability: 'https://schema.org/InStock',
+              url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
+              seller: { '@type': 'Person', name: product.seller },
+            },
           },
-        } : {}),
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+              { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE_URL}/products` },
+              { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_URL}${productPath(product.name, product.rawId)}` },
+            ],
+          },
+        ],
       }
     : null;
 
   useSEO({
-    title: product ? `${product.name} — ${product.brand}` : 'Product',
+    title: product ? `${product.name} | ${product.brand} Bag | BagSearch Nigeria` : 'Product | BagSearch',
     description: seoDescription,
     keywords: seoKeywords,
     image: product?.images?.[0],

@@ -1,8 +1,21 @@
 User-agent: *
 Allow: /
+Disallow: /login
+Disallow: /profile
+Disallow: /seller-profile
+Disallow: /seller-listing
+Disallow: /upload-product
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /auth/
+Disallow: /seller-product
+Disallow: /seller-products
 
 # AI Crawlers — explicitly allowed
 User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User

@@ -95,7 +95,7 @@ export default function Contact() {
         contactPoint: [
           {
             '@type': 'ContactPoint',
-            telephone: '+234-8138734530',
+            telephone: '+2348138734530',
             contactType: 'customer service',
             availableLanguage: ['English'],
             hoursAvailable: {
