@@ -236,7 +236,7 @@ export default function Contact() {
             {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
               label:'WhatsApp', value:'+234 8138734530', sub:'Mon–Sat · 8AM – 8PM',
-              action: ()=>window.open('https://wa.me/2348147061837','_blank'),
+              action: ()=>window.open('https://wa.me/2348138734530','_blank'),
             },
             {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,

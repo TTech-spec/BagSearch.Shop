@@ -2,6 +2,9 @@
 
 > BagSearch (bagsearch.shop) is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors. Founded in Lagos in 2024, it serves buyers and sellers across all 36 Nigerian states.
 
+License: https://robotstxt.org/rsl/1.0
+Updated: 2026-06-18
+
 ## What is BagSearch?
 
 BagSearch is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors on the platform.
@@ -86,8 +89,8 @@ Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (
 - Website: https://www.bagsearch.shop
 - Contact page: https://www.bagsearch.shop/contact
 - WhatsApp support: Available Monday–Saturday, 8AM–8PM WAT
-- Instagram: https://www.instagram.com/bagsearch
 - Facebook: https://www.facebook.com/bagsearch
+- TikTok: https://www.tiktok.com/@bagsearch1
 
 ## Licensing
 

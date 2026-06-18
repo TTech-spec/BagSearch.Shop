@@ -143,8 +143,7 @@ const BagSearchAbout = () => {
         },
         sameAs: [
           'https://www.facebook.com/bagsearch',
-          'https://www.instagram.com/bagsearch',
-          'https://twitter.com/bagsearch'
+          'https://www.tiktok.com/@bagsearch1'
         ]
       }
     }
@@ -564,11 +563,11 @@ const BagSearchAbout = () => {
 
       {/* Navigation */}
       <nav className="bs-nav">
-        <a href="#" className="bs-nav-logo">
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-nav-logo">
           <LogoIcon size={36} />
           <span className="bs-nav-logo-text">Bag<b>Search</b></span>
         </a>
-        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-nav-btn">
+        <a href="/products" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-nav-btn">
           <IconBag size={14} stroke="white" strokeWidth={2.5} />
           Shop Now
         </a>
@@ -587,11 +586,11 @@ const BagSearchAbout = () => {
           Upload a picture and let BagSearch instantly find matching bags from thousands of listings. Discover your next favorite bag, compare options, and connect with vendors—all in one place. Vendors can join for free, showcase their collections, and reach more customers through AI-powered visual search.
         </p>
         <div className="bs-hero-cta">
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-btn-primary">
+          <a href="/products" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-btn-primary">
             <IconSearch size={15} stroke="white" strokeWidth={2.5} />
             Browse Bags
           </a>
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }} className="bs-btn-outline">
+          <a href="/register" onClick={(e) => { e.preventDefault(); navigate('/register'); }} className="bs-btn-outline">
             <IconUser size={15} stroke="#c84b11" strokeWidth={2} />
             Start Selling
           </a>
@@ -755,7 +754,7 @@ const BagSearchAbout = () => {
             Whether you're a shopper hunting for the perfect bag or a seller ready to grow your business — you belong here.
           </p>
           <div ref={addReveal(17)} className="bs-reveal bs-d2 bs-join-cards">
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-join-card-shopper">
+            <a href="/products" onClick={(e) => { e.preventDefault(); navigate('/products'); }} className="bs-join-card-shopper">
               <div className={`bs-join-card-icon bs-join-card-icon-shopper`}>
                 <IconShopper size={24} stroke="#c84b11" strokeWidth={2} />
               </div>
@@ -766,7 +765,7 @@ const BagSearchAbout = () => {
                 <IconArrow size={13} stroke="#c84b11" strokeWidth={2.5} />
               </div>
             </a>
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate('/register'); }} className="bs-join-card-seller">
+            <a href="/register" onClick={(e) => { e.preventDefault(); navigate('/register'); }} className="bs-join-card-seller">
               <div className={`bs-join-card-icon bs-join-card-icon-seller`}>
                 <IconStore size={24} stroke="white" strokeWidth={2} />
               </div>

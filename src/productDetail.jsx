@@ -229,7 +229,7 @@ export default function ProductDetail() {
             const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
             return arr.map(c => resolveColor(c));
           })(),
-          sizes: ["S","M","L"],
+          sizes: [],
           category: data.category || "General",
           images: data.images?.length > 0 ? data.images : ['https://via.placeholder.com/600'],
           isMock: false,
@@ -322,17 +322,29 @@ export default function ProductDetail() {
         '@graph': [
           {
             '@type': 'Product',
+            '@id': `${SITE_URL}${productPath(product.name, product.rawId)}#product`,
             name: product.name,
             description: product.description,
             image: product.images,
+            sku: product.rawId,
             brand: { '@type': 'Brand', name: product.brand },
             offers: {
               '@type': 'Offer',
               priceCurrency: 'NGN',
               price: product.rawPrice,
-              availability: 'https://schema.org/InStock',
+              priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              availability: product.quantity === 0
+                ? 'https://schema.org/OutOfStock'
+                : product.quantity != null && product.quantity < 3
+                ? 'https://schema.org/LimitedAvailability'
+                : 'https://schema.org/InStock',
+              itemCondition: product.condition?.toLowerCase().includes('new')
+                ? 'https://schema.org/NewCondition'
+                : product.condition?.toLowerCase().includes('refurb')
+                ? 'https://schema.org/RefurbishedCondition'
+                : 'https://schema.org/UsedCondition',
               url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
-              seller: { '@type': 'Person', name: product.seller },
+              seller: { '@type': 'Organization', name: product.seller, url: `${SITE_URL}/seller/${product.sellerId}` },
             },
           },
           {
@@ -353,7 +365,7 @@ export default function ProductDetail() {
     keywords: seoKeywords,
     image: product?.images?.[0],
     url: product ? productPath(product.name, product.rawId) : null,
-    type: 'product',
+    type: 'website',
     schema: seoSchema,
   });
 
@@ -670,15 +682,6 @@ export default function ProductDetail() {
           aria-label="Breadcrumb"
           style={{ display:'flex',alignItems:'center',gap:6,fontSize:11,color:C.textFaint,marginBottom:20,flexWrap:'wrap' }}
         >
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
-              { '@type': 'ListItem', position: 2, name: product.category, item: `${SITE_URL}/products?category=${encodeURIComponent(product.category)}` },
-              { '@type': 'ListItem', position: 3, name: product.name, item: `${SITE_URL}${productPath(product.name, product.rawId)}` },
-            ],
-          })}} />
           <span
             role="link"
             tabIndex={0}
@@ -780,7 +783,7 @@ export default function ProductDetail() {
             {/* Trust strip */}
             <div style={{ display:'flex',borderRadius:14,border:`1.5px solid ${C.borderLight}`,overflow:'hidden',background:C.surfaceDim }}>
               {[
-                { icon:'🚚', label:'Free Delivery', sub:'Orders over $500' },
+                { icon:'🚚', label:'Free Delivery', sub:'Orders over ₦50,000' },
                 { icon:'🔄', label:'Easy Returns', sub:'30-day policy' },
                 { icon:'🔒', label:'Secure Pay', sub:'256-bit SSL' },
               ].map((item, i) => (

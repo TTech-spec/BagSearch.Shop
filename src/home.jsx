@@ -378,7 +378,7 @@ function AboutUsSection() {
         <div style={{ textAlign: "center", marginBottom: 64, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(24px)", transition: "opacity 0.8s ease, transform 0.8s ease" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", background: "rgba(201,75,44,0.1)", border: "1px solid rgba(201,75,44,0.25)", borderRadius: 9999, marginBottom: 20 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C94B2C", display: "block", animation: "aboutGlow 2s ease-in-out infinite" }} />
-            <span style={{ fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Est. 2018 · Lagos, Nigeria</span>
+            <span style={{ fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Est. 2024 · Lagos, Nigeria</span>
           </div>
           <h2 style={{ fontSize: "clamp(3rem,7vw,5.5rem)", fontWeight: 900, lineHeight: 0.95, letterSpacing: "-0.05em", fontFamily: "'Outfit', sans-serif", marginBottom: 16, background: "linear-gradient(135deg, #FFFFFF 30%, #F9DDD0 60%, #C94B2C 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             We Are<br /><span style={{ fontWeight: 200, letterSpacing: "-0.03em" }}>BagSearch</span>
@@ -411,7 +411,7 @@ function AboutUsSection() {
                 {["#FF5F56", "#FFBD2E", "#27C93F"].map(c => <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "block" }} />)}
                 <span style={{ fontSize: 10, color: "rgba(249,221,208,0.15)", marginLeft: 6 }}>bagsearch/config</span>
               </div>
-              {[{ k: "founded", v: '"Lagos, Nigeria — 2018"' }, { k: "tech", v: '"Vision AI + React"' }, { k: "verified", v: "true" }, { k: "ai_search", v: '"enabled"' }].map(({ k, v }, i) => (
+              {[{ k: "founded", v: '"Lagos, Nigeria — 2024"' }, { k: "tech", v: '"Vision AI + React"' }, { k: "verified", v: "true" }, { k: "ai_search", v: '"enabled"' }].map(({ k, v }, i) => (
                 <div key={k} style={{ display: "flex", gap: 8, marginBottom: 3, animation: `aboutFadeUp 0.4s ease ${i * 0.07}s both` }}>
                   <span style={{ color: "#C94B2C", fontSize: 11 }}>{k}:</span>
                   <span style={{ color: "rgba(249,221,208,0.75)", fontSize: 11 }}>{v},</span>

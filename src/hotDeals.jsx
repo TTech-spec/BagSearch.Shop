@@ -356,12 +356,16 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
   })();
 
   return (
-    <div
+    <a
+      href={productPath(p.name, p.id)}
       ref={ref}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      onClick={() => navigate(productPath(p.name, p.id))}
+      onClick={(e) => { e.preventDefault(); navigate(productPath(p.name, p.id)); }}
       style={{
+        display: 'block',
+        textDecoration: 'none',
+        color: 'inherit',
         background: T.bgCard,
         borderRadius: 18,
         border: `1px solid ${hov ? T.gold + '44' : T.border}`,
@@ -490,7 +494,7 @@ function GridCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onRequ
           </a>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -508,11 +512,15 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
   })();
 
   return (
-    <div
+    <a
+      href={productPath(p.name, p.id)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      onClick={() => navigate(productPath(p.name, p.id))}
+      onClick={(e) => { e.preventDefault(); navigate(productPath(p.name, p.id)); }}
       style={{
+        display: 'block',
+        textDecoration: 'none',
+        color: 'inherit',
         flexShrink: 0,
         width: 260,
         borderRadius: 20,
@@ -619,7 +627,7 @@ function SpecialCard({ product: p, navigate, onAddToCart, isAdded, isAuthed, onR
           </a>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
