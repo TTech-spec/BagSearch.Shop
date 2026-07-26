@@ -384,6 +384,95 @@ function DiscountPromoCard({ navigate, visible }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ─── GET VERIFIED CARD ───────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+const VERIFIED_REVIEW_GOAL = 5;
+
+function VerifiedBadgeCard({ seller, visible, reviewCount, reviewsLoading, onShare }) {
+  const [copied, setCopied] = useState(false);
+  const profileUrl = `${window.location.origin}/vendor/${seller?.id || ''}`;
+  const progress = Math.min(reviewCount / VERIFIED_REVIEW_GOAL, 1);
+  const remaining = Math.max(VERIFIED_REVIEW_GOAL - reviewCount, 0);
+  const goalReached = !reviewsLoading && remaining === 0;
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+    } catch {
+      const el = document.createElement('input');
+      el.value = profileUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [profileUrl]);
+
+  return (
+    <div
+      className={`verify-frame${visible ? ' is-visible' : ''}`}
+      style={{ marginBottom: 28, boxShadow: '0 4px 24px rgba(200,75,17,0.1)' }}
+    >
+      <div style={{ background: 'white', borderRadius: 20, padding: '22px 24px', display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div
+          className="verify-badge-icon"
+          style={{ width: 52, height: 52, borderRadius: 16, background: `linear-gradient(135deg,${C.primary},#facc15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 8px 24px rgba(200,75,17,0.35)' }}
+        >
+          <MS name="verified" size={26} style={{ color: 'white' }}/>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>Get Your Verified Badge</p>
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: goalReached ? C.successBg : '#fef9c3', color: goalReached ? C.success : '#a16207', border: `1px solid ${goalReached ? '#bbf7d0' : '#fde68a'}`, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              {reviewsLoading ? '…' : goalReached ? 'GOAL REACHED' : `${remaining} REVIEW${remaining === 1 ? '' : 'S'} TO GO`}
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6, fontWeight: 500, marginBottom: 14 }}>
+            Ask happy customers to leave you a review, and share your profile link so more buyers can find and vouch for you.
+            Sellers with {VERIFIED_REVIEW_GOAL}+ reviews earn a verified badge on their storefront.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 6, borderRadius: 20, background: C.surfaceDim, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: reviewsLoading ? '4%' : `${progress * 100}%`, borderRadius: 20, background: `linear-gradient(90deg,${C.primary},#facc15)`, transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)' }}/>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, whiteSpace: 'nowrap' }}>
+              {reviewsLoading ? '…' : `${Math.min(reviewCount, VERIFIED_REVIEW_GOAL)}/${VERIFIED_REVIEW_GOAL}`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 180, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: C.surfaceDim, border: `1.5px solid ${C.borderLight}`, borderRadius: 12, overflow: 'hidden' }}>
+              <MS name="link" size={15} style={{ color: C.textFaint, flexShrink: 0 }}/>
+              <span style={{ fontSize: 12, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{profileUrl}</span>
+            </div>
+            <button
+              onClick={handleCopy}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 12, border: `1.5px solid ${copied ? '#bbf7d0' : C.borderLight}`, background: copied ? C.successBg : 'white', color: copied ? C.success : C.textMuted, fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: "'Manrope',sans-serif", whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+              onMouseEnter={e=>{ if(!copied){ e.currentTarget.style.background=C.surfaceDim; e.currentTarget.style.borderColor=C.primaryBorder; } }}
+              onMouseLeave={e=>{ if(!copied){ e.currentTarget.style.background='white'; e.currentTarget.style.borderColor=C.borderLight; } }}
+            >
+              <MS name={copied ? 'check' : 'content_copy'} size={15}/> {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+            <button
+              onClick={onShare}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg,${C.primary},${C.accent})`, color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer', fontFamily: "'Manrope',sans-serif", whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(200,75,17,0.3)', transition: 'all 0.25s cubic-bezier(0.22,1,0.36,1)' }}
+              onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 8px 24px rgba(200,75,17,0.42)'; }}
+              onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 4px 16px rgba(200,75,17,0.3)'; }}
+            >
+              <MS name="ios_share" size={15}/> Share Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ─── SHARE PROFILE MODAL ─────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 function ShareProfileModal({ visible, onClose, seller }) {
@@ -1101,6 +1190,8 @@ export default function SellerProfile() {
   const [totalViewsCount,     setTotalViewsCount]     = useState(0);
   const [buyerViews,          setBuyerViews]          = useState([]);
   const [metricsLoading,      setMetricsLoading]      = useState(true);
+  const [reviewCount,         setReviewCount]         = useState(0);
+  const [reviewsLoading,      setReviewsLoading]      = useState(true);
 
   const [sidebarIn,     setSidebarIn]     = useState(false);
   const [headerIn,      setHeaderIn]      = useState(false);
@@ -1176,6 +1267,20 @@ export default function SellerProfile() {
       finally { setMetricsLoading(false); }
     }
     loadMetrics();
+  },[user]);
+
+  useEffect(()=>{
+    async function loadReviewCount() {
+      try {
+        if (!user) return;
+        setReviewsLoading(true);
+        const { count, error:e } = await supabase.from('seller_reviews').select('id',{count:'exact',head:true}).eq('seller_id',user.id);
+        if (e) throw e;
+        setReviewCount(count||0);
+      } catch(err){ console.error('Error loading review count:',err); }
+      finally { setReviewsLoading(false); }
+    }
+    loadReviewCount();
   },[user]);
 
   const handleDeleteAccount = useCallback(async () => {
@@ -1257,6 +1362,17 @@ export default function SellerProfile() {
         @keyframes tabSlideIn   {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes progressPulse{0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
         @keyframes modalPop     {from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes verifyBorderWipe  {to{clip-path:inset(0 0% 0 0 round 22px)}}
+        @keyframes verifyBorderShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        @keyframes verifyBadgePop   {0%{transform:scale(0.6);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+        .verify-frame{position:relative;border-radius:22px;padding:2px;background:linear-gradient(120deg,${C.primary},${C.primaryLight},#facc15,${C.primary});background-size:300% 300%;clip-path:inset(0 100% 0 0 round 22px)}
+        .verify-frame.is-visible{animation:verifyBorderWipe 0.9s cubic-bezier(0.22,1,0.36,1) forwards,verifyBorderShift 7s ease-in-out 0.9s infinite}
+        .verify-badge-icon{animation:none}
+        .verify-frame.is-visible .verify-badge-icon{animation:verifyBadgePop 0.6s cubic-bezier(0.22,1,0.36,1) 0.75s backwards}
+        @media (prefers-reduced-motion: reduce){
+          .verify-frame{clip-path:inset(0 0% 0 0 round 22px) !important}
+          .verify-frame.is-visible,.verify-frame.is-visible .verify-badge-icon{animation:none !important}
+        }
         @keyframes shareCardIn  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scanLine     {0%{left:-40px}100%{left:calc(100% + 40px)}}
 
@@ -1424,6 +1540,15 @@ export default function SellerProfile() {
                   </button>
                 </div>
               </div>
+
+              {/* ── GET VERIFIED CARD ── */}
+              <VerifiedBadgeCard
+                seller={seller}
+                visible={statsIn}
+                reviewCount={reviewCount}
+                reviewsLoading={reviewsLoading}
+                onShare={()=>setShareModalOpen(true)}
+              />
 
               <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:18, marginBottom:32, opacity:statsIn?1:0, transform:statsIn?"none":"translateY(20px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
                 {stats.map((stat,i)=><StatCard key={stat.label} stat={stat} delay={i*70} ready={statsIn}/>)}

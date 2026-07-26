@@ -3,6 +3,9 @@ import { useContext, useEffect, Suspense, lazy } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
+import AdsLoader from './components/AdsLoader.jsx';
+import { useIsMobileViewport } from './hooks/useIsMobileViewport';
+import { hasSeenOnboarding } from './utils/onboardingState';
 
 // Lazy load route components for better code splitting
 // const Home = lazy(() => import('./home.jsx')); // home.jsx preserved but no longer the landing page
@@ -26,6 +29,7 @@ const Policy = lazy(() => import('./policy.jsx'));
 const PrivacyPolicy = lazy(() => import('./policy.jsx'));
 const TermsOfService = lazy(() => import('./TermsOfService.jsx'));
 const AuthCallback = lazy(() => import('./AuthCallback.jsx'));
+const Onboarding = lazy(() => import('./Onboarding.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -168,8 +172,19 @@ function RegRoute() {
   return <Reg />;
 }
 
-// Root route — Product.jsx is now the landing page for all visitors
+// Root route — Product.jsx is the landing page for all visitors, except
+// first-time mobile guests (logged out, never seen the welcome slides),
+// who are sent through the onboarding tour first.
 function RootRoute() {
+  const { user, loading } = useContext(AuthContext);
+  const isMobile = useIsMobileViewport();
+
+  if (loading) return <LoadingSpinner />;
+
+  if (isMobile && !user && !hasSeenOnboarding()) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return <Product />;
 }
 
@@ -180,6 +195,7 @@ function App() {
     <Router>
       <AuthListener />
       <CookieConsent />
+      <AdsLoader />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Default route -> Home (public landing page) or Products (if logged in) */}
@@ -193,6 +209,9 @@ function App() {
 
           {/* Login route */}
           <Route path="/login" element={<LoginRoute />} />
+
+          {/* Mobile-only first-run onboarding flow (buyer/seller intro) */}
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/* Forgot Password route */}
           <Route path="/forgot-password" element={<ForgotPassword />} />

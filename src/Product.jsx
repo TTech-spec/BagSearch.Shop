@@ -1,11 +1,13 @@
 import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from './context/AuthContext';
 import { supabase, searchProducts } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import NotificationsDropdown from './components/NotificationsDropdown';
+import AdcashBanner from './components/AdcashBanner.jsx';
 import shoppingBagImg from './images/shopping-bag.png';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
@@ -777,6 +779,77 @@ function AuthGateModal({ open, onClose, navigate }) {
   );
 }
 
+// ─── First-visit prompt teaching the visual-search feature ─────────────────
+// Shown once when a guest lands here via the onboarding "Shop Now" button.
+function UploadPromptModal({ open, onClose, onUpload }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          style={{ position:"fixed", inset:0, zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}
+        >
+          <motion.div
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position:"absolute", inset:0, background:"rgba(26,10,0,0.55)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 32, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{ position:"relative", zIndex:1, width:"100%", maxWidth:400, background:"#FFFFFF", border:"1px solid rgba(201,75,44,0.15)", borderRadius:24, overflow:"hidden", boxShadow:"0 32px 80px rgba(26,10,0,0.2)" }}
+          >
+            <div style={{ height:6, background:"linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)", backgroundSize:"200% 100%", animation:"shimFeedback 2.5s linear infinite" }} />
+            <button onClick={onClose} style={{ position:"absolute", top:16, right:16, width:32, height:32, borderRadius:"50%", border:"1px solid #E8D5CC", background:"#FFF5F2", color:"#999", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <Icons.X size={15} color="currentColor" />
+            </button>
+
+            <div style={{ padding:"40px 32px 32px", textAlign:"center" }}>
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.45, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+                style={{ width:76, height:76, borderRadius:"50%", background:"linear-gradient(135deg,#fde8d8,#fdf4ee)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 22px", boxShadow:"0 8px 24px rgba(200,75,17,0.18)" }}
+              >
+                <Icons.Camera size={32} color="#c84b11" />
+              </motion.div>
+
+              <h2 style={{ fontSize:"1.35rem", fontWeight:900, color:"#1A0A00", letterSpacing:"-0.03em", marginBottom:10 }}>
+                See It. Snap It. Find It.
+              </h2>
+              <p style={{ fontSize:13.5, color:"#9a6348", lineHeight:1.6, marginBottom:28, maxWidth:300, marginLeft:"auto", marginRight:"auto" }}>
+                Upload a picture of any bag — yours, or one you love — and BagSearch will instantly show you similar bags for sale from real sellers across Nigeria.
+              </p>
+
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                <button
+                  onClick={onUpload}
+                  style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px 0", background:"linear-gradient(135deg,#c84b11,#f97316)", color:"white", fontWeight:800, fontSize:14, border:"none", borderRadius:12, cursor:"pointer", boxShadow:"0 8px 24px rgba(200,75,17,0.35)" }}
+                >
+                  <Icons.Camera size={17} color="white" /> Upload a Bag Photo
+                </button>
+                <button
+                  onClick={onClose}
+                  style={{ width:"100%", padding:"12px 0", background:"#FFF5F2", color:"#C94B2C", fontWeight:700, fontSize:13, border:"1px solid #F0C8BB", borderRadius:12, cursor:"pointer" }}
+                >
+                  Browse Bags First
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function useScrollReveal(t=0.08){const ref=useRef(null);const[v,setV]=useState(false);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setV(true);o.disconnect();}},{threshold:t});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[t]);return[ref,v];}
 function AnimatedCount({value}){const[n,setN]=useState(0);const ref=useRef(null);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){let s=0;const timer=setInterval(()=>{s+=Math.ceil(value/55);if(s>=value){setN(value);clearInterval(timer);}else setN(s);},20);o.disconnect();}},{threshold:0.2});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[value]);return <span ref={ref}>{n.toLocaleString()}</span>;}
 const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i=>(<Icons.Star key={i} size={size} color={i<=Math.floor(rating)?'#f97316':'#f0d9cc'} filled={i<=Math.floor(rating)} />))}</div>);
@@ -870,24 +943,20 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
           <button onClick={handleCart} style={{flex:1,minWidth:0,padding:'9px 6px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:11,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:4,whiteSpace:'nowrap',overflow:'hidden'}}>
             {added?<><Icons.Check size={11} color="white" /><span>Added!</span></>:<><Icons.Cart size={11} color="white" /><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
           </button>
-          <a href={(() => {
+          <button type="button" aria-label="Message seller on WhatsApp"
+            onClick={e=>{
+              e.preventDefault();e.stopPropagation();
+              if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
               const number=normalizeWhatsAppNumber(product.whatsapp||'');
-              if(!number)return'';
+              if(!number){alert('Seller WhatsApp number is missing for this product.');return;}
               const productLink=`${window.location.origin}/products/${product.id}`;
               const msg=`Hi! I'm interested in *${product.name}* 👜\n💰 Price: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (sale)':'₦'+product.price.toLocaleString()}\n\n🔗 View product: ${productLink}`;
-              return buildWhatsAppUrl(number,msg);
-            })()}
-            target="_blank" rel="noopener noreferrer"
-            onClick={e=>{
-              if(!isAuthed){e.preventDefault();e.stopPropagation();onRequireAuth&&onRequireAuth();return;}
-              const number=normalizeWhatsAppNumber(product.whatsapp||'');
-              if(!number){e.preventDefault();e.stopPropagation();alert('Seller WhatsApp number is missing for this product.');return;}
-              e.stopPropagation();
+              window.open(buildWhatsAppUrl(number,msg),'_blank','noopener,noreferrer');
             }}
-            style={{width:36,minWidth:36,height:'auto',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
+            style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
             <WaIcon size={14} color="currentColor" />
-          </a>
+          </button>
         </div>
       </div>
     </a>
@@ -975,6 +1044,58 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
         {products.map((p)=>(<CompactProductCard key={p.id} product={p} navigate={navigate} onAddToCart={onAddToCart} isAuthed={isAuthed} onRequireAuth={onRequireAuth} badge={badge} badgeColor={badgeColor} />))}
       </div>
     </div>
+  );
+}
+
+// ─── Buyer-only Hot Deals promo card (hidden for sellers) ─────────────────────
+function HotDealsPromoCard({ dealCount, navigate, isMobile }) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed || dealCount <= 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        marginBottom: isMobile ? 20 : 28,
+        background: 'white',
+        borderRadius: 16,
+        border: `1.5px solid ${C.primaryBorder}`,
+        padding: isMobile ? '14px 16px' : '16px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        flexWrap: 'wrap',
+        boxShadow: '0 2px 14px rgba(200,75,17,0.06)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: `linear-gradient(180deg,${C.primary},${C.primaryLight})` }} />
+      <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: C.primaryBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6 }}>
+        <Icons.Zap size={20} color={C.primary} />
+      </div>
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <p style={{ fontSize: 13, fontWeight: 800, color: C.text, marginBottom: 2 }}>Score Today's Hot Deals</p>
+        <p style={{ fontSize: 11, color: C.textMuted, fontWeight: 500, lineHeight: 1.5 }}>
+          {dealCount} bag{dealCount === 1 ? '' : 's'} currently marked down — grab one before it's gone.
+        </p>
+      </div>
+      <button
+        onClick={() => navigate('/hot-deals')}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg,${C.primary},${C.accent})`, color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer', boxShadow: '0 3px 12px rgba(200,75,17,0.3)', whiteSpace: 'nowrap', flexShrink: 0 }}
+      >
+        <Icons.Zap size={14} color="white" /> View Hot Deals
+      </button>
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss"
+        style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${C.borderLight}`, background: C.surfaceDim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textFaint, flexShrink: 0 }}
+      >
+        ×
+      </button>
+    </motion.div>
   );
 }
 
@@ -1368,6 +1489,7 @@ export default function Product(){
   const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
+  const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
   const[deferredPrompt,setDeferredPrompt]=useState(null);
@@ -1552,6 +1674,7 @@ export default function Product(){
   const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
   const handleProfileClick=()=>{if(!user){setAuthGateOpen(true);return;}navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');};
   useEffect(()=>{if(location.state?.openCart){setCartOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
+  useEffect(()=>{if(location.state?.promptUpload){setUploadPromptOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const getCategoryCount=id=>id==='all'?allProducts.length:allProducts.filter(p=>p.category===id).length;
   const categoriesWithCounts=CATEGORIES.map(c=>({...c,count:getCategoryCount(c.id)}));
@@ -1615,6 +1738,7 @@ export default function Product(){
 
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
+      <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
       {!cartOpen&&<WelcomeBackBadge user={user} isMobile={isMobile}/>}
@@ -1789,10 +1913,16 @@ export default function Product(){
 
           {!isFiltered&&displayedProducts.length>0&&(
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
+              {user?.user_metadata?.role!=='seller'&&<HotDealsPromoCard dealCount={hotDealProducts.length} navigate={navigate} isMobile={isMobile}/>}
               {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
+              <div style={{margin:isMobile?'28px 0':'36px 0'}}>
+                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
+                <AdcashBanner zoneId="11819390" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+              </div>
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
+              {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
                 <div style={{position:'relative'}}>
@@ -1805,6 +1935,7 @@ export default function Product(){
                   Start Selling Free →
                 </button>
               </div>
+              )}
             </div>
           )}
         </>}
