@@ -1475,7 +1475,7 @@ function WelcomeBackBadge({ user, isMobile }) {
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
-  useSEO({ title:'Shop Luxury Designer Bags in Nigeria | BagSearch',description:'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more. Shop Chanel, Hermès, Louis Vuitton, Gucci and other top brands in Nigeria.',keywords:'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',url:'/products' });
+  useSEO({ title:'Buy & Sell Luxury Designer Bags in Nigeria | BagSearch',description:'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more from verified sellers across Nigeria. Got a bag to sell? List it free and reach buyers looking for exactly that.',keywords:'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, sell your bags Nigeria, sell bags online free, list bags for free Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',url:'/products' });
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
@@ -1799,7 +1799,7 @@ export default function Product(){
                 <br style={{display:isMobile?'block':'none'}}/>
                 <span style={{color:C.primary,display:'inline-block',minWidth:isMobile?'8ch':'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
               </h1>
-              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers</p>
+              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers. Got a bag to sell? <a href="/register" style={{color:C.primary,fontWeight:700,textDecoration:'underline'}}>List it free</a>.</p>
             </div>
             <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><img src={shoppingBagImg} alt="" loading="lazy" decoding="async" style={{width:38,height:38,objectFit:'contain'}}/></div>
