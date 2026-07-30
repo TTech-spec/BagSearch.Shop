@@ -28,20 +28,48 @@ export const ensureSupabaseReady = () => {
   }
 };
 
+// Canonical bag color ids, matching BAG_COLORS in createProduct.jsx (the `colors` column
+// is a text[] array of these ids, not free text, so ilike on name/description alone
+// can't match a color-only search like "black bags").
+const COLOR_KEYWORDS = [
+  'black', 'white', 'beige', 'camel', 'tan', 'brown', 'burgundy', 'red', 'pink', 'blush',
+  'orange', 'yellow', 'olive', 'green', 'mint', 'teal', 'navy', 'blue', 'cobalt', 'purple',
+  'lavender', 'grey', 'silver', 'gold', 'multicolor',
+];
+const COLOR_ALIASES = { gray: 'grey', multi: 'multicolor', multicolour: 'multicolor' };
+
 // 6. Server-side text search with Supabase ilike
 export async function searchProducts(query, locationId = null, category = null) {
   try {
     let queryBuilder = supabase
       .from('products')
-      .select('*')
-      .eq('status', 'active');
+      .select('*');
 
     // Apply text search with ilike (case-insensitive)
     if (query && query.trim()) {
-      const searchTerm = `%${query.trim()}%`;
-      queryBuilder = queryBuilder.or(
-        `name.ilike.${searchTerm},brand.ilike.${searchTerm},description.ilike.${searchTerm},category.ilike.${searchTerm},sub.ilike.${searchTerm},seller.ilike.${searchTerm}`
-      );
+      const trimmed = query.trim();
+      const searchTerm = `%${trimmed}%`;
+      const orClauses = [
+        `name.ilike.${searchTerm}`,
+        `brand.ilike.${searchTerm}`,
+        `description.ilike.${searchTerm}`,
+        `category.ilike.${searchTerm}`,
+        `seller_name.ilike.${searchTerm}`,
+      ];
+
+      // Also match color words (e.g. "black", "white") against the colors array,
+      // so "black bags" surfaces products by their selected colors, not just
+      // products whose name/description happen to literally say "black bags".
+      const matchedColors = new Set();
+      for (const word of trimmed.toLowerCase().split(/\s+/)) {
+        const canonical = COLOR_ALIASES[word] || word;
+        if (COLOR_KEYWORDS.includes(canonical)) matchedColors.add(canonical);
+      }
+      for (const color of matchedColors) {
+        orClauses.push(`colors.cs.{${color}}`);
+      }
+
+      queryBuilder = queryBuilder.or(orClauses.join(','));
     }
 
     // Apply location filter

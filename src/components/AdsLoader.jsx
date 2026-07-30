@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const ADSENSE_CLIENT_ID = 'ca-pub-6332230508786505';
-
 function injectScript({ id, src, attrs = {}, onLoad }) {
   const existing = document.getElementById(id);
   if (existing) {
@@ -20,9 +18,8 @@ function injectScript({ id, src, attrs = {}, onLoad }) {
 }
 
 /**
- * Loads third-party ad scripts (Adcash lib + Google AdSense) everywhere
- * except the onboarding welcome tour, so a visitor's first impression of the
- * app is never interrupted by an ad.
+ * Loads the Adcash library everywhere except the onboarding welcome tour, so
+ * a visitor's first impression of the app is never interrupted by an ad.
  *
  * NOTE: this only loads the Adcash library (aclib.js). It deliberately does
  * NOT call `aclib.runAutoTag(...)` — AutoTag is the "hijack any click on the
@@ -47,12 +44,6 @@ export default function AdsLoader() {
         window.__aclibReady = true;
         window.dispatchEvent(new Event('aclib:ready'));
       },
-    });
-
-    injectScript({
-      id: 'adsbygoogle-loader',
-      src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`,
-      attrs: { crossorigin: 'anonymous' },
     });
   }, [location.pathname]);
 

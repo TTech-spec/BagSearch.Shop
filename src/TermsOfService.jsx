@@ -49,7 +49,7 @@ function TermsOfService() {
               <li><strong>Features:</strong> Product listings, visual search, seller verification, secure messaging, and location-based browsing</li>
             </ul>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginTop: 16 }}>
-              BagSearch uses third-party advertising services, including Google AdSense, to display advertisements on our platform. These advertisements may collect and use information about your browsing activities to serve personalized ads.
+              BagSearch uses third-party advertising services, including Adcash, to display advertisements on our platform. These advertisements may collect and use information about your browsing activities to serve personalized ads.
             </p>
           </section>
 
@@ -117,12 +117,12 @@ function TermsOfService() {
               6. Advertising and Third-Party Services
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
-              BagSearch uses third-party advertising services, including Google AdSense, to display advertisements on our website. By using our service, you acknowledge and agree to:
+              BagSearch uses third-party advertising services, including Adcash, to display advertisements on our website. By using our service, you acknowledge and agree to:
             </p>
             <ul style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, paddingLeft: 20, marginBottom: 12 }}>
               <li style={{ marginBottom: 8 }}>The display of third-party advertisements on our platform</li>
               <li style={{ marginBottom: 8 }}>The collection and use of browsing data by advertising partners for personalized advertising</li>
-              <li style={{ marginBottom: 8 }}>The use of cookies and web beacons by Google and other advertising partners</li>
+              <li style={{ marginBottom: 8 }}>The use of cookies and web beacons by Adcash and other advertising partners</li>
               <li style={{ marginBottom: 8 }}>That BagSearch may share certain data with advertising partners to improve ad relevance</li>
               <li>You can opt out of personalized advertising through Google's Ads Settings or your browser settings</li>
             </ul>

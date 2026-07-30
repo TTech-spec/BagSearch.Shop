@@ -283,8 +283,18 @@ export const deleteNotification = async (notificationId) => {
 
 // Subscribe to real-time notifications for a seller
 export const subscribeToNotifications = (sellerId, callback) => {
+  const channelName = `notifications:${sellerId}`;
+
+  // Supabase caches channels by name; calling `.on()` on a channel that is
+  // already subscribed throws. Reuse/remove any existing instance first so
+  // multiple mounted consumers (e.g. desktop + mobile header) don't collide.
+  const existing = supabase.getChannels().find((ch) => ch.topic === `realtime:${channelName}`);
+  if (existing) {
+    supabase.removeChannel(existing);
+  }
+
   const subscription = supabase
-    .channel(`notifications:${sellerId}`)
+    .channel(channelName)
     .on(
       'postgres_changes',
       {

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import specialOfferImg from './images/shopping-bag.png';
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "About Us", "Visual Search", "Contact Us"];
@@ -153,6 +154,51 @@ function TypewriterH1({ title, subtitle, accentColor = "#C94B2C", id }) {
         {subtitleText}{(phase === "subtitle" || phase === "done") && cursor(showCursor)}
       </em>
     </h1>
+  );
+}
+
+/* ─── SPECIAL OFFERS BANNER ─── */
+function SpecialOffersBanner({ navigate }) {
+  return (
+    <section style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 28px 0" }}>
+      <style>{`
+        @keyframes specialOfferFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .special-offer-card { position: relative; overflow: visible; border-radius: 20px; background: linear-gradient(135deg, #F9DDD0 0%, #F3E7DD 100%); box-shadow: 0 12px 32px rgba(201,75,44,0.12); }
+        .special-offer-grid { display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; min-height: 200px; }
+        .special-offer-text { padding: 32px 8px 32px 40px; position: relative; z-index: 2; }
+        .special-offer-imgwrap { position: relative; height: 200px; }
+        .special-offer-img { position: absolute; right: 24px; bottom: -24px; width: 78%; max-width: 260px; height: auto; object-fit: contain; filter: drop-shadow(0 18px 24px rgba(26,10,0,0.22)); animation: specialOfferFloat 4s ease-in-out infinite; }
+        .special-offer-shop-btn { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .special-offer-shop-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(201,75,44,0.4); }
+        @media (max-width: 768px) {
+          .special-offer-grid { grid-template-columns: 1fr; }
+          .special-offer-text { padding: 28px 24px 20px; text-align: center; }
+          .special-offer-imgwrap { height: 160px; width: 100%; }
+          .special-offer-img { right: 50%; transform: translateX(50%); bottom: -12px; width: 55%; max-width: 180px; }
+          .special-offer-shop-btn { margin: 0 auto; }
+        }
+        @media (max-width: 420px) {
+          .special-offer-imgwrap { height: 130px; }
+          .special-offer-img { width: 48%; max-width: 140px; bottom: -8px; }
+        }
+      `}</style>
+      <div className="special-offer-card">
+        <div className="special-offer-grid">
+          <div className="special-offer-text">
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, justifyContent: "inherit" }}>
+              <div style={{ width: 20, height: 3, background: "#C94B2C", borderRadius: 2 }} />
+              <span style={{ fontSize: 10, letterSpacing: "0.3em", textTransform: "uppercase", color: "#C94B2C", fontWeight: 800 }}>Special Offers</span>
+            </div>
+            <h2 style={{ fontSize: "clamp(1.6rem,3.2vw,2.4rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 10, fontFamily: "'Outfit', sans-serif" }}>35% Discount</h2>
+            <p style={{ fontSize: 13, color: "#7A4030", lineHeight: 1.6, marginBottom: 22, maxWidth: 280 }}>100% Verified &amp; Authentic Luxury Bags — grab this week's hottest deals before they're gone.</p>
+            <button className="special-offer-shop-btn" onClick={() => navigate("/hot-deals")} style={{ padding: "13px 30px", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 13, letterSpacing: "0.03em", border: "none", borderRadius: 9999, cursor: "pointer", boxShadow: "0 8px 20px rgba(201,75,44,0.35)" }}>Shop Now</button>
+          </div>
+          <div className="special-offer-imgwrap">
+            <img src={specialOfferImg} alt="Special offer luxury bag" className="special-offer-img" />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -766,6 +812,7 @@ export default function LuxeBag() {
         </header>
 
         <main>
+          <SpecialOffersBanner navigate={navigate} />
           <HeroCarousel navigate={navigate} newArrivalsRef={newArrivalsRef} onAuthGate={() => setAuthGateOpen(true)} />
           <NewArrivalsSection navigate={navigate} sectionRef={newArrivalsRef} />
 

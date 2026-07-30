@@ -1047,6 +1047,69 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
   );
 }
 
+// ─── "Special Offers" discount promo card ──────────────────────────────────────
+function SpecialOfferCard({ navigate, isMobile }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div style={{ marginBottom: isMobile ? 20 : 26 }}>
+      <h2 style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: C.text, marginBottom: 14, letterSpacing: '-0.02em' }}>Special Offers</h2>
+      <div
+        onClick={() => navigate('/hot-deals')}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 20,
+          background: `linear-gradient(120deg,${C.primaryPale} 0%,${C.primaryBg} 100%)`,
+          border: `1.5px solid ${C.primaryBorder}`,
+          borderRadius: isMobile ? 20 : 24,
+          padding: isMobile ? '24px 20px' : '30px 40px',
+          cursor: 'pointer',
+          overflow: 'hidden',
+          boxShadow: hov ? '0 14px 36px rgba(200,75,17,0.16)' : '0 4px 18px rgba(200,75,17,0.08)',
+          transform: hov ? 'translateY(-2px)' : 'none',
+          transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
+        }}
+      >
+        <div style={{ position: 'absolute', right: isMobile ? -30 : -10, top: '50%', transform: 'translateY(-50%)', width: isMobile ? 150 : 210, height: isMobile ? 150 : 210, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,75,17,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: isMobile ? '60%' : 420 }}>
+          <h3 style={{ fontSize: isMobile ? '1.5rem' : '2.1rem', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 8 }}>
+            35% Discount
+          </h3>
+          <p style={{ fontSize: isMobile ? 12 : 14, color: C.textMuted, fontWeight: 600, lineHeight: 1.5, marginBottom: isMobile ? 16 : 22 }}>
+            100% Guaranteed on all designer bags this week
+          </p>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate('/hot-deals'); }}
+            style={{
+              padding: isMobile ? '10px 22px' : '13px 30px',
+              borderRadius: 30,
+              border: 'none',
+              background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+              color: 'white',
+              fontWeight: 800,
+              fontSize: isMobile ? 12 : 14,
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(200,75,17,0.35)',
+              transition: 'all 0.25s',
+            }}
+          >
+            Shop Now
+          </button>
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, flexShrink: 0, width: isMobile ? 90 : 150, height: isMobile ? 90 : 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src={shoppingBagImg} alt="Special offer" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(200,75,17,0.25))', transform: hov ? 'scale(1.05) rotate(-3deg)' : 'none', transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1)' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Buyer-only Hot Deals promo card (hidden for sellers) ─────────────────────
 function HotDealsPromoCard({ dealCount, navigate, isMobile }) {
   const [dismissed, setDismissed] = useState(false);
@@ -1357,9 +1420,11 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
         {/* Spacer */}
         <div style={{ flex:1 }} />
 
+        {/* Shared: mounted once regardless of viewport so its realtime subscription isn't duplicated */}
+        {user && <NotificationsDropdown />}
+
         {/* Desktop actions */}
         <div className="desk-act" style={{ display:isMobile?'none':'flex',alignItems:'center',gap:8 }}>
-          {user && <NotificationsDropdown />}
           <button onClick={handleProfileClick} style={{ padding:'8px 10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',transition:'all 0.2s' }}
             onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
             <Icons.User size={20} color="currentColor" />
@@ -1386,7 +1451,6 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
         {/* Mobile: login/register + cart (menu button moved to left) */}
         {isMobile && (
           <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-            {user ? <NotificationsDropdown /> : null}
             {!user ? (
               <>
                 <button onClick={()=>navigate('/login')}
@@ -1412,11 +1476,12 @@ function WelcomeBackBadge({ user, isMobile }) {
   const [hov, setHov] = useState(false);
   const [visible, setVisible] = useState(true);
   const [exiting, setExiting] = useState(false);
-  if (!user) return null;
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
 
   useEffect(() => {
+    if (!user) return;
+
     setVisible(true);
     setExiting(false);
 
@@ -1434,7 +1499,7 @@ function WelcomeBackBadge({ user, isMobile }) {
     };
   }, [user?.id]);
 
-  if (!visible) return null;
+  if (!user || !visible) return null;
 
   return (
     <div
@@ -1479,6 +1544,7 @@ export default function Product(){
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
+  const[productViewCounts,setProductViewCounts]=useState({});
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
   const[visualSearching,setVisualSearching]=useState(false);
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
@@ -1628,7 +1694,7 @@ export default function Product(){
       let reviewCount=0;
       if(sellerIds.length>0){const{count}=await supabase.from('seller_reviews').select('id',{count:'exact',head:true}).in('seller_id',sellerIds);reviewCount=count||0;}
       setVendorStats({vendors:final.length,products:(products||[]).length,buyers:800,reviews:reviewCount});
-      setVendors(final);setFilteredVendors(final);return final;
+      setVendors(final);setFilteredVendors(final);setProductViewCounts(viewCountMap);return final;
     }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
   },[buildVendorsFromProducts,countUniqueBuyers]);
 
@@ -1682,6 +1748,11 @@ export default function Product(){
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
   const hotDealProducts=useMemo(()=>allProducts.filter(p=>p.discountedPrice||p.lowStock).slice(0,10),[allProducts]);
+  const mostClickedProducts=useMemo(()=>{
+    const withClicks=allProducts.filter(p=>productViewCounts[p.id]>0);
+    if(withClicks.length===0)return[];
+    return[...withClicks].sort((a,b)=>(productViewCounts[b.id]||0)-(productViewCounts[a.id]||0)).slice(0,10);
+  },[allProducts,productViewCounts]);
 
    return(
      <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
@@ -1879,6 +1950,12 @@ export default function Product(){
             </div>
           </div>
 
+          {!isFiltered&&!selectedVendor&&<SpecialOfferCard navigate={navigate} isMobile={isMobile}/>}
+
+          {!isFiltered&&!selectedVendor&&mostClickedProducts.length>0&&(
+            <HorizontalSection title="Most Clicked Products" subtitle="What everyone's tapping on right now" icon={<Icons.TrendingUp size={20} color="#2563eb"/>} accentColor="#2563eb" accentBg="#eff6ff" products={mostClickedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Trending" badgeColor="#2563eb" onSeeAll={()=>handleCategoryChange('all')}/>
+          )}
+
           {/* Visual Search overlays (unchanged) */}
           {visualSearching&&(
             <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(26,10,0,0.6)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',display:'flex',alignItems:'center',justifyContent:'center',animation:'fadeIn 0.35s ease both'}}>
@@ -1922,6 +1999,10 @@ export default function Product(){
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
+              <div style={{margin:isMobile?'28px 0':'36px 0'}}>
+                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
+                <AdcashBanner zoneId="11830826" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+              </div>
               {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
@@ -2038,6 +2119,18 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
     return nextReviews;
   }, [normalizedVendorId]);
 
+  const fetchVendorViews = useCallback(async () => {
+    if (vendorProducts.length === 0) { setTotalViewsCount(0); setViews([]); return; }
+    try {
+      setViewsLoading(true);
+      const productIds = vendorProducts.map(p => p.id);
+      if (productIds.length === 0) return;
+      const { data, count, error } = await supabase.from('product_views').select(`id, viewed_at, buyer_name, buyer_phone, buyer_email, buyer_id, product_id, products:product_id(id,name,images), users:buyer_id(full_name,email,phone)`, { count: 'exact' }).in('product_id', productIds).order('viewed_at', { ascending: false }).limit(20);
+      if (!error) { setTotalViewsCount(count || 0); setViews(data || []); }
+    } catch (err) { console.error('Failed to fetch vendor views:', err); setTotalViewsCount(0); setViews([]); }
+    finally { setViewsLoading(false); }
+  }, [vendorProducts]);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -2050,19 +2143,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
       finally { setLoading(false); }
     }
     loadData();
-  }, [normalizedVendorId, loadSellerReviews]);
-
-  const fetchVendorViews = async () => {
-    if (vendorProducts.length === 0) { setTotalViewsCount(0); setViews([]); return; }
-    try {
-      setViewsLoading(true);
-      const productIds = vendorProducts.map(p => p.id);
-      if (productIds.length === 0) return;
-      const { data, count, error } = await supabase.from('product_views').select(`id, viewed_at, buyer_name, buyer_phone, buyer_email, buyer_id, product_id, products:product_id(id,name,images), users:buyer_id(full_name,email,phone)`, { count: 'exact' }).in('product_id', productIds).order('viewed_at', { ascending: false }).limit(20);
-      if (!error) { setTotalViewsCount(count || 0); setViews(data || []); }
-    } catch (err) { console.error('Failed to fetch vendor views:', err); setTotalViewsCount(0); setViews([]); }
-    finally { setViewsLoading(false); }
-  };
+  }, [normalizedVendorId, loadSellerReviews, fetchVendorViews]);
 
   const authorName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous';
   const handleSubmitReview = async (e) => {

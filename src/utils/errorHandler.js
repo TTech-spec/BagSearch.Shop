@@ -1,4 +1,5 @@
 // Enhanced error handling with security considerations
+import React from 'react';
 
 export class SecureErrorHandler {
   static handleError(error, context = '') {
@@ -147,62 +148,70 @@ export class SecureErrorHandler {
   }
 }
 
-// React error boundary component
-export const ErrorBoundary = ({ children, fallback }) => {
-  return class extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = { hasError: false, error: null };
+// React error boundary component — catches uncaught render errors (including
+// failed dynamic import() of a lazy route chunk after a fresh deploy) so the
+// app shows a recoverable screen instead of unmounting to a blank white page.
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    const secureError = SecureErrorHandler.handleError(error, 'react_boundary');
+    console.error('React Error Boundary caught:', secureError, errorInfo);
+
+    // Report to monitoring service in production
+    if (!import.meta.env.DEV) {
+      // Example: Send to your monitoring service
+      // reportError(secureError, errorInfo);
     }
-    
-    static getDerivedStateFromError(error) {
-      return { hasError: true, error };
-    }
-    
-    componentDidCatch(error, errorInfo) {
-      const secureError = SecureErrorHandler.handleError(error, 'react_boundary');
-      console.error('React Error Boundary caught:', secureError, errorInfo);
-      
-      // Report to monitoring service in production
-      if (!import.meta.env.DEV) {
-        // Example: Send to your monitoring service
-        // reportError(secureError, errorInfo);
-      }
-    }
-    
-    render() {
-      if (this.state.hasError) {
-        return fallback || React.createElement(
-          'div',
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
+      return React.createElement(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            padding: '20px',
+            textAlign: 'center',
+            color: '#1a0a00',
+            background: 'linear-gradient(180deg, #fff8f4 0%, #fdf4ee 55%, #ffffff 100%)',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }
+        },
+        React.createElement('h2', null, 'Something went wrong'),
+        React.createElement('p', { style: { color: '#9a6348', marginBottom: '20px' } }, 'Please refresh the page and try again.'),
+        React.createElement(
+          'button',
           {
+            onClick: () => window.location.reload(),
             style: {
-              padding: '20px',
-              textAlign: 'center',
-              color: '#dc2626',
-              fontFamily: 'system-ui, -apple-system, sans-serif'
+              padding: '10px 24px',
+              backgroundColor: '#c84b11',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: 700,
+              cursor: 'pointer'
             }
           },
-          React.createElement('h2', null, 'Something went wrong'),
-          React.createElement('p', null, 'Please refresh the page and try again.'),
-          React.createElement(
-            'button',
-            {
-              onClick: () => this.setState({ hasError: false, error: null }),
-              style: {
-                padding: '10px 20px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
-              }
-            },
-            'Try Again'
-          )
-        );
-      }
-      
-      return children;
+          'Reload'
+        )
+      );
     }
-  };
-};
+
+    return this.props.children;
+  }
+}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Ad scripts (Adcash + AdSense) are loaded from src/components/AdsLoader.jsx,
+    <!-- Ad scripts (Adcash) are loaded from src/components/AdsLoader.jsx,
          gated so they never run on the /onboarding welcome tour. -->
 
     <!-- Primary SEO -->
@@ -16,7 +16,6 @@
     <meta name="google-site-verification" content="ea74478c515c8b88" />
     <meta name="author" content="BagSearch" />
     <link rel="canonical" href="https://www.bagsearch.shop/" />
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
 
     <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website" />
@@ -202,7 +201,7 @@
   </head>
   <body>
     <div id="root">
-      <!-- Static pre-rendered content for Google's AdSense / search crawlers that don't execute JS.
+      <!-- Static pre-rendered content for search crawlers that don't execute JS.
            Real browsers never see this — it is hidden synchronously by the script in <head> above. -->
       <div id="static-prerender" style="font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#1a0a00;background:#fff8f4;min-height:100vh;">
 

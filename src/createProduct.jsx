@@ -211,6 +211,8 @@ export default function CreateProduct() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
+  const [showAdGate, setShowAdGate] = useState(false);
+
   const toggleColor = (colorId) => {
     setSelectedColors(prev =>
       prev.includes(colorId) ? prev.filter(c => c !== colorId) : [...prev, colorId]
@@ -282,7 +284,7 @@ export default function CreateProduct() {
 
   const removeImage = (index) => setImages(prev => prev.filter((_, i) => i !== index));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     try {
       if (!user) throw new Error('You must be logged in to list a product');
@@ -290,15 +292,28 @@ export default function CreateProduct() {
 
       const sanitizedName = sanitizeInput(formData.name);
       validateRequired(sanitizedName, 'Product name');
-      const sanitizedBrand = sanitizeInput(formData.brand);
-      const sanitizedDescription = sanitizeInput(formData.description);
       const sanitizedWhatsApp = sanitizeInput(formData.whatsapp);
       validateRequired(sanitizedWhatsApp, 'WhatsApp number');
       validatePhone(sanitizedWhatsApp);
       validatePrice(formData.price);
       if (!sanitizedWhatsApp.trim()) throw new Error('Please enter your WhatsApp number');
 
+      setError(null);
+      setShowAdGate(true);
+    } catch (err) {
+      const secureError = SecureErrorHandler.handleError(err, 'product_creation');
+      setError(secureError.message);
+    }
+  };
+
+  const performListing = async () => {
+    try {
       setUploading(true); setError(null);
+
+      const sanitizedName = sanitizeInput(formData.name);
+      const sanitizedBrand = sanitizeInput(formData.brand);
+      const sanitizedDescription = sanitizeInput(formData.description);
+      const sanitizedWhatsApp = sanitizeInput(formData.whatsapp);
 
       const uploadedImageUrls = [];
       for (const img of images) {
@@ -348,6 +363,7 @@ export default function CreateProduct() {
     } catch (err) {
       const secureError = SecureErrorHandler.handleError(err, 'product_creation');
       setError(secureError.message);
+      setShowAdGate(false);
     } finally {
       setUploading(false);
     }
@@ -1233,7 +1249,81 @@ export default function CreateProduct() {
           </div>
         </footer>
       </main>
+
+      {showAdGate && (
+        <AdGateModal
+          onCancel={() => setShowAdGate(false)}
+          onContinue={() => { setShowAdGate(false); performListing(); }}
+        />
+      )}
     </div>
+  );
+}
+
+function AdBanner({ zoneId }) {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.innerHTML = '';
+    if (typeof window === 'undefined' || !window.aclib) return;
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.text = `aclib.runBanner({ zoneId: '${zoneId}' });`;
+    el.appendChild(script);
+    return () => { el.innerHTML = ''; };
+  }, [zoneId]);
+  return <div ref={containerRef} style={{ minHeight: 250, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />;
+}
+
+function AdGateModal({ onCancel, onContinue }) {
+  const [seconds, setSeconds] = useState(8);
+  useEffect(() => {
+    if (seconds <= 0) return;
+    const t = setTimeout(() => setSeconds(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [seconds]);
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(26,10,0,0.55)', backdropFilter: 'blur(4px)' }} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 601,
+        width: 'min(480px, calc(100vw - 24px))', background: 'white', borderRadius: 24,
+        boxShadow: '0 40px 100px rgba(200,75,17,0.18), 0 10px 40px rgba(0,0,0,0.14)', overflow: 'hidden',
+        animation: 'adModalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both',
+      }}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.borderLight}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: C.primaryPale, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <MS name="volunteer_activism" size={19} style={{ color: C.primary }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Quick ad before you list</div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>This keeps listing free for every seller on BagSearch</div>
+          </div>
+        </div>
+
+        <div style={{ padding: '20px 24px' }}>
+          <AdBanner zoneId="11797998" />
+        </div>
+
+        <div style={{ padding: '16px 24px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <button type="button" onClick={onCancel} style={{
+            padding: '10px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
+            background: 'white', color: C.textMuted, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          }}>
+            Cancel
+          </button>
+          <button type="button" disabled={seconds > 0} onClick={onContinue} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 12, border: 'none',
+            background: seconds > 0 ? C.textFaint : C.primary, color: 'white', fontSize: 14, fontWeight: 800,
+            cursor: seconds > 0 ? 'not-allowed' : 'pointer', transition: 'background 0.3s',
+          }}>
+            {seconds > 0 ? `Continue in ${seconds}s` : <>List My Bag <MS name="arrow_forward" size={18} /></>}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

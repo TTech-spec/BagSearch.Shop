@@ -1,1 +1,2 @@
-google.com, pub-6332230508786505, DIRECT, f08c47fec0942fa0
+# Adcash line pending — add the exact line from your Adcash dashboard
+# (Account / Site settings → ads.txt), typically: adcash.com, <publisher-id>, DIRECT

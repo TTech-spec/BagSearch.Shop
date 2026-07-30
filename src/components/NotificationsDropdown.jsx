@@ -74,17 +74,11 @@ export default function NotificationsDropdown() {
   // Fetch notifications and unread count
   const fetchNotifications = async () => {
     if (!user?.id) {
-      // #region agent log
-      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H5',location:'src/components/NotificationsDropdown.jsx:fetchNotifications:no-user',message:'Skipped notification fetch because user is missing',data:{hasUser:!!user,userId:user?.id||null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       return;
     }
-    
+
     try {
       setLoading(true);
-      // #region agent log
-      fetch('http://127.0.0.1:7528/ingest/c73351d5-2de0-4b35-8a7b-a781b1fe77c6',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'25b601'},body:JSON.stringify({sessionId:'25b601',runId:'initial',hypothesisId:'H5',location:'src/components/NotificationsDropdown.jsx:fetchNotifications:start',message:'Fetching seller notifications',data:{userId:user.id},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const [notificationsData, unreadData] = await Promise.all([
         getSellerNotifications(user.id, { limit: 20 }),
         getUnreadNotificationCount(user.id)

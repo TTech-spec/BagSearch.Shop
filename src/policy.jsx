@@ -71,7 +71,7 @@ const policySections = [
       'Listing content — product names, prices, photos, descriptions, and any seller contact channels you add to a listing.',
       'Activity data — searches you run, products you view, reviews you leave, and preferences you set while using the platform.',
       'Device and browser signals — basic technical data used to keep the platform running reliably and to catch unusual activity.',
-      'Cookies and similar technologies — used to remember your preferences, measure traffic, and deliver relevant ads through Google AdSense.',
+      'Cookies and similar technologies — used to remember your preferences, measure traffic, and deliver relevant ads through our advertising partner, Adcash.',
     ],
   },
   {
@@ -82,7 +82,7 @@ const policySections = [
       'To personalize your experience — surface relevant bags, remember your location, and highlight deals that match your browsing.',
       'To handle support and disputes — respond to reports, verify accounts, and resolve issues between buyers and sellers.',
       'To improve the platform — understand what works, fix problems, and build features that make shopping and selling easier.',
-      'To serve ads through Google AdSense — BagSearch is free because advertising helps fund the platform.',
+      'To serve ads through Adcash — BagSearch is free because advertising helps fund the platform.',
     ],
   },
   {
@@ -91,18 +91,18 @@ const policySections = [
     points: [
       'Seller contact details are visible to buyers who are genuinely looking to inquire about or purchase a listed item.',
       'We work with service providers — for hosting, analytics, and support — who help operate the platform and are bound to protect your data.',
-      'Google and other ad partners receive anonymized signals to serve relevant ads; they do not receive your full account profile.',
+      'Adcash and other ad partners receive anonymized signals to serve relevant ads; they do not receive your full account profile.',
       'We share information when the law requires it, or when doing so is necessary to protect users or the integrity of the marketplace.',
       'We do not sell personal information.',
     ],
   },
   {
-    title: 'Google AdSense and Advertising',
+    title: 'Advertising',
     icon: <IconEye size={18} stroke="#c84b11" />,
     points: [
-      'BagSearch displays ads through Google AdSense. This is how we keep the platform free for buyers and sellers.',
-      'Google uses cookies to serve ads based on your browsing activity on BagSearch and other sites you\'ve visited.',
-      'You can opt out of personalized ads at any time via Google\'s Ads Settings (adssettings.google.com) or the Network Advertising Initiative opt-out tool.',
+      'BagSearch displays ads through Adcash, our advertising partner. This is how we keep the platform free for buyers and sellers.',
+      'Adcash uses cookies to serve ads based on your browsing activity on BagSearch and other sites you\'ve visited.',
+      'You can limit ad personalization through your browser\'s cookie settings at any time.',
       'Disabling cookies in your browser will limit ad personalization but may also affect some platform features.',
     ],
   },
@@ -113,7 +113,7 @@ const policySections = [
       'We use cookies to keep you logged in, remember your preferences, and understand how people use the platform.',
       'Essential cookies are required for the site to work — you cannot opt out of these.',
       'Analytics cookies tell us which pages people visit and where things break, helping us improve the experience.',
-      'Advertising cookies allow Google AdSense to serve relevant ads. You can manage these through your browser settings.',
+      'Advertising cookies allow Adcash to serve relevant ads. You can manage these through your browser settings.',
     ],
   },
   {
@@ -131,7 +131,7 @@ const policySections = [
     icon: <IconShield size={18} stroke="#c84b11" />,
     points: [
       'You can request access to, correction of, or deletion of your personal information at any time.',
-      'You can opt out of personalized advertising through Google\'s settings or your browser.',
+      'You can opt out of personalized advertising through your browser\'s cookie settings.',
       'You can close your account by contacting support — we will remove your data where we are not legally required to keep it.',
       'To exercise any of these rights, email us at info@bagsearch.shop.',
     ],

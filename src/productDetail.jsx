@@ -57,19 +57,6 @@ const WaIcon = ({ size = 16 }) => (
   </svg>
 );
 
-function StarRating({ rating }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:2 }}>
-      {[1,2,3,4,5].map(s => (
-        <svg key={s} width="13" height="13" viewBox="0 0 24 24"
-          fill={s <= Math.round(rating) ? C.primaryLight : C.border}>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-      ))}
-    </div>
-  );
-}
-
 function NetworkLoader({ onRetry }) {
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(253,244,238,0.97)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:100,gap:20 }}>
@@ -221,8 +208,6 @@ export default function ProductDetail() {
           originalPrice: `₦${(parseFloat(data.price)*1.15).toLocaleString()}`,
           quantity: data.quantity != null ? parseInt(data.quantity) : null,
           lowStock: data.quantity != null ? parseInt(data.quantity) < 5 : false,
-          rating: 4.8,
-          reviews: 24,
           colors: (() => {
             const raw = data.colors;
             if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11","#f97316"];
@@ -820,13 +805,8 @@ export default function ProductDetail() {
               <p style={{ color:C.textMuted,fontSize:13,fontWeight:500 }}>{product.sub}</p>
             </div>
 
-            {/* Rating */}
+            {/* Availability */}
             <div className="fade-in-2" style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
-              <div style={{ display:'flex',alignItems:'center',gap:7,background:C.surfaceDim,border:`1.5px solid ${C.borderLight}`,borderRadius:100,padding:'6px 12px' }}>
-                <StarRating rating={product.rating}/>
-                <span style={{ fontSize:12,fontWeight:800,color:C.text }}>{product.rating}</span>
-                <span style={{ fontSize:11,color:C.textFaint }}>({product.reviews})</span>
-              </div>
               <div style={{ display:'flex',alignItems:'center',gap:6,fontSize:12,color:C.textMuted }}>
                 <div style={{ width:8,height:8,borderRadius:'50%',background:C.success,boxShadow:`0 0 0 3px ${C.successBg}` }}/>
                 {product.quantity != null ? `${product.quantity} available` : 'In stock'}
