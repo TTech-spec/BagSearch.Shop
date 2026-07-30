@@ -1260,20 +1260,88 @@ export default function CreateProduct() {
   );
 }
 
-function AdBanner({ zoneId }) {
-  const containerRef = useRef(null);
+function loadImaSdk(onReady) {
+  if (window.google?.ima) { onReady(); return; }
+  const existing = document.getElementById('ima-sdk');
+  if (existing) {
+    existing.addEventListener('load', onReady, { once: true });
+    return;
+  }
+  const script = document.createElement('script');
+  script.id = 'ima-sdk';
+  script.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
+  script.async = true;
+  script.addEventListener('load', onReady, { once: true });
+  document.head.appendChild(script);
+}
+
+function VastVideoAd({ adTagUrl, onAdEnded }) {
+  const videoRef = useRef(null);
+  const adContainerRef = useRef(null);
+
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.innerHTML = '';
-    if (typeof window === 'undefined' || !window.aclib) return;
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.text = `aclib.runBanner({ zoneId: '${zoneId}' });`;
-    el.appendChild(script);
-    return () => { el.innerHTML = ''; };
-  }, [zoneId]);
-  return <div ref={containerRef} style={{ minHeight: 250, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />;
+    let cancelled = false;
+    let adsLoader = null;
+    let adsManager = null;
+
+    const init = () => {
+      const videoEl = videoRef.current;
+      const adContainerEl = adContainerRef.current;
+      if (cancelled || !videoEl || !adContainerEl || !window.google?.ima) return;
+
+      const ima = window.google.ima;
+      const adDisplayContainer = new ima.AdDisplayContainer(adContainerEl, videoEl);
+      adsLoader = new ima.AdsLoader(adDisplayContainer);
+
+      const fail = () => { if (!cancelled) onAdEnded?.(); };
+
+      adsLoader.addEventListener(ima.AdErrorEvent.Type.AD_ERROR, fail, false);
+
+      adsLoader.addEventListener(
+        ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+        (adsManagerLoadedEvent) => {
+          if (cancelled) return;
+          adsManager = adsManagerLoadedEvent.getAdsManager(videoEl);
+          adsManager.addEventListener(ima.AdErrorEvent.Type.AD_ERROR, fail);
+          adsManager.addEventListener(ima.AdEvent.Type.ALL_ADS_COMPLETED, fail);
+          try {
+            adDisplayContainer.initialize();
+            const width = adContainerEl.clientWidth || 400;
+            adsManager.init(width, 250, ima.ViewMode.NORMAL);
+            adsManager.start();
+          } catch (err) {
+            console.error('VAST ad failed to start:', err);
+            fail();
+          }
+        },
+        false
+      );
+
+      const adsRequest = new ima.AdsRequest();
+      adsRequest.adTagUrl = adTagUrl;
+      adsRequest.linearAdSlotWidth = adContainerEl.clientWidth || 400;
+      adsRequest.linearAdSlotHeight = 250;
+      adsRequest.nonLinearAdSlotWidth = adContainerEl.clientWidth || 400;
+      adsRequest.nonLinearAdSlotHeight = 150;
+
+      adsLoader.requestAds(adsRequest);
+    };
+
+    loadImaSdk(init);
+
+    return () => {
+      cancelled = true;
+      try { adsManager?.destroy(); } catch { /* noop */ }
+      try { adsLoader?.destroy(); } catch { /* noop */ }
+    };
+  }, [adTagUrl, onAdEnded]);
+
+  return (
+    <div style={{ position: 'relative', width: '100%', minHeight: 250, background: '#000', borderRadius: 12, overflow: 'hidden' }}>
+      <video ref={videoRef} style={{ width: '100%', height: '100%', display: 'block' }} muted playsInline />
+      <div ref={adContainerRef} style={{ position: 'absolute', inset: 0 }} />
+    </div>
+  );
 }
 
 function AdGateModal({ onCancel, onContinue }) {
@@ -1304,7 +1372,7 @@ function AdGateModal({ onCancel, onContinue }) {
         </div>
 
         <div style={{ padding: '20px 24px' }}>
-          <AdBanner zoneId="11797998" />
+          <VastVideoAd adTagUrl="https://youradexchange.com/video/select.php?r=11869458" onAdEnded={() => {}} />
         </div>
 
         <div style={{ padding: '16px 24px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
