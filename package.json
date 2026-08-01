@@ -10,9 +10,6 @@
     "preview": "vite preview",
     "generate:sitemap": "node src/utils/generateSitemap.js"
   },
-  "overrides": {
-    "fdir": "6.4.2"
-  },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google-cloud/vision": "^5.3.5",
