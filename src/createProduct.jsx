@@ -1260,55 +1260,19 @@ export default function CreateProduct() {
   );
 }
 
-/**
- * Fires aclib.runAutoTag(zone 9o2rprcllc).
- * If aclib hasn't loaded yet (e.g. user navigated directly to /upload-product),
- * this injects the SDK itself and waits for it.
- */
-function runAdcashAutoTag() {
-  const activate = () => {
-    try {
-      window.aclib.runAutoTag({ zoneId: '9o2rprcllc' });
-    } catch (err) {
-      console.error('[AdGate] Adcash runAutoTag failed:', err);
-    }
-  };
-
-  if (typeof window.aclib?.runAutoTag === 'function') {
-    activate();
-    return;
-  }
-
-  if (!document.getElementById('aclib')) {
-    const s = document.createElement('script');
-    s.id = 'aclib';
-    s.src = 'https://acscdn.com/script/aclib.js';
-    s.async = true;
-    s.addEventListener('load', () => {
-      window.__aclibReady = true;
-      activate();
-    });
-    document.head.appendChild(s);
-  } else {
-    window.addEventListener('aclib:ready', activate, { once: true });
-  }
-}
-
 function AdGateModal({ onCancel, onContinue }) {
   const adSlotRef = useRef(null);
   const [seconds, setSeconds] = useState(8);
 
   // Countdown timer
+  // AdsLoader (mounted app-wide) already activates the Adcash AutoTag zone
+  // once per page — re-firing runAutoTag here would just be a duplicate
+  // call that Adcash's SDK ignores, so this modal doesn't trigger it again.
   useEffect(() => {
     if (seconds <= 0) return;
     const t = setTimeout(() => setSeconds(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [seconds]);
-
-  // Fire Adcash AutoTag once the modal mounts
-  useEffect(() => {
-    runAdcashAutoTag();
-  }, []);
 
   const pct = Math.round(((8 - seconds) / 8) * 100);
 
