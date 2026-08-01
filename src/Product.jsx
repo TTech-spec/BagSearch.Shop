@@ -1113,9 +1113,40 @@ function SpecialOfferCard({ navigate, isMobile }) {
           transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
         }}
       >
-        <div style={{ position: 'absolute', right: isMobile ? -30 : -10, top: '50%', transform: 'translateY(-50%)', width: isMobile ? 150 : 210, height: isMobile ? 150 : 210, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,75,17,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
+        {/* Slide 1+: real photos, shown as a full-card background */}
+        {SPECIAL_OFFER_IMAGES.slice(1).map((src, i) => (
+          <img
+            key={i + 1}
+            src={src}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              zIndex: 0,
+              transition: 'opacity 0.5s ease',
+              opacity: activeImg === i + 1 && !fading ? 1 : 0,
+            }}
+          />
+        ))}
+        {/* Scrim over the background photo so the text stays readable */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          background: `linear-gradient(100deg, ${C.primaryPale} 0%, ${C.primaryPale}ee 40%, ${C.primaryPale}55 100%)`,
+          transition: 'opacity 0.5s ease',
+          opacity: isPhoto && !fading ? 1 : 0,
+        }} />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: isMobile ? '60%' : 420 }}>
+        <div style={{ position: 'absolute', right: isMobile ? -30 : -10, top: '50%', transform: 'translateY(-50%)', width: isMobile ? 150 : 210, height: isMobile ? 150 : 210, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,75,17,0.12) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 1, transition: 'opacity 0.5s ease', opacity: isPhoto && !fading ? 0 : 1 }} />
+
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: isMobile ? '60%' : 420 }}>
           <h3 style={{ fontSize: isMobile ? '1.5rem' : '2.1rem', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 8 }}>
             35% Discount
           </h3>
@@ -1141,76 +1172,42 @@ function SpecialOfferCard({ navigate, isMobile }) {
           </button>
         </div>
 
-        {/* Image carousel — only this slot changes */}
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            flexShrink: 0,
-            width: isMobile ? 90 : 150,
-            height: isMobile ? 90 : 150,
-            borderRadius: isPhoto ? (isMobile ? 14 : 18) : '50%',
-            overflow: 'hidden',
-            transition: 'border-radius 0.3s ease',
-          }}
-        >
-          {/* Slide 0: original bag icon */}
+        {/* Slide 0: original bag icon — hidden once a background photo takes over */}
+        <div style={{ position: 'relative', zIndex: 2, flexShrink: 0, width: isMobile ? 90 : 150, height: isMobile ? 90 : 150, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease', opacity: isPhoto ? 0 : 1 }}>
           <img
             src={SPECIAL_OFFER_IMAGES[0]}
-            alt="Special offer bag"
+            alt="Special offer"
             style={{
-              position: 'absolute',
-              inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'contain',
               filter: 'drop-shadow(0 10px 20px rgba(200,75,17,0.25))',
-              transform: hov && activeImg === 0 ? 'scale(1.05) rotate(-3deg)' : 'none',
-              transition: 'opacity 0.3s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1)',
-              opacity: activeImg === 0 && !fading ? 1 : 0,
+              transform: hov && !isPhoto ? 'scale(1.05) rotate(-3deg)' : 'none',
+              transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1)',
             }}
           />
-          {/* Slide 1+: real photos */}
-          {SPECIAL_OFFER_IMAGES.slice(1).map((src, i) => (
-            <img
-              key={i + 1}
-              src={src}
-              alt={`Special offer ${i + 2}`}
+        </div>
+
+        {/* Dot indicators */}
+        <div style={{ position: 'absolute', bottom: isMobile ? 10 : 14, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 3 }}>
+          {SPECIAL_OFFER_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Slide ${i + 1}`}
+              onClick={e => { e.stopPropagation(); goTo(i); }}
               style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center',
-                transition: 'opacity 0.3s ease',
-                opacity: activeImg === i + 1 && !fading ? 1 : 0,
+                width: activeImg === i ? 14 : 5,
+                height: 5,
+                borderRadius: 3,
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                background: activeImg === i ? C.primary : 'rgba(200,75,17,0.3)',
+                transition: 'all 0.3s ease',
+                boxShadow: activeImg === i ? '0 1px 4px rgba(200,75,17,0.4)' : 'none',
               }}
             />
           ))}
-
-          {/* Dot indicators */}
-          <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 4 }}>
-            {SPECIAL_OFFER_IMAGES.map((_, i) => (
-              <button
-                key={i}
-                aria-label={`Slide ${i + 1}`}
-                onClick={e => { e.stopPropagation(); goTo(i); }}
-                style={{
-                  width: activeImg === i ? 14 : 5,
-                  height: 5,
-                  borderRadius: 3,
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  background: activeImg === i ? C.primary : 'rgba(255,255,255,0.75)',
-                  transition: 'all 0.3s ease',
-                  boxShadow: activeImg === i ? '0 1px 4px rgba(200,75,17,0.4)' : 'none',
-                }}
-              />
-            ))}
-          </div>
         </div>
       </div>
     </div>
