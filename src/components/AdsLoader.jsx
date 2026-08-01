@@ -18,31 +18,38 @@ function injectScript({ id, src, attrs = {}, onLoad }) {
 }
 
 /**
- * Loads the Adcash library everywhere except the onboarding welcome tour, so
- * a visitor's first impression of the app is never interrupted by an ad.
+ * Loads the Adcash library and activates the AutoTag zone (9o2rprcllc).
  *
- * NOTE: this only loads the Adcash library (aclib.js). It deliberately does
- * NOT call `aclib.runAutoTag(...)` — AutoTag is the "hijack any click on the
- * page and fire an interstitial/redirect" product, which is what was sending
- * visitors to gambling sites. Actual ad placements are rendered explicitly
- * via <AdcashBanner /> wherever we choose to show one.
+ * AutoTag is skipped on the /onboarding welcome tour so the first-run
+ * experience is never interrupted by an ad.
+ *
+ * The zone ID comes from the new approved account for https://bagsearch.shop.
  */
 export default function AdsLoader() {
   const location = useLocation();
   const loadedRef = useRef(false);
 
   useEffect(() => {
-    if (loadedRef.current) return;
+    // Never run ads on the onboarding welcome tour
     if (location.pathname.startsWith('/onboarding')) return;
 
+    // Only inject + activate once per page session
+    if (loadedRef.current) return;
     loadedRef.current = true;
 
     injectScript({
       id: 'aclib',
-      src: '//acscdn.com/script/aclib.js',
+      src: 'https://acscdn.com/script/aclib.js',
       onLoad: () => {
         window.__aclibReady = true;
         window.dispatchEvent(new Event('aclib:ready'));
+
+        // Activate AutoTag zone for the new approved account
+        try {
+          window.aclib.runAutoTag({ zoneId: '9o2rprcllc' });
+        } catch (err) {
+          console.error('[AdsLoader] runAutoTag failed:', err);
+        }
       },
     });
   }, [location.pathname]);

@@ -4,6 +4,7 @@ import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import specialOfferImg from './images/shopping-bag.png';
+import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "About Us", "Visual Search", "Contact Us"];
@@ -158,28 +159,72 @@ function TypewriterH1({ title, subtitle, accentColor = "#C94B2C", id }) {
 }
 
 /* ─── SPECIAL OFFERS BANNER ─── */
+const SPECIAL_OFFER_SLIDES = [specialOfferImg, specialOfferSlide2];
+
 function SpecialOffersBanner({ navigate }) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [fading, setFading] = useState(false);
+  const autoRef = useRef(null);
+
+  const goTo = useCallback((idx) => {
+    if (idx === activeSlide) return;
+    setFading(true);
+    setTimeout(() => {
+      setActiveSlide(idx);
+      setFading(false);
+    }, 300);
+  }, [activeSlide]);
+
+  // Auto-advance every 3 seconds
+  useEffect(() => {
+    autoRef.current = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setActiveSlide(prev => (prev + 1) % SPECIAL_OFFER_SLIDES.length);
+        setFading(false);
+      }, 300);
+    }, 3000);
+    return () => clearInterval(autoRef.current);
+  }, []);
+
+  const resetAuto = () => {
+    clearInterval(autoRef.current);
+    autoRef.current = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setActiveSlide(prev => (prev + 1) % SPECIAL_OFFER_SLIDES.length);
+        setFading(false);
+      }, 300);
+    }, 3000);
+  };
+
+  // Is the current slide a real photo (not the icon)?
+  const isPhoto = activeSlide !== 0;
+
   return (
     <section style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 28px 0" }}>
       <style>{`
         @keyframes specialOfferFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        .special-offer-card { position: relative; overflow: visible; border-radius: 20px; background: linear-gradient(135deg, #F9DDD0 0%, #F3E7DD 100%); box-shadow: 0 12px 32px rgba(201,75,44,0.12); }
+        .special-offer-card { position: relative; overflow: hidden; border-radius: 20px; background: linear-gradient(135deg, #F9DDD0 0%, #F3E7DD 100%); box-shadow: 0 12px 32px rgba(201,75,44,0.12); }
         .special-offer-grid { display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; min-height: 200px; }
         .special-offer-text { padding: 32px 8px 32px 40px; position: relative; z-index: 2; }
-        .special-offer-imgwrap { position: relative; height: 200px; }
-        .special-offer-img { position: absolute; right: 24px; bottom: -24px; width: 78%; max-width: 260px; height: auto; object-fit: contain; filter: drop-shadow(0 18px 24px rgba(26,10,0,0.22)); animation: specialOfferFloat 4s ease-in-out infinite; }
+        .special-offer-imgwrap { position: relative; height: 200px; overflow: hidden; }
+        .special-offer-img-icon { position: absolute; right: 24px; bottom: -24px; width: 78%; max-width: 260px; height: auto; object-fit: contain; filter: drop-shadow(0 18px 24px rgba(26,10,0,0.22)); animation: specialOfferFloat 4s ease-in-out infinite; transition: opacity 0.3s ease; }
+        .special-offer-img-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: opacity 0.3s ease; }
+        .special-offer-img-fading { opacity: 0 !important; }
         .special-offer-shop-btn { transition: transform 0.25s ease, box-shadow 0.25s ease; }
         .special-offer-shop-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(201,75,44,0.4); }
+        .so-dot { width: 6px; height: 6px; border-radius: 50%; border: none; padding: 0; cursor: pointer; transition: all 0.3s ease; }
         @media (max-width: 768px) {
           .special-offer-grid { grid-template-columns: 1fr; }
           .special-offer-text { padding: 28px 24px 20px; text-align: center; }
-          .special-offer-imgwrap { height: 160px; width: 100%; }
-          .special-offer-img { right: 50%; transform: translateX(50%); bottom: -12px; width: 55%; max-width: 180px; }
+          .special-offer-imgwrap { height: 200px; width: 100%; }
+          .special-offer-img-icon { right: 50%; transform: translateX(50%); bottom: -12px; width: 55%; max-width: 180px; animation: specialOfferFloat 4s ease-in-out infinite; }
           .special-offer-shop-btn { margin: 0 auto; }
         }
         @media (max-width: 420px) {
-          .special-offer-imgwrap { height: 130px; }
-          .special-offer-img { width: 48%; max-width: 140px; bottom: -8px; }
+          .special-offer-imgwrap { height: 170px; }
+          .special-offer-img-icon { width: 48%; max-width: 140px; bottom: -8px; }
         }
       `}</style>
       <div className="special-offer-card">
@@ -191,10 +236,45 @@ function SpecialOffersBanner({ navigate }) {
             </div>
             <h2 style={{ fontSize: "clamp(1.6rem,3.2vw,2.4rem)", fontWeight: 900, color: "#1A0A00", letterSpacing: "-0.03em", lineHeight: 1.05, marginBottom: 10, fontFamily: "'Outfit', sans-serif" }}>35% Discount</h2>
             <p style={{ fontSize: 13, color: "#7A4030", lineHeight: 1.6, marginBottom: 22, maxWidth: 280 }}>100% Verified &amp; Authentic Luxury Bags — grab this week's hottest deals before they're gone.</p>
-            <button className="special-offer-shop-btn" onClick={() => navigate("/hot-deals")} style={{ padding: "13px 30px", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 13, letterSpacing: "0.03em", border: "none", borderRadius: 9999, cursor: "pointer", boxShadow: "0 8px 20px rgba(201,75,44,0.35)" }}>Shop Now</button>
+            <button className="special-offer-shop-btn" onClick={() => navigate("/hot-deals")} style={{ padding: "13px 30px", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 13, letterSpacing: "0.03em", border: "none", borderRadius: 9999, cursor: "pointer", boxShadow: "0 8px 20px rgba(201,75,44,0.35)", display: "block" }}>Shop Now</button>
           </div>
+
+          {/* Image carousel — only the image slot changes */}
           <div className="special-offer-imgwrap">
-            <img src={specialOfferImg} alt="Special offer luxury bag" className="special-offer-img" />
+            {/* Slide 0: floating bag icon */}
+            <img
+              src={SPECIAL_OFFER_SLIDES[0]}
+              alt="Special offer bag"
+              className={`special-offer-img-icon${activeSlide === 0 && !fading ? '' : ' special-offer-img-fading'}`}
+              style={{ pointerEvents: 'none', opacity: activeSlide === 0 && !fading ? 1 : 0 }}
+            />
+            {/* Slide 1+: full-bleed photos */}
+            {SPECIAL_OFFER_SLIDES.slice(1).map((src, i) => (
+              <img
+                key={i + 1}
+                src={src}
+                alt={`Special offer ${i + 2}`}
+                className={`special-offer-img-photo${activeSlide === i + 1 && !fading ? '' : ' special-offer-img-fading'}`}
+                style={{ opacity: activeSlide === i + 1 && !fading ? 1 : 0 }}
+              />
+            ))}
+
+            {/* Dot indicators */}
+            <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, zIndex: 4 }}>
+              {SPECIAL_OFFER_SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  className="so-dot"
+                  aria-label={`Slide ${i + 1}`}
+                  onClick={() => { goTo(i); resetAuto(); }}
+                  style={{
+                    background: activeSlide === i ? '#C94B2C' : 'rgba(255,255,255,0.7)',
+                    width: activeSlide === i ? 18 : 6,
+                    boxShadow: activeSlide === i ? '0 2px 6px rgba(201,75,44,0.4)' : 'none',
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

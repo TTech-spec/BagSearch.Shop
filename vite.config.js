@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import viteImagemin from 'vite-plugin-imagemin'
 import path from 'node:path'
 
 // https://vite.dev/config/
@@ -16,21 +15,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    viteImagemin({
-      gifsicle: { optimizationLevel: 7 },
-      optipng: { optimizationLevel: 7 },
-      mozjpeg: { quality: 80 },
-      pngquant: { quality: [0.8, 0.9] },
-      svgo: {
-        plugins: [
-          { name: 'removeViewBox', active: false },
-          { name: 'removeEmptyAttrs', active: true }
-        ]
-      },
-      webp: {
-        quality: 75
-      }
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',

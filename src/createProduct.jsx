@@ -1260,97 +1260,57 @@ export default function CreateProduct() {
   );
 }
 
-function loadImaSdk(onReady) {
-  if (window.google?.ima) { onReady(); return; }
-  const existing = document.getElementById('ima-sdk');
-  if (existing) {
-    existing.addEventListener('load', onReady, { once: true });
+/**
+ * Fires aclib.runAutoTag(zone 9o2rprcllc).
+ * If aclib hasn't loaded yet (e.g. user navigated directly to /upload-product),
+ * this injects the SDK itself and waits for it.
+ */
+function runAdcashAutoTag() {
+  const activate = () => {
+    try {
+      window.aclib.runAutoTag({ zoneId: '9o2rprcllc' });
+    } catch (err) {
+      console.error('[AdGate] Adcash runAutoTag failed:', err);
+    }
+  };
+
+  if (typeof window.aclib?.runAutoTag === 'function') {
+    activate();
     return;
   }
-  const script = document.createElement('script');
-  script.id = 'ima-sdk';
-  script.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
-  script.async = true;
-  script.addEventListener('load', onReady, { once: true });
-  document.head.appendChild(script);
-}
 
-function VastVideoAd({ adTagUrl, onAdEnded }) {
-  const videoRef = useRef(null);
-  const adContainerRef = useRef(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let adsLoader = null;
-    let adsManager = null;
-
-    const init = () => {
-      const videoEl = videoRef.current;
-      const adContainerEl = adContainerRef.current;
-      if (cancelled || !videoEl || !adContainerEl || !window.google?.ima) return;
-
-      const ima = window.google.ima;
-      const adDisplayContainer = new ima.AdDisplayContainer(adContainerEl, videoEl);
-      adsLoader = new ima.AdsLoader(adDisplayContainer);
-
-      const fail = () => { if (!cancelled) onAdEnded?.(); };
-
-      adsLoader.addEventListener(ima.AdErrorEvent.Type.AD_ERROR, fail, false);
-
-      adsLoader.addEventListener(
-        ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-        (adsManagerLoadedEvent) => {
-          if (cancelled) return;
-          adsManager = adsManagerLoadedEvent.getAdsManager(videoEl);
-          adsManager.addEventListener(ima.AdErrorEvent.Type.AD_ERROR, fail);
-          adsManager.addEventListener(ima.AdEvent.Type.ALL_ADS_COMPLETED, fail);
-          try {
-            adDisplayContainer.initialize();
-            const width = adContainerEl.clientWidth || 400;
-            adsManager.init(width, 250, ima.ViewMode.NORMAL);
-            adsManager.start();
-          } catch (err) {
-            console.error('VAST ad failed to start:', err);
-            fail();
-          }
-        },
-        false
-      );
-
-      const adsRequest = new ima.AdsRequest();
-      adsRequest.adTagUrl = adTagUrl;
-      adsRequest.linearAdSlotWidth = adContainerEl.clientWidth || 400;
-      adsRequest.linearAdSlotHeight = 250;
-      adsRequest.nonLinearAdSlotWidth = adContainerEl.clientWidth || 400;
-      adsRequest.nonLinearAdSlotHeight = 150;
-
-      adsLoader.requestAds(adsRequest);
-    };
-
-    loadImaSdk(init);
-
-    return () => {
-      cancelled = true;
-      try { adsManager?.destroy(); } catch { /* noop */ }
-      try { adsLoader?.destroy(); } catch { /* noop */ }
-    };
-  }, [adTagUrl, onAdEnded]);
-
-  return (
-    <div style={{ position: 'relative', width: '100%', minHeight: 250, background: '#000', borderRadius: 12, overflow: 'hidden' }}>
-      <video ref={videoRef} style={{ width: '100%', height: '100%', display: 'block' }} muted playsInline />
-      <div ref={adContainerRef} style={{ position: 'absolute', inset: 0 }} />
-    </div>
-  );
+  if (!document.getElementById('aclib')) {
+    const s = document.createElement('script');
+    s.id = 'aclib';
+    s.src = 'https://acscdn.com/script/aclib.js';
+    s.async = true;
+    s.addEventListener('load', () => {
+      window.__aclibReady = true;
+      activate();
+    });
+    document.head.appendChild(s);
+  } else {
+    window.addEventListener('aclib:ready', activate, { once: true });
+  }
 }
 
 function AdGateModal({ onCancel, onContinue }) {
+  const adSlotRef = useRef(null);
   const [seconds, setSeconds] = useState(8);
+
+  // Countdown timer
   useEffect(() => {
     if (seconds <= 0) return;
     const t = setTimeout(() => setSeconds(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [seconds]);
+
+  // Fire Adcash AutoTag once the modal mounts
+  useEffect(() => {
+    runAdcashAutoTag();
+  }, []);
+
+  const pct = Math.round(((8 - seconds) / 8) * 100);
 
   return (
     <>
@@ -1361,21 +1321,45 @@ function AdGateModal({ onCancel, onContinue }) {
         boxShadow: '0 40px 100px rgba(200,75,17,0.18), 0 10px 40px rgba(0,0,0,0.14)', overflow: 'hidden',
         animation: 'adModalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both',
       }}>
+        {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.borderLight}`, display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: C.primaryPale, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <MS name="volunteer_activism" size={19} style={{ color: C.primary }} />
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Quick ad before you list</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>This keeps listing free for every seller on BagSearch</div>
           </div>
+          {/* Countdown ring */}
+          <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
+            <svg width="40" height="40" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="20" cy="20" r="16" fill="none" stroke={C.borderLight} strokeWidth="3" />
+              <circle cx="20" cy="20" r="16" fill="none" stroke={C.primary} strokeWidth="3"
+                strokeDasharray={`${2 * Math.PI * 16}`}
+                strokeDashoffset={`${2 * Math.PI * 16 * (1 - pct / 100)}`}
+                style={{ transition: 'stroke-dashoffset 0.9s linear' }}
+              />
+            </svg>
+            <span style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontWeight: 900, color: C.primary,
+            }}>
+              {seconds > 0 ? seconds : '✓'}
+            </span>
+          </div>
         </div>
 
+        {/* Adcash ad slot */}
         <div style={{ padding: '20px 24px' }}>
-          <VastVideoAd adTagUrl="https://youradexchange.com/video/select.php?r=11869458" onAdEnded={() => {}} />
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.textFaint, marginBottom: 8, textAlign: 'center' }}>Advertisement</p>
+          <div
+            ref={adSlotRef}
+            style={{ minHeight: 250, background: C.surfaceDim, borderRadius: 12, border: `1px solid ${C.borderLight}`, overflow: 'hidden' }}
+          />
         </div>
 
-        <div style={{ padding: '16px 24px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        {/* Footer */}
+        <div style={{ padding: '4px 24px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <button type="button" onClick={onCancel} style={{
             padding: '10px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
             background: 'white', color: C.textMuted, fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -1385,9 +1369,11 @@ function AdGateModal({ onCancel, onContinue }) {
           <button type="button" disabled={seconds > 0} onClick={onContinue} style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 12, border: 'none',
             background: seconds > 0 ? C.textFaint : C.primary, color: 'white', fontSize: 14, fontWeight: 800,
-            cursor: seconds > 0 ? 'not-allowed' : 'pointer', transition: 'background 0.3s',
+            cursor: seconds > 0 ? 'not-allowed' : 'pointer',
+            transition: 'background 0.4s cubic-bezier(0.22,1,0.36,1)',
+            boxShadow: seconds > 0 ? 'none' : `0 4px 16px ${C.primary}80`,
           }}>
-            {seconds > 0 ? `Continue in ${seconds}s` : <>List My Bag <MS name="arrow_forward" size={18} /></>}
+            {seconds > 0 ? `Continue in ${seconds}s` : <><span>List My Bag</span> <MS name="arrow_forward" size={18} /></>}
           </button>
         </div>
       </div>

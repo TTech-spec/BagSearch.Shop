@@ -9,6 +9,7 @@ import LogoIcon from './components/Logo.jsx';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import AdcashBanner from './components/AdcashBanner.jsx';
 import shoppingBagImg from './images/shopping-bag.png';
+import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
@@ -1048,8 +1049,46 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
 }
 
 // ─── "Special Offers" discount promo card ──────────────────────────────────────
+const SPECIAL_OFFER_IMAGES = [shoppingBagImg, specialOfferSlide2];
+
 function SpecialOfferCard({ navigate, isMobile }) {
   const [hov, setHov] = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const [fading, setFading] = useState(false);
+  const autoRef = useRef(null);
+
+  // Auto-advance every 3 seconds
+  useEffect(() => {
+    autoRef.current = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setActiveImg(prev => (prev + 1) % SPECIAL_OFFER_IMAGES.length);
+        setFading(false);
+      }, 300);
+    }, 3000);
+    return () => clearInterval(autoRef.current);
+  }, []);
+
+  const goTo = (idx) => {
+    if (idx === activeImg) return;
+    clearInterval(autoRef.current);
+    setFading(true);
+    setTimeout(() => {
+      setActiveImg(idx);
+      setFading(false);
+      // restart auto
+      autoRef.current = setInterval(() => {
+        setFading(true);
+        setTimeout(() => {
+          setActiveImg(prev => (prev + 1) % SPECIAL_OFFER_IMAGES.length);
+          setFading(false);
+        }, 300);
+      }, 3000);
+    }, 300);
+  };
+
+  const isPhoto = activeImg !== 0;
+
   return (
     <div style={{ marginBottom: isMobile ? 20 : 26 }}>
       <h2 style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: C.text, marginBottom: 14, letterSpacing: '-0.02em' }}>Special Offers</h2>
@@ -1102,8 +1141,76 @@ function SpecialOfferCard({ navigate, isMobile }) {
           </button>
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, flexShrink: 0, width: isMobile ? 90 : 150, height: isMobile ? 90 : 150, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src={shoppingBagImg} alt="Special offer" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(200,75,17,0.25))', transform: hov ? 'scale(1.05) rotate(-3deg)' : 'none', transition: 'transform 0.35s cubic-bezier(0.22,1,0.36,1)' }} />
+        {/* Image carousel — only this slot changes */}
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            flexShrink: 0,
+            width: isMobile ? 90 : 150,
+            height: isMobile ? 90 : 150,
+            borderRadius: isPhoto ? (isMobile ? 14 : 18) : '50%',
+            overflow: 'hidden',
+            transition: 'border-radius 0.3s ease',
+          }}
+        >
+          {/* Slide 0: original bag icon */}
+          <img
+            src={SPECIAL_OFFER_IMAGES[0]}
+            alt="Special offer bag"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 10px 20px rgba(200,75,17,0.25))',
+              transform: hov && activeImg === 0 ? 'scale(1.05) rotate(-3deg)' : 'none',
+              transition: 'opacity 0.3s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1)',
+              opacity: activeImg === 0 && !fading ? 1 : 0,
+            }}
+          />
+          {/* Slide 1+: real photos */}
+          {SPECIAL_OFFER_IMAGES.slice(1).map((src, i) => (
+            <img
+              key={i + 1}
+              src={src}
+              alt={`Special offer ${i + 2}`}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                transition: 'opacity 0.3s ease',
+                opacity: activeImg === i + 1 && !fading ? 1 : 0,
+              }}
+            />
+          ))}
+
+          {/* Dot indicators */}
+          <div style={{ position: 'absolute', bottom: 5, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4, zIndex: 4 }}>
+            {SPECIAL_OFFER_IMAGES.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Slide ${i + 1}`}
+                onClick={e => { e.stopPropagation(); goTo(i); }}
+                style={{
+                  width: activeImg === i ? 14 : 5,
+                  height: 5,
+                  borderRadius: 3,
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  background: activeImg === i ? C.primary : 'rgba(255,255,255,0.75)',
+                  transition: 'all 0.3s ease',
+                  boxShadow: activeImg === i ? '0 1px 4px rgba(200,75,17,0.4)' : 'none',
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1994,14 +2101,14 @@ export default function Product(){
               {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
               <div style={{margin:isMobile?'28px 0':'36px 0'}}>
                 <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
-                <AdcashBanner zoneId="11819390" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+                <AdcashBanner zoneId="9o2rprcllc" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
               </div>
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
               <div style={{margin:isMobile?'28px 0':'36px 0'}}>
                 <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
-                <AdcashBanner zoneId="11830826" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
+                <AdcashBanner zoneId="9o2rprcllc" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
               </div>
               {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
