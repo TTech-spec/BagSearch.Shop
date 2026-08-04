@@ -386,7 +386,7 @@ function DiscountPromoCard({ navigate, visible }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── GET VERIFIED CARD ───────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-const VERIFIED_REVIEW_GOAL = 5;
+const VERIFIED_REVIEW_GOAL = 10;
 
 function VerifiedBadgeCard({ seller, visible, reviewCount, reviewsLoading, onShare }) {
   const [copied, setCopied] = useState(false);
@@ -425,14 +425,14 @@ function VerifiedBadgeCard({ seller, visible, reviewCount, reviewsLoading, onSha
 
         <div style={{ flex: 1, minWidth: 220 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>Get Your Verified Badge</p>
+            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>Get Your Community Trusted Badge</p>
             <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: goalReached ? C.successBg : '#fef9c3', color: goalReached ? C.success : '#a16207', border: `1px solid ${goalReached ? '#bbf7d0' : '#fde68a'}`, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
               {reviewsLoading ? '…' : goalReached ? 'GOAL REACHED' : `${remaining} REVIEW${remaining === 1 ? '' : 'S'} TO GO`}
             </span>
           </div>
           <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6, fontWeight: 500, marginBottom: 14 }}>
-            Ask happy customers to leave you a review, and share your profile link so more buyers can find and vouch for you.
-            Sellers with {VERIFIED_REVIEW_GOAL}+ reviews earn a verified badge on their storefront.
+            Ask happy customers to log in and leave you a review, and share your profile link so more buyers can find and vouch for you.
+            Sellers with {VERIFIED_REVIEW_GOAL}+ reviews from different logged-in buyers earn a Community Trusted badge on their storefront.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -464,6 +464,162 @@ function VerifiedBadgeCard({ seller, visible, reviewCount, reviewsLoading, onSha
               onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 4px 16px rgba(200,75,17,0.3)'; }}
             >
               <MS name="ios_share" size={15}/> Share Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ─── ID SUBMITTED CARD (NIN photo, manually reviewed) ───────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+function compressImageToJpeg(file, maxDim = 1200, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not process image')), 'image/jpeg', quality);
+      };
+      img.onerror = () => reject(new Error('Could not read image'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+const NIN_STATUS_META = {
+  none:     { label: 'Not submitted',   color: '#9a6348', bg: '#fdf8f5', border: '#f7ece4' },
+  pending:  { label: 'Under review',    color: '#a16207', bg: '#fef9c3', border: '#fde68a' },
+  approved: { label: 'ID Submitted',    color: '#16a34a', bg: '#dcfce7', border: '#bbf7d0' },
+  rejected: { label: 'Not approved',    color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+};
+
+function NinVerificationCard({ sellerId, visible }) {
+  const [status, setStatus] = useState('none');
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
+
+  const loadStatus = useCallback(async () => {
+    if (!sellerId) return;
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('seller_verifications').select('status,nin_image_path').eq('seller_id', sellerId).maybeSingle();
+      if (data) {
+        setStatus(data.status);
+        if (data.nin_image_path) {
+          const { data: signed } = await supabase.storage.from('nin-documents').createSignedUrl(data.nin_image_path, 3600);
+          setPreviewUrl(signed?.signedUrl || null);
+        } else {
+          setPreviewUrl(null);
+        }
+      } else {
+        setStatus('none');
+        setPreviewUrl(null);
+      }
+    } catch (err) {
+      console.error('Failed to load NIN verification status:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [sellerId]);
+
+  useEffect(() => { loadStatus(); }, [loadStatus]);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !sellerId) return;
+    if (!file.type.startsWith('image/')) { setUploadError('Please upload an image file.'); return; }
+    if (file.size > 10 * 1024 * 1024) { setUploadError('Image is too large (max 10MB).'); return; }
+
+    setUploading(true);
+    setUploadError('');
+    try {
+      const compressed = await compressImageToJpeg(file);
+      const path = `${sellerId}/nin-${Date.now()}.jpg`;
+      const { error: uploadErr } = await supabase.storage.from('nin-documents').upload(path, compressed, { contentType: 'image/jpeg', upsert: false });
+      if (uploadErr) throw uploadErr;
+
+      const { error: upsertErr } = await supabase.from('seller_verifications').upsert({
+        seller_id: sellerId,
+        nin_image_path: path,
+        status: 'pending',
+        submitted_at: new Date().toISOString(),
+        reviewed_at: null,
+      }, { onConflict: 'seller_id' });
+      if (upsertErr) throw upsertErr;
+
+      await loadStatus();
+    } catch (err) {
+      console.error('NIN upload failed:', err);
+      setUploadError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const meta = NIN_STATUS_META[status] || NIN_STATUS_META.none;
+  const buttonLabel = uploading ? 'Uploading…' : status === 'none' ? 'Upload NIN photo' : status === 'rejected' ? 'Resubmit photo' : 'Replace photo';
+
+  return (
+    <div
+      className={`verify-frame${visible ? ' is-visible' : ''}`}
+      style={{ marginBottom: 28, boxShadow: '0 4px 24px rgba(200,75,17,0.1)' }}
+    >
+      <div style={{ background: 'white', borderRadius: 20, padding: '22px 24px', display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ width: 52, height: 52, borderRadius: 16, background: `linear-gradient(135deg,${C.primary},#facc15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 8px 24px rgba(200,75,17,0.35)' }}>
+          <MS name="badge" size={26} style={{ color: 'white' }}/>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>ID Submitted Badge</p>
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: meta.bg, color: meta.color, border: `1px solid ${meta.border}`, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              {loading ? '…' : meta.label.toUpperCase()}
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6, fontWeight: 500, marginBottom: 14 }}>
+            Upload a photo of your NIN slip or card. We review submissions manually — this isn't an automated government
+            database check, but it raises the bar for scammers and gives us evidence to act on if something goes wrong.
+          </p>
+
+          {status === 'rejected' && (
+            <p style={{ fontSize: 12, color: C.danger, fontWeight: 700, marginBottom: 10 }}>
+              Your last submission wasn't approved. Please upload a clearer photo of your NIN.
+            </p>
+          )}
+          {uploadError && (
+            <p style={{ fontSize: 12, color: C.danger, fontWeight: 700, marginBottom: 10 }}>{uploadError}</p>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {previewUrl && (
+              <img src={previewUrl} alt="Your submitted NIN document" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `1.5px solid ${C.borderLight}` }}/>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect}/>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || status === 'approved'}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, border: `1.5px solid ${C.borderLight}`, background: status === 'approved' ? C.surfaceDim : 'white', color: status === 'approved' ? C.textFaint : C.textMuted, fontSize: 12, fontWeight: 800, cursor: uploading || status === 'approved' ? 'default' : 'pointer', fontFamily: "'Manrope',sans-serif" }}
+            >
+              <MS name={uploading ? 'progress_activity' : 'upload'} size={15}/>
+              {buttonLabel}
             </button>
           </div>
         </div>
@@ -1549,6 +1705,9 @@ export default function SellerProfile() {
                 reviewsLoading={reviewsLoading}
                 onShare={()=>setShareModalOpen(true)}
               />
+
+              {/* ── ID SUBMITTED CARD ── */}
+              <NinVerificationCard sellerId={user?.id} visible={statsIn}/>
 
               <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:18, marginBottom:32, opacity:statsIn?1:0, transform:statsIn?"none":"translateY(20px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
                 {stats.map((stat,i)=><StatCard key={stat.label} stat={stat} delay={i*70} ready={statsIn}/>)}

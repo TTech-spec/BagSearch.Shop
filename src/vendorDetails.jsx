@@ -242,6 +242,7 @@ export default function VendorDetails() {
   const sellerParam = id || slug || '';
 
   const [profile,   setProfile]   = useState(null);
+  const [idVerified,setIdVerified]= useState(false);
   const [products,  setProducts]  = useState([]);
   const [reviews,   setReviews]   = useState([]);
   const [views,     setViews]     = useState([]);
@@ -323,7 +324,7 @@ export default function VendorDetails() {
     if (!sellerId) return;
     const { data, error } = await supabase
       .from('seller_reviews')
-      .select('id,author_name,rating,text,created_at')
+      .select('id,author_name,rating,text,created_at,buyer_id')
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -361,7 +362,7 @@ export default function VendorDetails() {
       try {
         const { data: p, error: pErr } = await supabase
           .from('users')
-          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email')
+          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,community_trusted')
           .eq('user_id', id || slug)
           .maybeSingle();
         setProfile(p || null);
@@ -369,6 +370,8 @@ export default function VendorDetails() {
         if (!resolvedSellerId) {
           setProducts([]); setReviews([]); setViews([]); setTotalViews(0); return;
         }
+        supabase.from('seller_verifications').select('status').eq('seller_id', resolvedSellerId).eq('status', 'approved').maybeSingle()
+          .then(({ data: v }) => setIdVerified(!!v));
         const { data: prods, error: prodsErr } = await supabase
           .from('products').select('*')
           .eq('user_id', resolvedSellerId)
@@ -389,7 +392,7 @@ export default function VendorDetails() {
         setProducts(mapped);
         const { data: reviewRows, error: reviewErr } = await supabase
           .from('seller_reviews')
-          .select('id,author_name,rating,text,created_at')
+          .select('id,author_name,rating,text,created_at,buyer_id')
           .eq('seller_id', resolvedSellerId)
           .order('created_at', { ascending: false })
           .limit(20);
@@ -402,31 +405,29 @@ export default function VendorDetails() {
 
   const submitReview = async (e) => {
     e.preventDefault();
-    if (!newText.trim()) return;
+    if (!newText.trim() || !user) return;
     setPosting(true);
     try {
       const { error } = await supabase
         .from('seller_reviews')
         .insert({
           seller_id: sellerId || sellerParam,
+          buyer_id: user.id,
           author_name: me,
           rating: newRating,
           text: newText.trim(),
         });
       if (error) {
-        const tempReview = {
-          id: 'temp-' + Date.now(),
-          author_name: me,
-          rating: newRating,
-          text: newText.trim(),
-          created_at: new Date().toISOString(),
-        };
-        setReviews(prev => [tempReview, ...prev]);
+        if (error.code === '23505') {
+          alert('You’ve already reviewed this seller.');
+        } else {
+          throw error;
+        }
       } else {
         await loadReviews();
+        setNewText(''); setNewRating(5);
+        setTab('reviews');
       }
-      setNewText(''); setNewRating(5);
-      setTab('reviews');
     } catch(e) {
       console.error('Review post failed:', e);
       alert('Could not post review: ' + (e.message || 'Unknown error'));
@@ -545,6 +546,20 @@ export default function VendorDetails() {
               </div>
               <div style={{flex:1,minWidth:200}}>
                 <h2 style={{fontSize:26,fontWeight:900,color:'white',letterSpacing:'-0.03em',marginBottom:4}}>{name}</h2>
+                {(profile.community_trusted || idVerified) && (
+                  <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
+                    {profile.community_trusted && (
+                      <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:20,background:'rgba(255,255,255,0.16)',color:'white',border:'1px solid rgba(255,255,255,0.28)'}}>
+                        ✓ Community Trusted
+                      </span>
+                    )}
+                    {idVerified && (
+                      <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:20,background:'rgba(255,255,255,0.16)',color:'white',border:'1px solid rgba(255,255,255,0.28)'}}>
+                        ✓ ID Submitted
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:10}}>
                   {loc && (
                     <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'rgba(255,255,255,0.6)',fontWeight:500}}>
@@ -740,29 +755,39 @@ export default function VendorDetails() {
                 </span>
                 Write a Review
               </h4>
-              <form onSubmit={submitReview}>
-                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:14}}>
-                  <span style={{fontSize:12,fontWeight:700,color:C.textMuted,marginRight:4}}>Your rating:</span>
-                  {[1,2,3,4,5].map(star => (
-                    <button key={star} type="button" onClick={()=>setNewRating(star)}
-                      onMouseEnter={()=>setHovStar(star)} onMouseLeave={()=>setHovStar(0)}
-                      style={{background:'none',border:'none',cursor:'pointer',padding:2,transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',transform:(hovStar||newRating)>=star?'scale(1.28) rotate(-5deg)':'scale(1)'}}>
-                      <IconStar size={26} filled={(hovStar||newRating)>=star}/>
-                    </button>
-                  ))}
+              {user ? (
+                <form onSubmit={submitReview}>
+                  <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:14}}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.textMuted,marginRight:4}}>Your rating:</span>
+                    {[1,2,3,4,5].map(star => (
+                      <button key={star} type="button" onClick={()=>setNewRating(star)}
+                        onMouseEnter={()=>setHovStar(star)} onMouseLeave={()=>setHovStar(0)}
+                        style={{background:'none',border:'none',cursor:'pointer',padding:2,transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',transform:(hovStar||newRating)>=star?'scale(1.28) rotate(-5deg)':'scale(1)'}}>
+                        <IconStar size={26} filled={(hovStar||newRating)>=star}/>
+                      </button>
+                    ))}
+                  </div>
+                  <textarea value={newText} onChange={e=>setNewText(e.target.value)}
+                    placeholder="Share your experience with this seller…"
+                    style={{...iStyle,minHeight:96,resize:'vertical',marginBottom:14}}
+                    onFocus={e=>{e.target.style.borderColor=C.primary;e.target.style.boxShadow='0 0 0 3px rgba(200,75,17,0.1)';}}
+                    onBlur={e=>{e.target.style.borderColor='#f0d9cc';e.target.style.boxShadow='none';}}/>
+                  <button type="submit" disabled={posting||!newText.trim()}
+                    style={{padding:'12px 22px',borderRadius:12,border:'none',background:posting||!newText.trim()?'#fde8d8':'linear-gradient(135deg,#c84b11,#f97316)',color:posting||!newText.trim()?C.primary:'white',fontWeight:900,fontSize:13,cursor:posting||!newText.trim()?'default':'pointer',transition:'all 0.3s',display:'flex',alignItems:'center',gap:8}}>
+                    {posting
+                      ? <><IconLoader size={14} style={{color:C.primary}}/> Posting…</>
+                      : <><IconSparkle size={14}/> Post Review</>}
+                  </button>
+                </form>
+              ) : (
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+                  <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Log in to leave a review for this seller.</p>
+                  <button onClick={()=>navigate('/login')}
+                    style={{padding:'10px 20px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:13,cursor:'pointer',whiteSpace:'nowrap'}}>
+                    Log In
+                  </button>
                 </div>
-                <textarea value={newText} onChange={e=>setNewText(e.target.value)}
-                  placeholder="Share your experience with this seller…"
-                  style={{...iStyle,minHeight:96,resize:'vertical',marginBottom:14}}
-                  onFocus={e=>{e.target.style.borderColor=C.primary;e.target.style.boxShadow='0 0 0 3px rgba(200,75,17,0.1)';}}
-                  onBlur={e=>{e.target.style.borderColor='#f0d9cc';e.target.style.boxShadow='none';}}/>
-                <button type="submit" disabled={posting||!newText.trim()}
-                  style={{padding:'12px 22px',borderRadius:12,border:'none',background:posting||!newText.trim()?'#fde8d8':'linear-gradient(135deg,#c84b11,#f97316)',color:posting||!newText.trim()?C.primary:'white',fontWeight:900,fontSize:13,cursor:posting||!newText.trim()?'default':'pointer',transition:'all 0.3s',display:'flex',alignItems:'center',gap:8}}>
-                  {posting
-                    ? <><IconLoader size={14} style={{color:C.primary}}/> Posting…</>
-                    : <><IconSparkle size={14}/> Post Review</>}
-                </button>
-              </form>
+              )}
             </div>
 
             <div style={{display:'flex',flexDirection:'column',gap:12}}>
@@ -816,7 +841,7 @@ export default function VendorDetails() {
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:10}}>
                           <Stars rating={r.rating}/>
-                          {user && r.author_name === me && (
+                          {user && r.buyer_id === user.id && (
                             <div style={{display:'flex',gap:6}}>
                               <button onClick={()=>{setEditId(r.id);setEditText(r.text);setEditRating(r.rating);}}
                                 style={{background:'#fdf8f5',border:'1px solid #f0d9cc',borderRadius:7,padding:'4px 8px',cursor:'pointer',fontSize:11,color:C.textMid,fontWeight:700}}>Edit</button>
