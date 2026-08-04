@@ -171,6 +171,8 @@ const Reg = () => {
     phone: '',
     password: '',
     role: 'buyer',
+    businessName: '',
+    dateOfBirth: '',
     terms: false,
   });
 
@@ -221,7 +223,11 @@ const Reg = () => {
     if (formData.role === 'seller' && !formData.phone) {
       newErrors.phone = 'Phone is required for sellers';
     }
-    
+
+    if (formData.role === 'seller' && !formData.businessName.trim()) {
+      newErrors.businessName = 'Business name is required for sellers';
+    }
+
     if (!formData.terms) {
       newErrors.terms = 'You must agree to the terms';
     }
@@ -273,6 +279,8 @@ const Reg = () => {
         email: sanitizedEmail,
         phone: sanitizedPhone,
         role: normalizedRole,
+        brandName: normalizedRole === 'seller' ? sanitizeInput(formData.businessName) : undefined,
+        dateOfBirth: formData.dateOfBirth || undefined,
       });
 
       // Don't block registration if profile upsert fails —
@@ -719,6 +727,35 @@ const Reg = () => {
                       </div>
                     </div>
 
+                    {formData.role === 'seller' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Business Name</label>
+                          <input
+                            className="reg-input fr"
+                            placeholder="e.g. Chioma's Bag Boutique"
+                            name="businessName"
+                            value={formData.businessName}
+                            onChange={handleChange}
+                            required
+                          />
+                          {errors.businessName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.businessName}</span>}
+                          <span style={{ fontSize: 11, color: C.textMuted, marginTop: 4, display: 'block' }}>Shown to buyers on your storefront instead of your name.</span>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Date of Birth <span style={{ color: C.textMuted, fontWeight: 500 }}>(optional)</span></label>
+                          <input
+                            className="reg-input fr"
+                            type="date"
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
+                            onChange={handleChange}
+                            max={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Email Address</label>
                       <input
@@ -938,6 +975,35 @@ const Reg = () => {
                 />
                 {errors.phone && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
               </div>
+
+              {formData.role === 'seller' && (
+                <>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Business Name</label>
+                    <input
+                      className="m-input fr"
+                      placeholder="e.g. Chioma's Bag Boutique"
+                      name="businessName"
+                      value={formData.businessName}
+                      onChange={handleChange}
+                      required
+                    />
+                    {errors.businessName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.businessName}</span>}
+                    <span style={{ fontSize: 11, color: C.textMuted, marginTop: 4, display: 'block' }}>Shown to buyers on your storefront instead of your name.</span>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Date of Birth <span style={{ color: C.textMuted, fontWeight: 500 }}>(optional)</span></label>
+                    <input
+                      className="m-input fr"
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>Password</label>

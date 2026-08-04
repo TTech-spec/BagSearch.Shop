@@ -12,12 +12,16 @@ export const buildUserProfileRecord = ({
   email,
   phone,
   role,
+  brandName,
+  dateOfBirth,
 }) => ({
   user_id: userId,
   full_name: normalizeText(fullName) || 'User',
   email: normalizeText(email),
   phone: normalizeText(phone),
   role: normalizeText(role) || 'buyer',
+  ...(brandName !== undefined ? { brand_name: normalizeText(brandName) } : {}),
+  ...(dateOfBirth !== undefined ? { date_of_birth: normalizeText(dateOfBirth) } : {}),
 });
 
 export const upsertUserProfile = async (profile) => {

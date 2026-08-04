@@ -138,23 +138,6 @@ function IconPackage({size=18, style={}}) {
   );
 }
 
-function IconEmail({size=16, style={}}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={style}>
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-      <polyline points="22,6 12,13 2,6"/>
-    </svg>
-  );
-}
-
-function IconPhone({size=16, style={}}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={style}>
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-    </svg>
-  );
-}
-
 function IconShopping({size=40, style={}}) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={style}>
@@ -216,6 +199,71 @@ function IconPercent({size=9, style={}}) {
 }
 
 /* ─── COMPOUND COMPONENTS ─────────────────────────────────────────── */
+
+function IconShieldCheck({size=12, style={}}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <path d="M12 2.5l7.5 3.5v5.2c0 4.9-3.2 8.3-7.5 9.8-4.3-1.5-7.5-4.9-7.5-9.8V6l7.5-3.5z"/>
+      <path d="M8.7 12l2.3 2.3 4.3-4.3"/>
+    </svg>
+  );
+}
+
+function IconIdCard({size=12, style={}}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <rect x="2" y="5" width="20" height="14" rx="2.2"/>
+      <circle cx="8.2" cy="11.3" r="1.7"/>
+      <path d="M5.4 15.8c0-1.5 1.25-2.5 2.8-2.5s2.8 1 2.8 2.5"/>
+      <line x1="14" y1="9.6" x2="18.4" y2="9.6"/>
+      <line x1="14" y1="13" x2="18.4" y2="13"/>
+    </svg>
+  );
+}
+
+/**
+ * Two-tier trust badge shown on a seller's public page.
+ * "trusted" = 10+ reviews from distinct logged-in buyers (automatic).
+ * "id" = seller submitted a NIN photo that a human manually approved —
+ * intentionally labeled "Submitted" rather than "Verified", since it's not
+ * an automated government-database check.
+ */
+function VerifiedBadge({ variant, index = 0 }) {
+  const isTrusted = variant === 'trusted';
+  const gradient = isTrusted
+    ? 'linear-gradient(135deg,#0d9488,#5eead4)'
+    : 'linear-gradient(135deg,#b8860b,#f7d774)';
+  const glow = isTrusted ? 'rgba(13,148,136,0.55)' : 'rgba(184,134,11,0.55)';
+  const label = isTrusted ? 'Community Trusted' : 'ID Submitted';
+  const Icon = isTrusted ? IconShieldCheck : IconIdCard;
+  return (
+    <span style={{
+      position: 'relative', overflow: 'hidden',
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '3px 12px 3px 4px', borderRadius: 20,
+      background: 'rgba(255,255,255,0.14)',
+      border: '1px solid rgba(255,255,255,0.32)',
+      backdropFilter: 'blur(6px)',
+      animation: `badgePop 0.4s cubic-bezier(0.22,1,0.36,1) ${index * 100}ms both`,
+    }}>
+      <span style={{
+        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+        background: gradient,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: `0 2px 8px ${glow}`,
+      }}>
+        <Icon size={11} style={{ color: 'white' }}/>
+      </span>
+      <span style={{ fontSize: 11, fontWeight: 800, color: 'white', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 20,
+        backgroundImage: 'linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.55) 50%,transparent 65%)',
+        backgroundSize: '250% 100%',
+        animation: 'badgeShine 3.2s ease-in-out infinite',
+      }}/>
+    </span>
+  );
+}
 
 function Stars({rating, size=13}) {
   return (
@@ -341,7 +389,7 @@ export default function VendorDetails() {
         .in('product_id', pids);
       const { data } = await supabase
         .from('product_views')
-        .select('id,viewed_at,buyer_name,buyer_phone,buyer_email,buyer_id,product_id,source,products:product_id(id,name,images)')
+        .select('id,viewed_at,buyer_name,buyer_id,product_id,source,products:product_id(id,name,images)')
         .in('product_id', pids)
         .order('viewed_at', { ascending: false })
         .limit(20);
@@ -518,7 +566,7 @@ export default function VendorDetails() {
 
   return (
     <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#fdf4ee 0%,white 40%)',fontFamily:"'Manrope',sans-serif",color:C.text}}>
-      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
+      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes badgePop{from{opacity:0;transform:scale(0.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
 
       {/* ── Header ── */}
       <header style={{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #f7ece4',position:'sticky',top:0,zIndex:50,padding:'0 20px',height:60,display:'flex',alignItems:'center',gap:12}}>
@@ -547,17 +595,9 @@ export default function VendorDetails() {
               <div style={{flex:1,minWidth:200}}>
                 <h2 style={{fontSize:26,fontWeight:900,color:'white',letterSpacing:'-0.03em',marginBottom:4}}>{name}</h2>
                 {(profile.community_trusted || idVerified) && (
-                  <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8}}>
-                    {profile.community_trusted && (
-                      <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:20,background:'rgba(255,255,255,0.16)',color:'white',border:'1px solid rgba(255,255,255,0.28)'}}>
-                        ✓ Community Trusted
-                      </span>
-                    )}
-                    {idVerified && (
-                      <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:20,background:'rgba(255,255,255,0.16)',color:'white',border:'1px solid rgba(255,255,255,0.28)'}}>
-                        ✓ ID Submitted
-                      </span>
-                    )}
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
+                    {profile.community_trusted && <VerifiedBadge variant="trusted" index={0}/>}
+                    {idVerified && <VerifiedBadge variant="id" index={profile.community_trusted?1:0}/>}
                   </div>
                 )}
                 <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:10}}>
@@ -889,8 +929,6 @@ export default function VendorDetails() {
               <div>
                 {views.map((v,idx) => {
                   const bName  = v.users?.full_name || v.buyer_name  || 'Anonymous Buyer';
-                  const bEmail = v.users?.email     || v.buyer_email;
-                  const bPhone = v.users?.phone     || v.buyer_phone;
                   const pName  = v.products?.name   || 'Unknown Product';
                   const pImg   = v.products?.images?.[0];
                   return (
@@ -910,16 +948,6 @@ export default function VendorDetails() {
                         <div style={{fontSize:12,color:C.textMid,marginBottom:3}}>viewed <strong style={{color:C.text}}>{pName}</strong></div>
                         <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
                           <span style={{fontSize:11,color:C.textFaint}}>{new Date(v.viewed_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-                          {bEmail && (
-                            <span style={{fontSize:11,color:C.textFaint,display:'flex',alignItems:'center',gap:3}}>
-                              <IconEmail size={11}/> {bEmail}
-                            </span>
-                          )}
-                          {bPhone && (
-                            <span style={{fontSize:11,color:C.textFaint,display:'flex',alignItems:'center',gap:3}}>
-                              <IconPhone size={11}/> {bPhone}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
