@@ -886,7 +886,7 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
     </div></>);
 }
 
-function CategoryPill({cat,isActive,onClick,index,count}){
+function CategoryPill({cat,isActive,onClick,index}){
   const[hov,setHov]=useState(false);
   return(<button onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
     style={{display:'flex',alignItems:'center',gap:7,padding:'9px 16px',borderRadius:100,border:`1.5px solid ${isActive?cat.color:hov?cat.border:C.border}`,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,background:isActive?cat.color:hov?cat.bg:'white',boxShadow:isActive?`0 6px 18px ${cat.color}44`:hov?`0 4px 14px ${cat.color}22`:'0 1px 4px rgba(0,0,0,0.04)',transform:isActive?'translateY(-2px) scale(1.03)':hov?'translateY(-1px)':'none',transition:'all 0.28s cubic-bezier(0.34,1.56,0.64,1)',animation:`catIn 0.45s cubic-bezier(0.22,1,0.36,1) ${index*50}ms both`,position:'relative',overflow:'hidden'}}>
@@ -895,7 +895,6 @@ function CategoryPill({cat,isActive,onClick,index,count}){
       {typeof cat.icon==='function'?cat.icon({size:16,color:isActive?'white':(hov?cat.color:C.textMid)}):cat.icon}
     </span>
     <span style={{fontSize:13,fontWeight:isActive?800:600,color:isActive?'white':hov?cat.color:C.textMid}}>{cat.label}</span>
-    {count>0&&<span style={{fontSize:10,fontWeight:800,background:isActive?'rgba(255,255,255,0.25)':cat.bg,color:isActive?'white':cat.color,border:`1px solid ${isActive?'rgba(255,255,255,0.3)':cat.border}`,padding:'1px 6px',borderRadius:20}}>{count}</span>}
   </button>);
 }
 
@@ -1846,8 +1845,6 @@ export default function Product(){
   useEffect(()=>{if(location.state?.openCart){setCartOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   useEffect(()=>{if(location.state?.promptUpload){setUploadPromptOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
-  const getCategoryCount=id=>id==='all'?allProducts.length:allProducts.filter(p=>p.category===id).length;
-  const categoriesWithCounts=CATEGORIES.map(c=>({...c,count:getCategoryCount(c.id)}));
   const featuredProducts=allProducts.slice(0,8);
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
@@ -2016,7 +2013,6 @@ export default function Product(){
               <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
               <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
               {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}><Icons.X size={13} color={C.textFaint} /></button>}
-              <div style={{fontSize:isMobile?11:12,fontWeight:700,color:C.primary,background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,padding:isMobile?'4px 10px':'5px 12px',borderRadius:20,whiteSpace:'nowrap'}}>{filteredVendors.length} vendors</div>
             </div>
           )}
           {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
@@ -2031,7 +2027,7 @@ export default function Product(){
           <div style={{marginBottom:isMobile?20:26,opacity:catVisible?1:0,transform:catVisible?'translateY(0)':'translateY(18px)',transition:'opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><div style={{width:18,height:2.5,background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2}}/><span style={{fontSize:11,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:C.textFaint}}>Browse by Category</span></div>
             <div className="cat-track" style={{display:'flex',gap:9,overflowX:'auto',paddingBottom:6,paddingTop:4}}>
-              {categoriesWithCounts.map((cat,i)=>(<CategoryPill key={cat.id} cat={cat} isActive={activeCategory===cat.id} onClick={()=>handleCategoryChange(cat.id)} index={i} count={cat.count}/>))}
+              {CATEGORIES.map((cat,i)=>(<CategoryPill key={cat.id} cat={cat} isActive={activeCategory===cat.id} onClick={()=>handleCategoryChange(cat.id)} index={i}/>))}
             </div>
             <div style={{marginTop:10,height:2,background:C.borderLight,borderRadius:2,overflow:'hidden',position:'relative'}}>
               {(()=>{const idx=CATEGORIES.findIndex(c=>c.id===activeCategory);const cat=CATEGORIES[idx];return <div style={{position:'absolute',left:`${(idx/CATEGORIES.length)*100}%`,width:`${100/CATEGORIES.length}%`,height:'100%',background:cat?.color||C.primary,borderRadius:2,transition:'left 0.4s cubic-bezier(0.34,1.56,0.64,1)'}}/>;})()}
