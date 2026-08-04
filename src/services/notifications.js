@@ -351,6 +351,13 @@ export const formatNotificationMessage = (notification) => {
         icon: 'campaign',
         color: '#c84b11'
       };
+    case 'birthday':
+      return {
+        title: notification.title || 'Happy Birthday! 🎉',
+        message: notification.message || 'Wishing you a wonderful day!',
+        icon: 'cake',
+        color: '#ec4899'
+      };
     default:
       return {
         title: notification.title || 'Notification',

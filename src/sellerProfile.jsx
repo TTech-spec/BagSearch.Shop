@@ -629,6 +629,112 @@ function NinVerificationCard({ sellerId, visible }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ─── BIRTHDAY CELEBRATION ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+const CONFETTI_COLORS = ['#ec4899', '#f97316', '#facc15', '#34d399', '#60a5fa', '#a78bfa'];
+
+function BirthdayCelebration({ seller }) {
+  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const confettiRef = useRef(null);
+  if (!confettiRef.current) {
+    confettiRef.current = Array.from({ length: 28 }, (_, i) => ({
+      left: Math.random() * 100,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: Math.random() * 1.2,
+      duration: 2.6 + Math.random() * 1.6,
+      size: 6 + Math.random() * 6,
+    }));
+  }
+
+  useEffect(() => {
+    if (!seller?.date_of_birth) return;
+    const dob = new Date(seller.date_of_birth);
+    if (Number.isNaN(dob.getTime())) return;
+    const today = new Date();
+    const isBirthday = dob.getUTCMonth() === today.getUTCMonth() && dob.getUTCDate() === today.getUTCDate();
+    if (!isBirthday) return;
+    const todayKey = today.toISOString().split('T')[0];
+    const seenKey = `bagsearch_birthday_seen_${todayKey}`;
+    try {
+      if (localStorage.getItem(seenKey) === '1') return;
+    } catch { /* localStorage unavailable — show it anyway */ }
+    setVisible(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
+  }, [seller?.date_of_birth]);
+
+  const dismiss = () => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    try { localStorage.setItem(`bagsearch_birthday_seen_${todayKey}`, '1'); } catch { /* ignore */ }
+    setMounted(false);
+    setTimeout(() => setVisible(false), 350);
+  };
+
+  if (!visible) return null;
+
+  const firstName = (seller?.name || 'there').split(' ')[0];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: mounted ? 'rgba(26,10,0,0.55)' : 'rgba(26,10,0,0)',
+      backdropFilter: mounted ? 'blur(6px)' : 'none',
+      transition: 'background 0.35s ease, backdrop-filter 0.35s ease',
+      padding: 20,
+    }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        {confettiRef.current.map((c, i) => (
+          <span key={i} style={{
+            position: 'absolute', top: -20, left: `${c.left}%`,
+            width: c.size, height: c.size * 0.4, background: c.color,
+            borderRadius: 2, opacity: mounted ? 1 : 0,
+            animation: mounted ? `confettiFall ${c.duration}s ease-in ${c.delay}s infinite` : 'none',
+          }}/>
+        ))}
+      </div>
+
+      <div style={{
+        position: 'relative', zIndex: 1, width: 'min(420px, 100%)',
+        background: 'linear-gradient(160deg,#fff7ed 0%,#fff 60%)',
+        borderRadius: 28, padding: '40px 30px 30px',
+        textAlign: 'center', boxShadow: '0 30px 80px rgba(0,0,0,0.35)',
+        transform: mounted ? 'scale(1) translateY(0)' : 'scale(0.85) translateY(30px)',
+        opacity: mounted ? 1 : 0,
+        transition: 'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        <div style={{
+          width: 84, height: 84, margin: '0 auto 18px', borderRadius: '50%',
+          background: 'linear-gradient(135deg,#ec4899,#f97316,#facc15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 42, boxShadow: '0 12px 32px rgba(236,72,153,0.4)',
+          animation: mounted ? 'birthdayBounce 1.6s ease-in-out infinite' : 'none',
+        }}>
+          🎂
+        </div>
+        <h2 style={{
+          fontSize: 26, fontWeight: 900, marginBottom: 10, letterSpacing: '-0.02em',
+          backgroundImage: 'linear-gradient(90deg,#ec4899,#f97316,#facc15)',
+          WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+        }}>
+          Happy Birthday, {firstName}! 🎉
+        </h2>
+        <p style={{ fontSize: 14, color: '#7A4030', lineHeight: 1.7, marginBottom: 26 }}>
+          The whole BagSearch team is wishing you an amazing day. Thanks for being part of our seller community — here's to another great year! 🥳
+        </p>
+        <button onClick={dismiss} style={{
+          padding: '13px 32px', borderRadius: 999, border: 'none', cursor: 'pointer',
+          background: 'linear-gradient(135deg,#ec4899,#f97316)', color: 'white',
+          fontWeight: 800, fontSize: 14, boxShadow: '0 10px 26px rgba(236,72,153,0.4)',
+        }}>
+          Thank you! 🎈
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ─── SHARE PROFILE MODAL ─────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 function ShareProfileModal({ visible, onClose, seller }) {
@@ -1386,13 +1492,13 @@ export default function SellerProfile() {
     async function loadSeller() {
       try {
         if (!user){ setError('User not authenticated'); setLoading(false); return; }
-        let { data, error:e } = await supabase.from('users').select('full_name,email,phone,brand_name,brand_story,bag_categories').eq('user_id',user.id).maybeSingle();
+        let { data, error:e } = await supabase.from('users').select('full_name,email,phone,brand_name,brand_story,bag_categories,date_of_birth').eq('user_id',user.id).maybeSingle();
         if (e && isMissingColumnError(e)) {
           const fallback = await supabase.from('users').select('full_name,email,phone').eq('user_id',user.id).maybeSingle();
           data=fallback.data; e=fallback.error;
         }
         if (e) throw e;
-        setSeller({ name:data?.full_name||user.user_metadata?.full_name||'Seller', email:data?.email||user.email||'N/A', phone:data?.phone||user.user_metadata?.phone||'N/A', brand_name:data?.brand_name||'', brand_story:data?.brand_story||'', bag_categories:data?.bag_categories||[], avatar:null, id:user.id });
+        setSeller({ name:data?.full_name||user.user_metadata?.full_name||'Seller', email:data?.email||user.email||'N/A', phone:data?.phone||user.user_metadata?.phone||'N/A', brand_name:data?.brand_name||'', brand_story:data?.brand_story||'', bag_categories:data?.bag_categories||[], date_of_birth:data?.date_of_birth||null, avatar:null, id:user.id });
       } catch(err){ setError(err.message); }
       finally { setLoading(false); }
     }
@@ -1500,6 +1606,7 @@ export default function SellerProfile() {
 
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`, fontFamily:"'Manrope',sans-serif", overflow:"hidden" }}>
+      <BirthdayCelebration seller={seller}/>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
@@ -1513,6 +1620,8 @@ export default function SellerProfile() {
         @keyframes eyePing      {0%{transform:scale(1);opacity:0.6}100%{transform:scale(2.2);opacity:0}}
         @keyframes eyeBounce    {0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-5px) scale(1.08)}}
         @keyframes spin         {to{transform:rotate(360deg)}}
+        @keyframes confettiFall {0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
+        @keyframes birthdayBounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
         @keyframes popIn        {from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
         @keyframes overlayFade  {from{opacity:0}to{opacity:1}}
         @keyframes tabSlideIn   {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
