@@ -3,7 +3,6 @@ import { useContext, useEffect, Suspense, lazy } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
-import AdsLoader from './components/AdsLoader.jsx';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
 
@@ -195,7 +194,6 @@ function App() {
     <Router>
       <AuthListener />
       <CookieConsent />
-      <AdsLoader />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Default route -> Home (public landing page) or Products (if logged in) */}

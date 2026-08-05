@@ -211,7 +211,6 @@ export default function CreateProduct() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
-  const [showAdGate, setShowAdGate] = useState(false);
 
   const toggleColor = (colorId) => {
     setSelectedColors(prev =>
@@ -299,7 +298,7 @@ export default function CreateProduct() {
       if (!sanitizedWhatsApp.trim()) throw new Error('Please enter your WhatsApp number');
 
       setError(null);
-      setShowAdGate(true);
+      performListing();
     } catch (err) {
       const secureError = SecureErrorHandler.handleError(err, 'product_creation');
       setError(secureError.message);
@@ -1249,99 +1248,7 @@ export default function CreateProduct() {
           </div>
         </footer>
       </main>
-
-      {showAdGate && (
-        <AdGateModal
-          onCancel={() => setShowAdGate(false)}
-          onContinue={() => { setShowAdGate(false); performListing(); }}
-        />
-      )}
     </div>
-  );
-}
-
-function AdGateModal({ onCancel, onContinue }) {
-  const adSlotRef = useRef(null);
-  const [seconds, setSeconds] = useState(8);
-
-  // Countdown timer
-  // AdsLoader (mounted app-wide) already activates the Adcash AutoTag zone
-  // once per page — re-firing runAutoTag here would just be a duplicate
-  // call that Adcash's SDK ignores, so this modal doesn't trigger it again.
-  useEffect(() => {
-    if (seconds <= 0) return;
-    const t = setTimeout(() => setSeconds(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [seconds]);
-
-  const pct = Math.round(((8 - seconds) / 8) * 100);
-
-  return (
-    <>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(26,10,0,0.55)', backdropFilter: 'blur(4px)' }} />
-      <div style={{
-        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 601,
-        width: 'min(480px, calc(100vw - 24px))', background: 'white', borderRadius: 24,
-        boxShadow: '0 40px 100px rgba(200,75,17,0.18), 0 10px 40px rgba(0,0,0,0.14)', overflow: 'hidden',
-        animation: 'adModalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both',
-      }}>
-        {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.borderLight}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: C.primaryPale, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <MS name="volunteer_activism" size={19} style={{ color: C.primary }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Quick ad before you list</div>
-            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>This keeps listing free for every seller on BagSearch</div>
-          </div>
-          {/* Countdown ring */}
-          <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
-            <svg width="40" height="40" style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx="20" cy="20" r="16" fill="none" stroke={C.borderLight} strokeWidth="3" />
-              <circle cx="20" cy="20" r="16" fill="none" stroke={C.primary} strokeWidth="3"
-                strokeDasharray={`${2 * Math.PI * 16}`}
-                strokeDashoffset={`${2 * Math.PI * 16 * (1 - pct / 100)}`}
-                style={{ transition: 'stroke-dashoffset 0.9s linear' }}
-              />
-            </svg>
-            <span style={{
-              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 900, color: C.primary,
-            }}>
-              {seconds > 0 ? seconds : '✓'}
-            </span>
-          </div>
-        </div>
-
-        {/* Adcash ad slot */}
-        <div style={{ padding: '20px 24px' }}>
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.textFaint, marginBottom: 8, textAlign: 'center' }}>Advertisement</p>
-          <div
-            ref={adSlotRef}
-            style={{ minHeight: 250, background: C.surfaceDim, borderRadius: 12, border: `1px solid ${C.borderLight}`, overflow: 'hidden' }}
-          />
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding: '4px 24px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <button type="button" onClick={onCancel} style={{
-            padding: '10px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
-            background: 'white', color: C.textMuted, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-          }}>
-            Cancel
-          </button>
-          <button type="button" disabled={seconds > 0} onClick={onContinue} style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 12, border: 'none',
-            background: seconds > 0 ? C.textFaint : C.primary, color: 'white', fontSize: 14, fontWeight: 800,
-            cursor: seconds > 0 ? 'not-allowed' : 'pointer',
-            transition: 'background 0.4s cubic-bezier(0.22,1,0.36,1)',
-            boxShadow: seconds > 0 ? 'none' : `0 4px 16px ${C.primary}80`,
-          }}>
-            {seconds > 0 ? `Continue in ${seconds}s` : <><span>List My Bag</span> <MS name="arrow_forward" size={18} /></>}
-          </button>
-        </div>
-      </div>
-    </>
   );
 }
 

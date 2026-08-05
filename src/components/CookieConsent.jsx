@@ -40,8 +40,7 @@ export default function CookieConsent() {
       fontFamily: "'Plus Jakarta Sans', Arial, sans-serif",
     }}>
       <p style={{ margin: 0, fontSize: 13, color: '#5c3317', lineHeight: 1.65, flex: '1 1 280px', maxWidth: 680 }}>
-        BagSearch uses cookies and similar technologies to improve your browsing experience and to serve personalised
-        advertisements through Adcash. By clicking <strong>Accept All</strong>, you consent to our use of
+        BagSearch uses cookies and similar technologies to improve your browsing experience. By clicking <strong>Accept All</strong>, you consent to our use of
         cookies as described in our{' '}
         <a href="/policy" style={{ color: '#c84b11', fontWeight: 700, textDecoration: 'none' }}>Privacy Policy</a>.
         You may decline non-essential cookies at any time.

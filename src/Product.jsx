@@ -7,7 +7,6 @@ import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import NotificationsDropdown from './components/NotificationsDropdown';
-import AdcashBanner from './components/AdcashBanner.jsx';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
 import { productPath } from './utils/slugify';
@@ -2092,17 +2091,9 @@ export default function Product(){
             <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
               {user?.user_metadata?.role!=='seller'&&<HotDealsPromoCard dealCount={hotDealProducts.length} navigate={navigate} isMobile={isMobile}/>}
               {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
-              <div style={{margin:isMobile?'28px 0':'36px 0'}}>
-                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
-                <AdcashBanner zoneId="9o2rprcllc" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
-              </div>
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
               <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
-              <div style={{margin:isMobile?'28px 0':'36px 0'}}>
-                <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:8,textAlign:'center'}}>Advertisement</p>
-                <AdcashBanner zoneId="9o2rprcllc" style={{minHeight:250,display:'flex',alignItems:'center',justifyContent:'center'}}/>
-              </div>
               {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>

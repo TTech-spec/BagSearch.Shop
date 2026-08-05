@@ -71,7 +71,7 @@ const policySections = [
       'Listing content — product names, prices, photos, descriptions, and any seller contact channels you add to a listing.',
       'Activity data — searches you run, products you view, reviews you leave, and preferences you set while using the platform.',
       'Device and browser signals — basic technical data used to keep the platform running reliably and to catch unusual activity.',
-      'Cookies and similar technologies — used to remember your preferences, measure traffic, and deliver relevant ads through our advertising partner, Adcash.',
+      'Cookies and similar technologies — used to remember your preferences and measure traffic.',
     ],
   },
   {
@@ -82,7 +82,6 @@ const policySections = [
       'To personalize your experience — surface relevant bags, remember your location, and highlight deals that match your browsing.',
       'To handle support and disputes — respond to reports, verify accounts, and resolve issues between buyers and sellers.',
       'To improve the platform — understand what works, fix problems, and build features that make shopping and selling easier.',
-      'To serve ads through Adcash — BagSearch is free because advertising helps fund the platform.',
     ],
   },
   {
@@ -91,7 +90,6 @@ const policySections = [
     points: [
       'Seller contact details are visible to buyers who are genuinely looking to inquire about or purchase a listed item.',
       'We work with service providers — for hosting, analytics, and support — who help operate the platform and are bound to protect your data.',
-      'Adcash and other ad partners receive anonymized signals to serve relevant ads; they do not receive your full account profile.',
       'We share information when the law requires it, or when doing so is necessary to protect users or the integrity of the marketplace.',
       'We do not sell personal information.',
     ],
@@ -100,10 +98,8 @@ const policySections = [
     title: 'Advertising',
     icon: <IconEye size={18} stroke="#c84b11" />,
     points: [
-      'BagSearch displays ads through Adcash, our advertising partner. This is how we keep the platform free for buyers and sellers.',
-      'Adcash uses cookies to serve ads based on your browsing activity on BagSearch and other sites you\'ve visited.',
-      'You can limit ad personalization through your browser\'s cookie settings at any time.',
-      'Disabling cookies in your browser will limit ad personalization but may also affect some platform features.',
+      'BagSearch does not currently display third-party advertising.',
+      'If we introduce advertising in the future, we will update this policy to name the partner and describe what data, if any, is shared with them before any ads go live.',
     ],
   },
   {
@@ -113,7 +109,6 @@ const policySections = [
       'We use cookies to keep you logged in, remember your preferences, and understand how people use the platform.',
       'Essential cookies are required for the site to work — you cannot opt out of these.',
       'Analytics cookies tell us which pages people visit and where things break, helping us improve the experience.',
-      'Advertising cookies allow Adcash to serve relevant ads. You can manage these through your browser settings.',
     ],
   },
   {

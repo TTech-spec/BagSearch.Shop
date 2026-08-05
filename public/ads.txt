@@ -1,2 +1,2 @@
-# Adcash line pending — add the exact line from your Adcash dashboard
-# (Account / Site settings → ads.txt), typically: adcash.com, <publisher-id>, DIRECT
+# No active advertising partners. When Google AdSense (or another network)
+# is added later, its ads.txt line goes here.

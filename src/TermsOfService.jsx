@@ -48,9 +48,6 @@ function TermsOfService() {
               <li style={{ marginBottom: 8 }}><strong>Sellers:</strong> Verified vendors and individuals selling authentic luxury designer bags</li>
               <li><strong>Features:</strong> Product listings, visual search, seller verification, secure messaging, and location-based browsing</li>
             </ul>
-            <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginTop: 16 }}>
-              BagSearch uses third-party advertising services, including Adcash, to display advertisements on our platform. These advertisements may collect and use information about your browsing activities to serve personalized ads.
-            </p>
           </section>
 
           <section style={{ marginBottom: 32 }}>
@@ -117,21 +114,10 @@ function TermsOfService() {
               6. Advertising and Third-Party Services
             </h2>
             <p style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, marginBottom: 12 }}>
-              BagSearch uses third-party advertising services, including Adcash, to display advertisements on our website. By using our service, you acknowledge and agree to:
+              BagSearch does not currently display third-party advertisements. If we introduce an advertising partner
+              in the future, we will update this section — and our Privacy Policy — to describe what's shown and what
+              data, if any, is shared with that partner before any ads go live.
             </p>
-            <ul style={{ fontSize: 15, color: C.textMid, lineHeight: 1.7, paddingLeft: 20, marginBottom: 12 }}>
-              <li style={{ marginBottom: 8 }}>The display of third-party advertisements on our platform</li>
-              <li style={{ marginBottom: 8 }}>The collection and use of browsing data by advertising partners for personalized advertising</li>
-              <li style={{ marginBottom: 8 }}>The use of cookies and web beacons by Adcash and other advertising partners</li>
-              <li style={{ marginBottom: 8 }}>That BagSearch may share certain data with advertising partners to improve ad relevance</li>
-              <li>You can opt out of personalized advertising through Google's Ads Settings or your browser settings</li>
-            </ul>
-            <div style={{ background: C.primaryBg, border: `1px solid ${C.primaryBorder}`, borderRadius: 12, padding: 16, marginTop: 16 }}>
-              <p style={{ fontSize: 14, color: C.text, fontWeight: 600 }}>📢 Advertising Disclaimer</p>
-              <p style={{ fontSize: 14, color: C.textMid, lineHeight: 1.6 }}>
-                BagSearch does not control the content of third-party advertisements and is not responsible for the products or services promoted through ads. Please review the privacy policies of advertising partners for more information about their data practices.
-              </p>
-            </div>
           </section>
 
           <section style={{ marginBottom: 32 }}>
