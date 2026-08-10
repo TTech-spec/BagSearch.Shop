@@ -97,8 +97,8 @@ export default function MobileBottomNav() {
       }}
     >
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 4,
-        background: '#ffffff', borderRadius: 999, padding: 6,
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: '#ffffff', borderRadius: 999, padding: '8px 12px',
         boxShadow: '0 12px 32px rgba(200,75,17,0.14), 0 2px 10px rgba(0,0,0,0.06)',
         border: '1.5px solid #f7ece4',
         pointerEvents: 'auto',
