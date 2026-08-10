@@ -405,7 +405,7 @@ function ReportSellerModal({ open, onClose, onSubmit, sending, sent, error }) {
               </div>
               <textarea value={details} onChange={e => setDetails(e.target.value)} placeholder="Add any extra detail (optional)…"
                 style={{ ...iStyle, minHeight: 76, resize: 'vertical', marginBottom: 14, fontSize: 13 }} />
-              {error && <p style={{ fontSize: 12, color: '#dc2626', fontWeight: 700, marginBottom: 12 }}>{error}</p>}
+              {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}><p style={{ fontSize: 12, color: '#dc2626', fontWeight: 700, lineHeight: 1.5 }}>{error}</p></div>}
               <button onClick={() => onSubmit(reason, details)} disabled={!reason || sending}
                 style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: !reason || sending ? '#fde8d8' : 'linear-gradient(135deg,#c84b11,#f97316)', color: !reason || sending ? C.primary : 'white', fontWeight: 900, fontSize: 14, cursor: !reason || sending ? 'default' : 'pointer' }}>
                 {sending ? 'Sending…' : 'Send Report'}
@@ -659,14 +659,19 @@ export default function VendorDetails() {
     setReportSending(true); setReportError('');
     try {
       const { error } = await supabase.from('seller_reports').upsert(
-        { seller_id: sellerId, reporter_id: user.id, reason, details: details.trim() || null },
+        { seller_id: sellerId, reporter_id: user.id, reason, details: (details || '').trim() || null },
         { onConflict: 'seller_id,reporter_id' }
       );
       if (error) throw error;
       setReportSent(true);
     } catch (e) {
       console.error('Report submission failed:', e);
-      setReportError('Could not send report. Please try again.');
+      // PGRST205 / 42P01 = the seller_reports table hasn't been created yet
+      // (database/add_seller_reports.sql hasn't been run against Supabase).
+      const missingTable = e?.code === 'PGRST205' || e?.code === '42P01' || /seller_reports/.test(e?.message || '');
+      setReportError(missingTable
+        ? "Reporting isn't set up on the server yet — ask the site owner to run the seller_reports database migration."
+        : 'Could not send report. Please try again.');
     } finally {
       setReportSending(false);
     }

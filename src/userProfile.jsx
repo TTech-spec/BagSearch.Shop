@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
+import { AuthContext } from './context/AuthContext';
 import { deleteFromPinecone } from './services/visualSearch';
 import {
   User, Mail, Phone, Calendar, History, AlertCircle,
@@ -456,6 +457,7 @@ function DangerZone({ onDelete, visible }) {
 // ══════════════════════════════════════════════════════════════════════════════
 export default function UserProfile() {
   const navigate = useNavigate();
+  const { user: authUser } = useContext(AuthContext);
   const [profile,  setProfile ] = useState(null);
   const [history,  setHistory ] = useState([]);
   const [stats,    setStats   ] = useState(null);
@@ -486,15 +488,19 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
+    // PrivateRoute already confirmed a logged-in user before this page can even
+    // mount, so trust that context user instead of re-verifying with
+    // supabase.auth.getUser() — that call round-trips to the Supabase auth
+    // server and, on a shaky mobile connection, can transiently fail and
+    // throw "Not authenticated" even though the session is perfectly valid,
+    // landing the buyer on a "Load Failed" screen that reads as a logout.
+    if (!authUser) return;
     async function load() {
       setLoading(true); setError(null);
       try {
-        const { data:{ user }, error:e } = await supabase.auth.getUser();
-        if (e) throw e;
-        if (!user) throw new Error('Not authenticated');
-        const uid = user.id;
+        const uid = authUser.id;
         const { data: pd } = await supabase.from('users').select('user_id,full_name,email,phone,role,created_at').eq('user_id',uid).maybeSingle();
-        setProfile(pd || { user_id:user.id, full_name:user.user_metadata?.full_name||'User', email:user.email, phone:user.user_metadata?.phone||'', role:user.user_metadata?.role||'buyer', created_at:user.created_at });
+        setProfile(pd || { user_id:authUser.id, full_name:authUser.user_metadata?.full_name||'User', email:authUser.email, phone:authUser.user_metadata?.phone||'', role:authUser.user_metadata?.role||'buyer', created_at:authUser.created_at });
         const { data:hist } = await supabase.from('search_history').select('query,created_at,type').eq('user_id',uid).order('created_at',{ascending:false}).limit(10);
         setHistory(hist ?? []);
         const total=hist?.length??0, imgs=hist?.filter(h=>h.type==='image').length??0;
@@ -507,7 +513,7 @@ export default function UserProfile() {
       finally { setLoading(false); }
     }
     load();
-  }, []);
+  }, [authUser]);
 
   const handleSave = async (field, val) => {
     const { data:{ user } } = await supabase.auth.getUser();

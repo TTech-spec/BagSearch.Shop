@@ -881,6 +881,20 @@ function UploadPromptModal({ open, onClose, onUpload }) {
   );
 }
 
+// Eased, JS-driven scroll instead of the browser's built-in smooth scroll —
+// consistent duration/curve across browsers (Safari in particular often just
+// snaps instantly for `scrollIntoView({behavior:'smooth'})`).
+function smoothScrollTo(targetY,duration=700){
+  const startY=window.scrollY;const diff=targetY-startY;let startTime=null;
+  const ease=t=>t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  function step(ts){
+    if(startTime===null)startTime=ts;
+    const progress=Math.min((ts-startTime)/duration,1);
+    window.scrollTo(0,startY+diff*ease(progress));
+    if(progress<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 function useScrollReveal(t=0.08){const ref=useRef(null);const[v,setV]=useState(false);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setV(true);o.disconnect();}},{threshold:t});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[t]);return[ref,v];}
 function AnimatedCount({value}){const[n,setN]=useState(0);const ref=useRef(null);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){let s=0;const timer=setInterval(()=>{s+=Math.ceil(value/55);if(s>=value){setN(value);clearInterval(timer);}else setN(s);},20);o.disconnect();}},{threshold:0.2});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[value]);return <span ref={ref}>{n.toLocaleString()}</span>;}
 const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i=>(<Icons.Star key={i} size={size} color={i<=Math.floor(rating)?'#f97316':'#f0d9cc'} filled={i<=Math.floor(rating)} />))}</div>);
@@ -1097,7 +1111,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   );
 }
 
-function HorizontalSection({ id, title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
+function HorizontalSection({ id, highlighted, title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
   const scrollRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
@@ -1115,7 +1129,7 @@ function HorizontalSection({ id, title, subtitle, icon, accentColor, accentBg, p
   }, []);
   const scroll = (dir) => { const el=scrollRef.current; if(!el)return; el.scrollBy({left:dir*430,behavior:'smooth'}); requestAnimationFrame(checkScroll); };
   return (
-    <div id={id} ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
+    <div id={id} ref={ref} style={{ marginBottom:48,borderRadius:20,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',boxShadow:highlighted?`0 0 0 3px ${accentColor}66,0 16px 40px ${accentColor}33`:'0 0 0 0 transparent',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1), box-shadow 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
           <div style={{ width:40,height:40,borderRadius:12,background:accentBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid ${accentColor}33` }}>
@@ -1649,22 +1663,17 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
           )}
         </div>
 
-        {/* Mobile: login/register + cart (menu button moved to left) */}
-        {isMobile && (
+        {/* Mobile: login/register only — cart lives in the bottom nav now */}
+        {isMobile && !user && (
           <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-            {!user ? (
-              <>
-                <button onClick={()=>navigate('/login')}
-                  style={{ padding:'6px 12px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
-                  Login
-                </button>
-                <button onClick={()=>navigate('/register')}
-                  style={{ padding:'6px 12px',borderRadius:8,border:'none',background:C.primary,cursor:'pointer',color:'white',fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
-                  Register
-                </button>
-              </>
-            ) : null}
-            <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
+            <button onClick={()=>navigate('/login')}
+              style={{ padding:'6px 12px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
+              Login
+            </button>
+            <button onClick={()=>navigate('/register')}
+              style={{ padding:'6px 12px',borderRadius:8,border:'none',background:C.primary,cursor:'pointer',color:'white',fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
+              Register
+            </button>
           </div>
         )}
       </div>
@@ -1748,6 +1757,7 @@ export default function Product(){
   const[productViewCounts,setProductViewCounts]=useState({});
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
   const[budgetOpen,setBudgetOpen]=useState(false);const[budgetMin,setBudgetMin]=useState('');const[budgetMax,setBudgetMax]=useState('');
+  const[highlightSection,setHighlightSection]=useState(null);
   const[visualSearching,setVisualSearching]=useState(false);
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
   const[visualSearchCount,setVisualSearchCount]=useState(0);
@@ -1980,12 +1990,22 @@ export default function Product(){
   useEffect(()=>{if(location.state?.promptUpload){setUploadPromptOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   // Scrolls to a named section (e.g. the mobile nav's "New Arrivals" shortcut) once it's
   // actually in the DOM — re-checks as allProducts loads in case it fires before render.
+  // Uses an eased custom scroll (not scrollIntoView) so it's consistently smooth across
+  // browsers, offsets past the sticky header so the section title isn't hidden under it,
+  // and briefly highlights the section on arrival so landing there feels intentional.
   useEffect(()=>{
     const targetId=location.state?.scrollTo;
     if(!targetId)return;
     const el=document.getElementById(targetId);
-    if(el){el.scrollIntoView({behavior:'smooth',block:'start'});navigate('/products',{replace:true,state:{}});}
-  },[location.state,navigate,allProducts]);
+    if(el){
+      const headerOffset=isMobile?76:92;
+      const targetY=Math.max(el.getBoundingClientRect().top+window.scrollY-headerOffset,0);
+      smoothScrollTo(targetY,800);
+      setHighlightSection(targetId);
+      setTimeout(()=>setHighlightSection(null),1500);
+      navigate('/products',{replace:true,state:{}});
+    }
+  },[location.state,navigate,allProducts,isMobile]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const featuredProducts=allProducts.slice(0,8);
   const newArrivals=[...allProducts].reverse().slice(0,8);
@@ -2254,7 +2274,7 @@ export default function Product(){
               {user?.user_metadata?.role!=='seller'&&<HotDealsPromoCard dealCount={hotDealProducts.length} navigate={navigate} isMobile={isMobile}/>}
               {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
-              <HorizontalSection id="new-arrivals" title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
+              <HorizontalSection id="new-arrivals" highlighted={highlightSection==='new-arrivals'} title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
               {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
