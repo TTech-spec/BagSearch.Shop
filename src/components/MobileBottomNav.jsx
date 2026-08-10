@@ -99,8 +99,8 @@ export default function MobileBottomNav() {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 4,
         background: '#ffffff', borderRadius: 999, padding: 6,
-        boxShadow: '0 12px 32px rgba(0,0,0,0.16), 0 2px 10px rgba(0,0,0,0.08)',
-        border: '1px solid rgba(0,0,0,0.05)',
+        boxShadow: '0 12px 32px rgba(200,75,17,0.14), 0 2px 10px rgba(0,0,0,0.06)',
+        border: '1.5px solid #f7ece4',
         pointerEvents: 'auto',
       }}>
         {items.map(item => (
@@ -112,11 +112,12 @@ export default function MobileBottomNav() {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 52, height: 52, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              background: item.active ? '#1a0a00' : 'transparent',
-              transition: 'background 0.25s ease',
+              background: item.active ? 'linear-gradient(135deg,#c84b11,#f97316)' : 'transparent',
+              boxShadow: item.active ? '0 6px 16px rgba(200,75,17,0.4)' : 'none',
+              transition: 'background 0.25s ease, box-shadow 0.25s ease',
             }}
           >
-            <item.Icon size={22} color={item.active ? '#ffffff' : '#1a0a00'} />
+            <item.Icon size={22} color={item.active ? '#ffffff' : '#5c3317'} />
           </button>
         ))}
       </div>
