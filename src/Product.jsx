@@ -949,6 +949,41 @@ function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
     </div></>);
 }
 
+const BUDGET_PRESETS=[{label:'Under ₦5,000',min:'',max:'5000'},{label:'₦5,000 – ₦20,000',min:'5000',max:'20000'},{label:'₦20,000 – ₦50,000',min:'20000',max:'50000'},{label:'₦50,000+',min:'50000',max:''}];
+function BudgetModal({isOpen,onClose,min,max,setMin,setMax,onClear}){
+  if(!isOpen)return null;
+  const applyPreset=p=>{setMin(p.min);setMax(p.max);};
+  return(<><div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.5)',zIndex:200,backdropFilter:'blur(4px)'}}/>
+    <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:201,width:'min(420px,92vw)',background:'white',borderRadius:24,overflow:'hidden',boxShadow:`0 32px 80px rgba(200,75,17,0.2)`,animation:'modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}>
+      <div style={{padding:'24px 24px 20px'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+          <div><h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:3}}>💰 Set Your Budget</h3><p style={{fontSize:12,color:C.textFaint,fontWeight:500}}>Only show bags in your price range</p></div>
+          <button onClick={onClose} style={{width:36,height:36,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.X size={16} color={C.primary} /></button>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+          <div style={{flex:1,display:'flex',alignItems:'center',gap:8,background:C.surfaceDim,border:`1.5px solid ${C.border}`,borderRadius:12,padding:'10px 14px'}}>
+            <span style={{fontSize:13,color:C.textFaint,fontWeight:700}}>₦</span>
+            <input type="number" min="0" inputMode="numeric" placeholder="Min" value={min} onChange={e=>setMin(e.target.value)} style={{flex:1,width:'100%',border:'none',background:'transparent',fontSize:14,color:C.text,fontFamily:'inherit',fontWeight:600,outline:'none'}}/>
+          </div>
+          <span style={{color:C.textFaint,fontWeight:700}}>–</span>
+          <div style={{flex:1,display:'flex',alignItems:'center',gap:8,background:C.surfaceDim,border:`1.5px solid ${C.border}`,borderRadius:12,padding:'10px 14px'}}>
+            <span style={{fontSize:13,color:C.textFaint,fontWeight:700}}>₦</span>
+            <input type="number" min="0" inputMode="numeric" placeholder="Max" value={max} onChange={e=>setMax(e.target.value)} style={{flex:1,width:'100%',border:'none',background:'transparent',fontSize:14,color:C.text,fontFamily:'inherit',fontWeight:600,outline:'none'}}/>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:20}}>
+          {BUDGET_PRESETS.map(p=>{const active=min===p.min&&max===p.max;return(
+            <button key={p.label} onClick={()=>applyPreset(p)} style={{background:active?C.primary:C.surfaceDim,color:active?'white':C.textMid,border:`1px solid ${active?C.primary:C.border}`,padding:'6px 12px',borderRadius:20,fontSize:12,fontWeight:700,cursor:'pointer'}}>{p.label}</button>
+          );})}
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button onClick={()=>{onClear();onClose();}} style={{flex:1,padding:'13px 0',borderRadius:12,border:`1.5px solid ${C.border}`,background:'white',color:C.textMid,fontWeight:700,fontSize:14,cursor:'pointer'}}>Clear</button>
+          <button onClick={onClose} style={{flex:1,padding:'13px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:14,cursor:'pointer',boxShadow:'0 6px 20px rgba(200,75,17,0.35)'}}>Apply</button>
+        </div>
+      </div>
+    </div></>);
+}
+
 function CategoryPill({cat,isActive,onClick,index}){
   const[hov,setHov]=useState(false);
   return(<button onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -1062,7 +1097,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   );
 }
 
-function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
+function HorizontalSection({ id, title, subtitle, icon, accentColor, accentBg, products, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor, onSeeAll }) {
   const scrollRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
@@ -1080,7 +1115,7 @@ function HorizontalSection({ title, subtitle, icon, accentColor, accentBg, produ
   }, []);
   const scroll = (dir) => { const el=scrollRef.current; if(!el)return; el.scrollBy({left:dir*430,behavior:'smooth'}); requestAnimationFrame(checkScroll); };
   return (
-    <div ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
+    <div id={id} ref={ref} style={{ marginBottom:48,opacity:vis?1:0,transform:vis?'translateY(0)':'translateY(32px)',transition:'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)' }}>
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18 }}>
         <div style={{ display:'flex',alignItems:'center',gap:12 }}>
           <div style={{ width:40,height:40,borderRadius:12,background:accentBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid ${accentColor}33` }}>
@@ -1712,6 +1747,7 @@ export default function Product(){
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
   const[productViewCounts,setProductViewCounts]=useState({});
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
+  const[budgetOpen,setBudgetOpen]=useState(false);const[budgetMin,setBudgetMin]=useState('');const[budgetMax,setBudgetMax]=useState('');
   const[visualSearching,setVisualSearching]=useState(false);
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
   const[visualSearchCount,setVisualSearchCount]=useState(0);
@@ -1942,10 +1978,26 @@ export default function Product(){
   const handleProfileClick=()=>{if(!user){setAuthGateOpen(true);return;}navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');};
   useEffect(()=>{if(location.state?.openCart){setCartOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   useEffect(()=>{if(location.state?.promptUpload){setUploadPromptOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
+  // Scrolls to a named section (e.g. the mobile nav's "New Arrivals" shortcut) once it's
+  // actually in the DOM — re-checks as allProducts loads in case it fires before render.
+  useEffect(()=>{
+    const targetId=location.state?.scrollTo;
+    if(!targetId)return;
+    const el=document.getElementById(targetId);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'start'});navigate('/products',{replace:true,state:{}});}
+  },[location.state,navigate,allProducts]);
   const handleLogout=async()=>{await logout();navigate('/login',{replace:true});};
   const featuredProducts=allProducts.slice(0,8);
   const newArrivals=[...allProducts].reverse().slice(0,8);
   const topDeals=allProducts.filter(p=>p.price<2000).slice(0,8);
+  const budgetActive=!!(budgetMin||budgetMax);
+  const budgetFilteredProducts=useMemo(()=>{
+    if(!budgetActive)return displayedProducts;
+    const min=budgetMin?Number(budgetMin):0;const max=budgetMax?Number(budgetMax):Infinity;
+    return displayedProducts.filter(p=>{const price=p.discountedPrice??p.price;return price>=min&&price<=max;});
+  },[displayedProducts,budgetMin,budgetMax,budgetActive]);
+  const clearBudget=()=>{setBudgetMin('');setBudgetMax('');};
+  const clearAllFilters=()=>{clearBudget();handleClearSearch();};
   const hotDealProducts=useMemo(()=>allProducts.filter(p=>p.discountedPrice||p.lowStock).slice(0,10),[allProducts]);
   const mostClickedProducts=useMemo(()=>{
     const withClicks=allProducts.filter(p=>productViewCounts[p.id]>0);
@@ -2135,23 +2187,29 @@ export default function Product(){
 
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
             <div>
-              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:isFiltered?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Luxury Designer Bags'}</h2>
-              <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{displayedProducts.length} {displayedProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
+              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:(isFiltered||budgetActive)?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Luxury Designer Bags'}</h2>
+              <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{budgetFilteredProducts.length} {budgetFilteredProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
             </div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+              <button onClick={()=>setBudgetOpen(true)} style={{background:budgetActive?C.primaryBg:'white',color:budgetActive?C.primary:C.textMid,border:`1px solid ${budgetActive?C.primaryBorder:C.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                💰 {budgetActive?`₦${budgetMin?Number(budgetMin).toLocaleString():'0'} – ₦${budgetMax?Number(budgetMax).toLocaleString():'∞'}`:'Budget'}
+                {budgetActive&&<span onClick={e=>{e.stopPropagation();clearBudget();}} style={{display:'flex'}}><Icons.X size={10} color="currentColor" /></span>}
+              </button>
               {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
                 {typeof cat.icon==='function'?cat.icon({size:12,color:cat.color}):cat.icon} {cat.label} <Icons.X size={10} color="currentColor" />
               </button>;})()}
               {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
                 {selectedLocation.emoji} {selectedLocation.name} <Icons.X size={10} color="currentColor" />
               </button>}
-              {isFiltered&&<button onClick={handleClearSearch} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
+              {(isFiltered||budgetActive)&&<button onClick={clearAllFilters} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
             </div>
           </div>
 
-          {!isFiltered&&!selectedVendor&&<SpecialOfferCard navigate={navigate} isMobile={isMobile}/>}
+          <BudgetModal isOpen={budgetOpen} onClose={()=>setBudgetOpen(false)} min={budgetMin} max={budgetMax} setMin={setBudgetMin} setMax={setBudgetMax} onClear={clearBudget}/>
 
-          {!isFiltered&&!selectedVendor&&mostClickedProducts.length>0&&(
+          {!isFiltered&&!budgetActive&&!selectedVendor&&<SpecialOfferCard navigate={navigate} isMobile={isMobile}/>}
+
+          {!isFiltered&&!budgetActive&&!selectedVendor&&mostClickedProducts.length>0&&(
             <HorizontalSection title="Most Clicked Products" subtitle="What everyone's tapping on right now" icon={<Icons.TrendingUp size={20} color="#2563eb"/>} accentColor="#2563eb" accentBg="#eff6ff" products={mostClickedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Trending" badgeColor="#2563eb" onSeeAll={()=>handleCategoryChange('all')}/>
           )}
 
@@ -2174,14 +2232,14 @@ export default function Product(){
 
           {/* Results */}
           <div style={{position:'relative',minHeight:'auto'}}>
-            {displayedProducts.length>0
-              ?<ProductGrid products={displayedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
+            {budgetFilteredProducts.length>0
+              ?<ProductGrid products={budgetFilteredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
               :!visualSearching&&(
                 <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
                   <Icons.Search size={56} color={C.textFaint} />
                   <h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8,marginTop:16}}>No bags found</h3>
                   <p style={{color:C.textMuted,marginBottom:24,fontSize:14}}>Try adjusting your search or browse all bags</p>
-                  <button onClick={handleClearSearch} style={{padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>View All Bags</button>
+                  <button onClick={clearAllFilters} style={{padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>View All Bags</button>
                 </div>
               )
             }
@@ -2192,7 +2250,7 @@ export default function Product(){
               {user?.user_metadata?.role!=='seller'&&<HotDealsPromoCard dealCount={hotDealProducts.length} navigate={navigate} isMobile={isMobile}/>}
               {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
               <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
-              <HorizontalSection title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
+              <HorizontalSection id="new-arrivals" title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
               {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
               {user?.user_metadata?.role!=='seller'&&(
               <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>

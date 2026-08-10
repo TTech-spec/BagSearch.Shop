@@ -26,6 +26,15 @@ function IconListBag({ size = 22, color = 'currentColor' }) {
   );
 }
 
+function IconSparkle({ size = 22, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />
+      <circle cx="12" cy="12" r="2.6" />
+    </svg>
+  );
+}
+
 function IconCart({ size = 22, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -46,10 +55,12 @@ function IconUser({ size = 22, color = 'currentColor' }) {
 }
 
 /**
- * Floating pill bottom nav, mobile only — Home / List Bag / Cart / Profile.
+ * Floating pill bottom nav, mobile only — Home / [List Bag or New Arrivals] / Cart / Profile.
  * Rendered once in App.jsx (outside <Routes>) so it persists across pages.
- * Cart has no page of its own; it reuses the existing openCart navigation
- * state that Product.jsx already listens for.
+ * The second slot is "List Bag" for sellers, or "New Arrivals" for everyone
+ * else, since buyers don't have anything to list. Cart and New Arrivals have
+ * no page of their own — both reuse Product.jsx's existing location-state
+ * pattern (openCart / scrollTo) to trigger behavior on the products page.
  */
 export default function MobileBottomNav() {
   const isMobile = useIsMobileViewport(768);
@@ -63,17 +74,19 @@ export default function MobileBottomNav() {
   const isSeller = user?.user_metadata?.role === 'seller';
   const profilePath = isSeller ? '/seller-profile' : '/profile';
 
+  // Buyers don't list products, so swap that slot for a shortcut to New
+  // Arrivals instead of showing them a "List Bag" action meant for sellers.
+  const secondItem = isSeller
+    ? { key: 'list', label: 'List Bag', Icon: IconListBag, active: location.pathname === '/upload-product', onClick: () => navigate('/upload-product') }
+    : { key: 'new', label: 'New Arrivals', Icon: IconSparkle, active: false, onClick: () => navigate('/products', { state: { scrollTo: 'new-arrivals' } }) };
+
   const items = [
     {
       key: 'home', label: 'Home', Icon: IconHome,
       active: location.pathname === '/' || location.pathname === '/products',
       onClick: () => navigate('/products'),
     },
-    {
-      key: 'list', label: 'List Bag', Icon: IconListBag,
-      active: location.pathname === '/upload-product',
-      onClick: () => navigate('/upload-product'),
-    },
+    secondItem,
     {
       key: 'cart', label: 'Cart', Icon: IconCart,
       active: false,
