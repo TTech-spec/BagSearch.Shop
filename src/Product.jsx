@@ -885,6 +885,39 @@ function useScrollReveal(t=0.08){const ref=useRef(null);const[v,setV]=useState(f
 function AnimatedCount({value}){const[n,setN]=useState(0);const ref=useRef(null);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){let s=0;const timer=setInterval(()=>{s+=Math.ceil(value/55);if(s>=value){setN(value);clearInterval(timer);}else setN(s);},20);o.disconnect();}},{threshold:0.2});if(ref.current)o.observe(ref.current);return()=>o.disconnect();},[value]);return <span ref={ref}>{n.toLocaleString()}</span>;}
 const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,3,4,5].map(i=>(<Icons.Star key={i} size={size} color={i<=Math.floor(rating)?'#f97316':'#f0d9cc'} filled={i<=Math.floor(rating)} />))}</div>);
 
+// ─── Seller trust stars ─────────────────────────────────────────────────────
+// Replaces the old plain 5-star average with a 3-star trust indicator:
+//  • How many stars a seller can EARN at all is capped by their verification
+//    tier — 1 star for any seller, 2 once their NIN photo is approved, 3 once
+//    they hit the Community Trusted review goal.
+//  • Within that cap, each star only fills in once 3 buyers have left a
+//    review — any review counts, not just positive ones — so a star fills
+//    gradually as reviews come in rather than jumping straight to full.
+const TRUST_STAR_REVIEWS_PER_STAR=3;
+function getTrustStarTier({ninApproved,communityTrusted,reviews}){
+  const cap=1+(ninApproved?1:0)+(communityTrusted?1:0);
+  const filled=Math.min(Math.floor((reviews||0)/TRUST_STAR_REVIEWS_PER_STAR),cap);
+  const partial=filled<cap?((reviews||0)-filled*TRUST_STAR_REVIEWS_PER_STAR)/TRUST_STAR_REVIEWS_PER_STAR:0;
+  return{cap,filled,partial};
+}
+function TrustStars({ninApproved,communityTrusted,reviews,size=13}){
+  const{cap,filled,partial}=getTrustStarTier({ninApproved,communityTrusted,reviews});
+  return(<div style={{display:'flex',gap:2}}>
+    {[0,1,2].map(i=>{
+      const locked=i>=cap;
+      if(i<filled)return<Icons.Star key={i} size={size} color="#f97316" filled/>;
+      if(locked)return<span key={i} style={{display:'inline-flex',opacity:0.4}}><Icons.Star size={size} color="#f0d9cc" filled={false}/></span>;
+      const frac=i===filled?partial:0;
+      return(<span key={i} style={{position:'relative',display:'inline-block',width:size,height:size,lineHeight:0}}>
+        <Icons.Star size={size} color="#f0d9cc" filled={false}/>
+        <span style={{position:'absolute',top:0,left:0,overflow:'hidden',width:`${frac*100}%`,height:size}}><Icons.Star size={size} color="#f97316" filled/></span>
+      </span>);
+    })}
+  </div>);
+}
+// Small pill flagging a seller who hasn't had their NIN approved yet.
+const NotVerifiedTag=({size=10})=>(<span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:size,fontWeight:800,color:'#9a6348',background:'#fdf8f5',border:'1px solid #f0d9cc',padding:'2px 8px',borderRadius:20,whiteSpace:'nowrap'}}><Icons.Shield size={size} color="#9a6348"/> Not Verified</span>);
+
 function LocationModal({isOpen,onClose,selectedLocation,onSelect}){
   const[search,setSearch]=useState('');
   if(!isOpen)return null;
@@ -1814,19 +1847,28 @@ export default function Product(){
 
   const fetchVendors=useCallback(async(products)=>{
     try{
-      const{data:sellerRows}=await supabase.from('users').select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug').eq('role','seller');
+      const{data:sellerRows}=await supabase.from('users').select('user_id,full_name,email,phone,brand_name,brand_story,bag_categories,avatar_url,profile_slug,community_trusted').eq('role','seller');
       const sellerProductIds={};const sellerProductCount={};
       (products||[]).forEach(p=>{const sid=p.sellerId||p.user_id||p.seller_id;if(!sid)return;if(!sellerProductIds[sid])sellerProductIds[sid]=[];if(p.id)sellerProductIds[sid].push(p.id);sellerProductCount[sid]=(sellerProductCount[sid]||0)+1;});
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
       const viewCountMap={};let viewRows=[];
       if(allProductIds.length>0){const{data}=await supabase.from('product_views').select('product_id,buyer_id,buyer_email,buyer_phone,buyer_name').in('product_id',allProductIds);viewRows=data||[];(viewRows||[]).forEach(row=>{viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;});}
-      const allSellers=(sellerRows||[]).map(s=>{const pids=sellerProductIds[s.user_id]||[];const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];return{id:s.user_id,name:s.brand_name||s.full_name||'Anonymous Seller',avatar:'👜',location:'all',rating:4.6,reviews:0,views,products:sellerProductCount[s.user_id]||0,joined:'N/A',specialty:cats[0]||'Bags',badge:'',description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,tags:cats,profile_slug:s.profile_slug||'',colors:['#c84b11','#f97316']};});
+      const allSellers=(sellerRows||[]).map(s=>{const pids=sellerProductIds[s.user_id]||[];const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];return{id:s.user_id,name:s.brand_name||s.full_name||'Anonymous Seller',avatar:'👜',location:'all',rating:4.6,reviews:0,communityTrusted:!!s.community_trusted,ninApproved:false,views,products:sellerProductCount[s.user_id]||0,joined:'N/A',specialty:cats[0]||'Bags',badge:'',description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,tags:cats,profile_slug:s.profile_slug||'',colors:['#c84b11','#f97316']};});
       const knownIds=new Set(allSellers.map(v=>v.id));
       const extra=buildVendorsFromProducts((products||[]).filter(p=>{const sid=p.sellerId||p.user_id||p.seller_id;return sid&&!knownIds.has(sid);}));
       const final=[...allSellers,...extra];
       const sellerIds=final.map(v=>v.id).filter(Boolean);
       let reviewCount=0;
-      if(sellerIds.length>0){const{count}=await supabase.from('seller_reviews').select('id',{count:'exact',head:true}).in('seller_id',sellerIds);reviewCount=count||0;}
+      if(sellerIds.length>0){
+        const[{data:reviewRows},{data:approvedRows}]=await Promise.all([
+          supabase.from('seller_reviews').select('seller_id').in('seller_id',sellerIds),
+          supabase.from('seller_verifications').select('seller_id').eq('status','approved').in('seller_id',sellerIds),
+        ]);
+        reviewCount=(reviewRows||[]).length;
+        const reviewCountMap={};(reviewRows||[]).forEach(r=>{reviewCountMap[r.seller_id]=(reviewCountMap[r.seller_id]||0)+1;});
+        const approvedSet=new Set((approvedRows||[]).map(r=>r.seller_id));
+        final.forEach(v=>{v.reviews=reviewCountMap[v.id]||0;v.ninApproved=approvedSet.has(v.id);});
+      }
       setVendorStats({vendors:final.length,products:(products||[]).length,buyers:800,reviews:reviewCount});
       setVendors(final);setFilteredVendors(final);setProductViewCounts(viewCountMap);return final;
     }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
@@ -2201,6 +2243,7 @@ function VendorCard({vendor,index,onViewProducts}){
   const[hov,setHov]=useState(false);const[ref,setRef]=useState(null);const[vis,setVis]=useState(false);
   useEffect(()=>{if(!ref)return;const o=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVis(true);o.disconnect();}},{threshold:0.08});o.observe(ref);return()=>o.disconnect();},[ref]);
   const loc=NIGERIAN_LOCATIONS.find(l=>l.id===vendor.location);
+  const trustTier=getTrustStarTier(vendor);
   return(
     <div ref={setRef} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:'white',borderRadius:20,overflow:'hidden',position:'relative',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,boxShadow:hov?`0 24px 60px rgba(200,75,17,0.13),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%3)*100}ms,box-shadow 0.3s,border-color 0.3s`}}>
@@ -2213,13 +2256,17 @@ function VendorCard({vendor,index,onViewProducts}){
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:6,marginTop:16}}>
           <div>
             <h3 style={{fontSize:16,fontWeight:900,color:C.text,letterSpacing:'-0.02em',marginBottom:2}}>{vendor.name}</h3>
-            <div style={{display:'flex',alignItems:'center',gap:5}}>
+            <div style={{display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
               <span style={{fontSize:11}}>{loc?.emoji}</span><span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>{loc?.name}</span>
               <span style={{width:3,height:3,borderRadius:'50%',background:C.border,display:'inline-block'}}/>
               <span style={{fontSize:11,color:C.textFaint,fontWeight:500}}>Since {vendor.joined}</span>
+              {!vendor.ninApproved&&<NotVerifiedTag size={9}/>}
             </div>
           </div>
-          <div style={{textAlign:'right',flexShrink:0}}><StarRating rating={vendor.rating} size={11}/><div style={{fontSize:13,fontWeight:900,color:C.primary,marginTop:3}}>{vendor.rating}</div></div>
+          <div style={{textAlign:'right',flexShrink:0}}>
+            <TrustStars ninApproved={vendor.ninApproved} communityTrusted={vendor.communityTrusted} reviews={vendor.reviews} size={11}/>
+            <div style={{fontSize:11,fontWeight:800,color:C.primary,marginTop:3}}>{trustTier.filled}/{trustTier.cap}</div>
+          </div>
         </div>
         <p style={{fontSize:12,color:C.textMuted,lineHeight:1.65,marginBottom:13,fontWeight:500,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{vendor.description}</p>
         <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>

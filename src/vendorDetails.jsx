@@ -275,6 +275,59 @@ function Stars({rating, size=13}) {
   );
 }
 
+/**
+ * Seller trust stars — separate from the plain 1-5 "Stars" above (which is
+ * still the raw per-review rating a buyer gives). This is a 3-star badge for
+ * the seller as a whole:
+ *  - how many stars they can earn at all is capped by verification tier:
+ *    1 star for any seller, 2 once their NIN photo is approved, 3 once they
+ *    hit the Community Trusted review goal.
+ *  - within that cap, a star only fills once 3 buyers have reviewed them
+ *    (any rating counts), so it fills gradually rather than jumping to full.
+ */
+const TRUST_STAR_REVIEWS_PER_STAR = 3;
+function getTrustStarTier({ ninApproved, communityTrusted, reviews }) {
+  const cap = 1 + (ninApproved ? 1 : 0) + (communityTrusted ? 1 : 0);
+  const filled = Math.min(Math.floor((reviews||0) / TRUST_STAR_REVIEWS_PER_STAR), cap);
+  const partial = filled < cap ? ((reviews||0) - filled*TRUST_STAR_REVIEWS_PER_STAR) / TRUST_STAR_REVIEWS_PER_STAR : 0;
+  return { cap, filled, partial };
+}
+function TrustStars({ ninApproved, communityTrusted, reviews, size=13 }) {
+  const { cap, filled, partial } = getTrustStarTier({ ninApproved, communityTrusted, reviews });
+  return (
+    <div style={{display:'flex',gap:2}}>
+      {[0,1,2].map(i => {
+        const locked = i >= cap;
+        if (i < filled) return <IconStar key={i} size={size} filled/>;
+        if (locked) return <IconStar key={i} size={size} filled={false} style={{opacity:0.4}}/>;
+        const frac = i === filled ? partial : 0;
+        return (
+          <span key={i} style={{position:'relative',display:'inline-block',width:size,height:size,lineHeight:0}}>
+            <IconStar size={size} filled={false}/>
+            <span style={{position:'absolute',top:0,left:0,overflow:'hidden',width:`${frac*100}%`,height:size}}>
+              <IconStar size={size} filled/>
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+// Pill flagging a seller whose NIN hasn't been approved yet — styled to sit
+// on the dark hero next to VerifiedBadge.
+function NotVerifiedTag({ size=11 }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '4px 12px', borderRadius: 20,
+      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)',
+    }}>
+      <IconShieldCheck size={size} style={{ color: 'rgba(255,255,255,0.6)' }}/>
+      <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>Not Verified</span>
+    </span>
+  );
+}
+
 const iStyle = {
   width:'100%', padding:'12px 14px', borderRadius:12,
   border:'1.5px solid #f0d9cc', background:'#fdf8f5',
@@ -515,6 +568,7 @@ export default function VendorDetails() {
   const avg   = reviews.length > 0
     ? (reviews.reduce((s,r) => s+(r.rating||0), 0) / reviews.length).toFixed(1)
     : null;
+  const trustTier = getTrustStarTier({ ninApproved: idVerified, communityTrusted: !!profile?.community_trusted, reviews: reviews.length });
   const loc = LOCATIONS.find(l => l.id === (profile?.location || ''));
 
   const TABS = [
@@ -552,7 +606,7 @@ export default function VendorDetails() {
   const STATS = [
     { Icon: IconBag,  value: products.length,               label: 'products'    },
     { Icon: IconEye,  value: totalViews.toLocaleString(),    label: 'total views' },
-    { Icon: IconStar2,value: avg || '—',                     label: 'avg rating'  },
+    { Icon: IconStar2,value: `${trustTier.filled}/${trustTier.cap}`, label: 'trust stars' },
     { Icon: IconChat, value: reviews.length,                 label: 'reviews'     },
   ];
 
@@ -560,7 +614,7 @@ export default function VendorDetails() {
   const ABOUT_CARDS = [
     { Icon: IconMapPin,  label: 'Location',        value: loc ? loc.name : 'Nigeria'  },
     { Icon: IconPackage, label: 'Total products',  value: products.length              },
-    { Icon: IconStar2,   label: 'Avg rating',      value: avg || '—'                  },
+    { Icon: IconStar2,   label: 'Trust stars',     value: `${trustTier.filled}/${trustTier.cap}` },
     { Icon: IconChat,    label: 'Reviews',          value: reviews.length              },
   ];
 
@@ -594,12 +648,11 @@ export default function VendorDetails() {
               </div>
               <div style={{flex:1,minWidth:200}}>
                 <h2 style={{fontSize:26,fontWeight:900,color:'white',letterSpacing:'-0.03em',marginBottom:4}}>{name}</h2>
-                {(profile.community_trusted || idVerified) && (
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
-                    {profile.community_trusted && <VerifiedBadge variant="trusted" index={0}/>}
-                    {idVerified && <VerifiedBadge variant="id" index={profile.community_trusted?1:0}/>}
-                  </div>
-                )}
+                <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
+                  {profile.community_trusted && <VerifiedBadge variant="trusted" index={0}/>}
+                  {idVerified && <VerifiedBadge variant="id" index={profile.community_trusted?1:0}/>}
+                  {!idVerified && <NotVerifiedTag/>}
+                </div>
                 <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:10}}>
                   {loc && (
                     <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'rgba(255,255,255,0.6)',fontWeight:500}}>
@@ -607,11 +660,10 @@ export default function VendorDetails() {
                       {loc.name}
                     </span>
                   )}
-                  {avg && (
-                    <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#f97316',fontWeight:800}}>
-                      <IconStar size={11} filled/> {avg}
-                    </span>
-                  )}
+                  <span style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#f97316',fontWeight:800}}>
+                    <TrustStars ninApproved={idVerified} communityTrusted={!!profile.community_trusted} reviews={reviews.length} size={12}/>
+                    {trustTier.filled}/{trustTier.cap}
+                  </span>
                 </div>
                 <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                   {cats.map(tag => (
