@@ -2013,8 +2013,8 @@ export default function Product(){
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
       {!cartOpen&&<WelcomeBackBadge user={user} isMobile={isMobile}/>}
-      {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp}/>}
-      {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)}/>}
+      {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp} isMobile={isMobile}/>}
+      {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)} isMobile={isMobile}/>}
 
       {/* Header — NO location selector here anymore */}
       <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
@@ -2491,25 +2491,25 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
   );
 }
 
-function InstallButton({ onClick, visible, label }) {
+function InstallButton({ onClick, visible, label, isMobile }) {
   const [hov, setHov] = useState(false);
   if (!visible) return null;
   return (
     <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position:'fixed',bottom:84,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#1e1b4b,#312e81)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(30,27,75,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap',animation:'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+      style={{ position:'fixed',bottom:isMobile?150:84,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#1e1b4b,#312e81)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(30,27,75,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap',animation:'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' }}>
       <Icons.Download size={20} color="white" />
       <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?160:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>{label}</span>
     </button>
   );
 }
 
-function FeedbackTrigger({ onClick }) {
+function FeedbackTrigger({ onClick, isMobile }) {
   const [hov, setHov] = useState(false);
   const [pulse, setPulse] = useState(false);
   useEffect(() => { const t = setInterval(() => { setPulse(true); setTimeout(() => setPulse(false), 1000); }, 5000); return () => clearInterval(t); }, []);
   return (
     <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position:'fixed',bottom:24,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap' }}>
+      style={{ position:'fixed',bottom:isMobile?90:24,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(200,75,17,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap' }}>
       {pulse&&<div style={{ position:'absolute',inset:-4,borderRadius:30,border:'2px solid rgba(249,115,22,0.6)',animation:'triggerPulse 1s ease-out both',pointerEvents:'none' }} />}
       <Icons.MessageCircle size={20} color="white" />
       <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?120:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>Feedback</span>
