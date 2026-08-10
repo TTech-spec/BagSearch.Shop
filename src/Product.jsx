@@ -1805,8 +1805,8 @@ export default function Product(){
       const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];
       let query=supabase.from('products').select('*');
       if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}
-      let{data,error}=await query.order('created_at',{ascending:false});
-      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:false});if(retry.error)throw retry.error;data=retry.data;}
+      let{data,error}=await query.order('created_at',{ascending:true});
+      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:true});if(retry.error)throw retry.error;data=retry.data;}
       return(data||[]).map(p=>{
         let rawColors=[];
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
