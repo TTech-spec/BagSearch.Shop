@@ -336,6 +336,88 @@ const iStyle = {
   fontSize:13, fontFamily:'inherit', color:'#1a0a00', outline:'none',
 };
 
+/* ─── REPORT SELLER — shared by mobile & desktop ──────────────────── */
+
+const REPORT_REASONS = [
+  { id: 'illegal',        label: 'Illegal/Fraudulent' },
+  { id: 'misinformation', label: 'Misinformation' },
+  { id: 'scams',          label: 'Scams' },
+  { id: 'violent',        label: 'Violent Content' },
+  { id: 'privacy',        label: 'Privacy Violation' },
+];
+
+function IconDots({ size = 18, style = {} }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}>
+      <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+    </svg>
+  );
+}
+function IconFlag({ size = 16, style = {} }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" />
+    </svg>
+  );
+}
+
+function ReportSellerModal({ open, onClose, onSubmit, sending, sent, error }) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
+  useEffect(() => { if (open) { setReason(''); setDetails(''); } }, [open]);
+  if (!open) return null;
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(26,10,0,0.5)', zIndex: 400, backdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 401, width: 'min(420px,92vw)', maxHeight: '85vh', overflowY: 'auto', background: 'white', borderRadius: 24, boxShadow: '0 32px 80px rgba(200,75,17,0.2)', animation: 'modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+        <div style={{ padding: '24px 24px 26px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6, gap: 12 }}>
+            <div>
+              <h3 style={{ fontSize: 19, fontWeight: 900, color: C.text, display: 'flex', alignItems: 'center', gap: 8 }}><IconFlag size={16} style={{ color: '#dc2626' }} /> Report Seller</h3>
+              <p style={{ fontSize: 12, color: C.textFaint, fontWeight: 500, marginTop: 4 }}>Help us keep BagSearch safe — reports are reviewed by our team.</p>
+            </div>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: C.surfaceDim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+          </div>
+
+          {sent ? (
+            <div style={{ textAlign: 'center', padding: '24px 0 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 4 }}>Report sent</p>
+              <p style={{ fontSize: 12, color: C.textMuted }}>Thanks for looking out — our team will review this seller.</p>
+              <button onClick={onClose} style={{ marginTop: 18, padding: '10px 24px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: 'white', color: C.textMid, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Close</button>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14, marginBottom: 14, border: `1.5px solid ${C.borderLight}`, borderRadius: 14, overflow: 'hidden' }}>
+                {REPORT_REASONS.map((r, i) => (
+                  <button key={r.id} type="button" onClick={() => setReason(r.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', border: 'none', borderTop: i > 0 ? `1px solid ${C.borderLight}` : 'none', background: reason === r.id ? C.primaryPale : 'white', cursor: 'pointer', textAlign: 'left' }}>
+                    <span style={{ width: 19, height: 19, borderRadius: '50%', border: `2px solid ${reason === r.id ? C.primary : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {reason === r.id && <span style={{ width: 9, height: 9, borderRadius: '50%', background: C.primary }} />}
+                    </span>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>{r.label}</span>
+                  </button>
+                ))}
+              </div>
+              <textarea value={details} onChange={e => setDetails(e.target.value)} placeholder="Add any extra detail (optional)…"
+                style={{ ...iStyle, minHeight: 76, resize: 'vertical', marginBottom: 14, fontSize: 13 }} />
+              {error && <p style={{ fontSize: 12, color: '#dc2626', fontWeight: 700, marginBottom: 12 }}>{error}</p>}
+              <button onClick={() => onSubmit(reason, details)} disabled={!reason || sending}
+                style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: !reason || sending ? '#fde8d8' : 'linear-gradient(135deg,#c84b11,#f97316)', color: !reason || sending ? C.primary : 'white', fontWeight: 900, fontSize: 14, cursor: !reason || sending ? 'default' : 'pointer' }}>
+                {sending ? 'Sending…' : 'Send Report'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ─── MAIN COMPONENT ─────────────────────────────────────────────── */
 
 export default function VendorDetails() {
@@ -362,6 +444,11 @@ export default function VendorDetails() {
   const [editText,  setEditText]  = useState('');
   const [editRating,setEditRating]= useState(5);
   const [updating,  setUpdating]  = useState(false);
+  const [reportOpen,    setReportOpen]    = useState(false);
+  const [reportSending, setReportSending] = useState(false);
+  const [reportSent,    setReportSent]    = useState(false);
+  const [reportError,   setReportError]   = useState('');
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 
   const sellerId = profile?.user_id || id || '';
   const [myName, setMyName] = useState('');
@@ -565,6 +652,26 @@ export default function VendorDetails() {
     await loadReviews();
   };
 
+  const openReport = () => { setReportSent(false); setReportError(''); setReportOpen(true); };
+  const submitReport = async (reason, details) => {
+    if (!user) { navigate('/login'); return; }
+    if (!reason || !sellerId) return;
+    setReportSending(true); setReportError('');
+    try {
+      const { error } = await supabase.from('seller_reports').upsert(
+        { seller_id: sellerId, reporter_id: user.id, reason, details: details.trim() || null },
+        { onConflict: 'seller_id,reporter_id' }
+      );
+      if (error) throw error;
+      setReportSent(true);
+    } catch (e) {
+      console.error('Report submission failed:', e);
+      setReportError('Could not send report. Please try again.');
+    } finally {
+      setReportSending(false);
+    }
+  };
+
   const name  = profile?.brand_name || profile?.full_name || 'Seller';
   const story = profile?.brand_story || null;
   const cats  = Array.isArray(profile?.bag_categories) ? profile.bag_categories : [];
@@ -617,6 +724,8 @@ export default function VendorDetails() {
         editId={editId} setEditId={setEditId} editText={editText} setEditText={setEditText}
         editRating={editRating} setEditRating={setEditRating} updating={updating}
         updateReview={updateReview} deleteReview={deleteReview}
+        openReport={openReport} submitReport={submitReport} reportOpen={reportOpen} setReportOpen={setReportOpen}
+        reportSending={reportSending} reportSent={reportSent} reportError={reportError}
       />
     );
   }
@@ -650,7 +759,25 @@ export default function VendorDetails() {
           <IconArrowLeft size={14}/> Back to Vendors
         </button>
         <span style={{fontSize:16,fontWeight:900,color:C.text}}>Bag<span style={{color:C.primary}}>Search</span></span>
+        <div style={{marginLeft:'auto',position:'relative'}}>
+          <button onClick={()=>setDesktopMenuOpen(o=>!o)} aria-label="More options" aria-haspopup="menu" aria-expanded={desktopMenuOpen}
+            style={{width:36,height:36,borderRadius:'50%',border:`1px solid ${C.border}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:C.textMid,transition:'all 0.2s'}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=C.primary;e.currentTarget.style.color=C.primary;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>
+            <IconDots size={18}/>
+          </button>
+          {desktopMenuOpen && (<>
+            <div onClick={()=>setDesktopMenuOpen(false)} style={{position:'fixed',inset:0,zIndex:39}}/>
+            <div style={{position:'absolute',top:'calc(100% + 8px)',right:0,zIndex:40,background:'white',borderRadius:14,boxShadow:'0 12px 32px rgba(0,0,0,0.16)',border:`1px solid ${C.borderLight}`,minWidth:180,overflow:'hidden',animation:'badgePop 0.2s ease both'}}>
+              <button onClick={()=>{setDesktopMenuOpen(false);openReport();}} style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'12px 16px',border:'none',background:'none',cursor:'pointer',fontSize:13,fontWeight:700,color:'#dc2626',textAlign:'left'}}>
+                <IconFlag size={15}/> Report Seller
+              </button>
+            </div>
+          </>)}
+        </div>
       </header>
+
+      <ReportSellerModal open={reportOpen} onClose={()=>setReportOpen(false)} onSubmit={submitReport} sending={reportSending} sent={reportSent} error={reportError}/>
 
       <div style={{maxWidth:1100,margin:'0 auto',padding:'0 20px 80px',animation:'fadeIn 0.4s ease'}}>
 
@@ -1096,9 +1223,11 @@ function MobileVendorProfile({
   navigate, sellerId, user,
   newText, setNewText, newRating, setNewRating, hovStar, setHovStar, posting, submitReview,
   editId, setEditId, editText, setEditText, editRating, setEditRating, updating, updateReview, deleteReview,
+  openReport, submitReport, reportOpen, setReportOpen, reportSending, reportSent, reportError,
 }) {
   const [tab, setTab] = useState('products');
   const [shared, setShared] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const avg = reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : null;
   const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/vendor/${sellerId}` : '';
@@ -1131,13 +1260,33 @@ function MobileVendorProfile({
           <IconArrowLeft size={16} style={{ color: C.text }} />
         </motion.button>
         <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Vendor Profile</span>
-        <motion.button whileTap={{ scale: 0.88 }} onClick={handleShare} aria-label="Share profile"
-          style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: C.surfaceDim, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-        </motion.button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={() => setMenuOpen(o => !o)} aria-label="More options" aria-haspopup="menu" aria-expanded={menuOpen}
+            style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: C.surfaceDim, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <IconDots size={17} style={{ color: C.text }} />
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={handleShare} aria-label="Share profile"
+            style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: C.surfaceDim, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          </motion.button>
+          <AnimatePresence>
+            {menuOpen && (<>
+              <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 39 }} />
+              <motion.div initial={{ opacity: 0, scale: 0.92, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: -6 }} transition={{ duration: 0.15 }}
+                style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 40, background: 'white', borderRadius: 14, boxShadow: '0 12px 32px rgba(0,0,0,0.16)', border: `1px solid ${C.borderLight}`, minWidth: 170, overflow: 'hidden' }}>
+                <button onClick={() => { setMenuOpen(false); openReport(); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#dc2626', textAlign: 'left' }}>
+                  <IconFlag size={15} /> Report Seller
+                </button>
+              </motion.div>
+            </>)}
+          </AnimatePresence>
+        </div>
       </header>
+
+      <ReportSellerModal open={reportOpen} onClose={() => setReportOpen(false)} onSubmit={submitReport} sending={reportSending} sent={reportSent} error={reportError} />
 
       <AnimatePresence>
         {shared && (
