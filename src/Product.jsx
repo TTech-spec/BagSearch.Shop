@@ -1805,8 +1805,8 @@ export default function Product(){
       const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];
       let query=supabase.from('products').select('*');
       if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}
-      let{data,error}=await query.order('created_at',{ascending:false});
-      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:false});if(retry.error)throw retry.error;data=retry.data;}
+      let{data,error}=await query.order('created_at',{ascending:true});
+      if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:true});if(retry.error)throw retry.error;data=retry.data;}
       return(data||[]).map(p=>{
         let rawColors=[];
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
@@ -2120,7 +2120,7 @@ export default function Product(){
             <p style={{fontSize:isMobile?12:13,color:C.textMuted,fontWeight:500}}>Trusted sellers with thousands of happy customers across Nigeria</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:28}}>
-            {[{l:'Total Vendors',v:vendorStats.vendors,i:<Icons.User size={20} color={C.primary}/>,c:C.primary,bg:C.primaryBg,b:C.primaryBorder},{l:'Products',v:vendorStats.products,i:<Icons.ShoppingBag size={20} color="#92400e"/>,c:'#92400e',bg:'#fef3c7',b:'#fde68a'},{l:'Happy Buyers',v:vendorStats.buyers,i:<Icons.Heart size={18} color="#15803d"/>,c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:vendorStats.reviews,i:<Icons.Star size={18} color="#c2410c" filled/>,c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
+            {[{l:'Happy Buyers',v:vendorStats.buyers,i:<Icons.Heart size={18} color="#15803d"/>,c:'#15803d',bg:'#dcfce7',b:'#a7f3d0'},{l:'Reviews',v:vendorStats.reviews,i:<Icons.Star size={18} color="#c2410c" filled/>,c:'#c2410c',bg:'#ffedd5',b:'#fed7aa'}].map(s=>(
               <div key={s.l} style={{background:'white',borderRadius:16,padding:'14px 16px',border:`1.5px solid ${s.b}`,display:'flex',alignItems:'center',gap:10,boxShadow:`0 4px 14px ${s.c}12`}}>
                 <div style={{width:38,height:38,borderRadius:11,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.i}</div>
                 <div><div style={{fontSize:18,fontWeight:900,color:s.c,letterSpacing:'-0.02em',lineHeight:1}}><AnimatedCount value={s.v}/></div><div style={{fontSize:10,color:C.textFaint,fontWeight:700,marginTop:2}}>{s.l}</div></div>
