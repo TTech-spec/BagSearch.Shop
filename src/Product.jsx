@@ -779,6 +779,37 @@ function AuthGateModal({ open, onClose, navigate }) {
   );
 }
 
+// ─── Nudges logged-in sellers who aren't verified yet toward the NIN upload ──
+// or review-collecting paths on their profile. Shown at most once per seller
+// (tracked in localStorage), and only if they haven't earned a badge yet.
+function SellerVerifyNudgeModal({ open, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
+    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
+  }, [open]);
+  if (phase === 0) return null;
+  const visible = phase === 2;
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px" }}>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(26,10,0,0.55)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",opacity:visible?1:0,transition:"opacity 0.35s ease" }} />
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:440,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+        <div style={{ height:6,background:"linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
+        <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}><Icons.X size={15} color="currentColor" /></button>
+        <div style={{ padding:"36px 36px 30px",textAlign:"center" }}>
+          <div style={{ width:64,height:64,borderRadius:"50%",background:"#F9DDD0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",color:"#C94B2C" }}><Icons.Star size={28} color="#C94B2C" filled/></div>
+          <h2 style={{ fontSize:"1.4rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:10 }}>Get Your Trust Badge</h2>
+          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:22 }}>Buyers trust verified sellers more. Earn a badge either way — upload your NIN for an <strong style={{color:'#1A0A00'}}>ID Submitted</strong> badge, or collect 10 reviews from real buyers for a <strong style={{color:'#1A0A00'}}>Community Trusted</strong> badge.</p>
+          <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+            <button onClick={()=>{ onClose(); navigate("/seller-profile"); }} style={{ width:"100%",padding:"13px 0",background:"#C94B2C",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow:"0 6px 20px rgba(201,75,44,0.35)",transition:"all 0.25s" }}>Get Verified Now</button>
+            <button onClick={onClose} style={{ width:"100%",padding:"12px 0",background:"#FFF5F2",color:"#C94B2C",fontWeight:700,fontSize:13,border:"1px solid #F0C8BB",borderRadius:10,cursor:"pointer",transition:"all 0.2s" }}>Maybe Later</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── First-visit prompt teaching the visual-search feature ─────────────────
 // Shown once when a guest lands here via the onboarding "Shop Now" button.
 function UploadPromptModal({ open, onClose, onUpload }) {
@@ -1658,6 +1689,7 @@ export default function Product(){
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
+  const[sellerVerifyNudgeOpen,setSellerVerifyNudgeOpen]=useState(false);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
   const[deferredPrompt,setDeferredPrompt]=useState(null);
@@ -1820,6 +1852,31 @@ export default function Product(){
 
   useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
 
+  // Nudge logged-in sellers who haven't earned a trust badge yet to upload their
+  // NIN or collect reviews. Checked once per seller and remembered in localStorage
+  // so it never shows again after the first time, whether they act on it or not.
+  useEffect(()=>{
+    const sellerId=user?.id;
+    if(!sellerId||user?.user_metadata?.role!=='seller')return;
+    const seenKey=`bagsearch_seller_verify_nudge_seen_${sellerId}`;
+    try{if(localStorage.getItem(seenKey)==='1')return;}catch{/* localStorage unavailable — proceed anyway */}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const[{data:profileRow},{data:verRow}]=await Promise.all([
+          supabase.from('users').select('community_trusted').eq('user_id',sellerId).maybeSingle(),
+          supabase.from('seller_verifications').select('status').eq('seller_id',sellerId).maybeSingle(),
+        ]);
+        if(cancelled)return;
+        const alreadyVerified=!!profileRow?.community_trusted||verRow?.status==='approved';
+        if(alreadyVerified)return;
+        try{localStorage.setItem(seenKey,'1');}catch{/* ignore */}
+        setSellerVerifyNudgeOpen(true);
+      }catch(err){console.error('Failed to check seller verification status:',err);}
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,user?.user_metadata?.role]);
+
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim()){const lowQ=q.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(lowQ)||(p.sub||'').toLowerCase().includes(lowQ)||(p.seller||'').toLowerCase().includes(lowQ)||(p.description||'').toLowerCase().includes(lowQ)||(p.brand||'').toLowerCase().includes(lowQ)||(p.category||'').toLowerCase().includes(lowQ)||(p.condition||'').toLowerCase().includes(lowQ));}if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all'){const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];if(loc.id==='lagos')r=r.filter(p=>LAGOS_IDS.includes(p.location));else r=r.filter(p=>p.location===loc.id);}return r;},[]);
   const saveSearch=useCallback((q)=>{if(!user||!q.trim()||q.trim().length<2)return;clearTimeout(searchSaveTimer.current);searchSaveTimer.current=setTimeout(async()=>{try{await supabase.from('search_history').insert({user_id:user.id,query:q.trim(),type:'text'});}catch(_){}},1500);},[user]);
 
@@ -1909,6 +1966,7 @@ export default function Product(){
 
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
+      <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
