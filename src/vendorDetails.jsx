@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
+import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -341,6 +343,7 @@ export default function VendorDetails() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const sellerParam = id || slug || '';
+  const isMobile = useIsMobileViewport(768);
 
   const [profile,   setProfile]   = useState(null);
   const [idVerified,setIdVerified]= useState(false);
@@ -601,6 +604,22 @@ export default function VendorDetails() {
       </div>
     </div>
   );
+
+  /* ── Mobile layout (separate, TikTok-profile-style design) ── */
+  if (isMobile) {
+    return (
+      <MobileVendorProfile
+        profile={profile} idVerified={idVerified} products={products} reviews={reviews}
+        trustTier={trustTier} name={name} story={story} cats={cats} loc={loc}
+        navigate={navigate} sellerId={sellerId} user={user}
+        newText={newText} setNewText={setNewText} newRating={newRating} setNewRating={setNewRating}
+        hovStar={hovStar} setHovStar={setHovStar} posting={posting} submitReview={submitReview}
+        editId={editId} setEditId={setEditId} editText={editText} setEditText={setEditText}
+        editRating={editRating} setEditRating={setEditRating} updating={updating}
+        updateReview={updateReview} deleteReview={deleteReview}
+      />
+    );
+  }
 
   /* ── Stat card data ── */
   const STATS = [
@@ -1011,6 +1030,355 @@ export default function VendorDetails() {
         )}
 
       </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * MOBILE LAYOUT — TikTok-profile-style vendor page (mobile viewports only)
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+function useCountUp(target, active, duration = 900) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!active || typeof target !== 'number') return;
+    let raf; const start = performance.now(); const from = 0;
+    const tick = (t) => {
+      const p = Math.min((t - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setN(Math.round(from + (target - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, active, duration]);
+  return n;
+}
+
+function MobileStat({ value, label, animate }) {
+  const isNumeric = typeof value === 'number';
+  const animated = useCountUp(isNumeric ? value : 0, animate && isNumeric);
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 19, fontWeight: 900, color: C.text, letterSpacing: '-0.02em' }}>{isNumeric ? animated : value}</div>
+      <div style={{ fontSize: 11, color: C.textFaint, fontWeight: 700, marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+// Badge chips tuned for a white background (the desktop VerifiedBadge is
+// designed to sit on the dark hero gradient and reads poorly on white).
+function MobileVerifiedBadge({ variant }) {
+  const isTrusted = variant === 'trusted';
+  const label = isTrusted ? 'Community Trusted' : 'ID Submitted';
+  const Icon = isTrusted ? IconShieldCheck : IconIdCard;
+  const color = isTrusted ? '#0d9488' : '#b45309';
+  const bg = isTrusted ? '#ecfdf7' : '#fef9e7';
+  const border = isTrusted ? '#99f6e4' : '#fde68a';
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 20, background: bg, border: `1px solid ${border}` }}>
+      <Icon size={11} style={{ color }} />
+      <span style={{ fontSize: 10.5, fontWeight: 800, color }}>{label}</span>
+    </span>
+  );
+}
+function MobileNotVerifiedTag() {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 20, background: C.surfaceDim, border: `1px solid ${C.border}` }}>
+      <IconShieldCheck size={11} style={{ color: C.textFaint }} />
+      <span style={{ fontSize: 10.5, fontWeight: 800, color: C.textMuted }}>Not Verified</span>
+    </span>
+  );
+}
+
+function MobileVendorProfile({
+  profile, idVerified, products, reviews, trustTier, name, story, cats, loc,
+  navigate, sellerId, user,
+  newText, setNewText, newRating, setNewRating, hovStar, setHovStar, posting, submitReview,
+  editId, setEditId, editText, setEditText, editRating, setEditRating, updating, updateReview, deleteReview,
+}) {
+  const [tab, setTab] = useState('products');
+  const [shared, setShared] = useState(false);
+
+  const avg = reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : null;
+  const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/vendor/${sellerId}` : '';
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: `${name} on BagSearch`, text: `Check out ${name}'s bags on BagSearch`, url: profileUrl }); }
+      catch { /* user cancelled the native share sheet */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch { /* clipboard unavailable */ }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: "'Manrope',sans-serif", color: C.text, paddingBottom: 48 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        @keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      `}</style>
+
+      {/* Sticky header */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'rgba(255,255,255,0.94)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${C.borderLight}` }}>
+        <motion.button whileTap={{ scale: 0.88 }} onClick={() => navigate('/products')} aria-label="Back"
+          style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: C.surfaceDim, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <IconArrowLeft size={16} style={{ color: C.text }} />
+        </motion.button>
+        <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Vendor Profile</span>
+        <motion.button whileTap={{ scale: 0.88 }} onClick={handleShare} aria-label="Share profile"
+          style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: C.surfaceDim, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+        </motion.button>
+      </header>
+
+      <AnimatePresence>
+        {shared && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            style={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: C.primary, overflow: 'hidden' }}>
+            <div style={{ padding: '8px 0' }}>Profile link copied!</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } }} style={{ padding: '20px 20px 0' }}>
+        {/* Identity row */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }} transition={{ duration: 0.4 }}
+          style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 14 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontSize: 23, fontWeight: 900, letterSpacing: '-0.03em', color: C.text, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {name} <span style={{ fontSize: 19 }}>👜</span>
+            </h1>
+            {loc && (
+              <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: C.textMuted, fontWeight: 600 }}>
+                <IconMapPin size={12} style={{ color: C.textFaint }} /> {loc.name}
+              </p>
+            )}
+          </div>
+          <motion.div variants={{ hidden: { opacity: 0, scale: 0.6 }, show: { opacity: 1, scale: 1 } }} transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            style={{ width: 84, height: 84, borderRadius: '50%', background: C.surfaceDim, border: `3px solid ${C.primaryBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt={name} loading="eager" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <IconStore size={34} style={{ color: C.primary }} />}
+          </motion.div>
+        </motion.div>
+
+        {/* Badges */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+          style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+          {profile.community_trusted && <MobileVerifiedBadge variant="trusted" />}
+          {idVerified && <MobileVerifiedBadge variant="id" />}
+          {!idVerified && <MobileNotVerifiedTag />}
+        </motion.div>
+
+        {/* Stats row */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+          style={{ display: 'flex', justifyContent: 'space-around', padding: '16px 0', borderTop: `1px solid ${C.borderLight}`, borderBottom: `1px solid ${C.borderLight}`, marginBottom: 18 }}>
+          <MobileStat value={products.length} label="Products" animate />
+          <MobileStat value={`${trustTier.filled}/${trustTier.cap}`} label="Trust Stars" />
+          <MobileStat value={reviews.length} label="Reviews" animate />
+        </motion.div>
+
+        {/* Action buttons */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+          style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+          {profile.phone && (
+            <motion.a whileTap={{ scale: 0.96 }}
+              href={'https://wa.me/' + profile.phone.replace(/\D/g, '') + '?text=Hi%2C%20I%20saw%20your%20store%20on%20BagSearch%21'}
+              target="_blank" rel="noopener noreferrer"
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 0', borderRadius: 14, background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, color: 'white', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: '0 8px 20px rgba(200,75,17,0.32)' }}>
+              <IconWhatsapp size={16} /> Message
+            </motion.a>
+          )}
+          <motion.button whileTap={{ scale: 0.96 }} onClick={handleShare}
+            style={{ flex: 1, padding: '13px 0', borderRadius: 14, border: `1.5px solid ${C.border}`, background: C.surfaceDim, color: C.textMid, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+            {shared ? 'Copied!' : 'Share Profile'}
+          </motion.button>
+        </motion.div>
+
+        {/* Bio */}
+        {(story || cats.length > 0) && (
+          <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} style={{ marginBottom: 20 }}>
+            {story
+              ? <p style={{ fontSize: 13.5, color: C.textMid, lineHeight: 1.7, marginBottom: cats.length ? 10 : 0 }}>{story}</p>
+              : <p style={{ fontSize: 13, color: C.textFaint, fontStyle: 'italic', marginBottom: cats.length ? 10 : 0 }}>This seller hasn't added a brand story yet.</p>}
+            {cats.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {cats.map(cat => (<span key={cat} style={{ fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 20, background: '#fde8d8', color: C.primary, border: '1px solid #f9c4a0' }}>{cat}</span>))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Tab switcher */}
+      <div style={{ position: 'sticky', top: 65, zIndex: 20, background: 'white', padding: '4px 20px 12px' }}>
+        <div style={{ position: 'relative', display: 'flex', background: C.surfaceDim, borderRadius: 14, padding: 4, border: `1px solid ${C.borderLight}` }}>
+          <motion.div
+            animate={{ x: tab === 'products' ? 0 : '100%' }}
+            transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+            style={{ position: 'absolute', top: 4, bottom: 4, left: 4, width: 'calc(50% - 4px)', background: 'white', borderRadius: 11, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          />
+          <button onClick={() => setTab('products')}
+            style={{ flex: 1, position: 'relative', zIndex: 1, padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13, color: tab === 'products' ? C.primary : C.textMuted, transition: 'color 0.2s' }}>
+            Products ({products.length})
+          </button>
+          <button onClick={() => setTab('reviews')}
+            style={{ flex: 1, position: 'relative', zIndex: 1, padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13, color: tab === 'reviews' ? C.primary : C.textMuted, transition: 'color 0.2s' }}>
+            Reviews ({reviews.length})
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {tab === 'products' ? (
+          <motion.div key="products" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }} style={{ padding: '14px 2px 0' }}>
+            {products.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2 }}>
+                {products.map((p, i) => (
+                  <motion.div key={p.id}
+                    initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: Math.min(i * 0.035, 0.35), duration: 0.25 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate('/products/' + p.id)}
+                    style={{ position: 'relative', aspectRatio: '3 / 4', overflow: 'hidden', cursor: 'pointer', background: C.primaryBg }}>
+                    <img src={p.src} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 55%,rgba(0,0,0,0.55) 100%)', pointerEvents: 'none' }} />
+                    {p.discountLabel && (
+                      <span style={{ position: 'absolute', top: 5, right: 5, background: C.primary, color: 'white', fontSize: 8.5, fontWeight: 800, padding: '2px 6px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <IconPercent size={7} /> {p.discountLabel}
+                      </span>
+                    )}
+                    <span style={{ position: 'absolute', left: 6, bottom: 6, color: 'white', fontSize: 11.5, fontWeight: 800, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
+                      {fmt(p.discountedPrice || p.price)}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fde8d8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', border: '2px solid #f9c4a0' }}>
+                  <IconShopping size={28} style={{ color: C.primary }} />
+                </div>
+                <p style={{ fontSize: 14, color: C.textMuted, fontWeight: 600 }}>No products yet</p>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div key="reviews" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }} style={{ padding: '16px 20px 0' }}>
+            {reviews.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '18px 16px', background: C.surfaceDim, borderRadius: 16, border: `1px solid ${C.borderLight}`, marginBottom: 18 }}>
+                <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ fontSize: 34, fontWeight: 900, color: C.primary, letterSpacing: '-0.04em', lineHeight: 1 }}>{avg}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 2, margin: '5px 0' }}><Stars rating={parseFloat(avg)} size={12} /></div>
+                  <div style={{ fontSize: 10.5, color: C.textFaint, fontWeight: 600 }}>{reviews.length} review{reviews.length !== 1 ? 's' : ''}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {[5, 4, 3, 2, 1].map(star => {
+                    const count = reviews.filter(r => Math.round(r.rating) === star).length;
+                    const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                    return (
+                      <div key={star} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, width: 7 }}>{star}</span>
+                        <div style={{ flex: 1, height: 5, background: '#f7ece4', borderRadius: 99, overflow: 'hidden' }}>
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: 'easeOut' }}
+                            style={{ height: '100%', background: 'linear-gradient(90deg,#f97316,#c84b11)', borderRadius: 99 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+              style={{ background: C.primaryPale, borderRadius: 16, padding: '18px 16px', border: `1px solid ${C.primaryBorder}`, marginBottom: 20 }}>
+              <h4 style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 12 }}>Write a Review</h4>
+              {user ? (
+                <form onSubmit={submitReview}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12 }}>
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button key={star} type="button" onClick={() => setNewRating(star)}
+                        onTouchStart={() => setHovStar(star)} onTouchEnd={() => setHovStar(0)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                        <IconStar size={24} filled={(hovStar || newRating) >= star} />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea value={newText} onChange={e => setNewText(e.target.value)}
+                    placeholder="Share your experience with this seller…"
+                    style={{ ...iStyle, minHeight: 84, resize: 'vertical', marginBottom: 12, fontSize: 13 }} />
+                  <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={posting || !newText.trim()}
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: posting || !newText.trim() ? '#fde8d8' : 'linear-gradient(135deg,#c84b11,#f97316)', color: posting || !newText.trim() ? C.primary : 'white', fontWeight: 900, fontSize: 13, cursor: posting || !newText.trim() ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    {posting ? <><IconLoader size={13} style={{ color: 'inherit' }} /> Posting…</> : <><IconSparkle size={13} /> Post Review</>}
+                  </motion.button>
+                </form>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                  <p style={{ fontSize: 12.5, color: C.textMuted, fontWeight: 600 }}>Log in to leave a review.</p>
+                  <button onClick={() => navigate('/login')} style={{ padding: '9px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#c84b11,#f97316)', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>Log In</button>
+                </div>
+              )}
+            </motion.div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {reviews.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fde8d8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', border: '2px solid #f9c4a0' }}>
+                    <IconChat size={24} style={{ color: C.primary }} />
+                  </div>
+                  <p style={{ fontSize: 13, color: C.textMuted, fontWeight: 600 }}>No reviews yet — be the first!</p>
+                </div>
+              ) : reviews.map((r, i) => (
+                <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.04, 0.3) }}
+                  style={{ background: 'white', borderRadius: 14, border: `1px solid ${C.borderLight}`, padding: '14px 16px' }}>
+                  {editId === r.id ? (
+                    <div>
+                      <div style={{ display: 'flex', gap: 3, marginBottom: 10 }}>
+                        {[1, 2, 3, 4, 5].map(s => (<button key={s} type="button" onClick={() => setEditRating(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}><IconStar size={19} filled={s <= editRating} /></button>))}
+                      </div>
+                      <textarea value={editText} onChange={e => setEditText(e.target.value)} style={{ ...iStyle, minHeight: 70, resize: 'vertical', marginBottom: 10, fontSize: 13 }} />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={updateReview} disabled={updating} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#c84b11,#f97316)', color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>{updating ? 'Saving…' : 'Save'}</button>
+                        <button onClick={() => { setEditId(null); setEditText(''); setEditRating(5); }} style={{ padding: '8px 16px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: 'white', color: C.textMid, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#c84b11,#f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: 'white', flexShrink: 0 }}>
+                            {(r.author_name || 'A').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12.5, fontWeight: 800, color: C.text }}>{r.author_name || 'Anonymous'}</div>
+                            <div style={{ fontSize: 10.5, color: C.textFaint, fontWeight: 500 }}>{r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</div>
+                          </div>
+                        </div>
+                        <Stars rating={r.rating} size={12} />
+                      </div>
+                      <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.55, marginBottom: user && r.buyer_id === user.id ? 8 : 0 }}>{r.text}</p>
+                      {user && r.buyer_id === user.id && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => { setEditId(r.id); setEditText(r.text); setEditRating(r.rating); }} style={{ background: C.surfaceDim, border: `1px solid ${C.border}`, borderRadius: 7, padding: '3px 9px', cursor: 'pointer', fontSize: 11, color: C.textMid, fontWeight: 700 }}>Edit</button>
+                          <button onClick={() => deleteReview(r.id)} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 7, padding: '3px 9px', cursor: 'pointer', fontSize: 11, color: '#dc2626', fontWeight: 700 }}>Delete</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
