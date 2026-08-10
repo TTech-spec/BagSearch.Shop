@@ -3,6 +3,7 @@ import { useContext, useEffect, Suspense, lazy } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
+import MobileBottomNav from './components/MobileBottomNav.jsx';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
 
@@ -294,6 +295,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      <MobileBottomNav />
     </Router>
   );
 }
