@@ -2156,6 +2156,10 @@ export default function Product(){
               <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
               <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
               {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.X size={isMobile?12:13} color={C.primary} /></button>}
+              <button onClick={()=>setBudgetOpen(true)} title="Set your budget" style={{position:'relative',width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:`1.5px solid ${budgetActive?C.primary:C.border}`,background:budgetActive?C.primaryBg:C.surfaceDim,color:budgetActive?C.primary:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',fontWeight:900,fontSize:isMobile?14:16}}>
+                ₦
+                {budgetActive&&<span style={{position:'absolute',top:-3,right:-3,width:9,height:9,borderRadius:'50%',background:'#16a34a',border:'2px solid white'}}/>}
+              </button>
               <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
               <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}><Icons.Camera size={isMobile?14:16} color="white" /></button>
             </div>
@@ -2191,10 +2195,10 @@ export default function Product(){
               <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{budgetFilteredProducts.length} {budgetFilteredProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
             </div>
             <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-              <button onClick={()=>setBudgetOpen(true)} style={{background:budgetActive?C.primaryBg:'white',color:budgetActive?C.primary:C.textMid,border:`1px solid ${budgetActive?C.primaryBorder:C.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-                💰 {budgetActive?`₦${budgetMin?Number(budgetMin).toLocaleString():'0'} – ₦${budgetMax?Number(budgetMax).toLocaleString():'∞'}`:'Budget'}
-                {budgetActive&&<span onClick={e=>{e.stopPropagation();clearBudget();}} style={{display:'flex'}}><Icons.X size={10} color="currentColor" /></span>}
-              </button>
+              {budgetActive&&<button onClick={()=>setBudgetOpen(true)} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                💰 ₦{budgetMin?Number(budgetMin).toLocaleString():'0'} – ₦{budgetMax?Number(budgetMax).toLocaleString():'∞'}
+                <span onClick={e=>{e.stopPropagation();clearBudget();}} style={{display:'flex'}}><Icons.X size={10} color="currentColor" /></span>
+              </button>}
               {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
                 {typeof cat.icon==='function'?cat.icon({size:12,color:cat.color}):cat.icon} {cat.label} <Icons.X size={10} color="currentColor" />
               </button>;})()}
