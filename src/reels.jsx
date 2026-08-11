@@ -17,6 +17,14 @@ const MOCK_REELS = [
 
 const TABS = [{ id: 'community', label: 'Community' }, { id: 'following', label: 'Following' }, { id: 'foryou', label: 'For You' }];
 
+// Mock comment thread reused across reels — this is a UI preview, not real data.
+const MOCK_COMMENTS = [
+  { id: 1, name: 'Ada N.', text: 'This bag is stunning! Is it still available? 😍', time: '2h', likes: 14 },
+  { id: 2, name: 'Chidi O.', text: 'Quality looks top notch 🔥 how much is delivery to Abuja?', time: '5h', likes: 8 },
+  { id: 3, name: 'Blessing K.', text: 'How much for the mini size?', time: '1d', likes: 3 },
+  { id: 4, name: 'Emeka T.', text: 'Bought one last week, it\'s even nicer in person', time: '2d', likes: 21 },
+];
+
 function IconHeart({ size = 26, color = 'white' }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M12 21s-6.7-4.35-9.3-8.2C.9 9.9 1.7 6.4 4.8 5.1c2.2-.9 4.4 0 5.7 1.8l1.5 2 1.5-2c1.3-1.8 3.5-2.7 5.7-1.8 3.1 1.3 3.9 4.8 2.1 7.7C18.7 16.65 12 21 12 21z" /></svg>;
 }
@@ -87,6 +95,85 @@ function ReelsToast({ visible }) {
   );
 }
 
+function IconX({ size = 14, color = 'white' }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+}
+
+/* ─── Comments — bottom sheet on mobile, side panel on desktop ──────────── */
+
+function CommentsBody({ onClose, onNotReady }) {
+  const [draft, setDraft] = useState('');
+  const post = () => { if (!draft.trim()) return; setDraft(''); onNotReady(); };
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 18px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 800 }}>{MOCK_COMMENTS.length} Comments</span>
+        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IconX size={13} />
+        </button>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {MOCK_COMMENTS.map(c => (
+          <div key={c.id} style={{ display: 'flex', gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
+              {c.name.charAt(0)}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{c.name}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{c.time}</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>{c.text}</p>
+            </div>
+            <button onClick={onNotReady} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>
+              <IconHeart size={14} color="rgba(255,255,255,0.5)" />
+              <span style={{ fontSize: 10, fontWeight: 700 }}>{c.likes}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+        <input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') post(); }} placeholder="Add a comment…"
+          style={{ flex: 1, minWidth: 0, background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 20, padding: '9px 14px', color: 'white', fontSize: 13, outline: 'none' }} />
+        <button onClick={post} disabled={!draft.trim()} style={{ background: 'none', border: 'none', cursor: draft.trim() ? 'pointer' : 'default', color: draft.trim() ? C.primaryLight : 'rgba(255,255,255,0.3)', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>Post</button>
+      </div>
+    </>
+  );
+}
+
+function CommentsPanel({ open, onClose, variant, onNotReady }) {
+  if (variant === 'side') {
+    return (
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 340 }} exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.25 }}
+            style={{ background: '#161211', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 711, flexShrink: 0 }}>
+            <div style={{ width: 340, height: '100%', display: 'flex', flexDirection: 'column', paddingTop: 14 }}>
+              <CommentsBody onClose={onClose} onNotReady={onNotReady} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 70 }} />
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 71, height: '68vh', background: '#161211', borderTopLeftRadius: 24, borderTopRightRadius: 24, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.25)', margin: '10px auto 4px', flexShrink: 0 }} />
+            <CommentsBody onClose={onClose} onNotReady={onNotReady} />
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function Reels() {
   const navigate = useNavigate();
   const isMobile = useIsMobileViewport(768);
@@ -110,6 +197,7 @@ export default function Reels() {
 /* ─── Mobile: full-bleed vertical snap-scroll ────────────────────────────── */
 
 function MobileReels({ tab, onSelectTab, toast, notReady, navigate }) {
+  const [commentsOpen, setCommentsOpen] = useState(false);
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: "'Manrope',sans-serif", position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'linear-gradient(180deg,rgba(0,0,0,0.6) 0%,transparent 100%)' }}>
@@ -126,16 +214,17 @@ function MobileReels({ tab, onSelectTab, toast, notReady, navigate }) {
 
       <div style={{ height: '100vh', overflowY: 'auto', scrollSnapType: 'y mandatory' }}>
         {MOCK_REELS.map((reel, i) => (
-          <ReelCard key={reel.id} reel={reel} index={i} onInteract={notReady} />
+          <ReelCard key={reel.id} reel={reel} index={i} onInteract={notReady} onOpenComments={() => setCommentsOpen(true)} />
         ))}
       </div>
 
+      <CommentsPanel variant="sheet" open={commentsOpen} onClose={() => setCommentsOpen(false)} onNotReady={notReady} />
       <ReelsToast visible={toast} />
     </div>
   );
 }
 
-function ReelCard({ reel, index, onInteract }) {
+function ReelCard({ reel, index, onInteract, onOpenComments }) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -162,7 +251,7 @@ function ReelCard({ reel, index, onInteract }) {
           <IconHeart color={liked ? '#f97316' : 'white'} />
           <span style={{ fontSize: 11, fontWeight: 700 }}>{reel.likes + (liked ? 1 : 0)}</span>
         </button>
-        <button onClick={onInteract} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+        <button onClick={onOpenComments} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
           <IconComment />
           <span style={{ fontSize: 11, fontWeight: 700 }}>{reel.comments}</span>
         </button>
@@ -184,6 +273,7 @@ function DesktopReels({ tab, onSelectTab, toast, notReady, navigate, activeIndex
   const reel = MOCK_REELS[activeIndex];
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const goTo = (i) => { setActiveIndex(((i % MOCK_REELS.length) + MOCK_REELS.length) % MOCK_REELS.length); setLiked(false); setSaved(false); };
 
   return (
@@ -244,8 +334,8 @@ function DesktopReels({ tab, onSelectTab, toast, notReady, navigate, activeIndex
               <span style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconHeart size={22} color={liked ? '#f97316' : 'white'} /></span>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{reel.likes + (liked ? 1 : 0)}</span>
             </button>
-            <button onClick={notReady} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconComment size={22} /></span>
+            <button onClick={() => setCommentsOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 48, height: 48, borderRadius: '50%', background: commentsOpen ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconComment size={22} color={commentsOpen ? '#f97316' : 'white'} /></span>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{reel.comments}</span>
             </button>
             <button onClick={() => { setSaved(s => !s); notReady(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -257,6 +347,8 @@ function DesktopReels({ tab, onSelectTab, toast, notReady, navigate, activeIndex
               <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{reel.shares}</span>
             </button>
           </div>
+
+          <CommentsPanel variant="side" open={commentsOpen} onClose={() => setCommentsOpen(false)} onNotReady={notReady} />
         </div>
       </div>
 

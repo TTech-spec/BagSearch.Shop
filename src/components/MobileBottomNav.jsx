@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useIsMobileViewport } from '../hooks/useIsMobileViewport';
 
@@ -144,14 +145,23 @@ export default function MobileBottomNav() {
               position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 52, height: 52, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              background: item.active ? 'linear-gradient(135deg,#c84b11,#f97316)' : 'transparent',
-              boxShadow: item.active ? '0 6px 16px rgba(200,75,17,0.4)' : 'none',
-              transition: 'background 0.25s ease, box-shadow 0.25s ease',
+              background: 'transparent',
             }}
           >
-            <item.Icon size={22} color={item.active ? '#ffffff' : '#5c3317'} />
+            {item.active && (
+              // Shared layoutId — framer-motion animates this circle sliding
+              // from its old button to this one instead of just popping in.
+              <motion.div
+                layoutId="bottomNavActiveBg"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(135deg,#c84b11,#f97316)', boxShadow: '0 6px 16px rgba(200,75,17,0.4)' }}
+              />
+            )}
+            <span style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
+              <item.Icon size={22} color={item.active ? '#ffffff' : '#5c3317'} />
+            </span>
             {item.isNew && !item.active && (
-              <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#16a34a', border: '2px solid white' }} />
+              <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#16a34a', border: '2px solid white', zIndex: 1 }} />
             )}
           </button>
         ))}
