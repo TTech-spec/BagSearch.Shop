@@ -35,6 +35,16 @@ function IconSparkle({ size = 22, color = 'currentColor' }) {
   );
 }
 
+function IconReels({ size = 22, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="18" rx="4" />
+      <path d="M2 8h20M7 3 7 8M17 3 17 8" />
+      <polygon points="10.5 12 15 14.5 10.5 17" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
 function IconCart({ size = 22, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -55,9 +65,12 @@ function IconUser({ size = 22, color = 'currentColor' }) {
 }
 
 /**
- * Floating pill bottom nav, mobile only — Home / [List Bag or New Arrivals] / Cart / Profile.
- * Rendered once in App.jsx (outside <Routes>) so it persists across pages.
- * The second slot is "List Bag" for sellers, or "New Arrivals" for everyone
+ * Floating pill bottom nav, mobile only — Home / Reels / [List Bag or New
+ * Arrivals] / Cart / Profile. Rendered once in App.jsx (outside <Routes>) so
+ * it persists across pages.
+ * Reels (src/reels.jsx) is a "coming soon" preview of the feature's UI —
+ * flagged with a small green dot until it's actually live.
+ * The third slot is "List Bag" for sellers, or "New Arrivals" for everyone
  * else, since buyers don't have anything to list. Cart and New Arrivals have
  * no page of their own — both reuse Product.jsx's existing location-state
  * pattern (openCart / scrollTo) to trigger behavior on the products page.
@@ -85,6 +98,11 @@ export default function MobileBottomNav() {
       key: 'home', label: 'Home', Icon: IconHome,
       active: location.pathname === '/' || location.pathname === '/products',
       onClick: () => navigate('/products'),
+    },
+    {
+      key: 'reels', label: 'Reels', Icon: IconReels, isNew: true,
+      active: location.pathname === '/reels',
+      onClick: () => navigate('/reels'),
     },
     secondItem,
     {
@@ -123,6 +141,7 @@ export default function MobileBottomNav() {
             aria-label={item.label}
             aria-current={item.active ? 'page' : undefined}
             style={{
+              position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 52, height: 52, borderRadius: '50%', border: 'none', cursor: 'pointer',
               background: item.active ? 'linear-gradient(135deg,#c84b11,#f97316)' : 'transparent',
@@ -131,6 +150,9 @@ export default function MobileBottomNav() {
             }}
           >
             <item.Icon size={22} color={item.active ? '#ffffff' : '#5c3317'} />
+            {item.isNew && !item.active && (
+              <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#16a34a', border: '2px solid white' }} />
+            )}
           </button>
         ))}
       </div>

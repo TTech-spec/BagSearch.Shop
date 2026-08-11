@@ -22,6 +22,7 @@ const CreateProduct = lazy(() => import('./createProduct.jsx'));
 const ForgotPassword = lazy(() => import('./forgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./resetPassword.jsx'));
 const VendorDetails = lazy(() => import('./vendorDetails.jsx'));
+const Reels = lazy(() => import('./reels.jsx'));
 const Contact = lazy(() => import('./contact.jsx'));
 const About = lazy(() => import('./about.jsx'));
 const HotDeals = lazy(() => import('./hotDeals.jsx'));
@@ -270,6 +271,9 @@ function App() {
           {/* Vendor Details - public */}
           <Route path="/vendor/:id" element={<VendorDetails />} />
           <Route path="/seller/:slug" element={<VendorDetails />} />
+
+          {/* Reels preview - public, coming soon */}
+          <Route path="/reels" element={<Reels />} />
 
           {/* Create Product - protected behind login */}
           <Route
