@@ -1645,6 +1645,11 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
             <Icons.User size={20} color="currentColor" />
           </button>
           <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
+         <button onClick={()=>navigate('/reels')} style={{ position:'relative',padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
+           onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>
+           Reels
+           <span style={{ position:'absolute',top:4,right:4,width:7,height:7,borderRadius:'50%',background:'#16a34a',border:'1.5px solid white' }} />
+         </button>
          <button onClick={()=>navigate('/contact')} style={{ padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
            onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>Contact</button>
          <button onClick={()=>navigate('/hot-deals')} style={{ padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
