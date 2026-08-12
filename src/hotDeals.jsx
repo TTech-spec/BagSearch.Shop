@@ -793,7 +793,7 @@ export default function HotDeals() {
     description: seoDescription,
     keywords: seoKeywords,
     url: '/hot-deals',
-    type: 'Collection',
+    type: 'website',
     schema: {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
