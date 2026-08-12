@@ -810,6 +810,50 @@ function SellerVerifyNudgeModal({ open, onClose, navigate }) {
   );
 }
 
+// ─── Tells a seller the outcome of their NIN review the first time they ────
+// open the app after a decision is made — congratulates them on approval,
+// or asks them to resubmit on rejection.
+function NinStatusModal({ status, open, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
+    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
+  }, [open]);
+  if (phase === 0) return null;
+  const visible = phase === 2;
+  const isApproved = status === 'approved';
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px" }}>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(26,10,0,0.55)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",opacity:visible?1:0,transition:"opacity 0.35s ease" }} />
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:440,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+        <div style={{ height:6,background: isApproved ? "linear-gradient(90deg,#16a34a,#4ade80,#16a34a)" : "linear-gradient(90deg,#dc2626,#f87171,#dc2626)" }} />
+        <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}><Icons.X size={15} color="currentColor" /></button>
+        <div style={{ padding:"36px 36px 30px",textAlign:"center" }}>
+          <div style={{ width:64,height:64,borderRadius:"50%",background: isApproved ? "#dcfce7" : "#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",fontSize:30 }}>
+            {isApproved ? '🎉' : '⚠️'}
+          </div>
+          <h2 style={{ fontSize:"1.4rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:10 }}>
+            {isApproved ? "You're Verified!" : "ID Not Approved"}
+          </h2>
+          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:22 }}>
+            {isApproved
+              ? <>Congratulations — your NIN was approved and your storefront now shows the <strong style={{color:'#1A0A00'}}>ID Submitted</strong> badge. Buyers can see you're a verified seller.</>
+              : <>Your submitted NIN photo wasn't approved. Please upload a clearer photo of your NIN and resubmit — you can do this from your seller profile.</>}
+          </p>
+          <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+            <button onClick={()=>{ onClose(); navigate("/seller-profile"); }} style={{ width:"100%",padding:"13px 0",background: isApproved ? "linear-gradient(135deg,#16a34a,#22c55e)" : "#C94B2C",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow: isApproved ? "0 6px 20px rgba(22,163,74,0.35)" : "0 6px 20px rgba(201,75,44,0.35)",transition:"all 0.25s" }}>
+              {isApproved ? "View My Profile" : "Re-upload NIN"}
+            </button>
+            <button onClick={onClose} style={{ width:"100%",padding:"12px 0",background:"#FFF5F2",color:"#C94B2C",fontWeight:700,fontSize:13,border:"1px solid #F0C8BB",borderRadius:10,cursor:"pointer",transition:"all 0.2s" }}>
+              {isApproved ? "Nice, thanks!" : "I'll do it later"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── First-visit prompt teaching the visual-search feature ─────────────────
 // Shown once when a guest lands here via the onboarding "Shop Now" button.
 function UploadPromptModal({ open, onClose, onUpload }) {
@@ -1787,6 +1831,7 @@ export default function Product(){
   const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
   const[sellerVerifyNudgeOpen,setSellerVerifyNudgeOpen]=useState(false);
+  const[ninStatusModal,setNinStatusModal]=useState(null);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
   const[deferredPrompt,setDeferredPrompt]=useState(null);
@@ -1974,11 +2019,38 @@ export default function Product(){
           supabase.from('seller_verifications').select('status').eq('seller_id',sellerId).maybeSingle(),
         ]);
         if(cancelled)return;
-        const alreadyVerified=!!profileRow?.community_trusted||verRow?.status==='approved';
-        if(alreadyVerified)return;
+        // Skip once they've submitted a NIN at all — pending/rejected sellers get the
+        // specific outcome modal below instead of the generic "go get verified" nudge.
+        const alreadySubmittedOrVerified=!!profileRow?.community_trusted||!!verRow;
+        if(alreadySubmittedOrVerified)return;
         try{localStorage.setItem(seenKey,'1');}catch{/* ignore */}
         setSellerVerifyNudgeOpen(true);
       }catch(err){console.error('Failed to check seller verification status:',err);}
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,user?.user_metadata?.role]);
+
+  // Tells a seller the outcome the first time they open the app after we
+  // review their NIN — congratulates them on approval, or asks them to
+  // resubmit on rejection. Keyed on the status value itself (not a plain
+  // boolean) so a later resubmission that flips the outcome shows again.
+  useEffect(()=>{
+    const sellerId=user?.id;
+    if(!sellerId||user?.user_metadata?.role!=='seller')return;
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data:verRow}=await supabase.from('seller_verifications').select('status').eq('seller_id',sellerId).maybeSingle();
+        if(cancelled||!verRow)return;
+        const{status}=verRow;
+        if(status!=='approved'&&status!=='rejected')return;
+        const seenKey=`bagsearch_nin_status_seen_${sellerId}`;
+        let lastSeen=null;
+        try{lastSeen=localStorage.getItem(seenKey);}catch{/* localStorage unavailable — proceed anyway */}
+        if(lastSeen===status)return;
+        try{localStorage.setItem(seenKey,status);}catch{/* ignore */}
+        setNinStatusModal(status);
+      }catch(err){console.error('Failed to check NIN status for notification:',err);}
     })();
     return()=>{cancelled=true;};
   },[user?.id,user?.user_metadata?.role]);
@@ -2099,6 +2171,7 @@ export default function Product(){
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
+      <NinStatusModal status={ninStatusModal} open={!!ninStatusModal} onClose={()=>setNinStatusModal(null)} navigate={navigate}/>
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
