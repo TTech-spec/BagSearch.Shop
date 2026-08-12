@@ -880,6 +880,89 @@ function NinStatusModal({ status, reason, open, onClose, navigate }) {
   );
 }
 
+// ─── Tells an already-Verified (NIN-approved) seller about the second, ─────
+// higher badge tier — shown once, ever, per seller. Distinct gold/premium
+// styling (vs. the green "You're Verified!" modal) so it reads as a step up
+// rather than a repeat of the same news. Animates a shimmering shield badge
+// with floating sparkles and an animated progress bar counting up to their
+// current review total, out of the 10 needed.
+function TrustBadgeUpsellModal({ open, reviewCount = 0, onClose, navigate }) {
+  const [phase, setPhase] = useState(0);
+  const [barWidth, setBarWidth] = useState(0);
+  const [countUp, setCountUp] = useState(0);
+  const target = Math.min(reviewCount, 10);
+  const sparkleRef = useRef(null);
+  if (!sparkleRef.current) {
+    sparkleRef.current = Array.from({ length: 10 }, (_, i) => ({
+      top: 10 + Math.random() * 70,
+      left: 6 + Math.random() * 88,
+      delay: Math.random() * 1.6,
+      duration: 1.6 + Math.random() * 1.4,
+      size: 6 + Math.random() * 7,
+    }));
+  }
+  useEffect(() => {
+    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
+    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
+  }, [open]);
+  useEffect(() => {
+    if (phase !== 2) { setBarWidth(0); setCountUp(0); return; }
+    const t = setTimeout(() => setBarWidth((target / 10) * 100), 380);
+    let raf; const start = performance.now(); const duration = 900;
+    const tick = (ts) => {
+      const p = Math.min((ts - start) / duration, 1);
+      setCountUp(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    const t2 = setTimeout(() => { raf = requestAnimationFrame(tick); }, 380);
+    return () => { clearTimeout(t); clearTimeout(t2); if (raf) cancelAnimationFrame(raf); };
+  }, [phase, target]);
+  if (phase === 0) return null;
+  const visible = phase === 2;
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px" }}>
+      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(26,10,0,0.55)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",opacity:visible?1:0,transition:"opacity 0.35s ease" }} />
+      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:440,background:"linear-gradient(160deg,#fffdf5 0%,#fff 55%)",border:"1px solid rgba(184,134,11,0.2)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+        <div style={{ height:6,background:"linear-gradient(90deg,#b8860b,#f7d774,#b8860b)",backgroundSize:"200% 100%",animation: visible ? "shimFeedback 2.5s linear infinite" : "none" }} />
+        <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}><Icons.X size={15} color="currentColor" /></button>
+        <div style={{ padding:"36px 36px 30px",textAlign:"center" }}>
+          <div style={{ position:"relative",width:72,height:72,margin:"0 auto 20px" }}>
+            {visible && sparkleRef.current.map((s,i)=>(
+              <span key={i} style={{ position:"absolute",top:`${s.top}%`,left:`${s.left}%`,fontSize:s.size,color:"#e0ac1f",animation:`trustSparkle ${s.duration}s ease-in-out ${s.delay}s infinite` }}>✦</span>
+            ))}
+            <div style={{ width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#b8860b,#f7d774)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 10px 26px rgba(184,134,11,0.4)",animation: visible ? "ninBadgePop 0.55s cubic-bezier(0.34,1.56,0.64,1) both" : "none" }}>
+              <Icons.Shield size={32} color="white"/>
+            </div>
+          </div>
+          <h2 style={{ fontSize:"1.4rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:10 }}>
+            One Badge Away From Trustworthy
+          </h2>
+          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:20 }}>
+            You've got your <strong style={{color:'#1A0A00'}}>Verified</strong> badge — nice. Collect <strong style={{color:'#1A0A00'}}>10 happy reviews</strong> from real buyers and BagSearch will also mark you <strong style={{color:'#1A0A00'}}>Community Trusted</strong>, the highest trust badge on the platform. Buyers see both badges on your storefront.
+          </p>
+          <div style={{ marginBottom:24 }}>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8 }}>
+              <span style={{ fontSize:11,fontWeight:800,color:"#b8860b",letterSpacing:"0.06em",textTransform:"uppercase" }}>Your progress</span>
+              <span style={{ fontSize:13,fontWeight:900,color:"#1A0A00" }}>{countUp}<span style={{ color:"#bbb",fontWeight:700 }}> / 10 reviews</span></span>
+            </div>
+            <div style={{ width:"100%",height:10,borderRadius:20,background:"#fdf3e0",border:"1px solid #f7e6b8",overflow:"hidden" }}>
+              <div style={{ height:"100%",borderRadius:20,width:`${barWidth}%`,background:"linear-gradient(90deg,#b8860b,#f7d774)",transition:"width 1s cubic-bezier(0.22,1,0.36,1)" }}/>
+            </div>
+          </div>
+          <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+            <button onClick={()=>{ onClose(); navigate("/seller-profile"); }} style={{ width:"100%",padding:"13px 0",background:"linear-gradient(135deg,#b8860b,#d4a017)",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow:"0 6px 20px rgba(184,134,11,0.35)",transition:"all 0.25s" }}>
+              View My Profile
+            </button>
+            <button onClick={onClose} style={{ width:"100%",padding:"12px 0",background:"#FFF5F2",color:"#C94B2C",fontWeight:700,fontSize:13,border:"1px solid #F0C8BB",borderRadius:10,cursor:"pointer",transition:"all 0.2s" }}>
+              Got it, thanks!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── First-visit prompt teaching the visual-search feature ─────────────────
 // Shown once when a guest lands here via the onboarding "Shop Now" button.
 function UploadPromptModal({ open, onClose, onUpload }) {
@@ -1865,6 +1948,7 @@ export default function Product(){
   const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
   const[sellerVerifyNudgeOpen,setSellerVerifyNudgeOpen]=useState(false);
   const[ninStatusModal,setNinStatusModal]=useState(null);
+  const[trustUpsellModal,setTrustUpsellModal]=useState(null);
   const[windowWidth,setWindowWidth]=useState(typeof window!=='undefined'?window.innerWidth:1200);
   const[feedbackOpen,setFeedbackOpen]=useState(false);
   const[deferredPrompt,setDeferredPrompt]=useState(null);
@@ -2068,22 +2152,47 @@ export default function Product(){
   // review their NIN — congratulates them on approval, or asks them to
   // resubmit on rejection. Keyed on the status value itself (not a plain
   // boolean) so a later resubmission that flips the outcome shows again.
+  //
+  // Once-approved sellers who aren't Community Trusted yet also get a
+  // one-time nudge (TrustBadgeUpsellModal) explaining the 10-review
+  // requirement for that second badge — chained to open right after they
+  // dismiss the approval modal so the two never overlap on screen; sellers
+  // who already saw the approval modal in an earlier session (so it won't
+  // fire again) get the upsell shown directly instead.
   useEffect(()=>{
     const sellerId=user?.id;
     if(!sellerId||user?.user_metadata?.role!=='seller')return;
     let cancelled=false;
     (async()=>{
       try{
-        const{data:verRow}=await supabase.from('seller_verifications').select('status,rejection_reason').eq('seller_id',sellerId).maybeSingle();
+        const[{data:verRow},{data:profileRow},{count:reviewCount}]=await Promise.all([
+          supabase.from('seller_verifications').select('status,rejection_reason').eq('seller_id',sellerId).maybeSingle(),
+          supabase.from('users').select('community_trusted').eq('user_id',sellerId).maybeSingle(),
+          supabase.from('seller_reviews').select('id',{count:'exact',head:true}).eq('seller_id',sellerId),
+        ]);
         if(cancelled||!verRow)return;
+
+        const upsellSeenKey=`bagsearch_trust_upsell_seen_${sellerId}`;
+        let upsellSeen=false;
+        try{upsellSeen=localStorage.getItem(upsellSeenKey)==='1';}catch{/* localStorage unavailable — proceed anyway */}
+        const eligibleForUpsell=verRow.status==='approved'&&!profileRow?.community_trusted&&!upsellSeen;
+        const openUpsell=()=>{
+          try{localStorage.setItem(upsellSeenKey,'1');}catch{/* ignore */}
+          setTrustUpsellModal({reviewCount:reviewCount||0});
+        };
+
         const{status,rejection_reason}=verRow;
-        if(status!=='approved'&&status!=='rejected')return;
-        const seenKey=`bagsearch_nin_status_seen_${sellerId}`;
-        let lastSeen=null;
-        try{lastSeen=localStorage.getItem(seenKey);}catch{/* localStorage unavailable — proceed anyway */}
-        if(lastSeen===status)return;
-        try{localStorage.setItem(seenKey,status);}catch{/* ignore */}
-        setNinStatusModal({status,reason:rejection_reason||''});
+        if(status==='approved'||status==='rejected'){
+          const seenKey=`bagsearch_nin_status_seen_${sellerId}`;
+          let lastSeen=null;
+          try{lastSeen=localStorage.getItem(seenKey);}catch{/* localStorage unavailable — proceed anyway */}
+          if(lastSeen!==status){
+            try{localStorage.setItem(seenKey,status);}catch{/* ignore */}
+            setNinStatusModal({status,reason:rejection_reason||'',onAfterClose:eligibleForUpsell?openUpsell:undefined});
+            return;
+          }
+        }
+        if(eligibleForUpsell)openUpsell();
       }catch(err){console.error('Failed to check NIN status for notification:',err);}
     })();
     return()=>{cancelled=true;};
@@ -2195,6 +2304,7 @@ export default function Product(){
         @keyframes ninConfettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(420px) rotate(360deg);opacity:0}}
         @keyframes ninBadgePop{0%{transform:scale(0.5) rotate(-10deg);opacity:0}60%{transform:scale(1.15) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
         @keyframes ninShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+        @keyframes trustSparkle{0%,100%{opacity:0;transform:scale(0.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(25deg)}}
         .hide-scrollbar::-webkit-scrollbar{height:0;width:0;display:none;}
         .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
         .cat-track::-webkit-scrollbar{height:0;}.cat-track{-ms-overflow-style:none;scrollbar-width:none;}
@@ -2214,7 +2324,8 @@ export default function Product(){
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
-      <NinStatusModal status={ninStatusModal?.status} reason={ninStatusModal?.reason} open={!!ninStatusModal} onClose={()=>setNinStatusModal(null)} navigate={navigate}/>
+      <NinStatusModal status={ninStatusModal?.status} reason={ninStatusModal?.reason} open={!!ninStatusModal} onClose={()=>{const after=ninStatusModal?.onAfterClose;setNinStatusModal(null);if(after)after();}} navigate={navigate}/>
+      <TrustBadgeUpsellModal open={!!trustUpsellModal} reviewCount={trustUpsellModal?.reviewCount||0} onClose={()=>setTrustUpsellModal(null)} navigate={navigate}/>
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
