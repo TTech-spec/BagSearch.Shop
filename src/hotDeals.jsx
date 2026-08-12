@@ -1062,9 +1062,9 @@ export default function HotDeals() {
             marginBottom: 20,
             animation: 'fadeUp 0.7s ease 0.2s both',
           }}>
-            The deals worth<br />
+            Hot Deals on<br />
             <em style={{ fontStyle: 'italic', color: T.gold, position: 'relative' }}>
-              obsessing over.
+              Luxury Designer Bags
             </em>
           </h1>
 

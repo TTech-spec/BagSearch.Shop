@@ -100,7 +100,7 @@ export default async function handler(req, res) {
       ).catch(() => []),
       supabaseGet(
         'users',
-        'user_id,updated_at',
+        'user_id,updated_at,brand_name,full_name',
         '&order=updated_at.desc'
       ).catch(() => []),
     ]);
@@ -108,6 +108,14 @@ export default async function handler(req, res) {
     // Only include sellers who have at least one listed product
     const activeSellerIds = new Set(products.filter(p => p.user_id).map(p => p.user_id));
     const sellers = sellerRows.filter(s => activeSellerIds.has(s.user_id));
+
+    // Build seller slug the same way the app does:
+    // vendorDetails uses useParams({ slug }) and matches /seller/:slug
+    // The slug is either brand_name or full_name, slugified
+    function sellerSlug(s) {
+      const name = s.brand_name || s.full_name || '';
+      return slugify(name) || s.user_id;
+    }
 
     const today = new Date().toISOString().slice(0, 10);
 
@@ -129,12 +137,12 @@ export default async function handler(req, res) {
           )
         ),
 
-      // 3. Seller profile pages
+      // 3. Seller profile pages — use slugified brand/name matching app routing
       ...sellers
         .filter(s => s.user_id)
         .map(s =>
           urlEntry(
-            `${SITE_URL}/seller/${escapeXml(s.user_id)}`,
+            `${SITE_URL}/seller/${escapeXml(sellerSlug(s))}`,
             s.updated_at || today,
             'weekly',
             '0.6'
