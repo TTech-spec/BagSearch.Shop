@@ -9,8 +9,12 @@ const SITE_NAME = 'BagSearch';
 const SITE_URL = 'https://www.bagsearch.shop';
 
 function setMeta(name, content, attr = 'name') {
-  if (!content) return;
   let el = document.querySelector(`meta[${attr}="${name}"]`);
+  if (!content) {
+    // Clear the tag if it exists — don't leave stale values
+    if (el) el.removeAttribute('content');
+    return;
+  }
   if (!el) {
     el = document.createElement('meta');
     el.setAttribute(attr, name);
