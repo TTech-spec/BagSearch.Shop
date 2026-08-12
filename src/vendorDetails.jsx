@@ -467,7 +467,7 @@ export default function VendorDetails() {
       : 'View this verified seller\'s bag collection on BagSearch Nigeria. Authentic products, WhatsApp contact, trusted marketplace.',
     keywords: sellerName ? `${sellerName} seller, verified seller, ${sellerName} bags, authentic bags Nigeria` : 'seller profile, verified seller, BagSearch vendors',
     url: `/seller/${sellerParam}`,
-    type: 'ProfilePage',
+    type: 'website',
     schema: profile ? {
       '@context': 'https://schema.org',
       '@type': 'Person',

@@ -52,8 +52,8 @@ export function useSEO({
     setMeta('keywords', keywords);
     setMeta('robots', robotsContent);
 
-    // ── Canonical (only set when indexable) ────────────────────────────────
-    if (!noindex) {
+    // ── Canonical (only set when indexable and url is known) ──────────────
+    if (!noindex && url) {
       setLink('canonical', canonicalUrl);
     }
 
@@ -91,6 +91,18 @@ export function useSEO({
     return () => {
       document.title = SITE_NAME;
       setMeta('robots', 'index, follow');
+      // Reset canonical so stale URLs don't persist across route transitions
+      const canonicalEl = document.querySelector('link[rel="canonical"]');
+      if (canonicalEl) canonicalEl.setAttribute('href', SITE_URL + '/');
+      // Reset OG tags to site defaults so previous page values don't leak
+      setMeta('og:title', SITE_NAME, 'property');
+      setMeta('og:description', '', 'property');
+      setMeta('og:image', `${SITE_URL}/og-default.jpg`, 'property');
+      setMeta('og:url', SITE_URL, 'property');
+      setMeta('og:type', 'website', 'property');
+      setMeta('twitter:title', SITE_NAME);
+      setMeta('twitter:description', '');
+      setMeta('twitter:image', `${SITE_URL}/og-default.jpg`);
       const schemaScript = document.getElementById(schemaId);
       if (schemaScript) schemaScript.remove();
     };

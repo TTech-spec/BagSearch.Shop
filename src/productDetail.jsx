@@ -1009,12 +1009,13 @@ export default function ProductDetail() {
                   </div>
                   <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
                     <p style={{ fontSize:17,fontWeight:900,color:C.primary }}>{p.price}</p>
-                    <button onClick={() => navigate(productPath(p.name, p.id))}
-                      style={{ padding:'6px 13px',background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,color:'white',fontWeight:800,fontSize:11,border:'none',borderRadius:8,cursor:'pointer',transition:'all 0.2s' }}
+                    <a href={productPath(p.name, p.id)}
+                      onClick={e=>{e.preventDefault();navigate(productPath(p.name, p.id));}}
+                      style={{ padding:'6px 13px',background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,color:'white',fontWeight:800,fontSize:11,borderRadius:8,cursor:'pointer',transition:'all 0.2s',textDecoration:'none',display:'inline-block' }}
                       onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
                       onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
                       View →
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>

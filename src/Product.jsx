@@ -1755,7 +1755,20 @@ function WelcomeBackBadge({ user, isMobile }) {
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
-  useSEO({ title:'Buy & Sell Luxury Designer Bags in Nigeria | BagSearch',description:'Browse authentic luxury designer handbags, shoulder bags, clutches, totes and more from verified sellers across Nigeria. Got a bag to sell? List it free and reach buyers looking for exactly that.',keywords:'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, sell your bags Nigeria, sell bags online free, list bags for free Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada',url:'/products' });
+  const isHomepage = location.pathname === '/';
+  useSEO({
+    title: isHomepage
+      ? 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria'
+      : 'Shop Luxury Designer Bags in Nigeria | BagSearch',
+    description: isHomepage
+      ? "Nigeria's AI-powered luxury bag marketplace. Upload any photo to find matching bags instantly. Buy authentic Chanel, Hermès, LV & more. Free for sellers to list."
+      : 'Browse authentic luxury designer handbags, shoulder bags, clutches and totes. Shop Chanel, Hermès, Louis Vuitton, Gucci from verified sellers across Nigeria.',
+    keywords: isHomepage
+      ? 'luxury bags Nigeria, buy designer bags Nigeria, sell bags online Nigeria, AI bag search, authentic luxury handbags, BagSearch'
+      : 'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada, sell bags free Nigeria',
+    url: location.pathname,
+    type: 'website',
+  });
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
