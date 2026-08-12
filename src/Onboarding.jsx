@@ -110,7 +110,7 @@ function DesktopFallback() {
   );
 }
 
-export default function Onboarding() {
+export default function Onboarding({ onDone } = {}) {
   useSEO({
     title: 'Welcome | BagSearch',
     description:
@@ -145,19 +145,19 @@ export default function Onboarding() {
 
   const handleSkip = useCallback(() => {
     markOnboardingSeen();
-    navigate('/register');
-  }, [navigate]);
+    if (onDone) { onDone(); } else { navigate('/register'); }
+  }, [navigate, onDone]);
 
   const handleSignUp = useCallback(() => {
     markOnboardingSeen();
-    navigate('/register');
-  }, [navigate]);
+    if (onDone) { onDone(); navigate('/register'); } else { navigate('/register'); }
+  }, [navigate, onDone]);
 
   const handleShopNow = useCallback(() => {
     markOnboardingSeen();
     // Flag consumed once by Product.jsx to show the visual-search prompt modal.
-    navigate('/products', { state: { promptUpload: true } });
-  }, [navigate]);
+    if (onDone) { onDone(); } else { navigate('/products', { state: { promptUpload: true } }); }
+  }, [navigate, onDone]);
 
   // Keyboard support for the swipe gesture (arrow keys, Enter on the final slide).
   useEffect(() => {
