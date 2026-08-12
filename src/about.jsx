@@ -130,11 +130,7 @@ const BagSearchAbout = () => {
         name: 'BagSearch',
         url: SITE_URL,
         logo: `${SITE_URL}/logo.png`,
-        foundingDate: '2024',
-        foundingLocation: {
-          '@type': 'Place',
-          name: 'Lagos, Nigeria'
-        },
+        foundingDate: '2026',
         description: "Nigeria's premier marketplace for authentic luxury designer bags, powered by AI visual search.",
         numberOfEmployees: {
           '@type': 'QuantitativeValue',
