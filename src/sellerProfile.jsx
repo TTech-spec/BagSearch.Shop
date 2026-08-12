@@ -509,6 +509,7 @@ const NIN_STATUS_META = {
 
 function NinVerificationCard({ sellerId, visible }) {
   const [status, setStatus] = useState('none');
+  const [rejectionReason, setRejectionReason] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -519,9 +520,10 @@ function NinVerificationCard({ sellerId, visible }) {
     if (!sellerId) return;
     setLoading(true);
     try {
-      const { data } = await supabase.from('seller_verifications').select('status,nin_image_path').eq('seller_id', sellerId).maybeSingle();
+      const { data } = await supabase.from('seller_verifications').select('status,nin_image_path,rejection_reason').eq('seller_id', sellerId).maybeSingle();
       if (data) {
         setStatus(data.status);
+        setRejectionReason(data.rejection_reason || '');
         if (data.nin_image_path) {
           const { data: signed } = await supabase.storage.from('nin-documents').createSignedUrl(data.nin_image_path, 3600);
           setPreviewUrl(signed?.signedUrl || null);
@@ -530,6 +532,7 @@ function NinVerificationCard({ sellerId, visible }) {
         }
       } else {
         setStatus('none');
+        setRejectionReason('');
         setPreviewUrl(null);
       }
     } catch (err) {
@@ -562,6 +565,7 @@ function NinVerificationCard({ sellerId, visible }) {
         status: 'pending',
         submitted_at: new Date().toISOString(),
         reviewed_at: null,
+        rejection_reason: null,
       }, { onConflict: 'seller_id' });
       if (upsertErr) throw upsertErr;
 
@@ -600,8 +604,10 @@ function NinVerificationCard({ sellerId, visible }) {
           </p>
 
           {status === 'rejected' && (
-            <p style={{ fontSize: 12, color: C.danger, fontWeight: 700, marginBottom: 10 }}>
-              Your last submission wasn't approved. Please upload a clearer photo of your NIN.
+            <p style={{ fontSize: 12, color: C.danger, fontWeight: 700, marginBottom: 10, lineHeight: 1.6 }}>
+              {rejectionReason
+                ? <>Not approved: <span style={{ fontWeight: 600 }}>{rejectionReason}</span></>
+                : "Your last submission wasn't approved. Please upload a clearer photo of your NIN."}
             </p>
           )}
           {uploadError && (
