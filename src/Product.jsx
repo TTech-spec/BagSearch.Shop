@@ -813,8 +813,20 @@ function SellerVerifyNudgeModal({ open, onClose, navigate }) {
 // ─── Tells a seller the outcome of their NIN review the first time they ────
 // open the app after a decision is made — congratulates them on approval,
 // or asks them to resubmit on rejection.
-function NinStatusModal({ status, open, onClose, navigate }) {
+const NIN_CONFETTI_COLORS = ['#16a34a', '#facc15', '#f97316', '#4ade80', '#60a5fa', '#ec4899'];
+
+function NinStatusModal({ status, reason, open, onClose, navigate }) {
   const [phase, setPhase] = useState(0);
+  const confettiRef = useRef(null);
+  if (!confettiRef.current) {
+    confettiRef.current = Array.from({ length: 24 }, (_, i) => ({
+      left: Math.random() * 100,
+      color: NIN_CONFETTI_COLORS[i % NIN_CONFETTI_COLORS.length],
+      delay: Math.random() * 0.5,
+      duration: 1.8 + Math.random() * 1.2,
+      size: 5 + Math.random() * 5,
+    }));
+  }
   useEffect(() => {
     if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
     else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
@@ -825,21 +837,35 @@ function NinStatusModal({ status, open, onClose, navigate }) {
   return (
     <div style={{ position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px" }}>
       <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(26,10,0,0.55)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",opacity:visible?1:0,transition:"opacity 0.35s ease" }} />
-      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:440,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+      {isApproved && visible && (
+        // Confetti rains from the top of the modal card only (not the whole
+        // screen) — clipped to the card's rounded corners via overflow:hidden below.
+        <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"100%",maxWidth:440,height:420,zIndex:1,overflow:"hidden",borderRadius:20,pointerEvents:"none" }}>
+          {confettiRef.current.map((c,i)=>(
+            <span key={i} style={{ position:"absolute",top:-16,left:`${c.left}%`,width:c.size,height:c.size*0.4,background:c.color,borderRadius:2,animation:`ninConfettiFall ${c.duration}s ease-in ${c.delay}s infinite` }}/>
+          ))}
+        </div>
+      )}
+      <div style={{ position:"relative",zIndex:2,width:"100%",maxWidth:440,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",animation: visible && !isApproved ? "ninShake 0.5s ease-in-out 0.35s" : "none",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
         <div style={{ height:6,background: isApproved ? "linear-gradient(90deg,#16a34a,#4ade80,#16a34a)" : "linear-gradient(90deg,#dc2626,#f87171,#dc2626)" }} />
         <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}><Icons.X size={15} color="currentColor" /></button>
         <div style={{ padding:"36px 36px 30px",textAlign:"center" }}>
-          <div style={{ width:64,height:64,borderRadius:"50%",background: isApproved ? "#dcfce7" : "#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",fontSize:30 }}>
+          <div style={{ width:64,height:64,borderRadius:"50%",background: isApproved ? "#dcfce7" : "#fef2f2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",fontSize:30,animation: visible ? "ninBadgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" : "none" }}>
             {isApproved ? '🎉' : '⚠️'}
           </div>
           <h2 style={{ fontSize:"1.4rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:10 }}>
             {isApproved ? "You're Verified!" : "ID Not Approved"}
           </h2>
-          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:22 }}>
+          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom: isApproved || !reason ? 22 : 10 }}>
             {isApproved
               ? <>Congratulations — your NIN was approved and your storefront now shows the <strong style={{color:'#1A0A00'}}>ID Submitted</strong> badge. Buyers can see you're a verified seller.</>
               : <>Your submitted NIN photo wasn't approved. Please upload a clearer photo of your NIN and resubmit — you can do this from your seller profile.</>}
           </p>
+          {!isApproved && reason && (
+            <p style={{ fontSize:12.5,color:"#dc2626",fontWeight:700,lineHeight:1.6,background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:"10px 12px",marginBottom:22,textAlign:"left" }}>
+              Reason: {reason}
+            </p>
+          )}
           <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
             <button onClick={()=>{ onClose(); navigate("/seller-profile"); }} style={{ width:"100%",padding:"13px 0",background: isApproved ? "linear-gradient(135deg,#16a34a,#22c55e)" : "#C94B2C",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow: isApproved ? "0 6px 20px rgba(22,163,74,0.35)" : "0 6px 20px rgba(201,75,44,0.35)",transition:"all 0.25s" }}>
               {isApproved ? "View My Profile" : "Re-upload NIN"}
@@ -952,6 +978,12 @@ const StarRating=({rating,size=12})=>(<div style={{display:'flex',gap:1}}>{[1,2,
 //    review — any review counts, not just positive ones — so a star fills
 //    gradually as reviews come in rather than jumping straight to full.
 const TRUST_STAR_REVIEWS_PER_STAR=3;
+// Verified sellers (NIN-approved and/or community-trusted) surface above
+// unverified ones in the Vendors tab. A stable sort keeps everyone's
+// relative order within each group, so search/filtering built on top of an
+// already-sorted list (Array#filter preserves order) stays verified-first too.
+const isVerifiedVendor=v=>!!(v?.ninApproved||v?.communityTrusted);
+const sortVendorsVerifiedFirst=list=>[...list].sort((a,b)=>(isVerifiedVendor(b)?1:0)-(isVerifiedVendor(a)?1:0));
 function getTrustStarTier({ninApproved,communityTrusted,reviews}){
   const cap=1+(ninApproved?1:0)+(communityTrusted?1:0);
   const filled=Math.min(Math.floor((reviews||0)/TRUST_STAR_REVIEWS_PER_STAR),cap);
@@ -1815,6 +1847,7 @@ export default function Product(){
   });
   const fileInputRef=useRef(null);
   const searchSaveTimer=useRef(null);
+  const searchReqId=useRef(0);
   const[allProducts,setAllProducts]=useState([]);const[displayedProducts,setDisplayedProducts]=useState([]);
   const[productViewCounts,setProductViewCounts]=useState({});
   const[isFiltered,setIsFiltered]=useState(false);const[searchQuery,setSearchQuery]=useState('');const[uploadedImage,setUploadedImage]=useState(null);
@@ -1979,8 +2012,9 @@ export default function Product(){
         final.forEach(v=>{v.reviews=reviewCountMap[v.id]||0;v.ninApproved=approvedSet.has(v.id);});
       }
       setVendorStats({vendors:final.length,products:(products||[]).length,buyers:800,reviews:reviewCount});
-      setVendors(final);setFilteredVendors(final);setProductViewCounts(viewCountMap);return final;
-    }catch(err){const derived=buildVendorsFromProducts(products||[]);setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
+      const sortedFinal=sortVendorsVerifiedFirst(final);
+      setVendors(sortedFinal);setFilteredVendors(sortedFinal);setProductViewCounts(viewCountMap);return sortedFinal;
+    }catch(err){const derived=sortVendorsVerifiedFirst(buildVendorsFromProducts(products||[]));setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
   },[buildVendorsFromProducts,countUniqueBuyers]);
 
   const fetchProducts=useCallback(async(locationId='all')=>{
@@ -2040,16 +2074,16 @@ export default function Product(){
     let cancelled=false;
     (async()=>{
       try{
-        const{data:verRow}=await supabase.from('seller_verifications').select('status').eq('seller_id',sellerId).maybeSingle();
+        const{data:verRow}=await supabase.from('seller_verifications').select('status,rejection_reason').eq('seller_id',sellerId).maybeSingle();
         if(cancelled||!verRow)return;
-        const{status}=verRow;
+        const{status,rejection_reason}=verRow;
         if(status!=='approved'&&status!=='rejected')return;
         const seenKey=`bagsearch_nin_status_seen_${sellerId}`;
         let lastSeen=null;
         try{lastSeen=localStorage.getItem(seenKey);}catch{/* localStorage unavailable — proceed anyway */}
         if(lastSeen===status)return;
         try{localStorage.setItem(seenKey,status);}catch{/* ignore */}
-        setNinStatusModal(status);
+        setNinStatusModal({status,reason:rejection_reason||''});
       }catch(err){console.error('Failed to check NIN status for notification:',err);}
     })();
     return()=>{cancelled=true;};
@@ -2058,9 +2092,15 @@ export default function Product(){
   const applyFilters=useCallback((q,cat,loc,prods)=>{let r=[...prods];if(q.trim()){const lowQ=q.toLowerCase();r=r.filter(p=>p.name.toLowerCase().includes(lowQ)||(p.sub||'').toLowerCase().includes(lowQ)||(p.seller||'').toLowerCase().includes(lowQ)||(p.description||'').toLowerCase().includes(lowQ)||(p.brand||'').toLowerCase().includes(lowQ)||(p.category||'').toLowerCase().includes(lowQ)||(p.condition||'').toLowerCase().includes(lowQ));}if(cat!=='all')r=r.filter(p=>p.category===cat);if(loc.id!=='all'){const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];if(loc.id==='lagos')r=r.filter(p=>LAGOS_IDS.includes(p.location));else r=r.filter(p=>p.location===loc.id);}return r;},[]);
   const saveSearch=useCallback((q)=>{if(!user||!q.trim()||q.trim().length<2)return;clearTimeout(searchSaveTimer.current);searchSaveTimer.current=setTimeout(async()=>{try{await supabase.from('search_history').insert({user_id:user.id,query:q.trim(),type:'text'});}catch(_){}},1500);},[user]);
 
-  const handleSearch=async q=>{setSearchQuery(q);if(q.trim()){const results=await searchProducts(q,selectedLocation.id,activeCategory);setDisplayedProducts(results);}else{const combined=await fetchProducts(selectedLocation.id);setAllProducts(combined);setDisplayedProducts(combined);}setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
-  const handleCategoryChange=async id=>{setActiveCategory(id);if(searchQuery.trim()){const results=await searchProducts(searchQuery,selectedLocation.id,id);setDisplayedProducts(results);}else{const combined=await fetchProducts(selectedLocation.id);setAllProducts(combined);setDisplayedProducts(combined);}setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
-  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);if(searchQuery.trim()){const results=await searchProducts(searchQuery,loc.id,activeCategory);setDisplayedProducts(results);}else{const combined=await fetchProducts(loc.id);setAllProducts(combined);setDisplayedProducts(combined);}};
+  // Every keystroke fires its own async lookup with nothing to guarantee they resolve in
+  // the order they were sent — on a slower connection an earlier, broader query (e.g. a
+  // single typed letter) can resolve *after* a later, more specific one and clobber it,
+  // which reads as "results only show once I stop typing / finish the whole name". Each
+  // call stamps a shared request id and bails if a newer call has since started, so only
+  // the latest keystroke's response is ever applied — partial names resolve live.
+  const handleSearch=async q=>{setSearchQuery(q);const reqId=++searchReqId.current;let results;if(q.trim()){results=await searchProducts(q,selectedLocation.id,activeCategory);}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
+  const handleCategoryChange=async id=>{setActiveCategory(id);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=await searchProducts(searchQuery,selectedLocation.id,id);}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
+  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=await searchProducts(searchQuery,loc.id,activeCategory);}else{results=await fetchProducts(loc.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);};
   const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false);setVisualSearchCount(0);};
   const handleImageUpload=async e=>{
     const f=e.target.files[0];if(!f)return;
@@ -2152,6 +2192,9 @@ export default function Product(){
         @keyframes vsFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes vsTagIn{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes vsCountIn{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+        @keyframes ninConfettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(420px) rotate(360deg);opacity:0}}
+        @keyframes ninBadgePop{0%{transform:scale(0.5) rotate(-10deg);opacity:0}60%{transform:scale(1.15) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+        @keyframes ninShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
         .hide-scrollbar::-webkit-scrollbar{height:0;width:0;display:none;}
         .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
         .cat-track::-webkit-scrollbar{height:0;}.cat-track{-ms-overflow-style:none;scrollbar-width:none;}
@@ -2171,7 +2214,7 @@ export default function Product(){
       {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
-      <NinStatusModal status={ninStatusModal} open={!!ninStatusModal} onClose={()=>setNinStatusModal(null)} navigate={navigate}/>
+      <NinStatusModal status={ninStatusModal?.status} reason={ninStatusModal?.reason} open={!!ninStatusModal} onClose={()=>setNinStatusModal(null)} navigate={navigate}/>
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
