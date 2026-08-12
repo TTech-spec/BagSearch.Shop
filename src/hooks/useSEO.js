@@ -73,6 +73,7 @@ export function useSEO({
 
     // ── Twitter Card ───────────────────────────────────────────────────────
     setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:site', '@bagsearch1');
     setMeta('twitter:title', fullTitle);
     setMeta('twitter:description', description);
     setMeta('twitter:image', ogImage);

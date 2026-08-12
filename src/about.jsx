@@ -580,7 +580,7 @@ const BagSearchAbout = () => {
           About BagSearch
         </div>
         <h1 className="bs-hero-title">
-          Finding the <em className="bs-hero-em">right bag</em><br/>should be simple
+          Nigeria's <em className="bs-hero-em">Luxury Bag</em><br/>Marketplace
         </h1>
         <p className="bs-hero-sub">
           Upload a picture and let BagSearch instantly find matching bags from thousands of listings. Discover your next favorite bag, compare options, and connect with vendors—all in one place. Vendors can join for free, showcase their collections, and reach more customers through AI-powered visual search.
