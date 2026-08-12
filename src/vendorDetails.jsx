@@ -226,9 +226,7 @@ function IconIdCard({size=12, style={}}) {
 /**
  * Two-tier trust badge shown on a seller's public page.
  * "trusted" = 10+ reviews from distinct logged-in buyers (automatic).
- * "id" = seller submitted a NIN photo that a human manually approved —
- * intentionally labeled "Submitted" rather than "Verified", since it's not
- * an automated government-database check.
+ * "id" = seller submitted a NIN photo that a human manually approved.
  */
 function VerifiedBadge({ variant, index = 0 }) {
   const isTrusted = variant === 'trusted';
@@ -236,7 +234,7 @@ function VerifiedBadge({ variant, index = 0 }) {
     ? 'linear-gradient(135deg,#0d9488,#5eead4)'
     : 'linear-gradient(135deg,#b8860b,#f7d774)';
   const glow = isTrusted ? 'rgba(13,148,136,0.55)' : 'rgba(184,134,11,0.55)';
-  const label = isTrusted ? 'Community Trusted' : 'ID Submitted';
+  const label = isTrusted ? 'Community Trusted' : 'Verified';
   const Icon = isTrusted ? IconShieldCheck : IconIdCard;
   return (
     <span style={{
@@ -1202,7 +1200,7 @@ function MobileStat({ value, label, animate }) {
 // designed to sit on the dark hero gradient and reads poorly on white).
 function MobileVerifiedBadge({ variant }) {
   const isTrusted = variant === 'trusted';
-  const label = isTrusted ? 'Community Trusted' : 'ID Submitted';
+  const label = isTrusted ? 'Community Trusted' : 'Verified';
   const Icon = isTrusted ? IconShieldCheck : IconIdCard;
   const color = isTrusted ? '#0d9488' : '#b45309';
   const bg = isTrusted ? '#ecfdf7' : '#fef9e7';

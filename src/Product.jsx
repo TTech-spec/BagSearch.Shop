@@ -799,7 +799,7 @@ function SellerVerifyNudgeModal({ open, onClose, navigate }) {
         <div style={{ padding:"36px 36px 30px",textAlign:"center" }}>
           <div style={{ width:64,height:64,borderRadius:"50%",background:"#F9DDD0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",color:"#C94B2C" }}><Icons.Star size={28} color="#C94B2C" filled/></div>
           <h2 style={{ fontSize:"1.4rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:10 }}>Get Your Trust Badge</h2>
-          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:22 }}>Buyers trust verified sellers more. Earn a badge either way — upload your NIN for an <strong style={{color:'#1A0A00'}}>ID Submitted</strong> badge, or collect 10 reviews from real buyers for a <strong style={{color:'#1A0A00'}}>Community Trusted</strong> badge.</p>
+          <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom:22 }}>Buyers trust verified sellers more. Earn a badge either way — upload your NIN for a <strong style={{color:'#1A0A00'}}>Verified</strong> badge, or collect 10 reviews from real buyers for a <strong style={{color:'#1A0A00'}}>Community Trusted</strong> badge.</p>
           <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
             <button onClick={()=>{ onClose(); navigate("/seller-profile"); }} style={{ width:"100%",padding:"13px 0",background:"#C94B2C",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow:"0 6px 20px rgba(201,75,44,0.35)",transition:"all 0.25s" }}>Get Verified Now</button>
             <button onClick={onClose} style={{ width:"100%",padding:"12px 0",background:"#FFF5F2",color:"#C94B2C",fontWeight:700,fontSize:13,border:"1px solid #F0C8BB",borderRadius:10,cursor:"pointer",transition:"all 0.2s" }}>Maybe Later</button>
@@ -858,7 +858,7 @@ function NinStatusModal({ status, reason, open, onClose, navigate }) {
           </h2>
           <p style={{ fontSize:13,color:"#888",lineHeight:1.65,marginBottom: isApproved || !reason ? 22 : 10 }}>
             {isApproved
-              ? <>Congratulations — your NIN was approved and your storefront now shows the <strong style={{color:'#1A0A00'}}>ID Submitted</strong> badge. Buyers can see you're a verified seller.</>
+              ? <>Congratulations — your NIN was approved and your storefront now shows the <strong style={{color:'#1A0A00'}}>Verified</strong> badge. Buyers can see you're a verified seller.</>
               : <>Your submitted NIN photo wasn't approved. Please upload a clearer photo of your NIN and resubmit — you can do this from your seller profile.</>}
           </p>
           {!isApproved && reason && (
