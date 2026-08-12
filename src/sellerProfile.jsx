@@ -503,7 +503,7 @@ function compressImageToJpeg(file, maxDim = 1200, quality = 0.75) {
 const NIN_STATUS_META = {
   none:     { label: 'Not submitted',   color: '#9a6348', bg: '#fdf8f5', border: '#f7ece4' },
   pending:  { label: 'Under review',    color: '#a16207', bg: '#fef9c3', border: '#fde68a' },
-  approved: { label: 'ID Submitted',    color: '#16a34a', bg: '#dcfce7', border: '#bbf7d0' },
+  approved: { label: 'Verified',        color: '#16a34a', bg: '#dcfce7', border: '#bbf7d0' },
   rejected: { label: 'Not approved',    color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
 };
 
@@ -593,7 +593,7 @@ function NinVerificationCard({ sellerId, visible }) {
 
         <div style={{ flex: 1, minWidth: 220 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>ID Submitted Badge</p>
+            <p style={{ fontSize: 15, fontWeight: 900, color: C.text }}>Verified Badge</p>
             <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: meta.bg, color: meta.color, border: `1px solid ${meta.border}`, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
               {loading ? '…' : meta.label.toUpperCase()}
             </span>
