@@ -182,7 +182,9 @@ function RootRoute() {
 
   if (loading) return <LoadingSpinner />;
 
-  if (isMobile && !user && !hasSeenOnboarding()) {
+  // Don't redirect crawlers/bots to onboarding — they should always see the homepage
+  const isBot = /bot|crawler|spider|googlebot|bingbot|slurp|duckduck|baidu|yandex|sogou|lighthouse|pagespeed/i.test(navigator.userAgent);
+  if (isMobile && !user && !hasSeenOnboarding() && !isBot) {
     return <Navigate to="/onboarding" replace />;
   }
 
