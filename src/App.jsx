@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { useContext, useEffect, Suspense, lazy } from 'react';
+import { useContext, useEffect, useState, Suspense, lazy } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
@@ -173,22 +173,33 @@ function RegRoute() {
   return <Reg />;
 }
 
-// Root route — Product.jsx is the landing page for all visitors, except
-// first-time mobile guests (logged out, never seen the welcome slides),
-// who are sent through the onboarding tour first.
+// Root route — Product.jsx is always the landing page.
+// First-time mobile guests (logged out, never seen the welcome slides) see the
+// onboarding tour rendered as a full-screen overlay ON TOP of Product, so the
+// URL stays at "/" and Product's useSEO (index, follow) remains active.
+// This prevents crawlers and social bots from ever seeing the noindex onboarding page.
 function RootRoute() {
   const { user, loading } = useContext(AuthContext);
   const isMobile = useIsMobileViewport();
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => isMobile && !hasSeenOnboarding()
+  );
 
   if (loading) return <LoadingSpinner />;
 
-  // Don't redirect crawlers/bots to onboarding — they should always see the homepage
-  const isBot = /bot|crawler|spider|googlebot|bingbot|slurp|duckduck|baidu|yandex|sogou|lighthouse|pagespeed/i.test(navigator.userAgent);
-  if (isMobile && !user && !hasSeenOnboarding() && !isBot) {
-    return <Navigate to="/onboarding" replace />;
-  }
+  // Once auth loads, hide onboarding if the user is already logged in
+  if (showOnboarding && user) setShowOnboarding(false);
 
-  return <Product />;
+  return (
+    <>
+      <Product />
+      {showOnboarding && !user && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+          <Onboarding onDone={() => setShowOnboarding(false)} />
+        </div>
+      )}
+    </>
+  );
 }
 
 function App() {
