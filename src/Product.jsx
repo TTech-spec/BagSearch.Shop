@@ -303,10 +303,7 @@ const LocationContextBar = React.memo(function LocationContextBar({ selectedLoca
             transition: 'box-shadow 0.5s ease',
             position: 'relative',
           }}>
-            {isAll
-              ? <span style={{ fontSize: isMobile ? 16 : 20 }}>🇳🇬</span>
-              : <Icons.MapPin size={isMobile ? 16 : 20} color="white" />
-            }
+            <Icons.MapPin size={isMobile ? 16 : 20} color={isAll ? C.primary : 'white'} />
           </div>
 
           <div>
@@ -1772,31 +1769,40 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
 
 // ─── HEADER (location selector removed — now in LocationContextBar below hero) ─
 function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handleProfileClick, cartCount, setCartOpen, user, handleLogout, isMobile }) {
+  // Mobile: same warm gradient as the welcome/hero panel right below it (same angle
+  // and stops) so the two blend into one continuous surface instead of a white bar
+  // sitting on top of a colored one. Desktop keeps the plain white header.
   return (
-    <header style={{ position:'sticky',top:0,zIndex:50,background:'rgba(255,255,255,0.97)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:`0 1px 20px rgba(200,75,17,0.07)` }}>
-      <div style={{ height:3,background:`linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />
+    <header style={{ position:'sticky',top:0,zIndex:50,background:isMobile?`linear-gradient(165deg,${C.primary} 0%,${C.primaryLight} 55%,${C.primary} 100%)`:'rgba(255,255,255,0.97)',backdropFilter:isMobile?'none':'blur(16px)',WebkitBackdropFilter:isMobile?'none':'blur(16px)',borderBottom:isMobile?'none':`1px solid ${C.borderLight}`,opacity:headerVisible?1:0,transform:headerVisible?'translateY(0)':'translateY(-100%)',transition:'opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)',boxShadow:isMobile?'none':`0 1px 20px rgba(200,75,17,0.07)` }}>
+      {!isMobile && <div style={{ height:3,background:`linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})` }} />}
       <div style={{ maxWidth:1280,margin:'0 auto',padding:isMobile?'0 12px':'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:isMobile?56:60,gap:isMobile?8:16 }}>
         {/* Left: Mobile Menu Button + Logo */}
         <div style={{ display:'flex',alignItems:'center',gap:isMobile?8:12 }}>
           {isMobile && (
             <button onClick={()=>setIsSidebarOpen(true)}
-              style={{ width:38,height:38,borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s',flexShrink:0 }}
-              onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}}
-              onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
+              style={{ width:38,height:38,borderRadius:10,border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.16)',cursor:'pointer',color:'white',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s',flexShrink:0 }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.26)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.16)';}}>
               <Icons.Menu size={20} color="currentColor" />
             </button>
           )}
-          <div style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',flexShrink:0,color:C.primary }} onClick={()=>navigate('/')}>
+          <div style={{ display:'flex',alignItems:'center',gap:8,cursor:'pointer',flexShrink:0,color:isMobile?'white':C.primary }} onClick={()=>navigate('/')}>
             <LogoIcon size={isMobile?'32px':'clamp(34px, 5vw, 50px)'} />
-            <span style={{ fontSize:isMobile?16:20,fontWeight:900,color:C.text,letterSpacing:'-0.5px' }}>Bag<span style={{ color:C.primary }}>Search</span></span>
+            <span style={{ fontSize:isMobile?16:20,fontWeight:900,color:isMobile?'white':C.text,letterSpacing:'-0.5px' }}>Bag<span style={{ color:isMobile?'#ffe3cc':C.primary }}>Search</span></span>
           </div>
         </div>
 
         {/* Spacer */}
         <div style={{ flex:1 }} />
 
-        {/* Shared: mounted once regardless of viewport so its realtime subscription isn't duplicated */}
-        {user && <NotificationsDropdown />}
+        {/* Shared: mounted once regardless of viewport so its realtime subscription isn't duplicated.
+            The dropdown's own bell icon is a fixed dark color, so on mobile it sits on a small
+            white badge for contrast against the orange header instead of recoloring the shared
+            component (which is also used on white backgrounds elsewhere). */}
+        {user && (isMobile
+          ? <div style={{ background:'rgba(255,255,255,0.9)',borderRadius:10 }}><NotificationsDropdown /></div>
+          : <NotificationsDropdown />
+        )}
 
         {/* Desktop actions */}
         <div className="desk-act" style={{ display:isMobile?'none':'flex',alignItems:'center',gap:8 }}>
@@ -1832,11 +1838,11 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
         {isMobile && !user && (
           <div style={{ display:'flex',alignItems:'center',gap:6 }}>
             <button onClick={()=>navigate('/login')}
-              style={{ padding:'6px 12px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
+              style={{ padding:'6px 12px',borderRadius:8,border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.16)',cursor:'pointer',color:'white',fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
               Login
             </button>
             <button onClick={()=>navigate('/register')}
-              style={{ padding:'6px 12px',borderRadius:8,border:'none',background:C.primary,cursor:'pointer',color:'white',fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
+              style={{ padding:'6px 12px',borderRadius:8,border:'none',background:'white',cursor:'pointer',color:C.primary,fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap' }}>
               Register
             </button>
           </div>
@@ -2297,7 +2303,6 @@ export default function Product(){
 
   // Greeting shown in the mobile-only welcome/hero panel below.
   const greetingName=user?(user.user_metadata?.full_name||user.email?.split('@')[0]||'there'):'Guest';
-  const greetingInitial=(greetingName.trim().charAt(0)||'B').toUpperCase();
   const greetingLabel=user?'Welcome Back':'Welcome to BagSearch';
 
    return(
@@ -2437,16 +2442,16 @@ export default function Product(){
             desktop banner above. Bleeds past the page's own side padding so
             it reaches the viewport edges, with rounded bottom corners. */}
         {isMobile && (
-        <div style={{margin:'-24px -12px 20px',opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(-14px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)',background:'linear-gradient(165deg,#0e3f3a 0%,#155a51 55%,#0e3f3a 100%)',borderRadius:'0 0 28px 28px',padding:'18px 16px 22px',position:'relative',overflow:'hidden',boxShadow:'0 12px 32px rgba(14,63,58,0.25)'}}>
-          <div style={{position:'absolute',right:-50,top:-60,width:200,height:200,borderRadius:'50%',background:'rgba(247,215,116,0.12)',filter:'blur(30px)',pointerEvents:'none'}}/>
+        <div style={{margin:'-24px -12px 20px',opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(-14px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)',background:`linear-gradient(165deg,${C.primary} 0%,${C.primaryLight} 55%,${C.primary} 100%)`,borderRadius:'0 0 28px 28px',padding:'18px 16px 22px',position:'relative',overflow:'hidden',boxShadow:'0 12px 32px rgba(200,75,17,0.25)'}}>
+          <div style={{position:'absolute',right:-50,top:-60,width:200,height:200,borderRadius:'50%',background:'rgba(255,255,255,0.12)',filter:'blur(30px)',pointerEvents:'none'}}/>
 
           {/* Greeting row */}
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16,position:'relative'}}>
-            <button onClick={()=>user?handleProfileClick():navigate('/login')} aria-label="Your account" style={{width:44,height:44,borderRadius:'50%',border:'none',cursor:'pointer',background:'linear-gradient(135deg,#f7d774,#c8941f)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:16,color:'#0e3f3a',flexShrink:0,boxShadow:'0 4px 14px rgba(0,0,0,0.25)'}}>
-              {greetingInitial}
+            <button onClick={()=>user?handleProfileClick():navigate('/login')} aria-label="Your account" style={{width:44,height:44,borderRadius:'50%',border:'none',cursor:'pointer',background:'white',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 14px rgba(0,0,0,0.2)'}}>
+              <Icons.User size={20} color={C.primary} />
             </button>
             <div style={{flex:1,minWidth:0}}>
-              <p style={{fontSize:10.5,fontWeight:700,color:'rgba(255,255,255,0.62)',letterSpacing:'0.02em',marginBottom:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingLabel}</p>
+              <p style={{fontSize:10.5,fontWeight:700,color:'rgba(255,255,255,0.75)',letterSpacing:'0.02em',marginBottom:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingLabel}</p>
               <p style={{fontSize:15,fontWeight:800,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingName}</p>
             </div>
           </div>
@@ -2457,12 +2462,12 @@ export default function Product(){
           {/* Discount hero card using the requested photo */}
           <div onClick={()=>navigate('/hot-deals')} style={{marginTop:16,borderRadius:18,overflow:'hidden',position:'relative',minHeight:150,cursor:'pointer',boxShadow:'0 10px 28px rgba(0,0,0,0.28)'}}>
             <img src={mobileHeroImg} alt="" loading="eager" decoding="async" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center'}}/>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg, rgba(14,63,58,0.94) 38%, rgba(14,63,58,0.35) 75%, rgba(14,63,58,0.1) 100%)'}}/>
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg, rgba(160,55,10,0.94) 38%, rgba(160,55,10,0.4) 75%, rgba(160,55,10,0.1) 100%)'}}/>
             <div style={{position:'relative',padding:'20px 100px 20px 18px'}}>
-              <p style={{fontSize:10.5,fontWeight:800,color:'#f7d774',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>Limited Offer</p>
+              <p style={{fontSize:10.5,fontWeight:800,color:'#ffe3cc',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>Limited Offer</p>
               <h3 style={{fontSize:'1.45rem',fontWeight:900,color:'white',lineHeight:1.15,letterSpacing:'-0.02em',marginBottom:8}}>10% Discount<br/>On Your First Order</h3>
-              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.82)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Authentic designer bags, fast & reliable delivery across Nigeria</p>
-              <button onClick={e=>{e.stopPropagation();navigate('/hot-deals');}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:'#0e3f3a',fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Shop Now</button>
+              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.85)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Authentic designer bags, fast & reliable delivery across Nigeria</p>
+              <button onClick={e=>{e.stopPropagation();navigate('/hot-deals');}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:C.primary,fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Shop Now</button>
             </div>
           </div>
         </div>
