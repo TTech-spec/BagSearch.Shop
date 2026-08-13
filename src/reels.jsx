@@ -181,7 +181,7 @@ export default function Reels() {
   const [toast, setToast] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useSEO({ title: 'Reels (Coming Soon) | BagSearch', description: 'A preview of BagSearch Reels — short videos from bag sellers across Nigeria. Coming soon.', url: '/reels' });
+  useSEO({ title: 'Reels (Coming Soon) | BagSearch', description: 'A preview of BagSearch Reels — short videos from bag sellers across Nigeria. Coming soon.', url: '/reels', noindex: true });
 
   const notReady = () => {
     setToast(true);
