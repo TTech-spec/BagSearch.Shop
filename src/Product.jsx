@@ -9,6 +9,7 @@ import LogoIcon from './components/Logo.jsx';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
+import mobileHeroImg from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.jpg';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
@@ -2264,6 +2265,41 @@ export default function Product(){
     return[...withClicks].sort((a,b)=>(productViewCounts[b.id]||0)-(productViewCounts[a.id]||0)).slice(0,10);
   },[allProducts,productViewCounts]);
 
+  // The actual search UI (product search w/ budget+camera, or vendor search) — a single
+  // source of JSX so mobile can relocate it into the new welcome/hero panel below while
+  // desktop keeps it in its original spot, without maintaining two copies of the markup.
+  const searchBarBlock=(<>
+    {activeTab==='products'?(
+      <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
+        <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
+        <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
+        {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.X size={isMobile?12:13} color={C.primary} /></button>}
+        <button onClick={()=>setBudgetOpen(true)} title="Set your budget" style={{position:'relative',width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:`1.5px solid ${budgetActive?C.primary:C.border}`,background:budgetActive?C.primaryBg:C.surfaceDim,color:budgetActive?C.primary:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',fontWeight:900,fontSize:isMobile?14:16}}>
+          ₦
+          {budgetActive&&<span style={{position:'absolute',top:-3,right:-3,width:9,height:9,borderRadius:'50%',background:'#16a34a',border:'2px solid white'}}/>}
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
+        <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}><Icons.Camera size={isMobile?14:16} color="white" /></button>
+      </div>
+    ):(
+      <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
+        <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
+        <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
+        {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}><Icons.X size={13} color={C.textFaint} /></button>}
+      </div>
+    )}
+    {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
+      <img src={uploadedImage} alt="" style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
+      <div style={{flex:1}}><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Image uploaded</p><p style={{fontSize:11,color:C.textMuted}}>Showing visually similar bags</p></div>
+      <button onClick={handleClearSearch} style={{fontSize:12,color:C.primary,fontWeight:700,background:'none',border:'none',cursor:'pointer'}}>Remove</button>
+    </div>}
+  </>);
+
+  // Greeting shown in the mobile-only welcome/hero panel below.
+  const greetingName=user?(user.user_metadata?.full_name||user.email?.split('@')[0]||'there'):'Guest';
+  const greetingInitial=(greetingName.trim().charAt(0)||'B').toUpperCase();
+  const greetingLabel=user?'Welcome Back':'Welcome to BagSearch';
+
    return(
      <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
 
@@ -2313,7 +2349,6 @@ export default function Product(){
         @media(max-width:380px){.product-grid{gap:8px!important;}}
         @media(max-width:720px){.product-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}}
         @media(max-width:768px){.desk-act{display:none!important;}}
-        @media(max-width:640px){.hero-banner{padding:24px 20px!important;}.hero-icons{display:none!important;}}
       `}</style>
 
       {floatMsg&&<div style={{position:'fixed',bottom:32,left:'50%',zIndex:9999,background:floatMsg.type==='danger'?'linear-gradient(135deg,#dc2626,#ef4444)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',padding:'12px 22px',borderRadius:50,fontSize:13,fontWeight:800,whiteSpace:'nowrap',boxShadow:'0 12px 40px rgba(200,75,17,0.45)',animation:'floatUpMsg 2.2s ease both',pointerEvents:'none',display:'flex',alignItems:'center',gap:8}}>
@@ -2377,25 +2412,61 @@ export default function Product(){
 
         {activeTab!=='vendorDetail'&&<>
 
-        {/* Hero */}
-        <div style={{marginBottom:isMobile?20:24,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
-          <div className="hero-banner" style={{background:C.primaryBg,borderRadius:isMobile?16:24,padding:isMobile?'24px 20px':'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
+        {/* Hero — desktop keeps the existing word-cycling banner. */}
+        {!isMobile && (
+        <div style={{marginBottom:24,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
+          <div className="hero-banner" style={{background:C.primaryBg,borderRadius:24,padding:'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
             <div style={{position:'absolute',right:-40,top:-40,width:200,height:200,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
-            <div style={{position:'relative',width:isMobile?'100%':'auto'}}>
-              <h1 style={{fontSize:isMobile?'clamp(1.4rem,5vw,1.8rem)':'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.2,marginBottom:10}}>
+            <div style={{position:'relative',width:'auto'}}>
+              <h1 style={{fontSize:'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.2,marginBottom:10}}>
                 Find Your{' '}
-                <br style={{display:isMobile?'block':'none'}}/>
-                <span style={{color:C.primary,display:'inline-block',minWidth:isMobile?'8ch':'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
+                <span style={{color:C.primary,display:'inline-block',minWidth:'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
               </h1>
-              <p style={{color:C.textMuted,fontSize:isMobile?13:15,fontWeight:500,lineHeight:1.6,maxWidth:isMobile?'100%':380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers. Got a bag to sell? <a href="/register" style={{color:C.primary,fontWeight:700,textDecoration:'underline'}}>List it free</a>.</p>
+              <p style={{color:C.textMuted,fontSize:15,fontWeight:500,lineHeight:1.6,maxWidth:380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers. Got a bag to sell? <a href="/register" style={{color:C.primary,fontWeight:700,textDecoration:'underline'}}>List it free</a>.</p>
             </div>
-            <div className="hero-icons" style={{display:isMobile?'none':'flex',gap:12,position:'relative'}}>
+            <div className="hero-icons" style={{display:'flex',gap:12,position:'relative'}}>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><img src={shoppingBagImg} alt="" loading="lazy" decoding="async" style={{width:38,height:38,objectFit:'contain'}}/></div>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:'translateY(-8px)'}}><Icons.ShoppingBag size={28} color={C.primary} /></div>
               <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><Icons.Sparkles size={28} color={C.primaryLight} /></div>
             </div>
           </div>
         </div>
+        )}
+
+        {/* Mobile-only welcome + search + discount hero panel, replacing the
+            desktop banner above. Bleeds past the page's own side padding so
+            it reaches the viewport edges, with rounded bottom corners. */}
+        {isMobile && (
+        <div style={{margin:'-24px -12px 20px',opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(-14px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)',background:'linear-gradient(165deg,#0e3f3a 0%,#155a51 55%,#0e3f3a 100%)',borderRadius:'0 0 28px 28px',padding:'18px 16px 22px',position:'relative',overflow:'hidden',boxShadow:'0 12px 32px rgba(14,63,58,0.25)'}}>
+          <div style={{position:'absolute',right:-50,top:-60,width:200,height:200,borderRadius:'50%',background:'rgba(247,215,116,0.12)',filter:'blur(30px)',pointerEvents:'none'}}/>
+
+          {/* Greeting row */}
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16,position:'relative'}}>
+            <button onClick={()=>user?handleProfileClick():navigate('/login')} aria-label="Your account" style={{width:44,height:44,borderRadius:'50%',border:'none',cursor:'pointer',background:'linear-gradient(135deg,#f7d774,#c8941f)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:16,color:'#0e3f3a',flexShrink:0,boxShadow:'0 4px 14px rgba(0,0,0,0.25)'}}>
+              {greetingInitial}
+            </button>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontSize:10.5,fontWeight:700,color:'rgba(255,255,255,0.62)',letterSpacing:'0.02em',marginBottom:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingLabel}</p>
+              <p style={{fontSize:15,fontWeight:800,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingName}</p>
+            </div>
+          </div>
+
+          {/* Search — same functional search bar as desktop, relocated here */}
+          <div style={{position:'relative'}}>{searchBarBlock}</div>
+
+          {/* Discount hero card using the requested photo */}
+          <div onClick={()=>navigate('/hot-deals')} style={{marginTop:16,borderRadius:18,overflow:'hidden',position:'relative',minHeight:150,cursor:'pointer',boxShadow:'0 10px 28px rgba(0,0,0,0.28)'}}>
+            <img src={mobileHeroImg} alt="" loading="eager" decoding="async" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center'}}/>
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg, rgba(14,63,58,0.94) 38%, rgba(14,63,58,0.35) 75%, rgba(14,63,58,0.1) 100%)'}}/>
+            <div style={{position:'relative',padding:'20px 100px 20px 18px'}}>
+              <p style={{fontSize:10.5,fontWeight:800,color:'#f7d774',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>Limited Offer</p>
+              <h3 style={{fontSize:'1.45rem',fontWeight:900,color:'white',lineHeight:1.15,letterSpacing:'-0.02em',marginBottom:8}}>10% Discount<br/>On Your First Order</h3>
+              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.82)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Authentic designer bags, fast & reliable delivery across Nigeria</p>
+              <button onClick={e=>{e.stopPropagation();navigate('/hot-deals');}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:'#0e3f3a',fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Shop Now</button>
+            </div>
+          </div>
+        </div>
+        )}
 
         {/* ── LOCATION CONTEXT BAR — creative new placement right below hero ── */}
         <LocationContextBar
@@ -2416,30 +2487,8 @@ export default function Product(){
             ))}
           </div>
 
-          {activeTab==='products'?(
-            <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
-              <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
-              <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.X size={isMobile?12:13} color={C.primary} /></button>}
-              <button onClick={()=>setBudgetOpen(true)} title="Set your budget" style={{position:'relative',width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:`1.5px solid ${budgetActive?C.primary:C.border}`,background:budgetActive?C.primaryBg:C.surfaceDim,color:budgetActive?C.primary:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',fontWeight:900,fontSize:isMobile?14:16}}>
-                ₦
-                {budgetActive&&<span style={{position:'absolute',top:-3,right:-3,width:9,height:9,borderRadius:'50%',background:'#16a34a',border:'2px solid white'}}/>}
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
-              <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}><Icons.Camera size={isMobile?14:16} color="white" /></button>
-            </div>
-          ):(
-            <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
-              <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
-              <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-              {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}><Icons.X size={13} color={C.textFaint} /></button>}
-            </div>
-          )}
-          {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
-            <img src={uploadedImage} alt="" style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
-            <div style={{flex:1}}><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Image uploaded</p><p style={{fontSize:11,color:C.textMuted}}>Showing visually similar bags</p></div>
-            <button onClick={handleClearSearch} style={{fontSize:12,color:C.primary,fontWeight:700,background:'none',border:'none',cursor:'pointer'}}>Remove</button>
-          </div>}
+          {/* Mobile's copy of this search bar now lives in the welcome/hero panel above. */}
+          {!isMobile&&searchBarBlock}
         </div>
 
         {/* PRODUCTS TAB */}
