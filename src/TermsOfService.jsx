@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useSEO } from './hooks/useSEO';
 
 const C = {
   primary: '#c84b11',
@@ -12,6 +13,13 @@ const C = {
 };
 
 function TermsOfService() {
+  useSEO({
+    title: 'Terms of Service | BagSearch',
+    description: 'Read the BagSearch Terms of Service covering account use, buyer and seller responsibilities, prohibited activities, payments, and Nigerian governing law.',
+    type: 'website',
+    url: '/terms-of-service',
+  });
+
   return (
     <div style={{ minHeight: '100vh', background: '#fdf8f4', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Header */}
