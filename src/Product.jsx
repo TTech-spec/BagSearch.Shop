@@ -2275,6 +2275,9 @@ export default function Product(){
   // source of JSX so mobile can relocate it into the new welcome/hero panel below while
   // desktop keeps it in its original spot, without maintaining two copies of the markup.
   const searchBarBlock=(<>
+    {/* Always mounted (not just on the products tab) so the visual-search hero
+        card below can trigger it regardless of which tab is active. */}
+    <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
     {activeTab==='products'?(
       <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
         <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
@@ -2284,7 +2287,6 @@ export default function Product(){
           ₦
           {budgetActive&&<span style={{position:'absolute',top:-3,right:-3,width:9,height:9,borderRadius:'50%',background:'#16a34a',border:'2px solid white'}}/>}
         </button>
-        <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
         <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}><Icons.Camera size={isMobile?14:16} color="white" /></button>
       </div>
     ):(
@@ -2459,15 +2461,17 @@ export default function Product(){
           {/* Search — same functional search bar as desktop, relocated here */}
           <div style={{position:'relative'}}>{searchBarBlock}</div>
 
-          {/* Discount hero card using the requested photo */}
-          <div onClick={()=>navigate('/hot-deals')} style={{marginTop:16,borderRadius:18,overflow:'hidden',position:'relative',minHeight:150,cursor:'pointer',boxShadow:'0 10px 28px rgba(0,0,0,0.28)'}}>
+          {/* Visual-search hero card using the requested photo — promotes the real
+              upload-a-photo feature (same fileInputRef/handleImageUpload as the
+              camera button in the search bar above) instead of a fake discount claim. */}
+          <div onClick={()=>{setActiveTab('products');fileInputRef.current?.click();}} style={{marginTop:16,borderRadius:18,overflow:'hidden',position:'relative',minHeight:150,cursor:'pointer',boxShadow:'0 10px 28px rgba(0,0,0,0.28)'}}>
             <img src={mobileHeroImg} alt="" loading="eager" decoding="async" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center'}}/>
             <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg, rgba(160,55,10,0.94) 38%, rgba(160,55,10,0.4) 75%, rgba(160,55,10,0.1) 100%)'}}/>
             <div style={{position:'relative',padding:'20px 100px 20px 18px'}}>
-              <p style={{fontSize:10.5,fontWeight:800,color:'#ffe3cc',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>Limited Offer</p>
-              <h3 style={{fontSize:'1.45rem',fontWeight:900,color:'white',lineHeight:1.15,letterSpacing:'-0.02em',marginBottom:8}}>10% Discount<br/>On Your First Order</h3>
-              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.85)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Authentic designer bags, fast & reliable delivery across Nigeria</p>
-              <button onClick={e=>{e.stopPropagation();navigate('/hot-deals');}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:C.primary,fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Shop Now</button>
+              <p style={{fontSize:10.5,fontWeight:800,color:'#ffe3cc',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>AI Visual Search</p>
+              <h3 style={{fontSize:'1.45rem',fontWeight:900,color:'white',lineHeight:1.15,letterSpacing:'-0.02em',marginBottom:8}}>Upload Your Dream Bag<br/>Get The Similar One</h3>
+              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.85)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Snap a photo of any bag you love — we'll instantly find matching styles from real sellers</p>
+              <button onClick={e=>{e.stopPropagation();setActiveTab('products');fileInputRef.current?.click();}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:C.primary,fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Upload Photo</button>
             </div>
           </div>
         </div>
