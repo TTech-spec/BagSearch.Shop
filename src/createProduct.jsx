@@ -360,9 +360,11 @@ export default function CreateProduct() {
 
       navigate('/products');
     } catch (err) {
-      const secureError = SecureErrorHandler.handleError(err, 'product_creation');
-      setError(secureError.message);
-      setShowAdGate(false);
+      // Log the real error to console so it's visible during debugging
+      console.error('[performListing] Upload failed:', err?.message || err);
+      // Show the actual error message directly — don't hide it behind a generic string
+      const msg = err?.message || 'Upload failed. Please try again.';
+      setError(msg);
     } finally {
       setUploading(false);
     }
