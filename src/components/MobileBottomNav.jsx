@@ -69,8 +69,6 @@ function IconUser({ size = 22, color = 'currentColor' }) {
  * Floating pill bottom nav, mobile only — Home / Reels / [List Bag or New
  * Arrivals] / Cart / Profile. Rendered once in App.jsx (outside <Routes>) so
  * it persists across pages.
- * Reels (src/reels.jsx) is a "coming soon" preview of the feature's UI —
- * flagged with a small green dot until it's actually live.
  * The third slot is "List Bag" for sellers, or "New Arrivals" for everyone
  * else, since buyers don't have anything to list. Cart and New Arrivals have
  * no page of their own — both reuse Product.jsx's existing location-state
@@ -101,7 +99,7 @@ export default function MobileBottomNav() {
       onClick: () => navigate('/products'),
     },
     {
-      key: 'reels', label: 'Reels', Icon: IconReels, isNew: true,
+      key: 'reels', label: 'Reels', Icon: IconReels,
       active: location.pathname === '/reels',
       onClick: () => navigate('/reels'),
     },

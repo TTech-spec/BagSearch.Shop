@@ -285,7 +285,7 @@ function App() {
           <Route path="/vendor/:id" element={<VendorDetails />} />
           <Route path="/seller/:slug" element={<VendorDetails />} />
 
-          {/* Reels preview - public, coming soon */}
+          {/* Reels — short bag videos from sellers */}
           <Route path="/reels" element={<Reels />} />
 
           {/* Create Product - protected behind login */}
