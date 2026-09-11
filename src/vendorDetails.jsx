@@ -751,7 +751,7 @@ export default function VendorDetails() {
 
   return (
     <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#fdf4ee 0%,white 40%)',fontFamily:"'Manrope',sans-serif",color:C.text}}>
-      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes badgePop{from{opacity:0;transform:scale(0.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
+      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes badgePop{from{opacity:0;transform:scale(0.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes vendorNameGlow{0%,100%{text-shadow:0 0 20px rgba(249,115,22,0.3),0 0 40px rgba(200,75,17,0.1)}50%{text-shadow:0 0 30px rgba(249,115,22,0.5),0 0 60px rgba(200,75,17,0.2)}}@keyframes vendorUnderline{from{width:0}to{width:100%}}@keyframes vendorSparkle{0%,100%{opacity:0.6;transform:scale(0.8) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(180deg)}}@keyframes vendorLetterIn{from{opacity:0;transform:translateY(14px) scale(0.7)}to{opacity:1;transform:translateY(0) scale(1)}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
 
       {/* ── Header ── */}
       <header style={{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #f7ece4',position:'sticky',top:0,zIndex:50,padding:'0 20px',height:60,display:'flex',alignItems:'center',gap:12}}>
@@ -796,7 +796,32 @@ export default function VendorDetails() {
                   : <IconStore size={40} style={{color:'rgba(255,255,255,0.7)'}}/>}
               </div>
               <div style={{flex:1,minWidth:200}}>
-                <h2 style={{fontSize:26,fontWeight:900,color:'white',letterSpacing:'-0.03em',marginBottom:4}}>{name}</h2>
+                <div style={{position:'relative',display:'inline-block',marginBottom:6}}>
+                  <h2 style={{
+                    fontFamily:"'Playfair Display','Manrope',serif",
+                    fontSize:'clamp(24px,3.2vw,34px)',fontWeight:900,color:'white',
+                    letterSpacing:'-0.03em',lineHeight:1.15,
+                    animation:'vendorNameGlow 3s ease-in-out infinite',
+                    position:'relative',
+                  }}>
+                    {name.split('').map((ch,i)=>(
+                      <span key={i} style={{display:'inline-block',animation:`vendorLetterIn 0.4s cubic-bezier(0.34,1.56,0.64,1) ${i*0.04}s both`}}>
+                        {ch===' '?' ':ch}
+                      </span>
+                    ))}
+                    <span style={{
+                      position:'absolute',top:-6,right:-18,
+                      animation:'vendorSparkle 2.5s ease-in-out infinite',
+                      fontSize:14,lineHeight:1,
+                    }}>✨</span>
+                  </h2>
+                  <div style={{
+                    height:3,borderRadius:3,
+                    background:'linear-gradient(90deg,#f97316,#ea580c,#f9a825)',
+                    animation:'vendorUnderline 0.8s cubic-bezier(0.22,1,0.36,1) 0.5s both',
+                    marginTop:2,
+                  }}/>
+                </div>
                 <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:8}}>
                   {profile.community_trusted && <VerifiedBadge variant="trusted" index={0}/>}
                   {idVerified && <VerifiedBadge variant="id" index={profile.community_trusted?1:0}/>}
@@ -1251,9 +1276,13 @@ function MobileVendorProfile({
   return (
     <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: "'Manrope',sans-serif", color: C.text, paddingBottom: 48 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         @keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes mobileNameGlow{0%,100%{text-shadow:0 2px 12px rgba(200,75,17,0.15)}50%{text-shadow:0 2px 20px rgba(200,75,17,0.3)}}
+        @keyframes mobileUnderline{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+        @keyframes mobileSparkle{0%,100%{opacity:0.5;transform:scale(0.7) rotate(0deg)}50%{opacity:1;transform:scale(1.3) rotate(180deg)}}
+        @keyframes mobileLetterReveal{from{opacity:0;transform:translateY(8px) rotateX(40deg)}to{opacity:1;transform:translateY(0) rotateX(0deg)}}
       `}</style>
 
       {/* Sticky header */}
@@ -1305,9 +1334,40 @@ function MobileVendorProfile({
         <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }} transition={{ duration: 0.4 }}
           style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: 23, fontWeight: 900, letterSpacing: '-0.03em', color: C.text, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              {name} <span style={{ fontSize: 19 }}>👜</span>
-            </h1>
+            <div style={{ position: 'relative', display: 'inline-block', marginBottom: 4 }}>
+              <h1 style={{
+                fontFamily: "'Playfair Display','Manrope',serif",
+                fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em',
+                color: C.text, lineHeight: 1.15,
+                animation: 'mobileNameGlow 3s ease-in-out infinite',
+                display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap',
+                perspective: '600px',
+              }}>
+                {name.split('').map((ch, i) => (
+                  <span key={i} style={{
+                    display: 'inline-block',
+                    animation: `mobileLetterReveal 0.35s cubic-bezier(0.34,1.56,0.64,1) ${i * 0.035}s both`,
+                    background: i < 1 ? 'linear-gradient(135deg,#c84b11,#f97316)' : 'none',
+                    WebkitBackgroundClip: i < 1 ? 'text' : 'unset',
+                    WebkitTextFillColor: i < 1 ? 'transparent' : C.text,
+                    backgroundClip: i < 1 ? 'text' : 'unset',
+                  }}>
+                    {ch === ' ' ? ' ' : ch}
+                  </span>
+                ))}
+                <span style={{
+                  fontSize: 18, lineHeight: 1,
+                  animation: 'mobileSparkle 2.5s ease-in-out infinite',
+                  display: 'inline-block',
+                }}>👜</span>
+              </h1>
+              <div style={{
+                height: 3, borderRadius: 3, marginTop: 2,
+                background: 'linear-gradient(90deg,#c84b11,#f97316,#f9a825)',
+                transformOrigin: 'left',
+                animation: 'mobileUnderline 0.7s cubic-bezier(0.22,1,0.36,1) 0.4s both',
+              }} />
+            </div>
             {loc && (
               <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5, color: C.textMuted, fontWeight: 600 }}>
                 <IconMapPin size={12} style={{ color: C.textFaint }} /> {loc.name}
