@@ -8,6 +8,7 @@ import { uploadLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { getImageEmbeddingFromSource, upsertProductImageEmbedding } from './services/imageEmbeddings';
 import { useSEO } from './hooks/useSEO';
+import { useUploadLimit, recordUpload } from './hooks/useUploadLimit';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -191,6 +192,7 @@ export default function CreateProduct() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
+  const { canUpload, plan, used, limit, loading: limitLoading } = useUploadLimit('product');
 
   useSEO({
     title: 'Upload Product | BagSearch',
@@ -295,6 +297,7 @@ export default function CreateProduct() {
     e.preventDefault();
     try {
       if (!user) throw new Error('You must be logged in to list a product');
+      if (!canUpload) throw new Error(`You've reached your ${plan === 'free' ? 'Free' : plan} plan limit (${limit} listings). Upgrade your plan at /pricing for unlimited listings.`);
       if (images.length === 0) throw new Error('Please upload at least one image');
 
       const sanitizedName = sanitizeInput(formData.name);
@@ -352,6 +355,9 @@ export default function CreateProduct() {
 
       let { data: insertedData, error: insertError } = await supabase.from('products').insert([insertData]).select();
       if (insertError) throw insertError;
+
+      // Record upload for plan limit tracking
+      await recordUpload(user.id, 'product');
 
       try {
         const inserted = insertedData && insertedData[0];

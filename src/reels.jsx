@@ -7,6 +7,7 @@ import { useSEO } from './hooks/useSEO';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { sanitizeInput } from './utils/securityUtils';
 import { uploadLimiter } from './utils/rateLimiter';
+import { useUploadLimit, recordUpload } from './hooks/useUploadLimit';
 
 // ─── Theme ───────────────────────────────────────────────────────────────────
 const C = { primary: '#c84b11', primaryLight: '#f97316', primaryBg: '#fde8d8', primaryPale: '#fdf4ee' };
@@ -173,6 +174,7 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const fileRef = useRef(null);
+  const { canUpload: canUploadVideo, plan: sellerPlan, used: videosUsed, limit: videoLimit } = useUploadLimit('video');
 
   // Load seller's products to optionally link
   useEffect(() => {
@@ -216,6 +218,10 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
 
   const handleUpload = async () => {
     if (!videoFile || !user) return;
+    if (!canUploadVideo) {
+      setError(`You've reached your daily video limit (${videoLimit} video/day on ${sellerPlan === 'free' ? 'Free' : sellerPlan} plan). Upgrade at /pricing for unlimited uploads.`);
+      return;
+    }
     if (!uploadLimiter.isAllowed(user.id)) {
       setError('Too many uploads. Please wait a minute.');
       return;
@@ -243,6 +249,9 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
 
       const { error: dbErr } = await supabase.from('reels').insert([insertData]);
       if (dbErr) throw dbErr;
+
+      // Record upload for plan limit tracking
+      await recordUpload(user.id, 'video');
 
       handleClose();
       onUploaded();

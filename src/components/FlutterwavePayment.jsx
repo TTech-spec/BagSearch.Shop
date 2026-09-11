@@ -6,6 +6,7 @@
  * and subscription payments (sellers).
  */
 import { useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../services/api';
 
 const FLW_PUBLIC_KEY = 'FLWPUBK-7e4afdcd444955fea510c96d737a5f37-X';
 const SCRIPT_URL = 'https://checkout.flutterwave.com/v3.js';
@@ -74,8 +75,25 @@ export async function payForProduct({
       seller_name: sellerName,
       source: 'bagsearch_checkout',
     },
-    callback: (response) => {
+    callback: async (response) => {
       if (response.status === 'successful' || response.status === 'completed') {
+        // Record payment in Supabase
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('payments').insert({
+              user_id: user.id,
+              payment_type: 'product_purchase',
+              amount,
+              flutterwave_tx_ref: txRef,
+              flutterwave_tx_id: response.transaction_id?.toString() || '',
+              flutterwave_status: response.status,
+              product_id: productId || null,
+              seller_id: null,
+              metadata: { product_name: productName, seller_name: sellerName },
+            });
+          }
+        } catch (err) { console.warn('Payment record failed:', err); }
         onSuccess?.(response);
       }
     },
@@ -124,8 +142,39 @@ export async function payForSubscription({
       user_id: userId,
       source: 'bagsearch_subscription',
     },
-    callback: (response) => {
+    callback: async (response) => {
       if (response.status === 'successful' || response.status === 'completed') {
+        try {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const expiresAt = new Date();
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+            // Upsert subscription
+            await supabase.from('seller_subscriptions').upsert({
+              user_id: authUser.id,
+              plan,
+              status: 'active',
+              flutterwave_tx_ref: txRef,
+              flutterwave_tx_id: response.transaction_id?.toString() || '',
+              amount,
+              started_at: new Date().toISOString(),
+              expires_at: expiresAt.toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+
+            // Record payment
+            await supabase.from('payments').insert({
+              user_id: authUser.id,
+              payment_type: 'subscription',
+              plan,
+              amount,
+              flutterwave_tx_ref: txRef,
+              flutterwave_tx_id: response.transaction_id?.toString() || '',
+              flutterwave_status: response.status,
+            });
+          }
+        } catch (err) { console.warn('Subscription record failed:', err); }
         onSuccess?.(response);
       }
     },
