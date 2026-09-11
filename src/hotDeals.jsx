@@ -1004,7 +1004,7 @@ export default function HotDeals() {
           padding: '9px 0',
         }}>
           {[...Array(4)].map((_, i) =>
-            ['Flash Sale Today Only', '₦ — Deals Up To 70% Off', '✦ Low Stock Alert', '₦ — Direct Seller Contact', 'Free Delivery ₦2,000+', '✦ New Deals Daily'].map((t, j) => (
+            ['Flash Sale Today Only', '₦ — Deals Up To 70% Off', '✦ Low Stock Alert', '₦ — Direct Seller Contact', '✅ Verified Sellers', '✦ New Deals Daily'].map((t, j) => (
               <span key={`${i}-${j}`} style={{ fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.15em', textTransform: 'uppercase', paddingRight: 40 }}>
                 {t}
               </span>
@@ -1334,7 +1334,7 @@ export default function HotDeals() {
             <div style={{ background: T.bgCard, padding: isMobile ? '40px 28px' : '60px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 28 }}>
               {[
                 { n: '01', text: 'New deals added every day from verified sellers.', accent: T.gold },
-                { n: '02', text: 'Free delivery on all orders over ₦2,000.', accent: T.flame },
+                { n: '02', text: 'Chat sellers directly via WhatsApp to arrange pickup or delivery.', accent: T.flame },
                 { n: '03', text: 'Contact any seller directly via WhatsApp — no middleman.', accent: T.success },
               ].map(item => (
                 <div key={item.n} style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
