@@ -7,6 +7,7 @@ import {
   User, Mail, Phone, Calendar, History, AlertCircle,
   ArrowLeft, Upload, Check, X, Pencil, Loader
 } from 'lucide-react';
+import { useSEO } from './hooks/useSEO';
 
 // ─── Design Tokens — Warm Light Mode ─────────────────────────────────────────
 const T = {
@@ -458,6 +459,14 @@ function DangerZone({ onDelete, visible }) {
 export default function UserProfile() {
   const navigate = useNavigate();
   const { user: authUser } = useContext(AuthContext);
+
+  useSEO({
+    title: 'My Profile | BagSearch',
+    description: 'View and manage your BagSearch profile. Update your account details, preferences, and settings.',
+    type: 'website',
+    noindex: true,
+  });
+
   const [profile,  setProfile ] = useState(null);
   const [history,  setHistory ] = useState([]);
   const [stats,    setStats   ] = useState(null);

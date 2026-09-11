@@ -1,10 +1,18 @@
 import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext.jsx';
+import { useSEO } from './hooks/useSEO';
 
 export default function AuthCallback() {
   const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  useSEO({
+    title: 'Signing In | BagSearch',
+    description: 'Completing your sign-in to BagSearch. Please wait while we verify your account.',
+    type: 'website',
+    noindex: true,
+  });
 
   useEffect(() => {
     if (loading) return;

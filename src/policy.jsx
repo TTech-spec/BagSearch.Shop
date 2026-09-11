@@ -170,7 +170,7 @@ export default function Policy() {
     description: 'Read BagSearch\'s privacy policy, terms of service, and marketplace guidelines. Learn how we handle your data, seller responsibilities, and platform rules.',
     keywords: 'privacy policy, terms of service, BagSearch rules, marketplace policy, data protection, seller guidelines, buyer rights',
     url: '/policy',
-    type: 'WebPage',
+    type: 'website',
     schema: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
