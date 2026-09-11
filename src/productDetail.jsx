@@ -350,7 +350,7 @@ export default function ProductDetail() {
     keywords: seoKeywords,
     image: product?.images?.[0],
     url: product ? productPath(product.name, product.rawId) : null,
-    type: 'website',
+    type: 'product',
     schema: seoSchema,
   });
 

@@ -314,7 +314,7 @@ export default function Contact() {
   // SEO for contact page
   useSEO({
     title: 'Contact Us | BagSearch Support Nigeria',
-    description: 'Need help? Contact BagSearch support via WhatsApp (+234 8138734530) or email (info@bagsearch.shop). Available Mon–Sat 8AM–8PM. Get answers about orders, listings, and accounts.',
+    description: 'Need help? Contact BagSearch support via WhatsApp (+234 8138734530) or email info@bagsearch.shop. Mon–Sat 8AM–8PM.',
     keywords: 'contact BagSearch, BagSearch support, help center, WhatsApp Nigeria, email BagSearch, customer service',
     url: '/contact',
     type: 'website',

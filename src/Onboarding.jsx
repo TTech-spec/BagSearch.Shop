@@ -111,11 +111,15 @@ function DesktopFallback() {
 }
 
 export default function Onboarding({ onDone } = {}) {
+  // When rendered as an overlay (onDone is set), skip useSEO entirely so
+  // Product's index/follow meta stays active. This prevents Googlebot
+  // Smartphone (fresh visitor, no localStorage) from seeing noindex on "/".
   useSEO({
     title: 'Welcome | BagSearch',
     description:
       'Find any bag by photo, or reach buyers and sellers across Africa. Get started with BagSearch.',
     noindex: true,
+    skip: !!onDone,
   });
 
   const navigate = useNavigate();

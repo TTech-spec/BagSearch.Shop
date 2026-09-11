@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { useSEO } from './hooks/useSEO';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const C = {
@@ -541,6 +542,13 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const handleBack = onBack || (() => navigate('/products'));
+
+  useSEO({
+    title: 'Seller Products | BagSearch Nigeria',
+    description: 'Browse bags from this seller on BagSearch Nigeria. View their collection, prices, and contact via WhatsApp.',
+    type: 'website',
+    noindex: true,
+  });
 
   // Default vendor for demo
   const [vendor, setVendor] = useState(propVendor || location.state?.vendor || {

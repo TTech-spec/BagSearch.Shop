@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from './services/api';
+import { useSEO } from './hooks/useSEO';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -27,6 +28,13 @@ const ResetPassword = () => {
   const location = useLocation();
   const phone = location.state?.phone;
   const method = location.state?.method || 'phone';
+
+  useSEO({
+    title: 'Reset Password | BagSearch',
+    description: 'Create a new password for your BagSearch account. Enter your new password to regain access.',
+    type: 'website',
+    noindex: true,
+  });
 
   const [formData, setFormData] = useState({
     verificationCode: '',
