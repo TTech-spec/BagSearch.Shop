@@ -84,6 +84,14 @@ const IconGlobe = ({ size = 22, stroke = '#c84b11', strokeWidth = 2 }) => (
   </svg>
 );
 
+const IconVideoReels = ({ size = 22, stroke = '#c84b11', strokeWidth = 2 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="18" rx="4" />
+    <path d="M2 8h20M7 3 7 8M17 3 17 8" />
+    <polygon points="10.5 12 15 14.5 10.5 17" fill={stroke} stroke="none" />
+  </svg>
+);
+
 const IconShopper = ({ size = 28, stroke = '#c84b11', strokeWidth = 2 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={strokeWidth}>
     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
@@ -679,16 +687,22 @@ const BagSearchAbout = () => {
                 delay: 'bs-d1'
               },
               {
+                IconComp: IconVideoReels,
+                title: 'Video Reels',
+                text: 'Sellers can upload short videos of their bags so buyers see products in action — every angle, every detail. Reach more customers with engaging content.',
+                delay: 'bs-d2'
+              },
+              {
                 IconComp: IconChart,
                 title: 'Seller Empowerment',
                 text: 'Vendors grow through subscriptions and premium listings that boost visibility. Your products reach buyers actively looking for what you sell.',
-                delay: 'bs-d2'
+                delay: 'bs-d3'
               },
               {
                 IconComp: IconGlobe,
                 title: 'Built for Local Reality',
                 text: 'We understand how people buy and sell in emerging markets — from Lagos Island to Kano, from Abuja to Port Harcourt.',
-                delay: 'bs-d3'
+                delay: ''
               },
             ].map(({ IconComp, title, text, delay }, i) => (
               <div key={i} ref={addReveal(6 + i)} className={`bs-reveal ${delay} bs-diff-card`}>
@@ -766,7 +780,7 @@ const BagSearchAbout = () => {
                 <IconStore size={24} stroke="white" strokeWidth={2} />
               </div>
               <h4>I'm a Seller</h4>
-              <p>List your products, reach 10,000+ active buyers, and grow your bag business with tools built specifically for the Nigerian market.</p>
+              <p>List your products, upload video reels of your bags, reach 10,000+ active buyers, and grow your bag business with tools built specifically for the Nigerian market.</p>
               <div className="bs-cta-seller">
                 Start Selling Free
                 <IconArrow size={13} stroke="#f97316" strokeWidth={2.5} />
