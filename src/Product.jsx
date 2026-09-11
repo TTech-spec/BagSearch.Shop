@@ -593,13 +593,14 @@ const WaIcon = ({ size = 16, color = 'currentColor' }) => (
   </svg>
 );
 
-function FeedbackBox({ onClose }) {
+function FeedbackBox({ onClose, user }) {
   const [phase, setPhase] = useState(0);
   const [step, setStep] = useState('rate');
   const [rating, setRating] = useState(0);
   const [hovRating, setHovRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [particles, setParticles] = useState([]);
   useEffect(() => { setTimeout(() => setPhase(1), 50); setTimeout(() => setPhase(2), 100); }, []);
   const handleClose = () => { setPhase(3); setTimeout(() => onClose(), 450); };
@@ -609,11 +610,31 @@ function FeedbackBox({ onClose }) {
     setParticles(p); setTimeout(() => setParticles([]), 1200);
   };
   const handleRating = (r) => { setRating(r); setTimeout(() => setStep('comment'), 400); };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!comment.trim() && rating === 0) return;
     setSubmitting(true);
-    setTimeout(() => { setSubmitting(false); setStep('thanks'); spawnParticles(); }, 900);
-    setTimeout(() => handleClose(), 3200);
+    setSubmitError('');
+    try {
+      const feedbackData = {
+        rating,
+        comment: comment.trim(),
+        user_id: user?.id || null,
+        user_email: user?.email || null,
+        user_name: user?.user_metadata?.full_name || user?.user_metadata?.name || 'Anonymous',
+        page: window.location.pathname,
+        user_agent: navigator.userAgent,
+      };
+      const { error } = await supabase.from('feedback').insert([feedbackData]);
+      if (error) throw error;
+      setSubmitting(false);
+      setStep('thanks');
+      spawnParticles();
+      setTimeout(() => handleClose(), 3200);
+    } catch (err) {
+      console.error('Feedback submit error:', err);
+      setSubmitting(false);
+      setSubmitError('Failed to send. Please try again.');
+    }
   };
   const ratingLabels = ['','Terrible 😤','Bad 😕','Okay 😐','Good 😊','Amazing! 🤩'];
   const ratingColors = ['','#dc2626','#ea580c','#d97706','#16a34a','#c84b11'];
@@ -635,7 +656,7 @@ function FeedbackBox({ onClose }) {
             <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
               <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:20 }}>
                 <div style={{ width:48,height:48,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 18px rgba(200,75,17,0.35)' }}><Icons.MessageCircle size={22} color="white" /></div>
-                <div><h3 style={{ fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.03em',margin:0,marginBottom:2 }}>Share Your Thoughts</h3><p style={{ fontSize:13,color:C.textMuted,fontWeight:500,margin:0 }}>How's your BagSearch experience?</p></div>
+                <div><h3 style={{ fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.03em',margin:0,marginBottom:2 }}>Help Us Improve</h3><p style={{ fontSize:13,color:C.textMuted,fontWeight:500,margin:0 }}>What can we improve about BagSearch?</p></div>
               </div>
               <div style={{ display:'flex',justifyContent:'center',gap:8,marginBottom:14,padding:'8px 0' }}>
                 {[1,2,3,4,5].map(star=>(
@@ -677,6 +698,7 @@ function FeedbackBox({ onClose }) {
               <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%',padding:'14px 0',borderRadius:14,border:'none',background:submitting?C.primaryBg:'linear-gradient(135deg,#c84b11,#f97316)',color:submitting?C.primary:'white',fontWeight:900,fontSize:15,cursor:submitting?'default':'pointer',transition:'all 0.35s',boxShadow:submitting?'none':'0 6px 20px rgba(200,75,17,0.38)',display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}>
                 {submitting?<><div style={{ width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(200,75,17,0.3)',borderTopColor:C.primary,animation:'ldSpin 0.7s linear infinite' }}/>Sending…</>:<>Send Feedback <Icons.Sparkles size={16} color="white" /></>}
               </button>
+              {submitError&&<p style={{ color:'#dc2626',fontSize:12,fontWeight:600,textAlign:'center',marginTop:10 }}>{submitError}</p>}
             </div>
           )}
           {step==='thanks'&&(
@@ -2369,7 +2391,7 @@ export default function Product(){
       <TrustBadgeUpsellModal open={!!trustUpsellModal} reviewCount={trustUpsellModal?.reviewCount||0} onClose={()=>setTrustUpsellModal(null)} navigate={navigate}/>
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
-      {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)}/>}
+      {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)} user={user}/>}
       {!cartOpen&&<WelcomeBackBadge user={user} isMobile={isMobile}/>}
       {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp} isMobile={isMobile}/>}
       {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)} isMobile={isMobile}/>}
