@@ -1480,7 +1480,7 @@ export default function SellerProfile() {
     description: 'Manage your BagSearch seller account. View product views, buyer inquiries, update listings, and track your performance.',
     keywords: 'seller dashboard, manage listings, seller profile, product views, buyer inquiries, bag business',
     url: '/seller-profile',
-    type: 'WebPage',
+    type: 'website',
     noindex: true // Prevent indexing of private dashboard
   });
 

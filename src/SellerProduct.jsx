@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { useSEO } from './hooks/useSEO';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const C = {
@@ -541,6 +542,13 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const handleBack = onBack || (() => navigate('/products'));
+
+  useSEO({
+    title: 'Seller Products | BagSearch Nigeria',
+    description: 'Browse bags from this seller on BagSearch Nigeria. View their collection, prices, and contact via WhatsApp.',
+    type: 'website',
+    noindex: true,
+  });
 
   // Default vendor for demo
   const [vendor, setVendor] = useState(propVendor || location.state?.vendor || {
@@ -1351,10 +1359,9 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
                     letterSpacing: "-0.01em" 
                   }}>🏆 Vendor Highlights</h4>
                   {[
-                    { icon: "📦", label: "Fast Dispatch", desc: "Ships within 24hrs", color: C.success, bg: C.successBg },
                     { icon: "✅", label: "Quality Assured", desc: "100% authentic items", color: "#2563eb", bg: "#dbeafe" },
-                    { icon: "↩️", label: "Easy Returns", desc: "7-day return policy", color: C.primary, bg: C.primaryBg },
-                    { icon: "💬", label: "Responsive", desc: "Replies within 1 hour", color: "#7c3aed", bg: "#ede9fe" },
+                    { icon: "💬", label: "Direct Chat", desc: "WhatsApp seller directly", color: C.primary, bg: C.primaryBg },
+                    { icon: "🔒", label: "Verified Seller", desc: "Trusted profile", color: "#7c3aed", bg: "#ede9fe" },
                   ].map(h => (
                     <div key={h.label} style={{ 
                       display: "flex", 

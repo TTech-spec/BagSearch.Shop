@@ -7,6 +7,7 @@ import { sanitizeInput, validateRequired, validatePrice, validatePhone } from '.
 import { uploadLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { getImageEmbeddingFromSource, upsertProductImageEmbedding } from './services/imageEmbeddings';
+import { useSEO } from './hooks/useSEO';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -190,6 +191,13 @@ export default function CreateProduct() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
+
+  useSEO({
+    title: 'Upload Product | BagSearch',
+    description: 'List your bag for sale on BagSearch Nigeria. Upload photos, set your price, and reach buyers across Nigeria.',
+    type: 'website',
+    noindex: true,
+  });
 
   const [formData, setFormData] = useState({
     name: '', brand: '', category: '',

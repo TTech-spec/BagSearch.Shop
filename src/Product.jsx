@@ -369,7 +369,7 @@ const LocationContextBar = React.memo(function LocationContextBar({ selectedLoca
           </span>
           <span style={{ width:3,height:3,borderRadius:'50%',background:C.border,display:'inline-block' }} />
           <span style={{ fontSize:11,color:C.textFaint,fontWeight:600 }}>
-            🚚 Free delivery over ₦2,000
+            💬 Chat sellers directly via WhatsApp
           </span>
           {!isAll && (
             <>
@@ -490,7 +490,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Help</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/'},{label:'Contact Us',href:'/contact'},{label:'Delivery Info',href:'/'},{label:'Returns Policy',href:'/'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/terms-of-service'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/'},{label:'Contact Us',href:'/contact'},{label:'Help Centre',href:'/contact'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/terms-of-service'}])}</ul>
           <div style={{ marginTop:18,background:'rgba(37,211,102,0.1)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(37,211,102,0.2)' }}>
             <p style={{ fontSize:11,fontWeight:800,color:'#4ade80',marginBottom:3,display:'flex',alignItems:'center',gap:6 }}>
               <Icons.MessageCircle size={14} color="#4ade80" /> WhatsApp Support
@@ -582,7 +582,6 @@ const CATEGORIES = [
 ];
 
 const CURRENCY_SYMBOL = '₦';
-const FREE_DELIVERY_THRESHOLD = 2000;
 const formatCurrency = (value, options = {}) => {
   const normalized = Number(value ?? 0);
   return `${CURRENCY_SYMBOL}${normalized.toLocaleString(undefined, { maximumFractionDigits: 0, ...options })}`;
@@ -1607,7 +1606,7 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
                 {added?<><Icons.Check size={13} color="white" />Added!</>:<><Icons.ShoppingBag size={13} color="white" /> Grab This Deal</>}
               </button>
             </div>
-            <p style={{marginTop:12,fontSize:isSmall?9:11,color:C.textFaint,fontWeight:600}}>⚡ Only {product.quantity??'few'} left · Free delivery over ₦{FREE_DELIVERY_THRESHOLD.toLocaleString()}</p>
+            <p style={{marginTop:12,fontSize:isSmall?9:11,color:C.textFaint,fontWeight:600}}>⚡ Only {product.quantity??'few'} left · Chat seller for delivery details</p>
           </div>
         </div>
         {products.length>1&&(
@@ -1686,7 +1685,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
   const[chatting,setChatting]=useState(false);const[chatted,setChatted]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
-  const delivery=total>=FREE_DELIVERY_THRESHOLD?0:15;const tax=total*0.075;const grand=total+delivery+tax;
+  const tax=total*0.075;const grand=total+tax;
   const handleChatSellers=()=>{
     if(!cartItems.length)return;if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
     setChatting(true);
@@ -1722,10 +1721,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
                 <Icons.X size={15} color="currentColor" />
               </button>
             </div>
-            {total>0&&total<FREE_DELIVERY_THRESHOLD&&<div style={{background:'white',borderRadius:12,padding:'11px 14px',border:`1px solid ${C.primaryBorder}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11,color:C.primary,fontWeight:700}}>Add {formatCurrency(FREE_DELIVERY_THRESHOLD-total)} more for FREE delivery</span></div>
-              <div style={{height:7,background:C.primaryBg,borderRadius:99,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.min((total/FREE_DELIVERY_THRESHOLD)*100,100)}%`,background:'linear-gradient(90deg,#c84b11,#f97316)',borderRadius:99,transition:'width 0.7s ease'}}/></div>
-            </div>}
           </div>
           <div style={{flex:1,overflowY:'auto',padding:'18px 22px'}}>
             {cartItems.length===0?(
@@ -1744,7 +1739,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
-              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Est. Delivery',v:delivery===0?'FREE ✨':formatCurrency(delivery),g:delivery===0},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
+              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
                 <div key={r.l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.textMuted,fontWeight:500}}>{r.l}</span><span style={{fontSize:13,fontWeight:700,color:r.g?'#15803d':C.text}}>{r.v}</span></div>
               ))}
               <div style={{height:1,background:C.border,margin:'11px 0'}}/>

@@ -350,7 +350,7 @@ export default function ProductDetail() {
     keywords: seoKeywords,
     image: product?.images?.[0],
     url: product ? productPath(product.name, product.rawId) : null,
-    type: 'website',
+    type: 'product',
     schema: seoSchema,
   });
 
@@ -768,8 +768,8 @@ export default function ProductDetail() {
             {/* Trust strip */}
             <div style={{ display:'flex',borderRadius:14,border:`1.5px solid ${C.borderLight}`,overflow:'hidden',background:C.surfaceDim }}>
               {[
-                { icon:'🚚', label:'Free Delivery', sub:'Orders over ₦50,000' },
-                { icon:'🔄', label:'Easy Returns', sub:'30-day policy' },
+                { icon:'💬', label:'Direct Chat', sub:'WhatsApp seller' },
+                { icon:'✅', label:'Verified Sellers', sub:'Trusted profiles' },
                 { icon:'🔒', label:'Secure Pay', sub:'256-bit SSL' },
               ].map((item, i) => (
                 <div key={i} style={{ flex:1,padding:'11px 8px',textAlign:'center',borderLeft:i>0?`1px solid ${C.borderLight}`:'none' }}>

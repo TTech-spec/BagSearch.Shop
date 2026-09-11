@@ -43,8 +43,11 @@ export function useSEO({
   type = 'website',
   schema,
   noindex = false,
-}) {
+  skip = false,
+} = {}) {
   useEffect(() => {
+    // When skip is true, do nothing — lets a parent component's useSEO stay active
+    if (skip) return;
     const fullTitle = title || SITE_NAME;
     const canonicalUrl = url ? `${SITE_URL}${url}` : SITE_URL;
     const ogImage = image || `${SITE_URL}/og-default.jpg`;
@@ -111,7 +114,7 @@ export function useSEO({
       const schemaScript = document.getElementById(schemaId);
       if (schemaScript) schemaScript.remove();
     };
-  }, [title, description, keywords, image, url, type, schema, noindex]);
+  }, [title, description, keywords, image, url, type, schema, noindex, skip]);
 }
 
 export { SITE_URL, SITE_NAME };

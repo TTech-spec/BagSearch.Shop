@@ -8,6 +8,7 @@ import {
   Package, AlignLeft, Check, AlertCircle, Loader
 } from "lucide-react";
 import { supabase } from "./services/api";
+import { useSEO } from './hooks/useSEO';
 
 // ―― Palette ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 const C = {
@@ -961,6 +962,14 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
 // ―― Main page ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 export default function SellerListings() {
   const navigate   = useNavigate();
+
+  useSEO({
+    title: 'My Listings | BagSearch Seller Dashboard',
+    description: 'Manage your bag listings on BagSearch. Edit, update, or remove your products from your seller dashboard.',
+    type: 'website',
+    noindex: true,
+  });
+
   const [listings, setListings]     = useState([]);
   const [loading,  setLoading]      = useState(true);
   const [filter,   setFilter]       = useState("all");
