@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from './context/AuthContext';
 import { supabase, searchProducts } from './services/api';
@@ -2045,6 +2045,10 @@ export default function Product(){
 
   useEffect(()=>{const h=()=>setWindowWidth(window.innerWidth);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
+
+  // Support ?q= URL param for Google Sitelinks Search Box and direct links
+  const[urlSearchParams]=useSearchParams();
+  useEffect(()=>{const q=urlSearchParams.get('q');if(q&&q.trim()){setSearchQuery(q.trim());handleSearch(q.trim());}},[]);// eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(()=>{
     if(!vendorRouteParam)return;
