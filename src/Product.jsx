@@ -6,6 +6,7 @@ import { supabase, searchProducts } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
+import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
@@ -1189,6 +1190,7 @@ function CategoryPill({cat,isActive,onClick,index}){
 }
 
 function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}){
+  const{user}=useContext(AuthContext);
   const[ref,vis]=useScrollReveal();
   const[hov,setHov]=useState(false);
   const[added,setAdded]=useState(false);
@@ -1242,6 +1244,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
               const productLink=`${window.location.origin}/products/${product.id}`;
               const msg=`Hi! I'm interested in *${product.name}* 👜\n💰 Price: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (sale)':'₦'+product.price.toLocaleString()}\n\n🔗 View product: ${productLink}`;
               window.open(buildWhatsAppUrl(number,msg),'_blank','noopener,noreferrer');
+              setTimeout(()=>triggerGoogleReviewSurvey({ email: user?.email||'', productName: product.name||'', productId: product.id||'' }), 1500);
             }}
             style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
