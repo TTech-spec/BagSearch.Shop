@@ -1,546 +1,299 @@
 <!--
-  Mobile Vendor Profile Redesign — BagSearch.Shop
-  390×844 phone frame · All SVG icons · CSS animations
+  Vendors Tab Redesign — BagSearch.Shop Products Page
+  390px mobile · All SVG icons · CSS animations
   Matching: Manrope, Playfair Display, #c84b11 / #f97316 warm palette
 -->
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Manrope', system-ui, -apple-system, sans-serif; background: #fdf8f5; -webkit-font-smoothing: antialiased; }
+    a { color: #c84b11; } a:hover { color: #92400e; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(200,75,17,0.25); } 50% { box-shadow: 0 0 0 8px rgba(200,75,17,0); } }
+    @keyframes slideCount { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</helmet>
 
-  :root {
-    --primary: #c84b11;
-    --primaryLight: #f97316;
-    --primaryBg: #fde8d8;
-    --primaryPale: #fdf4ee;
-    --primaryBorder: #f9c4a0;
-    --surface: #ffffff;
-    --surfaceDim: #fdf8f5;
-    --border: #f0d9cc;
-    --borderLight: #f7ece4;
-    --text: #1a0a00;
-    --textMid: #5c3317;
-    --textMuted: #9a6348;
-    --textFaint: #c4957a;
-  }
+<div style="width: 390px; min-height: 1560px; background: #fdf8f5; padding: 16px 16px 40px; overflow: hidden;">
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Manrope', sans-serif;
-    background: var(--surface);
-    color: var(--text);
-    width: 390px;
-    min-height: 844px;
-    overflow-x: hidden;
-  }
-
-  /* ── Animations ── */
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes nameGlow {
-    0%, 100% { text-shadow: 0 2px 12px rgba(200,75,17,0.15); }
-    50% { text-shadow: 0 2px 24px rgba(200,75,17,0.35); }
-  }
-  @keyframes underlineGrow {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-  }
-  @keyframes sparkleRotate {
-    0%, 100% { opacity: 0.6; transform: scale(0.8) rotate(0deg); }
-    50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
-  }
-  @keyframes letterReveal {
-    from { opacity: 0; transform: translateY(10px) rotateX(40deg); }
-    to { opacity: 1; transform: translateY(0) rotateX(0deg); }
-  }
-  @keyframes pulseRing {
-    0% { box-shadow: 0 0 0 0 rgba(200,75,17,0.3); }
-    70% { box-shadow: 0 0 0 8px rgba(200,75,17,0); }
-    100% { box-shadow: 0 0 0 0 rgba(200,75,17,0); }
-  }
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-  @keyframes countUp {
-    from { opacity: 0; transform: translateY(12px) scale(0.8); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  @keyframes badgeSlide {
-    from { opacity: 0; transform: translateX(-12px) scale(0.9); }
-    to { opacity: 1; transform: translateX(0) scale(1); }
-  }
-  @keyframes tabIndicator {
-    from { transform: scaleX(0.6); opacity: 0.5; }
-    to { transform: scaleX(1); opacity: 1; }
-  }
-  @keyframes gridItemIn {
-    from { opacity: 0; transform: scale(0.88); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  @keyframes avatarBounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.04); }
-  }
-  @keyframes floatUp {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-
-  .anim-1 { animation: fadeSlideUp 0.5s ease-out 0.1s both; }
-  .anim-2 { animation: fadeSlideUp 0.5s ease-out 0.18s both; }
-  .anim-3 { animation: fadeSlideUp 0.5s ease-out 0.26s both; }
-  .anim-4 { animation: fadeSlideUp 0.5s ease-out 0.34s both; }
-  .anim-5 { animation: fadeSlideUp 0.5s ease-out 0.42s both; }
-  .anim-6 { animation: fadeSlideUp 0.5s ease-out 0.5s both; }
-  .anim-7 { animation: fadeSlideUp 0.5s ease-out 0.58s both; }
-
-  /* ── Sticky Header ── */
-  .header {
-    position: sticky; top: 0; z-index: 30;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px;
-    background: rgba(255,255,255,0.94);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--borderLight);
-  }
-  .header-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: none; background: var(--surfaceDim);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: transform 0.15s, background 0.2s;
-  }
-  .header-btn:active { transform: scale(0.88); background: var(--primaryBg); }
-  .header-title { font-size: 14px; font-weight: 800; color: var(--text); }
-
-  /* ── Identity Section ── */
-  .identity {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    gap: 14px; padding: 20px 20px 0;
-  }
-  .identity-info { flex: 1; min-width: 0; }
-  .vendor-name-wrap { position: relative; display: inline-block; margin-bottom: 4px; }
-  .vendor-name {
-    font-family: 'Playfair Display', 'Manrope', serif;
-    font-size: 24px; font-weight: 900; letter-spacing: -0.03em;
-    color: var(--text); line-height: 1.15;
-    animation: nameGlow 3s ease-in-out infinite;
-    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-    perspective: 600px;
-  }
-  .vendor-name .letter {
-    display: inline-block;
-    animation: letterReveal 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  .vendor-name .letter-first {
-    background: linear-gradient(135deg, #c84b11, #f97316);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .vendor-name .sparkle-icon {
-    display: inline-flex; align-items: center;
-    animation: sparkleRotate 2.5s ease-in-out infinite;
-  }
-  .name-underline {
-    height: 3px; border-radius: 3px; margin-top: 2px;
-    background: linear-gradient(90deg, #c84b11, #f97316, #f9a825);
-    transform-origin: left;
-    animation: underlineGrow 0.7s cubic-bezier(0.22,1,0.36,1) 0.4s both;
-  }
-  .location {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 12.5px; color: var(--textMuted); font-weight: 600;
-    margin-top: 6px;
-  }
-  .avatar-wrap {
-    width: 84px; height: 84px; border-radius: 50%;
-    background: var(--surfaceDim);
-    border: 3px solid var(--primaryBorder);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
-    animation: pulseRing 2s ease-in-out infinite, avatarBounce 3s ease-in-out infinite;
-  }
-  .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-
-  /* ── Badges ── */
-  .badges {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    padding: 14px 20px 0;
-  }
-  .badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 20;
-    font-size: 10.5px; font-weight: 800;
-  }
-  .badge-trusted {
-    background: #ecfdf7; border: 1px solid #99f6e4; color: #0d9488;
-    animation: badgeSlide 0.4s ease-out 0.3s both;
-  }
-  .badge-verified {
-    background: #fef9e7; border: 1px solid #fde68a; color: #b45309;
-    animation: badgeSlide 0.4s ease-out 0.4s both;
-  }
-
-  /* ── Stats Row ── */
-  .stats-row {
-    display: flex; justify-content: space-around;
-    padding: 16px 20px; margin: 18px 20px 0;
-    border-top: 1px solid var(--borderLight);
-    border-bottom: 1px solid var(--borderLight);
-  }
-  .stat { text-align: center; }
-  .stat-value {
-    font-size: 20px; font-weight: 900; color: var(--text);
-    letter-spacing: -0.04em; line-height: 1;
-    animation: countUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  .stat-value.d1 { animation-delay: 0.3s; }
-  .stat-value.d2 { animation-delay: 0.4s; }
-  .stat-value.d3 { animation-delay: 0.5s; }
-  .stat-label {
-    font-size: 10.5px; color: var(--textFaint); font-weight: 600;
-    margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em;
-  }
-
-  /* ── Action Buttons ── */
-  .actions {
-    display: flex; gap: 10px;
-    padding: 0 20px; margin-top: 18px;
-  }
-  .btn-primary {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 13px 0; border-radius: 14; border: none;
-    background: linear-gradient(135deg, var(--primary), var(--primaryLight));
-    color: white; font-weight: 800; font-size: 14px;
-    cursor: pointer; text-decoration: none;
-    box-shadow: 0 8px 20px rgba(200,75,17,0.32);
-    transition: transform 0.15s, box-shadow 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .btn-primary::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 2.5s ease-in-out infinite;
-  }
-  .btn-primary:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(200,75,17,0.2); }
-  .btn-secondary {
-    flex: 1; padding: 13px 0; border-radius: 14;
-    border: 1.5px solid var(--border); background: var(--surfaceDim);
-    color: var(--textMid); font-weight: 800; font-size: 14px;
-    cursor: pointer; transition: transform 0.15s, background 0.2s;
-  }
-  .btn-secondary:active { transform: scale(0.96); background: var(--primaryBg); }
-
-  /* ── Bio Section ── */
-  .bio {
-    padding: 0 20px; margin-top: 20px;
-  }
-  .bio-text {
-    font-size: 13.5px; color: var(--textMid);
-    line-height: 1.7; margin-bottom: 10px;
-  }
-  .category-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .cat-tag {
-    font-size: 11px; font-weight: 700;
-    padding: 4px 11px; border-radius: 20;
-    background: var(--primaryBg); color: var(--primary);
-    border: 1px solid var(--primaryBorder);
-    transition: transform 0.2s, background 0.2s;
-  }
-  .cat-tag:hover { transform: translateY(-1px); background: #fbdbc5; }
-
-  /* ── Tab Switcher ── */
-  .tab-bar {
-    position: sticky; top: 65px; z-index: 20;
-    background: white; padding: 4px 20px 12px;
-    margin-top: 20px;
-  }
-  .tab-container {
-    position: relative; display: flex;
-    background: var(--surfaceDim); border-radius: 14;
-    padding: 4px; border: 1px solid var(--borderLight);
-  }
-  .tab-indicator {
-    position: absolute; top: 4px; bottom: 4px; left: 4px;
-    width: calc(50% - 4px);
-    background: white; border-radius: 11;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    animation: tabIndicator 0.3s ease-out both;
-  }
-  .tab-btn {
-    flex: 1; position: relative; z-index: 1;
-    padding: 10px 0; border: none; background: none;
-    cursor: pointer; font-weight: 800; font-size: 13px;
-    transition: color 0.2s;
-    font-family: 'Manrope', sans-serif;
-  }
-  .tab-btn.active { color: var(--primary); }
-  .tab-btn.inactive { color: var(--textMuted); }
-
-  /* ── Product Grid ── */
-  .products-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 2px; padding: 14px 2px 0;
-  }
-  .product-card {
-    position: relative; aspect-ratio: 3/4;
-    overflow: hidden; cursor: pointer;
-    background: var(--primaryBg);
-  }
-  .product-card img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-    transition: transform 0.3s ease;
-  }
-  .product-card:hover img { transform: scale(1.05); }
-  .product-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55) 100%);
-    pointer-events: none;
-  }
-  .product-price {
-    position: absolute; left: 6px; bottom: 6px;
-    color: white; font-size: 11.5px; font-weight: 800;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
-  }
-  .discount-badge {
-    position: absolute; top: 5px; right: 5px;
-    background: var(--primary); color: white;
-    font-size: 8.5px; font-weight: 800;
-    padding: 2px 6px; border-radius: 20;
-    display: flex; align-items: center; gap: 2px;
-  }
-
-  /* Grid item stagger animation */
-  .product-card:nth-child(1) { animation: gridItemIn 0.35s ease-out 0.1s both; }
-  .product-card:nth-child(2) { animation: gridItemIn 0.35s ease-out 0.14s both; }
-  .product-card:nth-child(3) { animation: gridItemIn 0.35s ease-out 0.18s both; }
-  .product-card:nth-child(4) { animation: gridItemIn 0.35s ease-out 0.22s both; }
-  .product-card:nth-child(5) { animation: gridItemIn 0.35s ease-out 0.26s both; }
-  .product-card:nth-child(6) { animation: gridItemIn 0.35s ease-out 0.3s both; }
-  .product-card:nth-child(7) { animation: gridItemIn 0.35s ease-out 0.34s both; }
-  .product-card:nth-child(8) { animation: gridItemIn 0.35s ease-out 0.38s both; }
-  .product-card:nth-child(9) { animation: gridItemIn 0.35s ease-out 0.42s both; }
-</style>
-
-<!-- ═══════════ STICKY HEADER ═══════════ -->
-<header class="header anim-1">
-  <button class="header-btn" aria-label="Back">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-    </svg>
-  </button>
-  <span class="header-title">Vendor Profile</span>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <button class="header-btn" aria-label="More options">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>
-      </svg>
-    </button>
-    <button class="header-btn" aria-label="Share profile">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-      </svg>
-    </button>
-  </div>
-</header>
-
-<!-- ═══════════ IDENTITY ROW ═══════════ -->
-<div class="identity anim-2">
-  <div class="identity-info">
-    <div class="vendor-name-wrap">
-      <h1 class="vendor-name">
-        <span class="letter letter-first" style="animation-delay:0s">L</span><span class="letter" style="animation-delay:0.035s">u</span><span class="letter" style="animation-delay:0.07s">x</span><span class="letter" style="animation-delay:0.105s">e</span><span class="letter" style="animation-delay:0.14s">&nbsp;</span><span class="letter" style="animation-delay:0.175s">B</span><span class="letter" style="animation-delay:0.21s">a</span><span class="letter" style="animation-delay:0.245s">g</span><span class="letter" style="animation-delay:0.28s">s</span>
-        <span class="sparkle-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
-          </svg>
-        </span>
-      </h1>
-      <div class="name-underline"></div>
+  <!-- ═══ Tab Toggle ═══ -->
+  <div style="display: flex; background: white; border: 1.5px solid #f0d9cc; border-radius: 12px; padding: 5px; gap: 4px; margin-bottom: 22px; box-shadow: 0 2px 10px rgba(200,75,17,0.07);">
+    <div style="flex: 1; padding: 9px 12px; border-radius: 8px; background: transparent; color: #9a6348; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Products
     </div>
-    <div class="location">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/>
-      </svg>
-      Lagos, Nigeria
+    <div style="flex: 1; padding: 9px 12px; border-radius: 8px; background: linear-gradient(135deg, #c84b11, #f97316); color: white; font-weight: 800; font-size: 12px; box-shadow: 0 4px 16px rgba(200,75,17,0.4); transform: scale(1.02); display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Vendors
     </div>
   </div>
 
-  <div class="avatar-wrap">
-    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fde8d8,#fdf4ee);">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
+  <!-- ═══ Header ═══ -->
+  <div style="margin-bottom: 20px; animation: fadeInUp 0.5s ease both;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      <div style="width: 18px; height: 2.5px; background: linear-gradient(90deg, #c84b11, #f97316); border-radius: 2px;"></div>
+      <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #c4957a;">Our Sellers</span>
     </div>
+    <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: 800; color: #1a0a00; letter-spacing: -0.03em; margin-bottom: 6px;">Meet Our Vendors</h2>
+    <p style="font-size: 12.5px; color: #9a6348; font-weight: 500; line-height: 1.55;">Trusted sellers with verified identities and happy customers across Nigeria</p>
+  </div>
+
+  <!-- ═══ Stats Banner (2x2) ═══ -->
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; animation: fadeInUp 0.5s ease 0.08s both;">
+    <div style="background: white; border-radius: 14px; padding: 12px 14px; border: 1.5px solid #f7ece4; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(200,75,17,0.04);">
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #fde8d8; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div><div style="font-size: 19px; font-weight: 900; color: #c84b11; letter-spacing: -0.02em; line-height: 1; animation: slideCount 0.5s ease 0.3s both;">24</div><div style="font-size: 10px; color: #c4957a; font-weight: 700; margin-top: 2px;">Vendors</div></div>
+    </div>
+    <div style="background: white; border-radius: 14px; padding: 12px 14px; border: 1.5px solid #f7ece4; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(200,75,17,0.04);">
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #fde8d8; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </div>
+      <div><div style="font-size: 19px; font-weight: 900; color: #c84b11; letter-spacing: -0.02em; line-height: 1; animation: slideCount 0.5s ease 0.4s both;">186</div><div style="font-size: 10px; color: #c4957a; font-weight: 700; margin-top: 2px;">Products</div></div>
+    </div>
+    <div style="background: white; border-radius: 14px; padding: 12px 14px; border: 1.5px solid #a7f3d0; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(22,163,74,0.04);">
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #dcfce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div><div style="font-size: 19px; font-weight: 900; color: #15803d; letter-spacing: -0.02em; line-height: 1; animation: slideCount 0.5s ease 0.5s both;">800+</div><div style="font-size: 10px; color: #c4957a; font-weight: 700; margin-top: 2px;">Happy Buyers</div></div>
+    </div>
+    <div style="background: white; border-radius: 14px; padding: 12px 14px; border: 1.5px solid #fed7aa; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(194,65,12,0.04);">
+      <div style="width: 36px; height: 36px; border-radius: 10px; background: #ffedd5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#c2410c" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+      </div>
+      <div><div style="font-size: 19px; font-weight: 900; color: #c2410c; letter-spacing: -0.02em; line-height: 1; animation: slideCount 0.5s ease 0.6s both;">47</div><div style="font-size: 10px; color: #c4957a; font-weight: 700; margin-top: 2px;">Reviews</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ Search ═══ -->
+  <div style="display: flex; align-items: center; background: white; border: 1.5px solid #f0d9cc; border-radius: 12px; padding: 10px 12px; gap: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 22px; animation: fadeInUp 0.5s ease 0.15s both;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span style="flex: 1; font-size: 13px; color: #c4957a; font-weight: 500;">Search vendors...</span>
+  </div>
+
+  <!-- ═══ Vendor Cards ═══ -->
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+
+    <!-- ─── Card 1: Verified + Top Rated ─── -->
+    <div style="background: white; border-radius: 20px; overflow: hidden; border: 1.5px solid #f7ece4; box-shadow: 0 4px 20px rgba(200,75,17,0.06); animation: fadeInUp 0.55s ease 0.2s both;">
+      <div style="height: 72px; background: linear-gradient(135deg, #c84b11 0%, #e8762b 50%, #f97316 100%); position: relative; overflow: hidden;">
+        <div style="position: absolute; inset: 0; opacity: 0.08; background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px); background-size: 20px 20px;"></div>
+        <div style="position: absolute; top: 10px; right: 12px; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 800; color: white; display: flex; align-items: center; gap: 4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+          Top Rated
+        </div>
+      </div>
+      <div style="margin-top: -30px; padding: 0 16px;">
+        <div style="width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #fde8d8, #fdf4ee); display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 14px rgba(0,0,0,0.1); position: relative; animation: pulseGlow 3s ease-in-out infinite;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #16a34a; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 8px 16px 16px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; margin-top: 12px;">
+          <div>
+            <h3 style="font-size: 15.5px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; margin-bottom: 4px;">Luxury Lane Bags</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a6348" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size: 11px; color: #9a6348; font-weight: 500;">Lagos</span></div>
+              <span style="width: 3px; height: 3px; border-radius: 50%; background: #f0d9cc;"></span>
+              <span style="font-size: 11px; color: #c4957a; font-weight: 500;">Since 2023</span>
+            </div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 1px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            </div>
+            <div style="font-size: 11px; font-weight: 800; color: #c84b11; margin-top: 2px;">3/3</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: #dcfce7; color: #15803d; border: 1px solid #a7f3d0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            NIN Verified
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: #fde8d8; color: #c84b11; border: 1px solid #f9c4a0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c84b11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Community Trusted
+          </span>
+        </div>
+        <p style="font-size: 12px; color: #5c3317; line-height: 1.65; margin-bottom: 10px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">Premium designer bags and accessories. Authentic luxury items sourced directly from top international brands.</p>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px;">
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Luxury</span>
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Designer</span>
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Tote Bags</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;">
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">342</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Views</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">23</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Reviews</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">18</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Products</div>
+          </div>
+        </div>
+        <div style="width: 100%; padding: 11px 0; border-radius: 12px; background: linear-gradient(135deg, #c84b11, #f97316); color: white; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 16px rgba(200,75,17,0.3); display: flex; align-items: center; justify-content: center; gap: 6px;">
+          View Products
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Card 2: NIN Verified, not Top Rated ─── -->
+    <div style="background: white; border-radius: 20px; overflow: hidden; border: 1.5px solid #f7ece4; box-shadow: 0 4px 20px rgba(200,75,17,0.06); animation: fadeInUp 0.55s ease 0.35s both;">
+      <div style="height: 72px; background: linear-gradient(135deg, #6B3F2A 0%, #A67C52 50%, #C19A6B 100%); position: relative; overflow: hidden;">
+        <div style="position: absolute; inset: 0; opacity: 0.08; background-image: radial-gradient(circle at 30% 40%, white 1px, transparent 1px); background-size: 18px 18px;"></div>
+      </div>
+      <div style="margin-top: -30px; padding: 0 16px;">
+        <div style="width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #f5e6d8, #ede0d4); display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 14px rgba(0,0,0,0.1); position: relative;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B3F2A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div style="position: absolute; bottom: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #16a34a; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 8px 16px 16px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; margin-top: 12px;">
+          <div>
+            <h3 style="font-size: 15.5px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; margin-bottom: 4px;">Adaeze Collections</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a6348" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size: 11px; color: #9a6348; font-weight: 500;">Abuja</span></div>
+              <span style="width: 3px; height: 3px; border-radius: 50%; background: #f0d9cc;"></span>
+              <span style="font-size: 11px; color: #c4957a; font-weight: 500;">Since 2024</span>
+            </div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 1px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#f97316" stroke="#f97316" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f0d9cc" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            </div>
+            <div style="font-size: 11px; font-weight: 800; color: #c84b11; margin-top: 2px;">2/3</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: #dcfce7; color: #15803d; border: 1px solid #a7f3d0;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            NIN Verified
+          </span>
+        </div>
+        <p style="font-size: 12px; color: #5c3317; line-height: 1.65; margin-bottom: 10px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">Handcrafted leather goods and traditional Nigerian-inspired designs. Every piece tells a story of culture and craftsmanship.</p>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px;">
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Leather</span>
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Handmade</span>
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Crossbody</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;">
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">189</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Views</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">8</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Reviews</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">12</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Products</div>
+          </div>
+        </div>
+        <div style="width: 100%; padding: 11px 0; border-radius: 12px; background: linear-gradient(135deg, #6B3F2A, #A67C52); color: white; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 16px rgba(107,63,42,0.3); display: flex; align-items: center; justify-content: center; gap: 6px;">
+          View Products
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Card 3: Not Verified (New Seller) ─── -->
+    <div style="background: white; border-radius: 20px; overflow: hidden; border: 1.5px solid #f7ece4; box-shadow: 0 4px 20px rgba(200,75,17,0.06); animation: fadeInUp 0.55s ease 0.5s both;">
+      <div style="height: 72px; background: linear-gradient(135deg, #2D6A3F 0%, #3a8a56 50%, #4ade80 100%); position: relative; overflow: hidden;">
+        <div style="position: absolute; inset: 0; opacity: 0.06; background-image: radial-gradient(circle at 60% 30%, white 1px, transparent 1px); background-size: 16px 16px;"></div>
+      </div>
+      <div style="margin-top: -30px; padding: 0 16px;">
+        <div style="width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #dcfce7, #f0fdf4); display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 14px rgba(0,0,0,0.1); position: relative;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2D6A3F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      </div>
+      <div style="padding: 8px 16px 16px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; margin-top: 12px;">
+          <div>
+            <h3 style="font-size: 15.5px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; margin-bottom: 4px;">GreenStyle Hub</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a6348" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size: 11px; color: #9a6348; font-weight: 500;">Port Harcourt</span></div>
+              <span style="width: 3px; height: 3px; border-radius: 50%; background: #f0d9cc;"></span>
+              <span style="font-size: 11px; color: #c4957a; font-weight: 500;">Since 2025</span>
+            </div>
+          </div>
+          <div style="text-align: right; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 1px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f0d9cc" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <span style="display: inline-flex; opacity: 0.4;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f0d9cc" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg></span>
+              <span style="display: inline-flex; opacity: 0.4;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f0d9cc" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg></span>
+            </div>
+            <div style="font-size: 11px; font-weight: 800; color: #c84b11; margin-top: 2px;">0/1</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; color: #9a6348; background: #fdf8f5; border: 1px solid #f0d9cc; padding: 3px 8px; border-radius: 20px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a6348" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Not Verified
+          </span>
+        </div>
+        <p style="font-size: 12px; color: #5c3317; line-height: 1.65; margin-bottom: 10px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">Eco-friendly and sustainable bags made from recycled materials. New seller building a reputation for quality.</p>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px;">
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Eco-Friendly</span>
+          <span style="font-size: 10px; font-weight: 700; background: #fdf4ee; color: #c84b11; border: 1px solid #f9c4a0; padding: 3px 9px; border-radius: 20px;">Backpacks</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;">
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">45</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Views</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">0</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Reviews</div>
+          </div>
+          <div style="background: #fdf8f5; border-radius: 10px; padding: 8px 4px; text-align: center; border: 1px solid #f7ece4;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4957a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 2px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <div style="font-size: 14px; font-weight: 900; color: #1a0a00; letter-spacing: -0.02em; line-height: 1;">5</div>
+            <div style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c4957a; margin-top: 2px;">Products</div>
+          </div>
+        </div>
+        <div style="width: 100%; padding: 11px 0; border-radius: 12px; background: linear-gradient(135deg, #2D6A3F, #4ade80); color: white; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 16px rgba(45,106,63,0.3); display: flex; align-items: center; justify-content: center; gap: 6px;">
+          View Products
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
-
-<!-- ═══════════ BADGES ═══════════ -->
-<div class="badges anim-3">
-  <span class="badge badge-trusted">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
-    </svg>
-    Community Trusted
-  </span>
-  <span class="badge badge-verified">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
-    </svg>
-    Verified
-  </span>
-</div>
-
-<!-- ═══════════ STATS ROW ═══════════ -->
-<div class="stats-row anim-4">
-  <div class="stat">
-    <div class="stat-value d1">24</div>
-    <div class="stat-label">Products</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value d2">4/5</div>
-    <div class="stat-label">Trust Stars</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value d3">18</div>
-    <div class="stat-label">Reviews</div>
-  </div>
-</div>
-
-<!-- ═══════════ ACTION BUTTONS ═══════════ -->
-<div class="actions anim-5">
-  <a class="btn-primary" href="#">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.025.507 3.932 1.395 5.608L.144 23.324a.5.5 0 00.611.611l5.716-1.251A11.948 11.948 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.85 0-3.593-.508-5.084-1.396l-.354-.212-3.691.808.808-3.691-.212-.354A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-    </svg>
-    Message
-  </a>
-  <button class="btn-secondary">Share Profile</button>
-</div>
-
-<!-- ═══════════ BIO & CATEGORIES ═══════════ -->
-<div class="bio anim-6">
-  <p class="bio-text">Premium handcrafted leather bags made with love. Every piece tells a story of craftsmanship and elegance. We source only the finest materials for our collection.</p>
-  <div class="category-tags">
-    <span class="cat-tag">Leather</span>
-    <span class="cat-tag">Handbags</span>
-    <span class="cat-tag">Luxury</span>
-    <span class="cat-tag">Tote Bags</span>
-  </div>
-</div>
-
-<!-- ═══════════ TAB SWITCHER ═══════════ -->
-<div class="tab-bar anim-7">
-  <div class="tab-container">
-    <div class="tab-indicator"></div>
-    <button class="tab-btn active">Products (24)</button>
-    <button class="tab-btn inactive">Reviews (18)</button>
-  </div>
-</div>
-
-<!-- ═══════════ PRODUCT GRID ═══════════ -->
-<div class="products-grid">
-  <!-- Row 1 -->
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#d4a07a,#b8744a);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦45,000</span>
-    <span class="discount-badge">
-      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-      20% OFF
-    </span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#c4956e,#a06840);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦32,500</span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#8b6048,#6b4430);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦28,000</span>
-  </div>
-
-  <!-- Row 2 -->
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#e0b090,#c88960);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦55,000</span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#b07850,#8c5c38);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦38,000</span>
-    <span class="discount-badge">
-      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-      15% OFF
-    </span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#d8a878,#bc8c5c);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦42,000</span>
-  </div>
-
-  <!-- Row 3 -->
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#c89870,#a07848);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦29,500</span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#d0a080,#b48860);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦35,000</span>
-  </div>
-  <div class="product-card">
-    <div style="width:100%;height:100%;background:linear-gradient(135deg,#9c7050,#7c5438);display:flex;align-items:center;justify-content:center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-    </div>
-    <div class="product-overlay"></div>
-    <span class="product-price">₦50,000</span>
-    <span class="discount-badge">
-      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-      10% OFF
-    </span>
-  </div>
-</div>
-
-<div style="height:48px;"></div>
+</x-dc>
+</body>
+</html>
