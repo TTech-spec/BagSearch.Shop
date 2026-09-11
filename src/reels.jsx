@@ -511,6 +511,102 @@ function CommentsPanel({ open, onClose, variant, reel, user }) {
   );
 }
 
+// ─── Seller upload banner — shown once per session ───────────────────────────
+function SellerUploadBanner({ onUpload, onDismiss }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      style={{
+        position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 40,
+        width: 'min(380px, 90vw)', padding: '14px 18px', borderRadius: 18,
+        background: 'linear-gradient(135deg, rgba(200,75,17,0.95), rgba(249,115,22,0.95))',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 12px 40px rgba(200,75,17,0.5), 0 0 0 1px rgba(255,255,255,0.15) inset',
+        color: 'white', fontFamily: "'Manrope',sans-serif",
+        display: 'flex', alignItems: 'center', gap: 12,
+      }}
+    >
+      <div style={{ fontSize: 28, flexShrink: 0 }}>📹</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 3 }}>Show off your bags!</div>
+        <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.9, lineHeight: 1.4 }}>Upload a short video to attract more buyers</div>
+      </div>
+      <button onClick={onUpload}
+        style={{ padding: '8px 16px', borderRadius: 12, border: '2px solid white', background: 'rgba(255,255,255,0.15)', color: 'white', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: "'Manrope',sans-serif" }}>
+        Upload
+      </button>
+      <button onClick={onDismiss}
+        style={{ position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <IconX size={10} />
+      </button>
+    </motion.div>
+  );
+}
+
+// ─── Floating Upload FAB for mobile sellers ──────────────────────────────────
+function SellerFAB({ onClick }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.5 }}
+      style={{
+        position: 'fixed', bottom: 100, right: 16, zIndex: 35,
+        width: 58, height: 58, borderRadius: '50%', border: 'none',
+        background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
+        color: 'white', cursor: 'pointer',
+        boxShadow: '0 8px 28px rgba(200,75,17,0.5), 0 0 0 4px rgba(249,115,22,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Manrope',sans-serif",
+      }}
+    >
+      {/* Pulsing ring */}
+      <span style={{
+        position: 'absolute', inset: -6, borderRadius: '50%',
+        border: '2px solid rgba(249,115,22,0.4)',
+        animation: 'fabPulse 2s ease-in-out infinite',
+      }} />
+      <IconPlus size={24} />
+      {/* Label */}
+      <span style={{
+        position: 'absolute', right: 66, top: '50%', transform: 'translateY(-50%)',
+        background: 'rgba(0,0,0,0.75)', padding: '6px 12px', borderRadius: 10,
+        fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        animation: 'fabLabelFade 4s ease-in-out',
+        animationFillMode: 'forwards',
+      }}>
+        Upload Reel 📹
+      </span>
+    </motion.button>
+  );
+}
+
+// ─── CSS keyframes for FAB ───────────────────────────────────────────────────
+function ReelsStyles() {
+  return (
+    <style>{`
+      @keyframes fabPulse {
+        0%, 100% { transform: scale(1); opacity: 0.4; }
+        50% { transform: scale(1.4); opacity: 0; }
+      }
+      @keyframes fabLabelFade {
+        0% { opacity: 0; transform: translateY(-50%) translateX(10px); }
+        10% { opacity: 1; transform: translateY(-50%) translateX(0); }
+        70% { opacity: 1; transform: translateY(-50%) translateX(0); }
+        100% { opacity: 0; transform: translateY(-50%) translateX(10px); pointer-events: none; }
+      }
+      @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 4px 16px rgba(200,75,17,0.4); }
+        50% { box-shadow: 0 4px 24px rgba(249,115,22,0.7), 0 0 0 3px rgba(249,115,22,0.15); }
+      }
+    `}</style>
+  );
+}
+
 // ─── Empty state when no reels exist yet ─────────────────────────────────────
 function EmptyState({ isSeller, onUpload }) {
   return (
@@ -758,6 +854,10 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
   const [commentReel, setCommentReel] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
+  const [showBanner, setShowBanner] = useState(() => {
+    if (!isSeller) return false;
+    return !sessionStorage.getItem('reels_banner_dismissed');
+  });
 
   // IntersectionObserver to detect which reel is in view
   const observerRef = useRef(null);
@@ -796,24 +896,29 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
     );
   }
 
+  const dismissBanner = () => { setShowBanner(false); sessionStorage.setItem('reels_banner_dismissed', '1'); };
+  const handleUpload = () => { dismissBanner(); setUploadOpen(true); };
+
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: "'Manrope',sans-serif", position: 'relative', overflow: 'hidden' }}>
+      <ReelsStyles />
+
       {/* Top header */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'linear-gradient(180deg,rgba(0,0,0,0.6) 0%,transparent 100%)' }}>
         <button onClick={() => navigate('/products')} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <IconArrowLeft size={16} />
         </button>
         <TabRow tab={tab} onSelect={setTab} />
-        {isSeller && (
-          <button onClick={() => setUploadOpen(true)} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(200,75,17,0.4)' }}>
-            <IconPlus size={18} />
-          </button>
-        )}
-        {!isSeller && <div style={{ width: 34 }} />}
+        <div style={{ width: 34 }} />
       </div>
 
+      {/* Seller banner — shows once per session */}
+      <AnimatePresence>
+        {showBanner && <SellerUploadBanner onUpload={handleUpload} onDismiss={dismissBanner} />}
+      </AnimatePresence>
+
       {reels.length === 0 ? (
-        <EmptyState isSeller={isSeller} onUpload={() => setUploadOpen(true)} />
+        <EmptyState isSeller={isSeller} onUpload={handleUpload} />
       ) : (
         <div ref={scrollRef} style={{ height: '100vh', overflowY: 'auto', scrollSnapType: 'y mandatory' }}>
           {reels.map((reel, i) => (
@@ -831,6 +936,9 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
         </div>
       )}
 
+      {/* Floating upload button — always visible for sellers when reels exist */}
+      {isSeller && reels.length > 0 && !uploadOpen && <SellerFAB onClick={handleUpload} />}
+
       <CommentsPanel variant="sheet" open={commentsOpen} onClose={() => setCommentsOpen(false)} reel={commentReel} user={user} />
       <AnimatePresence>
         {uploadOpen && <UploadReelModal open={uploadOpen} onClose={() => setUploadOpen(false)} user={user} onUploaded={fetchReels} />}
@@ -846,6 +954,10 @@ function DesktopReels({ tab, setTab, reels, loading, navigate, user, isSeller, u
   const videoRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [showBanner, setShowBanner] = useState(() => {
+    if (!isSeller) return false;
+    return !sessionStorage.getItem('reels_banner_dismissed');
+  });
 
   const reel = reels[activeIndex] || null;
   const isLiked = reel ? likedReels.has(reel.id) : false;
@@ -890,21 +1002,51 @@ function DesktopReels({ tab, setTab, reels, loading, navigate, user, isSeller, u
     );
   }
 
+  const dismissBanner = () => { setShowBanner(false); sessionStorage.setItem('reels_banner_dismissed', '1'); };
+  const handleUpload = () => { dismissBanner(); setUploadOpen(true); };
+
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 50% 0%,#241a15 0%,#0a0806 60%)', color: 'white', fontFamily: "'Manrope',sans-serif" }}>
+      <ReelsStyles />
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 32px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <button onClick={() => navigate('/products')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
           <IconArrowLeft size={14} /> Back to BagSearch
         </button>
         <TabRow tab={tab} onSelect={setTab} size={15} />
         {isSeller ? (
-          <button onClick={() => setUploadOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 18px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, color: 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 16px rgba(200,75,17,0.4)' }}>
-            <IconPlus size={14} /> Upload Reel
+          <button onClick={handleUpload} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 22px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 800, animation: 'glowPulse 2s ease-in-out infinite', fontFamily: "'Manrope',sans-serif" }}>
+            📹 Upload Reel
           </button>
         ) : (
           <div style={{ width: 100 }} />
         )}
       </header>
+
+      {/* Seller banner — shows once per session on desktop too */}
+      <AnimatePresence>
+        {showBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            style={{ maxWidth: 700, margin: '20px auto 0', padding: '16px 24px', borderRadius: 16, background: 'linear-gradient(135deg, rgba(200,75,17,0.12), rgba(249,115,22,0.08))', border: '1px solid rgba(249,115,22,0.25)', display: 'flex', alignItems: 'center', gap: 16 }}
+          >
+            <span style={{ fontSize: 36 }}>📹</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>You're a seller — show off your bags!</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Upload a short video reel to attract more buyers. Show unboxings, styling tips, or bag details.</div>
+            </div>
+            <button onClick={handleUpload}
+              style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, color: 'white', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Manrope',sans-serif", boxShadow: '0 4px 16px rgba(200,75,17,0.4)' }}>
+              Upload Now
+            </button>
+            <button onClick={dismissBanner}
+              style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <IconX size={12} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 20px 60px' }}>
         {reels.length === 0 ? (
