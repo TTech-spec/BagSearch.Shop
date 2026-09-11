@@ -6,6 +6,7 @@ import { AuthContext } from './context/AuthContext';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { slugify, extractIdFromParam, productPath } from './utils/slugify';
+import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
@@ -922,6 +923,7 @@ export default function ProductDetail() {
 
               {/* WhatsApp */}
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="wa-btn"
+                onClick={()=>{ setTimeout(()=>triggerGoogleReviewSurvey({ email: user?.email||'', productName: product?.name||'', productId: product?.id||'' }), 1500); }}
                 style={{
                   display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                   padding:'13px 0',borderRadius:12,textDecoration:'none',

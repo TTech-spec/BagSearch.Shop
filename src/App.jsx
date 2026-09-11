@@ -4,6 +4,7 @@ import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
+import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
 
@@ -313,6 +314,7 @@ function App() {
         </Routes>
       </Suspense>
       <MobileBottomNav />
+      <GoogleReviewsBadge />
     </Router>
   );
 }
