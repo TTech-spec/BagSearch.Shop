@@ -43,22 +43,33 @@ export function triggerGoogleReviewSurvey({ email, productName, productId }) {
 
 /**
  * Google Customer Reviews badge component.
- * Shows the Google badge on the site for trust signals.
+ * Loads the official merchant widget script and renders the seller rating badge.
  */
 export function GoogleReviewsBadge() {
-  const ref = useRef(null);
+  const loaded = useRef(false);
 
   useEffect(() => {
-    if (!window.gapi?.surveyoptin) return;
-    // Badge renders automatically when platform.js loads with the merchant_id
+    if (loaded.current) return;
+    loaded.current = true;
+
+    // Load the merchant widget script
+    const script = document.createElement('script');
+    script.id = 'merchantWidgetScript';
+    script.src = 'https://www.gstatic.com/shopping/merchant/merchantwidget.js';
+    script.defer = true;
+    script.addEventListener('load', () => {
+      try {
+        window.merchantwidget?.start({
+          merchant_id: MERCHANT_ID,
+          position: 'BOTTOM_RIGHT',
+          region: 'NG',
+        });
+      } catch (err) {
+        console.warn('Google merchant widget failed:', err);
+      }
+    });
+    document.body.appendChild(script);
   }, []);
 
-  return (
-    <div
-      ref={ref}
-      className="g-customer-reviews"
-      data-merchant-id={MERCHANT_ID}
-      data-position="BOTTOM_RIGHT"
-    />
-  );
+  return null;
 }
