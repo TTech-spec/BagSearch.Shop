@@ -40,7 +40,7 @@
       ]
     },
     {
-      "source": "/(login|register|profile|seller-profile|seller-listing|upload-product|forgot-password|reset-password|auth/callback|seller-product|seller-products)",
+      "source": "/(login|register|profile|seller-profile|seller-listing|upload-product|forgot-password|reset-password|auth/callback|seller-product|seller-products|onboarding)",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
