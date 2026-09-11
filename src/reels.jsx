@@ -259,12 +259,17 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
     <>
       <motion.div onClick={handleClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 100 }} />
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
         style={{
-          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101,
-          width: 'min(460px, 92vw)', maxHeight: '90vh', overflowY: 'auto',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 101,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px 16px', pointerEvents: 'none',
+        }}>
+        <div style={{
+          width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto',
           background: '#1a1410', borderRadius: 24, border: '1px solid rgba(255,255,255,0.12)',
           boxShadow: '0 40px 100px rgba(0,0,0,0.6)', color: 'white', fontFamily: "'Manrope',sans-serif",
+          pointerEvents: 'auto',
         }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -388,6 +393,7 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
             }}>
             {uploading ? '⏳ Uploading…' : '🚀 Post Reel'}
           </button>
+        </div>
         </div>
       </motion.div>
     </>
