@@ -1,6 +1,6 @@
 # BagSearch — Nigeria's Luxury Bag Marketplace
 
-> BagSearch (bagsearch.shop) is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors. Founded in Lagos in 2024, it serves buyers and sellers across all 36 Nigerian states.
+> BagSearch (bagsearch.shop) is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors. Founded in 2026, it serves buyers and sellers across all 36 Nigerian states.
 
 License: https://robotstxt.org/rsl/1.0
 Updated: 2026-06-18
@@ -15,7 +15,7 @@ Unlike general marketplaces (Jiji, Jumia), BagSearch specialises in one category
 
 ## Key Facts
 
-- **Founded**: 2024, Lagos, Nigeria
+- **Founded**: 2026, Nigeria
 - **Category**: Luxury and designer bags exclusively
 - **Coverage**: All 36 states of Nigeria
 - **Active buyers**: 10,000+
