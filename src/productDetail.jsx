@@ -7,6 +7,7 @@ import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { slugify, extractIdFromParam, productPath } from './utils/slugify';
 import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
+import { payForProduct, useFlutterwavePreload } from './components/FlutterwavePayment';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
@@ -90,6 +91,8 @@ export default function ProductDetail() {
   const [wishlisted, setWishlisted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [networkError, setNetworkError] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(false);
+  useFlutterwavePreload();
   const [pageLoaded, setPageLoaded] = useState(false);
   const [imgZoom, setImgZoom] = useState(false);
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -412,6 +415,27 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     setCartAdded(true);
     setTimeout(() => setCartAdded(false), 2200);
+  };
+
+  const handleBuyNow = () => {
+    if (!user) { navigate('/login'); return; }
+    const price = parseFloat((product.discountedPrice || product.price || '0').toString().replace(/[^0-9.]/g, ''));
+    if (!price || price <= 0) { alert('Price not available for this product.'); return; }
+    setBuyingNow(true);
+    payForProduct({
+      amount: price * quantity,
+      email: user.email || '',
+      name: user.user_metadata?.full_name || user.email || '',
+      productName: product.name || '',
+      productId: product.id || '',
+      sellerName: product.seller || '',
+      onSuccess: (response) => {
+        setBuyingNow(false);
+        triggerGoogleReviewSurvey({ email: user.email || '', productName: product.name || '', productId: product.id || '' });
+        alert(`🎉 Payment successful!\n\nTransaction ref: ${response.tx_ref}\n\nThe seller has been notified and will contact you on WhatsApp to arrange delivery.`);
+      },
+      onClose: () => { setBuyingNow(false); },
+    });
   };
 
   const parsePrice = (p) => parseFloat((p || '0').toString().replace(/[^0-9.]/g, ''));
@@ -921,6 +945,20 @@ export default function ProductDetail() {
                 </button>
               </div>
 
+              {/* Buy Now */}
+              <button onClick={handleBuyNow} disabled={buyingNow}
+                style={{
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                  padding:'13px 0',borderRadius:12,border:'none',cursor:'pointer',
+                  background:'linear-gradient(135deg,#2563eb,#3b82f6)',
+                  color:'white',fontWeight:800,fontSize:14,
+                  boxShadow:'0 6px 20px #2563eb44',
+                  transition:'all 0.25s',
+                  opacity: buyingNow ? 0.6 : 1,
+                }}>
+                {buyingNow ? '⏳ Processing...' : '💳 Buy Now'}
+              </button>
+
               {/* WhatsApp */}
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="wa-btn"
                 onClick={()=>{ setTimeout(()=>triggerGoogleReviewSurvey({ email: user?.email||'', productName: product?.name||'', productId: product?.id||'' }), 1500); }}
@@ -1058,6 +1096,21 @@ export default function ProductDetail() {
             ? <><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
             : <>🛒 Add to Cart</>
           }
+        </button>
+
+        {/* Buy Now */}
+        <button onClick={handleBuyNow} disabled={buyingNow}
+          style={{
+            display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+            padding:'11px 13px',
+            background:'linear-gradient(135deg,#2563eb,#3b82f6)',
+            color:'white',fontWeight:800,fontSize:12,borderRadius:10,
+            border:'none',cursor:'pointer',flexShrink:0,
+            boxShadow:'0 4px 14px #2563eb44',
+            transition:'all 0.25s',
+            opacity: buyingNow ? 0.6 : 1,
+          }}>
+          💳 Buy
         </button>
 
         {/* WhatsApp */}

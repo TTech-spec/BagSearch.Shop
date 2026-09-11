@@ -66,6 +66,12 @@ const ROUTES = [
     description: "Read BagSearch's terms of service. Rules and guidelines for buyers and sellers on Nigeria's luxury bag marketplace.",
     ogType: 'website',
   },
+  {
+    path: '/pricing',
+    title: 'Seller Plans & Pricing | BagSearch Nigeria',
+    description: 'Choose a plan to sell bags on BagSearch. Free, Pro (₦1,000/mo), or Premium (₦5,000/mo). Unlimited uploads, search boost, and more.',
+    ogType: 'website',
+  },
 ];
 
 // ── HTML tag injection helpers ─────────────────────────────────────────────
