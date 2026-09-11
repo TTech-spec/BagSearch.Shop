@@ -1460,6 +1460,7 @@ export default function SellerProfile() {
   const [metricsLoading,      setMetricsLoading]      = useState(true);
   const [reviewCount,         setReviewCount]         = useState(0);
   const [reviewsLoading,      setReviewsLoading]      = useState(true);
+  const [hasBankDetails,      setHasBankDetails]      = useState(true); // assume true to avoid flash
 
   const [sidebarIn,     setSidebarIn]     = useState(false);
   const [headerIn,      setHeaderIn]      = useState(false);
@@ -1509,6 +1510,13 @@ export default function SellerProfile() {
       finally { setLoading(false); }
     }
     loadSeller();
+
+    // Check if seller has bank details set up
+    if (user?.id) {
+      supabase.from('seller_bank_details').select('id').eq('user_id', user.id).eq('is_verified', true).maybeSingle()
+        .then(({ data }) => { setHasBankDetails(!!data); })
+        .catch(() => { /* graceful fallback */ });
+    }
   },[user]);
 
   useEffect(()=>{
@@ -1766,6 +1774,22 @@ export default function SellerProfile() {
           {activeTab==='dashboard' && (
             <div style={{ animation:"tabSlideIn 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
 
+              {/* ── BANK DETAILS PROMPT ── */}
+              {!hasBankDetails && (
+                <div style={{ marginBottom:20, background:'linear-gradient(135deg,#eff6ff,#dbeafe)', borderRadius:16, border:'1.5px solid #93c5fd', padding:'18px 22px', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', opacity:statsIn?1:0, transform:statsIn?'none':'translateY(12px)', transition:'all 0.5s ease 50ms' }}>
+                  <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 6px 20px rgba(37,99,235,0.3)' }}>
+                    <MS name="account_balance" size={22} style={{ color:'white' }}/>
+                  </div>
+                  <div style={{ flex:1, minWidth:180 }}>
+                    <p style={{ margin:0, fontWeight:800, fontSize:14, color:'#1e3a5f' }}>Set Up Payments</p>
+                    <p style={{ margin:'4px 0 0', fontSize:12.5, color:'#3b82f6', lineHeight:1.5 }}>Add your bank account so buyers can pay you directly when they purchase your bags.</p>
+                  </div>
+                  <button onClick={()=>navigate('/bank-details')} style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', fontWeight:800, fontSize:13, cursor:'pointer', boxShadow:'0 4px 14px rgba(37,99,235,0.3)', whiteSpace:'nowrap' }}>
+                    Add Bank Account →
+                  </button>
+                </div>
+              )}
+
               {/* ── DISCOUNT PROMO CARD (small, non-obstructive) ── */}
               <DiscountPromoCard navigate={navigate} visible={statsIn} />
 
@@ -1908,6 +1932,8 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     { icon:'home',        label:'Home',         key:'home'              },
     { icon:'dashboard',   label:'Dashboard',    key:'dashboard'         },
     { icon:'inventory_2', label:'My Listings',  key:'listings'          },
+    { icon:'account_balance', label:'Bank Details', key:'bank'          },
+    { icon:'workspace_premium', label:'Plans & Pricing', key:'pricing'  },
     { icon:'edit',        label:'Edit Profile', key:'edit', badge:true  },
   ];
 
@@ -1915,6 +1941,8 @@ function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, swi
     if (item.key==='home')                         navigate('/products');
     if (item.key==='dashboard'||item.key==='edit') switchTab?.(item.key);
     if (item.key==='listings')                     navigate('/seller-listing');
+    if (item.key==='bank')                         navigate('/bank-details');
+    if (item.key==='pricing')                      navigate('/pricing');
     onNav?.();
   }, [navigate, switchTab, onNav]);
 

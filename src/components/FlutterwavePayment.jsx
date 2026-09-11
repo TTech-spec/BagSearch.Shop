@@ -47,6 +47,7 @@ function loadFlutterwaveScript() {
  */
 export async function payForProduct({
   amount, email, name, phone = '', productName, productId, sellerName,
+  sellerSubaccountId, sellerId,
   onSuccess, onClose,
 }) {
   await loadFlutterwaveScript();
@@ -57,7 +58,7 @@ export async function payForProduct({
 
   const txRef = `BS-${productId}-${Date.now()}`;
 
-  window.FlutterwaveCheckout({
+  const config = {
     public_key: FLW_PUBLIC_KEY,
     tx_ref: txRef,
     amount,
@@ -75,7 +76,19 @@ export async function payForProduct({
       seller_name: sellerName,
       source: 'bagsearch_checkout',
     },
-    callback: async (response) => {
+  };
+
+  // If seller has a Flutterwave subaccount, payment goes directly to them
+  if (sellerSubaccountId) {
+    config.subaccounts = [{
+      id: sellerSubaccountId,
+      transaction_split_ratio: 1,
+      transaction_charge_type: 'flat',
+      transaction_charge: 0, // No BagSearch commission
+    }];
+  }
+
+  config.callback = async (response) => {
       if (response.status === 'successful' || response.status === 'completed') {
         // Record payment in Supabase
         try {
@@ -89,7 +102,7 @@ export async function payForProduct({
               flutterwave_tx_id: response.transaction_id?.toString() || '',
               flutterwave_status: response.status,
               product_id: productId || null,
-              seller_id: null,
+              seller_id: sellerId || null,
               metadata: { product_name: productName, seller_name: sellerName },
             });
           }
@@ -97,8 +110,9 @@ export async function payForProduct({
         onSuccess?.(response);
       }
     },
-    onclose: () => { onClose?.(); },
-  });
+  config.onclose = () => { onClose?.(); };
+
+  window.FlutterwaveCheckout(config);
 }
 
 /**

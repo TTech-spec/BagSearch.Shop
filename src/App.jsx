@@ -33,6 +33,7 @@ const TermsOfService = lazy(() => import('./TermsOfService.jsx'));
 const AuthCallback = lazy(() => import('./AuthCallback.jsx'));
 const Onboarding = lazy(() => import('./Onboarding.jsx'));
 const Pricing = lazy(() => import('./pricing.jsx'));
+const SellerBankDetails = lazy(() => import('./sellerBankDetails.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -285,6 +286,11 @@ function App() {
 
           {/* Seller Pricing page - public */}
           <Route path="/pricing" element={<Pricing />} />
+
+          {/* Seller Bank Details - protected */}
+          <Route path="/bank-details" element={
+            <PrivateRoute><SellerBankDetails /></PrivateRoute>
+          } />
 
           {/* Vendor Details - public */}
           <Route path="/vendor/:id" element={<VendorDetails />} />

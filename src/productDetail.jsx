@@ -417,11 +417,29 @@ export default function ProductDetail() {
     setTimeout(() => setCartAdded(false), 2200);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!user) { navigate('/login'); return; }
     const price = parseFloat((product.discountedPrice || product.price || '0').toString().replace(/[^0-9.]/g, ''));
     if (!price || price <= 0) { alert('Price not available for this product.'); return; }
     setBuyingNow(true);
+
+    // Fetch seller's Flutterwave subaccount
+    let sellerSubaccountId = null;
+    let sellerId = product.user_id || null;
+    try {
+      if (sellerId) {
+        const { data: bankData } = await supabase
+          .from('seller_bank_details')
+          .select('flutterwave_subaccount_id')
+          .eq('user_id', sellerId)
+          .eq('is_verified', true)
+          .maybeSingle();
+        if (bankData?.flutterwave_subaccount_id) {
+          sellerSubaccountId = bankData.flutterwave_subaccount_id;
+        }
+      }
+    } catch { /* proceed without subaccount */ }
+
     payForProduct({
       amount: price * quantity,
       email: user.email || '',
@@ -429,6 +447,8 @@ export default function ProductDetail() {
       productName: product.name || '',
       productId: product.id || '',
       sellerName: product.seller || '',
+      sellerId,
+      sellerSubaccountId,
       onSuccess: (response) => {
         setBuyingNow(false);
         triggerGoogleReviewSurvey({ email: user.email || '', productName: product.name || '', productId: product.id || '' });
