@@ -2152,14 +2152,26 @@ export default function Product(){
       if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}
       let{data,error}=await query.order('created_at',{ascending:true});
       if(error){query=supabase.from('products').select('id,name,seller_name,user_id,brand,condition,description,price,location,images,created_at,category,whatsapp,discounted_price,discount_label,quantity,colors');if(locationId&&locationId!=='all'){if(locationId==='lagos')query=query.in('location',LAGOS_IDS);else query=query.eq('location',locationId);}const retry=await query.order('created_at',{ascending:true});if(retry.error)throw retry.error;data=retry.data;}
-      return(data||[]).map(p=>{
+      // ── Fetch active subscriptions for product boosting ──
+      let boostMap={};// userId → boost rank (premium=2, pro=1, free=0)
+      try{
+        const now=new Date().toISOString();
+        const{data:subs}=await supabase.from('seller_subscriptions').select('user_id,plan,status,expires_at').eq('status','active').gte('expires_at',now);
+        if(subs){subs.forEach(s=>{boostMap[s.user_id]=s.plan==='premium'?2:s.plan==='pro'?1:0;});}
+      }catch(e){console.warn('Could not fetch subscriptions for boosting:',e);}
+
+      const products=(data||[]).map(p=>{
         let rawColors=[];
         if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
-        const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[]; 
+        const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[];
         const qty=p.quantity!=null?parseInt(p.quantity):null;
         const rawSrc=p.images?.length>0?p.images[0]:'https://via.placeholder.com/400';
-        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId:p.seller_id||p.user_id||'db',sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height),srcHero:getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height),srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||''};
+        const sellerId=p.seller_id||p.user_id||'db';
+        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId,sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height),srcHero:getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height),srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||'',boostRank:boostMap[sellerId]||0};
       });
+      // Sort: Premium (2) first, then Pro (1), then Free (0), within same rank keep original order
+      products.sort((a,b)=>b.boostRank-a.boostRank);
+      return products;
     }catch(err){console.error('Failed to load products:',err);return[];}
   },[mapCategory]);
 
