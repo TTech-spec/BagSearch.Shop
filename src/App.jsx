@@ -7,6 +7,7 @@ import MobileBottomNav from './components/MobileBottomNav.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
+import { CartProvider } from './context/CartContext';
 
 // Lazy load route components for better code splitting
 // const Home = lazy(() => import('./home.jsx')); // home.jsx preserved but no longer the landing page
@@ -34,6 +35,7 @@ const AuthCallback = lazy(() => import('./AuthCallback.jsx'));
 const Onboarding = lazy(() => import('./Onboarding.jsx'));
 const Pricing = lazy(() => import('./pricing.jsx'));
 const SellerBankDetails = lazy(() => import('./sellerBankDetails.jsx'));
+const Cart = lazy(() => import('./cartPage.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -209,6 +211,7 @@ function App() {
   const { user } = useContext(AuthContext);
 
   return (
+    <CartProvider>
     <Router>
       <AuthListener />
       <CookieConsent />
@@ -284,6 +287,9 @@ function App() {
           {/* Hot Deals page - public */}
           <Route path="/hot-deals" element={<HotDeals />} />
 
+          {/* Cart page */}
+          <Route path="/cart" element={<Cart />} />
+
           {/* Seller Pricing page - public */}
           <Route path="/pricing" element={<Pricing />} />
 
@@ -326,6 +332,7 @@ function App() {
       <MobileBottomNav />
       <GoogleReviewsBadge />
     </Router>
+    </CartProvider>
   );
 }
 

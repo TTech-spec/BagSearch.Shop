@@ -106,8 +106,8 @@ export default function MobileBottomNav() {
     secondItem,
     {
       key: 'cart', label: 'Cart', Icon: IconCart,
-      active: false,
-      onClick: () => navigate('/products', { state: { openCart: true } }),
+      active: location.pathname === '/cart',
+      onClick: () => navigate('/cart'),
     },
     {
       key: 'profile', label: 'Profile', Icon: IconUser,

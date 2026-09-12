@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
+import { useCart } from './context/CartContext';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { slugify, extractIdFromParam, productPath } from './utils/slugify';
@@ -80,6 +81,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -413,6 +415,18 @@ export default function ProductDetail() {
   }
 
   const handleAddToCart = () => {
+    const rawSrc = product.images?.length > 0 ? product.images[0] : '';
+    for (let i = 0; i < quantity; i++) {
+      addToCart({
+        id: product.id,
+        name: product.name,
+        seller: product.seller_name || 'Seller',
+        sellerId: product.seller_id || product.user_id || '',
+        price: parseFloat(product.discounted_price || product.price || 0),
+        src: rawSrc,
+        whatsapp: product.whatsapp || '',
+      });
+    }
     setCartAdded(true);
     setTimeout(() => setCartAdded(false), 2200);
   };

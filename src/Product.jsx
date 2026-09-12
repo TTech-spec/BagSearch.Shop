@@ -2,6 +2,7 @@ import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } 
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from './context/AuthContext';
+import { useCart } from './context/CartContext';
 import { supabase, searchProducts } from './services/api';
 import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
@@ -1886,7 +1887,7 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
             onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;}}>
             <Icons.User size={20} color="currentColor" />
           </button>
-          <CartBadge count={cartCount} onClick={()=>setCartOpen(true)} />
+          <CartBadge count={cartCount} onClick={()=>navigate('/cart')} />
          <button onClick={()=>navigate('/reels')} style={{ position:'relative',padding:'8px 16px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceDim,cursor:'pointer',color:C.textMid,fontSize:13,fontWeight:700,transition:'all 0.2s' }}
            onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.color=C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.textMid;}}>
            Reels
@@ -2027,7 +2028,8 @@ export default function Product(){
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
-  const[cartItems,setCartItems]=useState([]);const[cartOpen,setCartOpen]=useState(false);const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
+  const{cartItems,addToCart,updateQty:handleUpdateQty,removeFromCart:handleRemoveFromCart,cartCount}=useCart();
+  const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
   const[sellerVerifyNudgeOpen,setSellerVerifyNudgeOpen]=useState(false);
   const[ninStatusModal,setNinStatusModal]=useState(null);
@@ -2118,7 +2120,7 @@ export default function Product(){
   const[hasScrolledPastThreshold,setHasScrolledPastThreshold]=useState(false);
   const[vendorStats,setVendorStats]=useState({vendors:0,products:0,buyers:0,reviews:0});
   const vendorRouteParam=params.id||params.slug||'';
-  const cartCount=cartItems.reduce((a,i)=>a+i.qty,0);
+  // cartCount comes from useCart() above
   const isMobile=windowWidth<=768;
 
   const HERO_PHRASES=['Perfect Bag','Dream Clutch','Ideal Tote','Luxury Satchel','Everyday Crossbody'];
@@ -2320,11 +2322,9 @@ export default function Product(){
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
   const handleViewVendorProducts=useCallback((vendor)=>{navigate(`/vendor/${vendor.id}`);},[navigate]);
   const handleRequireAuth=useCallback(()=>setAuthGateOpen(true),[]);
-  const handleAddToCart=product=>{setCartItems(prev=>{const ex=prev.find(i=>i.id===product.id);if(ex)return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);return[...prev,{...product,qty:1}];});setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
-  const handleUpdateQty=(id,qty)=>setCartItems(prev=>prev.map(i=>i.id===id?{...i,qty}:i));
-  const handleRemoveFromCart=id=>setCartItems(prev=>prev.filter(i=>i.id!==id));
+  const handleAddToCart=product=>{addToCart(product);setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
   const handleProfileClick=()=>{if(!user){setAuthGateOpen(true);return;}navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');};
-  useEffect(()=>{if(location.state?.openCart){setCartOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
+  useEffect(()=>{if(location.state?.openCart){navigate('/cart',{replace:true});}},[location.state,navigate]);
   useEffect(()=>{if(location.state?.promptUpload){setUploadPromptOpen(true);navigate('/products',{replace:true,state:{}});}},[location.state,navigate]);
   // Scrolls to a named section (e.g. the mobile nav's "New Arrivals" shortcut) once it's
   // actually in the DOM — re-checks as allProducts loads in case it fires before render.
@@ -2455,7 +2455,7 @@ export default function Product(){
         {floatMsg.text}
       </div>}
 
-      {cartOpen&&<CartPage cartItems={cartItems} onUpdateQty={handleUpdateQty} onRemove={handleRemoveFromCart} onClose={()=>setCartOpen(false)} isAuthed={!!user} onRequireAuth={handleRequireAuth}/>}
+      {/* Cart is now a standalone page at /cart */}
       <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
       <NinStatusModal status={ninStatusModal?.status} reason={ninStatusModal?.reason} open={!!ninStatusModal} onClose={()=>{const after=ninStatusModal?.onAfterClose;setNinStatusModal(null);if(after)after();}} navigate={navigate}/>
@@ -2463,12 +2463,12 @@ export default function Product(){
       <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
       <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
       {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)} user={user}/>}
-      {!cartOpen&&<WelcomeBackBadge user={user} isMobile={isMobile}/>}
-      {!feedbackOpen&&!cartOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp} isMobile={isMobile}/>}
-      {!feedbackOpen&&!cartOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)} isMobile={isMobile}/>}
+      <WelcomeBackBadge user={user} isMobile={isMobile}/>
+      {!feedbackOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp} isMobile={isMobile}/>}
+      {!feedbackOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)} isMobile={isMobile}/>}
 
       {/* Header — NO location selector here anymore */}
-      <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={setCartOpen} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
+      <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={()=>navigate('/cart')} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
@@ -2490,7 +2490,7 @@ export default function Product(){
 
         <div style={{height:1,background:C.borderLight,marginBottom:12}}/>
 
-                 {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{setCartOpen(true);setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
+                 {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent',cursor:'pointer',color:label==='Logout'?C.danger:label==='Contact'?C.primary:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s',width:'100%'}}
             onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:label==='Contact'?C.primary:C.text;}}>
             <IconComponent size={20} color="currentColor" />{label}
