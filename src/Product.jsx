@@ -7,6 +7,7 @@ import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
+import { payForProduct } from './components/FlutterwavePayment';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
@@ -1720,10 +1721,45 @@ function CartBadge({count,onClick}){
 }
 
 function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth}){
+  const{user}=useContext(AuthContext);
   const[chatting,setChatting]=useState(false);const[chatted,setChatted]=useState(false);
+  const[paying,setPaying]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
   const tax=total*0.075;const grand=total+tax;
+
+  const handlePayNow=async()=>{
+    if(!cartItems.length)return;if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
+    setPaying(true);
+    try{
+      // For cart checkout, pay total amount; use first product's details for reference
+      const firstItem=cartItems[0];
+      const productNames=cartItems.map(i=>i.name).join(', ');
+      // Fetch seller's subaccount if single seller
+      const sellerIds=[...new Set(cartItems.map(i=>i.sellerId).filter(Boolean))];
+      let sellerSubaccountId=null;
+      let sellerId=sellerIds[0]||null;
+      if(sellerIds.length===1&&sellerIds[0]){
+        try{
+          const{data:bankRow}=await supabase.from('seller_bank_details').select('flutterwave_subaccount_id').eq('user_id',sellerIds[0]).maybeSingle();
+          if(bankRow?.flutterwave_subaccount_id)sellerSubaccountId=bankRow.flutterwave_subaccount_id;
+        }catch(e){console.warn('Could not fetch seller subaccount:',e);}
+      }
+      await payForProduct({
+        amount:grand,
+        email:user?.email||'',
+        name:user?.user_metadata?.full_name||user?.email||'Customer',
+        productName:productNames.length>60?productNames.slice(0,57)+'...':productNames,
+        productId:firstItem.id,
+        sellerName:firstItem.seller||'Seller',
+        sellerId,
+        sellerSubaccountId,
+        onSuccess:()=>{setPaying(false);onClose();},
+        onClose:()=>{setPaying(false);},
+      });
+    }catch(err){console.error('Cart payment error:',err);setPaying(false);}
+  };
+
   const handleChatSellers=()=>{
     if(!cartItems.length)return;if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
     setChatting(true);
@@ -1786,11 +1822,21 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
                 <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
               </div>
             </div>
+            <button onClick={handlePayNow} disabled={paying}
+              style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:paying?'linear-gradient(135deg,#9ca3af,#6b7280)':'linear-gradient(135deg,#2563eb,#3b82f6)',color:'white',fontWeight:900,fontSize:15,transition:'all 0.5s',boxShadow:'0 8px 28px rgba(37,99,235,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:10}}>
+              {paying?(<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>)
+                :(<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(grand)}</>)}
+            </button>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <div style={{flex:1,height:1,background:C.border}}/>
+              <span style={{fontSize:11,color:C.textFaint,fontWeight:700}}>OR</span>
+              <div style={{flex:1,height:1,background:C.border}}/>
+            </div>
             <button onClick={handleChatSellers}
-              style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:chatted?'linear-gradient(135deg,#15803d,#16a34a)':chatting?`linear-gradient(135deg,${C.whatsappDark},${C.whatsapp})`:`linear-gradient(135deg,${C.whatsapp},#20c95a)`,color:'white',fontWeight:900,fontSize:15,transition:'all 0.5s',boxShadow:`0 8px 28px rgba(37,211,102,0.4)`,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-              {chatted?(<><Icons.Check size={18} color="white" />Chats Opened! 🎉</>)
-                :chatting?(<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Opening WhatsApp…</>)
-                :(<><WaIcon size={18} color="white"/>Chat Sellers on WhatsApp · {formatCurrency(grand)}</>)}
+              style={{width:'100%',padding:'14px 0',borderRadius:16,border:`1.5px solid ${C.whatsapp}`,cursor:'pointer',background:'white',color:C.whatsapp,fontWeight:800,fontSize:14,transition:'all 0.5s',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+              {chatted?(<><Icons.Check size={16} color={C.whatsapp} />Chats Opened!</>)
+                :chatting?(<><div style={{width:16,height:16,borderRadius:'50%',border:'2.5px solid rgba(37,211,102,0.3)',borderTopColor:C.whatsapp,animation:'ldSpin 0.7s linear infinite'}}/>Opening WhatsApp…</>)
+                :(<><WaIcon size={16} color={C.whatsapp}/>Chat Sellers on WhatsApp</>)}
             </button>
           </div>}
         </div>

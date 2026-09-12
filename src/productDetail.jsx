@@ -558,7 +558,7 @@ export default function ProductDetail() {
         @media (max-width: 767px) {
           .sticky-bar { display: flex; }
           .desktop-cta { display: none !important; }
-          .main-wrap { padding-bottom: 88px; }
+          .main-wrap { padding-bottom: 160px; }
         }
         @media (min-width: 768px) {
           .sticky-bar { display: none !important; }
@@ -1086,7 +1086,7 @@ export default function ProductDetail() {
 
       {/* ══════════════════════ STICKY BOTTOM BAR (mobile) ══════════════════════ */}
       <div className="sticky-bar" style={{
-        position:'fixed',bottom:0,left:0,right:0,zIndex:40,
+        position:'fixed',bottom:76,left:0,right:0,zIndex:40,
         background:'rgba(255,255,255,0.97)',backdropFilter:'blur(20px)',
         WebkitBackdropFilter:'blur(20px)',
         borderTop:`1px solid ${C.borderLight}`,
