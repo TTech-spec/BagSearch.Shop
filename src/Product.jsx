@@ -1243,7 +1243,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
             }}
             style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:'#dbeafe',color:'#2563eb',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.color='#2563eb';}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+            <span style={{fontSize:14,lineHeight:1}}>💳</span>
           </button>
           <button type="button" aria-label="Message seller on WhatsApp"
             onClick={e=>{
