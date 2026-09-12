@@ -33,7 +33,7 @@ function validateVideoFile(file) {
 async function uploadVideoToCloudinary(file, userId, onProgress) {
   validateVideoFile(file);
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error('Cloudinary is not configured. Please check your .env file.');
+    throw new Error('Video upload service is not configured. Please contact support.');
   }
   const payload = new FormData();
   payload.append('file', file);
@@ -871,7 +871,7 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
   const scrollRef = useRef(null);
   const [showBanner, setShowBanner] = useState(() => {
     if (!isSeller) return false;
-    return !sessionStorage.getItem('reels_banner_dismissed');
+    try { return !localStorage.getItem('reels_banner_seen'); } catch { return false; }
   });
 
   // IntersectionObserver to detect which reel is in view
@@ -911,7 +911,7 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
     );
   }
 
-  const dismissBanner = () => { setShowBanner(false); sessionStorage.setItem('reels_banner_dismissed', '1'); };
+  const dismissBanner = () => { setShowBanner(false); try { localStorage.setItem('reels_banner_seen', '1'); } catch {} };
   const handleUpload = () => { dismissBanner(); setUploadOpen(true); };
 
   return (
@@ -951,8 +951,29 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
         </div>
       )}
 
-      {/* Floating upload button — always visible for sellers when reels exist */}
-      {isSeller && reels.length > 0 && !uploadOpen && <SellerFAB onClick={handleUpload} />}
+      {/* TikTok-style bottom nav with center plus button */}
+      {isSeller && !uploadOpen && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 35,
+          height: 64, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 20px',
+        }}>
+          <button onClick={handleUpload} style={{
+            width: 48, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
+            color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(200,75,17,0.45)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Side accent bars like TikTok */}
+            <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, borderRadius: '8px 0 0 8px', background: '#25F4EE' }} />
+            <span style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 4, borderRadius: '0 8px 8px 0', background: '#FE2C55' }} />
+            <IconPlus size={20} />
+          </button>
+        </div>
+      )}
 
       <CommentsPanel variant="sheet" open={commentsOpen} onClose={() => setCommentsOpen(false)} reel={commentReel} user={user} />
       <AnimatePresence>
@@ -971,7 +992,7 @@ function DesktopReels({ tab, setTab, reels, loading, navigate, user, isSeller, u
   const [muted, setMuted] = useState(true);
   const [showBanner, setShowBanner] = useState(() => {
     if (!isSeller) return false;
-    return !sessionStorage.getItem('reels_banner_dismissed');
+    try { return !localStorage.getItem('reels_banner_seen'); } catch { return false; }
   });
 
   const reel = reels[activeIndex] || null;
@@ -1017,7 +1038,7 @@ function DesktopReels({ tab, setTab, reels, loading, navigate, user, isSeller, u
     );
   }
 
-  const dismissBanner = () => { setShowBanner(false); sessionStorage.setItem('reels_banner_dismissed', '1'); };
+  const dismissBanner = () => { setShowBanner(false); try { localStorage.setItem('reels_banner_seen', '1'); } catch {} };
   const handleUpload = () => { dismissBanner(); setUploadOpen(true); };
 
   return (

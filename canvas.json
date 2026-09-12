@@ -1,7 +1,7 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 1200 },
-    { "file": "Reviews.dc.html", "x": 550, "y": 0, "w": 390, "h": 1200 }
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 1320 },
+    { "file": "VendorDetail.dc.html", "x": 550, "y": 0, "w": 390, "h": 1400 }
   ],
   "launch": { "view": "canvas" }
 }
