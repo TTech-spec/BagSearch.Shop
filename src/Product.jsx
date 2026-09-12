@@ -1243,7 +1243,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
             }}
             style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:'#dbeafe',color:'#2563eb',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',flexShrink:0}}
             onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.color='#2563eb';}}>
-            <span style={{fontSize:14,lineHeight:1}}>💳</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
           </button>
           <button type="button" aria-label="Message seller on WhatsApp"
             onClick={e=>{
@@ -1641,7 +1641,7 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
                 {added?<><Icons.Check size={13} color="white" />Added!</>:<><Icons.ShoppingBag size={13} color="white" /> Grab Deal</>}
               </button>
               <button onClick={()=>navigate(productPath(product.name,product.id))} style={{flex:1,maxWidth:isSmall?'100%':160,padding:isMobile?'11px 0':'13px 0',borderRadius:12,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,background:'linear-gradient(135deg,#2563eb,#3b82f6)',color:'white',transition:'all 0.35s',boxShadow:'0 6px 20px rgba(37,99,235,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
-                💳 Buy Now
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg> Buy Now
               </button>
             </div>
             <p style={{marginTop:12,fontSize:isSmall?9:11,color:C.textFaint,fontWeight:600}}>⚡ Only {product.quantity??'few'} left · Chat seller for delivery details</p>
