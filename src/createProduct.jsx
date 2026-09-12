@@ -6,6 +6,7 @@ import LogoIcon from './components/Logo.jsx';
 import { sanitizeInput, validateRequired, validatePrice, validatePhone } from './utils/securityUtils';
 import { uploadLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
+import { normalizeWhatsAppNumber } from './utils/whatsapp';
 import { getImageEmbeddingFromSource, upsertProductImageEmbedding } from './services/imageEmbeddings';
 import { useSEO } from './hooks/useSEO';
 import { useUploadLimit, recordUpload } from './hooks/useUploadLimit';
@@ -1149,8 +1150,8 @@ export default function CreateProduct() {
                 <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} required className="field-input" placeholder="e.g., 08012345678 or +2348012345678" type="tel" style={{ paddingLeft: 42 }} />
               </div>
               <p style={{ fontSize: 11, color: C.textMuted, marginTop: 5 }}>Buyers will tap "Chat on WhatsApp" to contact you directly about this listing.</p>
-              {formData.whatsapp && (
-                <a href={`https://wa.me/${formData.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+              {formData.whatsapp && normalizeWhatsAppNumber(formData.whatsapp) && (
+                <a href={`https://wa.me/${normalizeWhatsAppNumber(formData.whatsapp)}`} target="_blank" rel="noopener noreferrer"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10,
                     padding: "7px 14px", borderRadius: 8, background: C.successBg, border: `1px solid ${C.primaryBorder}`,

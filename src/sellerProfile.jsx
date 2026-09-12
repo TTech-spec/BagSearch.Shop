@@ -5,6 +5,7 @@ import { AuthContext } from './context/AuthContext';
 import { deleteFromPinecone } from './services/visualSearch';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import { normalizeWhatsAppNumber } from './utils/whatsapp';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
@@ -213,8 +214,8 @@ function InquiryRow({ row, index, ready }) {
           <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
             <MS name="check_circle" size={16}/> Replied
           </span>
-        ) : row.phone ? (
-          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+        ) : row.phone && normalizeWhatsAppNumber(row.phone) ? (
+          <a href={`https://wa.me/${normalizeWhatsAppNumber(row.phone)}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
             style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s", boxShadow:`0 2px 8px rgba(37,211,102,0.3)` }}
             onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow=`0 4px 12px rgba(37,211,102,0.4)`;}}
@@ -252,8 +253,8 @@ function InquiryCard({ row, index, ready }) {
           <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:C.surfaceDim, color:C.textMuted, fontSize:12, fontWeight:700 }}>
             <MS name="check_circle" size={16}/> Replied
           </span>
-        ) : row.phone ? (
-          <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
+        ) : row.phone && normalizeWhatsAppNumber(row.phone) ? (
+          <a href={`https://wa.me/${normalizeWhatsAppNumber(row.phone)}?text=Hi%2C%20following%20up%20on%20${encodeURIComponent(row.bag)}`}
             target="_blank" rel="noopener noreferrer"
             style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, background:"#25D366", color:"white", fontSize:12, fontWeight:700, textDecoration:"none", transition:"all 0.2s" }}
             onMouseEnter={e=>e.currentTarget.style.background="#22c35e"}

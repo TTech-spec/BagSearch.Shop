@@ -6,6 +6,7 @@ import { AuthContext } from './context/AuthContext';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
+import { normalizeWhatsAppNumber, buildWhatsAppUrl } from './utils/whatsapp';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -845,8 +846,8 @@ export default function VendorDetails() {
                   ))}
                 </div>
               </div>
-              {profile.phone && (
-                <a href={'https://wa.me/' + profile.phone.replace(/\D/g,'') + '?text=Hi%2C%20I%20saw%20your%20store%20on%20BagSearch%21'}
+              {profile.phone && normalizeWhatsAppNumber(profile.phone) && (
+                <a href={buildWhatsAppUrl(profile.phone, 'Hi, I saw your store on BagSearch!')}
                   target="_blank" rel="noopener noreferrer"
                   style={{display:'inline-flex',alignItems:'center',gap:8,background:'#25d366',color:'white',border:'none',borderRadius:12,padding:'11px 18px',fontWeight:800,fontSize:13,textDecoration:'none',boxShadow:'0 6px 20px rgba(37,211,102,0.4)',transition:'all 0.25s',flexShrink:0}}
                   onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
@@ -911,8 +912,8 @@ export default function VendorDetails() {
                           {p.discountedPrice && <p style={{fontSize:10,color:C.textFaint,textDecoration:'line-through'}}>{fmt(p.price)}</p>}
                           <p style={{fontSize:17,fontWeight:900,color:C.primary}}>{fmt(p.discountedPrice||p.price)}</p>
                         </div>
-                        {p.whatsapp && (
-                          <a href={'https://wa.me/'+p.whatsapp.replace(/\D/g,'')+'?text='+encodeURIComponent('Hi! I\'m interested in *'+p.name+'*\n\u{1F517} '+window.location.origin+'/products/'+p.id)}
+                        {p.whatsapp && normalizeWhatsAppNumber(p.whatsapp) && (
+                          <a href={buildWhatsAppUrl(p.whatsapp, 'Hi! I\'m interested in *'+p.name+'*\n\u{1F517} '+window.location.origin+'/products/'+p.id)}
                             target="_blank" rel="noopener noreferrer"
                             onClick={e=>e.stopPropagation()}
                             style={{width:34,height:34,borderRadius:10,background:'#dcfce7',color:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',textDecoration:'none',flexShrink:0,transition:'all 0.2s'}}
@@ -1401,9 +1402,9 @@ function MobileVendorProfile({
         {/* Action buttons */}
         <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
           style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-          {profile.phone && (
+          {profile.phone && normalizeWhatsAppNumber(profile.phone) && (
             <motion.a whileTap={{ scale: 0.96 }}
-              href={'https://wa.me/' + profile.phone.replace(/\D/g, '') + '?text=Hi%2C%20I%20saw%20your%20store%20on%20BagSearch%21'}
+              href={buildWhatsAppUrl(profile.phone, 'Hi, I saw your store on BagSearch!')}
               target="_blank" rel="noopener noreferrer"
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 0', borderRadius: 14, background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, color: 'white', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: '0 8px 20px rgba(200,75,17,0.32)' }}>
               <IconWhatsapp size={16} /> Message
