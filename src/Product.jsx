@@ -1216,52 +1216,49 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
         {loc&&<span style={{position:'absolute',top:10,right:10,zIndex:2,background:'rgba(255,255,255,0.93)',backdropFilter:'blur(8px)',color:C.textMid,fontSize:10,fontWeight:700,padding:'4px 9px',borderRadius:20,display:'flex',alignItems:'center',gap:4,boxShadow:'0 2px 8px rgba(0,0,0,0.08)',whiteSpace:'nowrap',maxWidth:'calc(100% - 100px)',overflow:'hidden',textOverflow:'ellipsis'}}><span style={{flexShrink:0}}>{loc.emoji}</span><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{loc.name}</span></span>}
         <div style={{position:'absolute',bottom:10,left:'50%',transform:hov?'translateX(-50%) translateY(0)':'translateX(-50%) translateY(12px)',opacity:hov?1:0,transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',background:'rgba(26,10,0,0.75)',backdropFilter:'blur(8px)',color:'white',fontSize:10,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase',padding:'5px 16px',borderRadius:20,whiteSpace:'nowrap',pointerEvents:'none'}}>Quick View</div>
       </div>
-      <div style={{padding:'13px 13px 12px'}}>
-        <h3 style={{fontWeight:800,fontSize:14,color:C.text,marginBottom:2,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.name}</h3>
-        <p style={{fontSize:11,color:C.textFaint,marginBottom:10,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.seller}</p>
-        <div style={{display:'flex',gap:4,marginBottom:10,alignItems:'center'}}>
-          {(product.colors||[]).length>0?(<>{(product.colors||[]).slice(0,5).map((c,i)=>(<span key={i} style={{width:13,height:13,borderRadius:'50%',background:c.hex||c,border:'2px solid white',outline:`1px solid ${C.border}`,display:'inline-block'}} title={c.id||''}/>))}{(product.colors||[]).length>5&&<span style={{fontSize:9,color:C.textFaint,fontWeight:700}}>+{(product.colors||[]).length-5}</span>}</>):<span style={{fontSize:10,color:C.textFaint,fontWeight:500}}>—</span>}
-        </div>
-        <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:10}}>
+      <div style={{padding:'12px 13px 13px'}}>
+        <h3 style={{fontWeight:800,fontSize:14,color:C.text,marginBottom:3,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.name}</h3>
+        <p style={{fontSize:11,color:C.textFaint,marginBottom:8,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.seller}</p>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
           <div>
-            <p style={{fontSize:9,color:C.textFaint,marginBottom:1,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>Qty</p>
-            <p style={{fontSize:12,fontWeight:700,color:C.textMid}}>{product.quantity!=null?`${product.quantity} units`:'—'}</p>
-          </div>
-          <div style={{textAlign:'right'}}>
             {product.discountedPrice&&<p style={{fontSize:10,color:C.textFaint,fontWeight:600,textDecoration:'line-through',marginBottom:1}}>{formatCurrency(product.price)}</p>}
-            <p style={{fontSize:19,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s',lineHeight:1}}>{formatCurrency(product.discountedPrice||product.price)}</p>
+            <p style={{fontSize:18,fontWeight:900,color:hov?C.primary:C.accent,letterSpacing:'-0.03em',transition:'color 0.2s',lineHeight:1}}>{formatCurrency(product.discountedPrice||product.price)}</p>
+          </div>
+          <div style={{display:'flex',gap:3,alignItems:'center'}}>
+            {(product.colors||[]).slice(0,4).map((c,i)=>(<span key={i} style={{width:11,height:11,borderRadius:'50%',background:c.hex||c,border:'1.5px solid white',outline:`0.5px solid ${C.border}`,display:'inline-block'}} title={c.id||''}/>))}
+            {(product.colors||[]).length>4&&<span style={{fontSize:8,color:C.textFaint,fontWeight:700}}>+{(product.colors||[]).length-4}</span>}
           </div>
         </div>
-        <div style={{display:'flex',gap:6,alignItems:'stretch'}}>
+        {/* Action buttons — two rows for clean layout */}
+        <div style={{display:'flex',gap:6,marginBottom:6}}>
           <button onClick={handleCart} style={{flex:1,minWidth:0,padding:'9px 6px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:11,background:added?'linear-gradient(135deg,#15803d,#16a34a)':'linear-gradient(135deg,#c84b11,#f97316)',color:'white',transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',boxShadow:added?'0 4px 14px rgba(22,163,74,0.4)':'0 4px 12px rgba(200,75,17,0.35)',transform:added?'scale(0.96)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:4,whiteSpace:'nowrap',overflow:'hidden'}}>
-            {added?<><Icons.Check size={11} color="white" /><span>Added!</span></>:<><Icons.Cart size={11} color="white" /><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>Add to Cart</span></>}
+            {added?<><Icons.Check size={11} color="white" /><span>Added!</span></>:<><Icons.Cart size={11} color="white" /><span>Add to Cart</span></>}
           </button>
-          <button type="button" aria-label="Buy now"
+          <button type="button"
             onClick={e=>{
               e.preventDefault();e.stopPropagation();
               if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
               navigate(productPath(product.name,product.id));
             }}
-            style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:'#dbeafe',color:'#2563eb',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',flexShrink:0}}
-            onMouseEnter={e=>{e.currentTarget.style.background='#3b82f6';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background='#dbeafe';e.currentTarget.style.color='#2563eb';}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-          </button>
-          <button type="button" aria-label="Message seller on WhatsApp"
-            onClick={e=>{
-              e.preventDefault();e.stopPropagation();
-              if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
-              const number=normalizeWhatsAppNumber(product.whatsapp||'');
-              if(!number){alert('Seller WhatsApp number is missing for this product.');return;}
-              const productLink=`${window.location.origin}/products/${product.id}`;
-              const msg=`Hi! I'm interested in *${product.name}* 👜\n💰 Price: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (sale)':'₦'+product.price.toLocaleString()}\n\n🔗 View product: ${productLink}`;
-              window.open(buildWhatsAppUrl(number,msg),'_blank','noopener,noreferrer');
-              setTimeout(()=>triggerGoogleReviewSurvey({ email: user?.email||'', productName: product.name||'', productId: product.id||'' }), 1500);
-            }}
-            style={{width:36,minWidth:36,height:'auto',border:'none',borderRadius:10,background:C.successBg,color:C.success,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.25s',textDecoration:'none',flexShrink:0}}
-            onMouseEnter={e=>{e.currentTarget.style.background='#22c55e';e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.successBg;e.currentTarget.style.color=C.success;}}>
-            <WaIcon size={14} color="currentColor" />
+            style={{flex:1,minWidth:0,padding:'9px 6px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:800,fontSize:11,background:'linear-gradient(135deg,#2563eb,#3b82f6)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',gap:4,whiteSpace:'nowrap',boxShadow:'0 4px 12px rgba(37,99,235,0.3)',transition:'all 0.25s'}}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+            <span>Buy Now</span>
           </button>
         </div>
+        <button type="button"
+          onClick={e=>{
+            e.preventDefault();e.stopPropagation();
+            if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
+            const number=normalizeWhatsAppNumber(product.whatsapp||'');
+            if(!number){alert('Seller WhatsApp number is missing for this product.');return;}
+            const productLink=`${window.location.origin}/products/${product.id}`;
+            const msg=`Hi! I'm interested in *${product.name}* 👜\n💰 Price: ${product.discountedPrice?'₦'+product.discountedPrice.toLocaleString()+' (sale)':'₦'+product.price.toLocaleString()}\n\n🔗 View product: ${productLink}`;
+            window.open(buildWhatsAppUrl(number,msg),'_blank','noopener,noreferrer');
+            setTimeout(()=>triggerGoogleReviewSurvey({ email: user?.email||'', productName: product.name||'', productId: product.id||'' }), 1500);
+          }}
+          style={{width:'100%',padding:'8px 0',borderRadius:10,border:`1.5px solid #dcfce7`,cursor:'pointer',fontWeight:700,fontSize:11,background:'#f0fdf4',color:'#16a34a',display:'flex',alignItems:'center',justifyContent:'center',gap:5,transition:'all 0.25s'}}>
+          <WaIcon size={12} color="#16a34a" /><span>Chat Seller</span>
+        </button>
       </div>
     </a>
   );

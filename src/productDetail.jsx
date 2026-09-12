@@ -1090,62 +1090,62 @@ export default function ProductDetail() {
         background:'rgba(255,255,255,0.97)',backdropFilter:'blur(20px)',
         WebkitBackdropFilter:'blur(20px)',
         borderTop:`1px solid ${C.borderLight}`,
-        padding:'10px 14px',gap:8,alignItems:'center',
+        padding:'10px 14px',gap:0,alignItems:'stretch',flexDirection:'column',
         boxShadow:'0 -4px 20px rgba(0,0,0,0.07)',
       }}>
-        {/* Qty stepper */}
-        <div style={{ display:'flex',alignItems:'center',border:`1.5px solid ${C.border}`,borderRadius:10,overflow:'hidden',background:'white',flexShrink:0 }}>
-          <button onClick={() => setQuantity(q=>Math.max(1,q-1))}
-            style={{ width:34,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>−</button>
-          <span style={{ width:30,textAlign:'center',fontSize:13,fontWeight:900,color:C.text }}>{quantity}</span>
-          <button onClick={() => setQuantity(q=>Math.min(product.quantity??99,q+1))}
-            style={{ width:34,height:42,border:'none',background:'transparent',cursor:'pointer',fontSize:18,color:C.textMid,fontWeight:700 }}>+</button>
+        {/* Top row: Price + Qty stepper */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+          <div>
+            {product.discounted_price&&<span style={{fontSize:11,color:C.textFaint,fontWeight:600,textDecoration:'line-through',marginRight:6}}>{formatCurrency(product.price)}</span>}
+            <span style={{fontSize:20,fontWeight:900,color:C.primary,letterSpacing:'-0.03em'}}>{formatCurrency(product.discounted_price||product.price)}</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',border:`1.5px solid ${C.border}`,borderRadius:10,overflow:'hidden',background:'white'}}>
+            <button onClick={()=>setQuantity(q=>Math.max(1,q-1))}
+              style={{width:32,height:36,border:'none',background:'transparent',cursor:'pointer',fontSize:16,color:C.textMid,fontWeight:700}}>−</button>
+            <span style={{width:26,textAlign:'center',fontSize:13,fontWeight:900,color:C.text}}>{quantity}</span>
+            <button onClick={()=>setQuantity(q=>Math.min(product.quantity??99,q+1))}
+              style={{width:32,height:36,border:'none',background:'transparent',cursor:'pointer',fontSize:16,color:C.textMid,fontWeight:700}}>+</button>
+          </div>
         </div>
-
-        {/* Add to cart */}
-        <button onClick={handleAddToCart}
-          style={{
-            flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-            padding:'11px 0',borderRadius:10,border:'none',cursor:'pointer',
-            background: cartAdded ? `linear-gradient(135deg,${C.success},#22c55e)` : `linear-gradient(135deg,${C.primary},${C.primaryLight})`,
-            color:'white',fontWeight:800,fontSize:13,
-            boxShadow: cartAdded ? `0 4px 14px ${C.success}55` : `0 4px 14px ${C.primary}44`,
-            transition:'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-          }}>
-          {cartAdded
-            ? <><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
-            : <>🛒 Add to Cart</>
-          }
-        </button>
-
-        {/* Buy Now */}
-        <button onClick={handleBuyNow} disabled={buyingNow}
-          style={{
-            display:'flex',alignItems:'center',justifyContent:'center',gap:5,
-            padding:'11px 13px',
-            background:'linear-gradient(135deg,#2563eb,#3b82f6)',
-            color:'white',fontWeight:800,fontSize:12,borderRadius:10,
-            border:'none',cursor:'pointer',flexShrink:0,
-            boxShadow:'0 4px 14px #2563eb44',
-            transition:'all 0.25s',
-            opacity: buyingNow ? 0.6 : 1,
-          }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg> Buy
-        </button>
-
-        {/* WhatsApp */}
-        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-          style={{
-            display:'flex',alignItems:'center',justifyContent:'center',gap:5,
-            padding:'11px 13px',
-            background:`linear-gradient(135deg,#16a34a,#22c55e)`,
-            color:'white',fontWeight:800,fontSize:12,borderRadius:10,
-            textDecoration:'none',flexShrink:0,
-            boxShadow:`0 4px 14px #16a34a44`,
-            transition:'all 0.25s',
-          }}>
-          <WaIcon size={14}/> Chat
-        </a>
+        {/* Bottom row: 3 action buttons */}
+        <div style={{display:'flex',gap:6}}>
+          <button onClick={handleAddToCart}
+            style={{
+              flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+              padding:'11px 0',borderRadius:12,border:'none',cursor:'pointer',
+              background:cartAdded?`linear-gradient(135deg,${C.success},#22c55e)`:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,
+              color:'white',fontWeight:800,fontSize:12,
+              boxShadow:cartAdded?`0 4px 14px ${C.success}55`:`0 4px 14px ${C.primary}44`,
+              transition:'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+            }}>
+            {cartAdded
+              ?<><svg width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="white"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Added!</>
+              :<><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="20" r="1.2" fill="white" stroke="none"/><circle cx="17" cy="20" r="1.2" fill="white" stroke="none"/><path d="M2.5 3h2l2.1 11.4A2 2 0 009 16h8a2 2 0 002-1.6L21 6H6"/></svg>Add to Cart</>
+            }
+          </button>
+          <button onClick={handleBuyNow} disabled={buyingNow}
+            style={{
+              flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+              padding:'11px 0',borderRadius:12,border:'none',cursor:'pointer',
+              background:'linear-gradient(135deg,#2563eb,#3b82f6)',
+              color:'white',fontWeight:800,fontSize:12,
+              boxShadow:'0 4px 14px rgba(37,99,235,0.35)',
+              transition:'all 0.25s',opacity:buyingNow?0.6:1,
+            }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Buy Now
+          </button>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+            style={{
+              display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+              padding:'11px 14px',borderRadius:12,
+              background:'#f0fdf4',border:'1.5px solid #dcfce7',
+              color:'#16a34a',fontWeight:800,fontSize:12,
+              textDecoration:'none',flexShrink:0,
+              transition:'all 0.25s',
+            }}>
+            <WaIcon size={13}/> Chat
+          </a>
+        </div>
       </div>
     </div>
   );
