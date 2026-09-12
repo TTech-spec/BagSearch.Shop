@@ -32,7 +32,7 @@ function validateVideoFile(file) {
 async function uploadVideoToCloudinary(file, userId, onProgress) {
   validateVideoFile(file);
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error('Cloudinary is not configured. Please check your .env file.');
+    throw new Error('Video upload service is not configured. Please contact support.');
   }
   const payload = new FormData();
   payload.append('file', file);

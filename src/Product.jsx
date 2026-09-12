@@ -1195,7 +1195,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   const[hov,setHov]=useState(false);
   const[added,setAdded]=useState(false);
   const loc=NIGERIAN_LOCATIONS.find(l=>l.id===product.location);
-  const handleCart=(e)=>{e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
+  const handleCart=(e)=>{e.preventDefault();e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
   return(
     <a href={productPath(product.name,product.id)} ref={ref} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
@@ -1259,7 +1259,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
 function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequireAuth, badge, badgeColor }) {
   const [hov, setHov] = useState(false);
   const [added, setAdded] = useState(false);
-  const handleCart = (e) => { e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
+  const handleCart = (e) => { e.preventDefault(); e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
   return (
     <a href={productPath(product.name,product.id)} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:16,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',boxShadow:hov?`0 16px 40px rgba(200,75,17,0.13)`:'0 2px 8px rgba(0,0,0,0.04)',transform:hov?'translateY(-4px)':'none',flexShrink:0,width:200 }}>
@@ -1576,7 +1576,7 @@ function HotDealsCarousel({ products, navigate, onAddToCart, isAuthed, onRequire
   const goNext=useCallback(()=>goTo((activeIdx+1)%products.length,'next'),[activeIdx,products.length,goTo]);
   const goPrev=useCallback(()=>goTo((activeIdx-1+products.length)%products.length,'prev'),[activeIdx,products.length,goTo]);
   useEffect(()=>{if(isPaused||products.length<=1)return;autoRef.current=setInterval(goNext,5000);return()=>clearInterval(autoRef.current);},[isPaused,goNext,products.length]);
-  const handleCart=(e,product)=>{e.stopPropagation();setAddedMap(m=>({...m,[product.id]:true}));onAddToCart(product);setTimeout(()=>setAddedMap(m=>({...m,[product.id]:false})),1800);};
+  const handleCart=(e,product)=>{e.preventDefault();e.stopPropagation();setAddedMap(m=>({...m,[product.id]:true}));onAddToCart(product);setTimeout(()=>setAddedMap(m=>({...m,[product.id]:false})),1800);};
   if(!products||products.length===0)return null;
   const product=products[activeIdx];
   const discountPct=product.discountedPrice?Math.round((1-product.discountedPrice/product.price)*100):23;
