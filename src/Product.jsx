@@ -1197,7 +1197,7 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
   const loc=NIGERIAN_LOCATIONS.find(l=>l.id===product.location);
   const handleCart=(e)=>{e.preventDefault();e.stopPropagation();setAdded(true);onAddToCart(product);setTimeout(()=>setAdded(false),1800);};
   return(
-    <a href={productPath(product.name,product.id)} ref={ref} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    <a href={productPath(product.name,product.id)} ref={ref} onClick={(e)=>{e.preventDefault();if(e.target.closest('button'))return;navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
         <img
@@ -1271,7 +1271,7 @@ function CompactProductCard({ product, navigate, onAddToCart, isAuthed, onRequir
   const [added, setAdded] = useState(false);
   const handleCart = (e) => { e.preventDefault(); e.stopPropagation(); setAdded(true); onAddToCart(product); setTimeout(() => setAdded(false), 1800); };
   return (
-    <a href={productPath(product.name,product.id)} onClick={(e)=>{e.preventDefault();navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    <a href={productPath(product.name,product.id)} onClick={(e)=>{e.preventDefault();if(e.target.closest('button'))return;navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{ display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:16,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',boxShadow:hov?`0 16px 40px rgba(200,75,17,0.13)`:'0 2px 8px rgba(0,0,0,0.04)',transform:hov?'translateY(-4px)':'none',flexShrink:0,width:200 }}>
       <div style={{ position:'relative',overflow:'hidden',height:150,background:C.primaryBg }}>
         <img
