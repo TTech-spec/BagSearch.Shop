@@ -201,32 +201,40 @@ export default function ProductDetail() {
 
         const fmt = {
           id: data.id,
-          name: data.name,
-          brand: data.brand,
+          name: data.name || 'Untitled Product',
+          brand: data.brand || 'Brand',
           seller: data.seller_name || 'Anonymous Seller',
+          sellerId: data.seller_id || data.user_id || '',
           sellerPhone: data.whatsapp || "2348147061837",
           sellerLocation: data.location || "Lagos, Nigeria",
           sellerVerified: true,
           sellerJoined: "2023",
-          sub: `${data.brand} • ${data.condition}`,
+          sub: `${data.brand || 'Brand'} • ${data.condition || 'New'}`,
           description: data.description || "No description provided.",
-          price: `₦${parseFloat(data.price).toLocaleString()}`,
-          originalPrice: `₦${(parseFloat(data.price)*1.15).toLocaleString()}`,
+          price: `₦${parseFloat(data.price || 0).toLocaleString()}`,
+          originalPrice: `₦${(parseFloat(data.price || 0)*1.15).toLocaleString()}`,
           quantity: data.quantity != null ? parseInt(data.quantity) : null,
           lowStock: data.quantity != null ? parseInt(data.quantity) < 5 : false,
           colors: (() => {
-            const raw = data.colors;
-            if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11","#f97316"];
-            const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
-            return arr.map(c => resolveColor(c));
+            try {
+              const raw = data.colors;
+              if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11","#f97316"];
+              const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
+              return arr.map(c => resolveColor(c));
+            } catch { return ["#c84b11","#f97316"]; }
           })(),
           sizes: [],
           category: data.category || "General",
+          condition: data.condition || '',
           images: data.images?.length > 0 ? data.images : ['https://via.placeholder.com/600'],
           isMock: false,
-          rawPrice: parseFloat(data.price) || 0,
+          rawPrice: parseFloat(data.price || 0) || 0,
           rawId: data.id,
           slug: slugify(data.name),
+          whatsapp: data.whatsapp || '',
+          user_id: data.user_id || data.seller_id || null,
+          seller_id: data.seller_id || data.user_id || null,
+          discounted_price: data.discounted_price || null,
         };
         setProduct(fmt);
         setSelectedColor(fmt.colors[0]);
@@ -420,11 +428,11 @@ export default function ProductDetail() {
       addToCart({
         id: product.id,
         name: product.name,
-        seller: product.seller_name || 'Seller',
-        sellerId: product.seller_id || product.user_id || '',
-        price: parseFloat(product.discounted_price || product.price || 0),
+        seller: product.seller || 'Seller',
+        sellerId: product.sellerId || product.seller_id || '',
+        price: product.rawPrice || parseFloat(String(product.price || '0').replace(/[^0-9.]/g, '')) || 0,
         src: rawSrc,
-        whatsapp: product.whatsapp || '',
+        whatsapp: product.sellerPhone || product.whatsapp || '',
       });
     }
     setCartAdded(true);
