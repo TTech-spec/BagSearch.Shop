@@ -783,7 +783,7 @@ function ShareProfileModal({ visible, onClose, seller }) {
       color: '#25D366',
       textColor: '#fff',
       Icon: SocialIcons.WhatsApp,
-      href: `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + profileUrl)}`,
+      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + profileUrl)}`,
     },
     {
       id: 'twitter',

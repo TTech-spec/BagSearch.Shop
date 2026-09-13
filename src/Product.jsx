@@ -1666,7 +1666,7 @@ function CartItem({item,onUpdateQty,onRemove,index,isAuthed,onRequireAuth}){
   const[removing,setRemoving]=useState(false);const[vis,setVis]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>setVis(true),index*70);return()=>clearTimeout(t);},[index]);
   const handleRemove=()=>{setRemoving(true);setTimeout(()=>onRemove(item.id),420);};
-  const waNumber=(item.whatsapp||'').replace(/\D/g,'');
+  const waNumber=normalizeWhatsAppNumber(item.whatsapp||'');
   const waMsg=encodeURIComponent(`Hi! I have *${item.qty}x ${item.name}* in my cart.\nTotal: ₦${(item.price*item.qty).toLocaleString()}\nProduct: ${item.src}`);
   const waLink=waNumber?`https://wa.me/${waNumber}?text=${waMsg}`:null;
   return(
@@ -1763,7 +1763,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
     setChatting(true);
     const bySellerMap=cartItems.reduce((acc,item)=>{const key=item.seller||'Seller';if(!acc[key])acc[key]={whatsapp:item.whatsapp||'',items:[]};acc[key].items.push(item);return acc;},{});
     Object.entries(bySellerMap).forEach(([sellerName,{whatsapp,items}],idx)=>{
-      const number=(whatsapp||'').replace(/\D/g,'');if(!number)return;
+      const number=normalizeWhatsAppNumber(whatsapp||'');if(!number)return;
       const itemLines=items.map(i=>`• ${i.qty}x *${i.name}* — ₦${(i.price*i.qty).toLocaleString()}`).join('\n');
       const sellerTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
       const msg=encodeURIComponent(`Hi ${sellerName}! 👋\n\nI'd like to order:\n\n${itemLines}\n\n*Subtotal: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability. Thank you! 🛍️`);
