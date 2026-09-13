@@ -8,7 +8,9 @@
  * Body: { account_number, bank_code }
  */
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://www.bagsearch.shop');
+  const origin = req.headers.origin || '';
+  const allowed = ['https://www.bagsearch.shop', 'https://bagsearch.shop'];
+  res.setHeader('Access-Control-Allow-Origin', allowed.includes(origin) ? origin : allowed[0]);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -34,6 +36,7 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log('Flutterwave resolve response:', response.status, JSON.stringify(data));
 
     if (data.status === 'success') {
       return res.status(200).json({
@@ -42,7 +45,7 @@ export default async function handler(req, res) {
         account_number: data.data.account_number,
       });
     } else {
-      return res.status(400).json({ error: data.message || 'Could not resolve account' });
+      return res.status(400).json({ error: data.message || 'Could not resolve account', flw_status: response.status });
     }
   } catch (err) {
     console.error('Account resolve error:', err);

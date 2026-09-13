@@ -10,7 +10,9 @@
  */
 export default async function handler(req, res) {
   // CORS
-  res.setHeader('Access-Control-Allow-Origin', 'https://www.bagsearch.shop');
+  const origin = req.headers.origin || '';
+  const allowed = ['https://www.bagsearch.shop', 'https://bagsearch.shop'];
+  res.setHeader('Access-Control-Allow-Origin', allowed.includes(origin) ? origin : allowed[0]);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
