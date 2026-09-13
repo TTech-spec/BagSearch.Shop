@@ -135,7 +135,7 @@ export default function CartPage() {
       return acc;
     }, {});
     Object.entries(bySellerMap).forEach(([sellerName, { whatsapp, items }], idx) => {
-      const number = (whatsapp || '').replace(/\D/g, '');
+      const number = normalizeWhatsAppNumber(whatsapp || '');
       if (!number) return;
       const itemLines = items.map(i => `• ${i.qty}x *${i.name}* — ₦${(i.price * i.qty).toLocaleString()}`).join('\n');
       const sellerTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
