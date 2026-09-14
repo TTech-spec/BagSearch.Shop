@@ -617,7 +617,7 @@ function NinVerificationCard({ sellerId, visible }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {previewUrl && (
-              <img src={previewUrl} alt="Your submitted NIN document" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `1.5px solid ${C.borderLight}` }}/>
+              <img src={previewUrl} alt="Your submitted NIN document" loading="lazy" width="56" height="56" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `1.5px solid ${C.borderLight}` }}/>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelect}/>
             <button

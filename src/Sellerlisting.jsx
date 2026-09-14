@@ -403,7 +403,7 @@ function EditDrawer({ listing, onClose, onSaved }) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, overflow: "hidden", border: "2px solid rgba(255,255,255,0.6)", flexShrink: 0 }}>
-                  <img src={listing.image} alt={listing.title || 'Product listing'} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={listing.image} alt={listing.title || 'Product listing'} loading="lazy" width="44" height="44" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 <div>
                   <p style={{ fontSize: 10, fontWeight: 700, color: C.brand, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 2 }}>Editing</p>
@@ -840,6 +840,7 @@ function ListingCard({ listing, index, visible, onDelete, onEdit }) {
       <div style={{ position: "relative", height: 160, overflow: "hidden", background: C.surfacePeach }}>
         {!imgLoaded && <div style={{ position: "absolute", inset: 0 }}><Skel w="100%" h="100%" r={0} /></div>}
         <img src={listing.image} alt={listing.title} onLoad={() => setImgLoaded(true)}
+          loading="lazy" width="300" height="160"
           style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgLoaded ? 1 : 0, transform: hovered ? "scale(1.05)" : "scale(1)", transition: "transform 0.4s ease, opacity 0.4s ease" }} />
         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, rgba(26,8,0,0.55) 0%, transparent 55%)`, opacity: hovered ? 1 : 0.6, transition: "opacity 0.3s ease" }} />
 

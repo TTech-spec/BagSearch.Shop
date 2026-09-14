@@ -299,7 +299,7 @@ function ProductCard({ product, index, onAddToCart }) {
 
       {/* Image */}
       <div style={{ position: "relative", overflow: "hidden", height: "clamp(160px, 30vw, 220px)" }}>
-        <img src={product.src} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)", transform: hovered ? "scale(1.1)" : "scale(1)" }} />
+        <img src={product.src} alt={product.name} loading="lazy" width="300" height="220" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)", transform: hovered ? "scale(1.1)" : "scale(1)" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(26,10,0,0.5) 100%)", opacity: hovered ? 1 : 0, transition: "opacity 0.4s" }} />
         {product.lowStock && (
           <div style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "white", fontSize: "clamp(8px, 2vw, 9px)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 20, boxShadow: "0 4px 12px rgba(220,38,38,0.5)", animation: "lowStockPulse 2s ease-in-out infinite" }}>⚡ Low Quantity</div>

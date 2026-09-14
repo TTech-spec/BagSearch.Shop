@@ -11,8 +11,8 @@ import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
 import { payForProduct } from './components/FlutterwavePayment';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
-import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
-import mobileHeroImg from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.jpg';
+import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
+import mobileHeroImg from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.webp';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
@@ -1421,6 +1421,10 @@ function SpecialOfferCard({ navigate, isMobile }) {
             src={src}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            width="600"
+            height="400"
             style={{
               position: 'absolute',
               inset: 0,
@@ -1478,6 +1482,10 @@ function SpecialOfferCard({ navigate, isMobile }) {
           <img
             src={SPECIAL_OFFER_IMAGES[0]}
             alt="Special offer"
+            loading="lazy"
+            decoding="async"
+            width="150"
+            height="150"
             style={{
               width: '100%',
               height: '100%',
@@ -2389,7 +2397,7 @@ export default function Product(){
       </div>
     )}
     {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
-      <img src={uploadedImage} alt="" style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
+      <img src={uploadedImage} alt="" loading="lazy" width="48" height="48" style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
       <div style={{flex:1}}><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Image uploaded</p><p style={{fontSize:11,color:C.textMuted}}>Showing visually similar bags</p></div>
       <button onClick={handleClearSearch} style={{fontSize:12,color:C.primary,fontWeight:700,background:'none',border:'none',cursor:'pointer'}}>Remove</button>
     </div>}
@@ -2640,7 +2648,7 @@ export default function Product(){
                 <div style={{position:'relative',width:180,height:180,margin:'0 auto 28px'}}>
                   <div style={{position:'absolute',inset:0,borderRadius:'50%',border:'3.5px solid transparent',borderTopColor:'#c84b11',borderRightColor:'#f97316',animation:'vsSpin 1.1s linear infinite'}}/>
                   <div style={{position:'absolute',inset:22,borderRadius:'50%',overflow:'hidden',background:'#fdf4ee',boxShadow:'0 8px 24px rgba(200,75,17,0.18)'}}>
-                    {uploadedImage?<img src={uploadedImage} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#fde8d8,#fdf4ee)',display:'flex',alignItems:'center',justifyContent:'center'}}><Icons.Camera size={32} color={C.primary}/></div>}
+                    {uploadedImage?<img src={uploadedImage} alt="" loading="lazy" width="180" height="180" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#fde8d8,#fdf4ee)',display:'flex',alignItems:'center',justifyContent:'center'}}><Icons.Camera size={32} color={C.primary}/></div>}
                   </div>
                 </div>
                 <h3 style={{fontSize:20,fontWeight:900,color:'#1a0a00',letterSpacing:'-0.03em',marginBottom:8}}>Finding similar bags...</h3>
@@ -2896,7 +2904,7 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
               const productImage=view.products?.images?.[0];
               return(
                 <div key={view.id} style={{padding:'16px 20px',background:'#fdf8f5',borderRadius:16,border:'1px solid #f0d9cc',display:'flex',gap:16,alignItems:'center'}}>
-                  {productImage?<img src={productImage} alt={productName} style={{width:60,height:60,borderRadius:12,objectFit:'cover',flexShrink:0}}/>:<div style={{width:60,height:60,borderRadius:12,background:'#f0d9cc',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.ShoppingBag size={24} color="#9a6348"/></div>}
+                  {productImage?<img src={productImage} alt={productName} loading="lazy" width="60" height="60" style={{width:60,height:60,borderRadius:12,objectFit:'cover',flexShrink:0}}/>:<div style={{width:60,height:60,borderRadius:12,background:'#f0d9cc',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.ShoppingBag size={24} color="#9a6348"/></div>}
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}><span style={{fontSize:14,fontWeight:800,color:'#1a0a00'}}>{buyerName}</span><span style={{fontSize:11,color:'#9a6348',background:'#f0d9cc',padding:'2px 8px',borderRadius:12}}>{view.source||'web'}</span></div>
                     <div style={{fontSize:13,color:'#5c3317',marginBottom:2}}>viewed <strong>{productName}</strong></div>
