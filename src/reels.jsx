@@ -18,14 +18,14 @@ const CLOUDINARY_FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER || 'products';
 
 // ─── Video upload to Cloudinary ──────────────────────────────────────────────
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MB
 
 function validateVideoFile(file) {
   if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
     throw new Error('Only MP4, WebM, and MOV videos are allowed');
   }
   if (file.size > MAX_VIDEO_SIZE) {
-    throw new Error('Video must be under 100 MB');
+    throw new Error('Video must be under 25 MB. Try trimming or compressing your video before uploading.');
   }
   return true;
 }
@@ -310,7 +310,7 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
               <input ref={fileRef} type="file" accept="video/mp4,video/webm,video/quicktime,video/x-m4v" style={{ display: 'none' }} onChange={handleFileChange} />
               <div style={{ fontSize: 40, marginBottom: 12 }}>📹</div>
               <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Tap to select a video</p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>MP4, WebM, or MOV · up to 100 MB</p>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>MP4, WebM, or MOV · up to 25 MB</p>
             </div>
           ) : (
             <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 16, background: '#000' }}>
@@ -442,6 +442,17 @@ function CommentsPanel({ open, onClose, variant, reel, user }) {
       setComments(prev => [data[0], ...prev]);
       // Increment comment count
       supabase.rpc('increment_reel_comments', { reel_uuid: reel.id }).catch(() => {});
+      // Send notification to reel owner
+      if (reel.user_id && reel.user_id !== user.id) {
+        const commenterName = user.user_metadata?.full_name || 'Someone';
+        supabase.from('notifications').insert([{
+          seller_id: reel.user_id,
+          type: 'reel_comment',
+          title: `${commenterName} commented on your reel`,
+          message: text.length > 80 ? text.slice(0, 80) + '…' : text,
+          is_read: false,
+        }]).catch(() => {});
+      }
     }
     setDraft('');
     setPosting(false);
@@ -851,6 +862,18 @@ export default function Reels() {
       await supabase.from('reel_likes').delete().eq('reel_id', reelId).eq('user_id', user.id);
     } else {
       await supabase.from('reel_likes').insert([{ reel_id: reelId, user_id: user.id }]);
+      // Send notification to reel owner
+      const reel = reels.find(r => r.id === reelId);
+      if (reel && reel.user_id !== user.id) {
+        const likerName = user.user_metadata?.full_name || 'Someone';
+        supabase.from('notifications').insert([{
+          seller_id: reel.user_id,
+          type: 'reel_like',
+          title: `${likerName} liked your reel`,
+          message: reel.caption ? `"${reel.caption.slice(0, 60)}${reel.caption.length > 60 ? '…' : ''}"` : 'Your reel got a new like!',
+          is_read: false,
+        }]).catch(() => {});
+      }
     }
   };
 
