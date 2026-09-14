@@ -193,6 +193,7 @@ export class ErrorBoundary extends React.Component {
         },
         React.createElement('h2', null, 'Something went wrong'),
         React.createElement('p', { style: { color: '#9a6348', marginBottom: '20px' } }, 'Please refresh the page and try again.'),
+        this.state.error && React.createElement('p', { style: { color: '#b45309', fontSize: '12px', marginBottom: '16px', maxWidth: '400px', wordBreak: 'break-word' } }, String(this.state.error.message || this.state.error)),
         React.createElement(
           'button',
           {

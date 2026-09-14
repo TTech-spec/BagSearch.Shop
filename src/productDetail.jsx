@@ -21,6 +21,8 @@ const BAG_COLOR_MAP = {
   multicolor:'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)',
 };
 
+const formatCurrency = (v) => `₦${Number(v || 0).toLocaleString()}`;
+
 const resolveColor = (c) => {
   if (!c) return '#c84b11';
   if (typeof c === 'string') {
@@ -268,15 +270,17 @@ export default function ProductDetail() {
       if (similarData && similarData.length > 0) {
         const formattedSimilar = similarData.map(p => ({
           id: p.id,
-          name: p.name,
-          brand: p.brand,
-          price: `₦${parseFloat(p.price).toLocaleString()}`,
+          name: p.name || 'Untitled Product',
+          brand: p.brand || 'Brand',
+          price: `₦${parseFloat(p.price || 0).toLocaleString()}`,
           images: p.images?.length > 0 ? p.images : ['https://via.placeholder.com/600'],
           colors: (() => {
-            const raw = p.colors;
-            if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11"];
-            const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
-            return arr.map(c => resolveColor(c));
+            try {
+              const raw = p.colors;
+              if (!raw || (Array.isArray(raw) && raw.length === 0)) return ["#c84b11"];
+              const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : [raw]);
+              return arr.map(c => resolveColor(c));
+            } catch { return ["#c84b11"]; }
           })(),
         }));
         setSimilarProducts(formattedSimilar);
