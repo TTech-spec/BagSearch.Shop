@@ -36,6 +36,7 @@ const Onboarding = lazy(() => import('./Onboarding.jsx'));
 const Pricing = lazy(() => import('./pricing.jsx'));
 const SellerBankDetails = lazy(() => import('./sellerBankDetails.jsx'));
 const Cart = lazy(() => import('./cartPage.jsx'));
+const Orders = lazy(() => import('./ordersPage.jsx'));
 
 // Loading spinner component
 function LoadingSpinner() {
@@ -289,6 +290,11 @@ function App() {
 
           {/* Cart page */}
           <Route path="/cart" element={<Cart />} />
+
+          {/* Orders page — buyer confirms delivery to release payment */}
+          <Route path="/orders" element={
+            <PrivateRoute><Orders /></PrivateRoute>
+          } />
 
           {/* Seller Pricing page - public */}
           <Route path="/pricing" element={<Pricing />} />

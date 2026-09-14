@@ -449,22 +449,7 @@ export default function ProductDetail() {
     if (!price || price <= 0) { alert('Price not available for this product.'); return; }
     setBuyingNow(true);
 
-    // Fetch seller's Flutterwave subaccount
-    let sellerSubaccountId = null;
     let sellerId = product.user_id || null;
-    try {
-      if (sellerId) {
-        const { data: bankData } = await supabase
-          .from('seller_bank_details')
-          .select('flutterwave_subaccount_id')
-          .eq('user_id', sellerId)
-          .eq('is_verified', true)
-          .maybeSingle();
-        if (bankData?.flutterwave_subaccount_id) {
-          sellerSubaccountId = bankData.flutterwave_subaccount_id;
-        }
-      }
-    } catch { /* proceed without subaccount */ }
 
     payForProduct({
       amount: price * quantity,
@@ -474,11 +459,37 @@ export default function ProductDetail() {
       productId: product.id || '',
       sellerName: product.seller || '',
       sellerId,
-      sellerSubaccountId,
-      onSuccess: (response) => {
+      sellerSubaccountId: null, // No direct split — payment held until delivery confirmed
+      onSuccess: async (response) => {
         setBuyingNow(false);
+        // Create order record
+        try {
+          await supabase.from('orders').insert([{
+            buyer_id: user.id,
+            seller_id: sellerId,
+            product_id: product.id,
+            product_name: product.name || '',
+            product_image: product.images?.[0] || '',
+            quantity,
+            unit_price: price,
+            total_price: price * quantity,
+            status: 'paid',
+            flutterwave_tx_ref: response.tx_ref || response.txRef || '',
+            flutterwave_tx_id: response.transaction_id?.toString() || '',
+          }]);
+          // Notify seller
+          if (sellerId) {
+            supabase.from('notifications').insert([{
+              seller_id: sellerId,
+              type: 'new_order',
+              title: 'New order received!',
+              message: `${user.user_metadata?.full_name || 'A buyer'} ordered "${product.name}" (×${quantity}) for ₦${(price * quantity).toLocaleString()}. Payment held until delivery is confirmed.`,
+              is_read: false,
+            }]).catch(() => {});
+          }
+        } catch (err) { console.warn('Order record failed:', err); }
         triggerGoogleReviewSurvey({ email: user.email || '', productName: product.name || '', productId: product.id || '' });
-        alert(`🎉 Payment successful!\n\nTransaction ref: ${response.tx_ref}\n\nThe seller has been notified and will contact you on WhatsApp to arrange delivery.`);
+        navigate('/orders');
       },
       onClose: () => { setBuyingNow(false); },
     });

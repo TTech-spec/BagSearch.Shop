@@ -1732,7 +1732,6 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
   const[paying,setPaying]=useState(false);
   const total=cartItems.reduce((a,i)=>a+i.price*i.qty,0);
   const itemCount=cartItems.reduce((a,i)=>a+i.qty,0);
-  const tax=total*0.075;const grand=total+tax;
 
   const handlePayNow=async()=>{
     if(!cartItems.length)return;if(!isAuthed){onRequireAuth&&onRequireAuth();return;}
@@ -1741,25 +1740,17 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
       // For cart checkout, pay total amount; use first product's details for reference
       const firstItem=cartItems[0];
       const productNames=cartItems.map(i=>i.name).join(', ');
-      // Fetch seller's subaccount if single seller
       const sellerIds=[...new Set(cartItems.map(i=>i.sellerId).filter(Boolean))];
-      let sellerSubaccountId=null;
       let sellerId=sellerIds[0]||null;
-      if(sellerIds.length===1&&sellerIds[0]){
-        try{
-          const{data:bankRow}=await supabase.from('seller_bank_details').select('flutterwave_subaccount_id').eq('user_id',sellerIds[0]).maybeSingle();
-          if(bankRow?.flutterwave_subaccount_id)sellerSubaccountId=bankRow.flutterwave_subaccount_id;
-        }catch(e){console.warn('Could not fetch seller subaccount:',e);}
-      }
       await payForProduct({
-        amount:grand,
+        amount:total,
         email:user?.email||'',
         name:user?.user_metadata?.full_name||user?.email||'Customer',
         productName:productNames.length>60?productNames.slice(0,57)+'...':productNames,
         productId:firstItem.id,
         sellerName:firstItem.seller||'Seller',
         sellerId,
-        sellerSubaccountId,
+        sellerSubaccountId:null,
         onSuccess:()=>{setPaying(false);onClose();},
         onClose:()=>{setPaying(false);},
       });
@@ -1819,19 +1810,17 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
           {cartItems.length>0&&<div style={{padding:'18px 22px 28px',borderTop:`1px solid ${C.borderLight}`,background:'white',flexShrink:0}}>
             <div style={{background:C.surfaceDim,borderRadius:18,padding:'16px 18px',marginBottom:16,border:`1.5px solid ${C.borderLight}`}}>
               <p style={{fontSize:10,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:11}}>Order Summary</p>
-              {[{l:'Subtotal',v:formatCurrency(total)},{l:'Tax (7.5%)',v:formatCurrency(tax)}].map(r=>(
-                <div key={r.l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.textMuted,fontWeight:500}}>{r.l}</span><span style={{fontSize:13,fontWeight:700,color:r.g?'#15803d':C.text}}>{r.v}</span></div>
-              ))}
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.textMuted,fontWeight:500}}>Subtotal ({itemCount} {itemCount===1?'item':'items'})</span><span style={{fontSize:13,fontWeight:700,color:C.text}}>{formatCurrency(total)}</span></div>
               <div style={{height:1,background:C.border,margin:'11px 0'}}/>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <span style={{fontSize:16,fontWeight:900,color:C.text}}>Total</span>
-                <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
+                <span style={{fontSize:26,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(total)}</span>
               </div>
             </div>
             <button onClick={handlePayNow} disabled={paying}
               style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',background:paying?'linear-gradient(135deg,#9ca3af,#6b7280)':'linear-gradient(135deg,#2563eb,#3b82f6)',color:'white',fontWeight:900,fontSize:15,transition:'all 0.5s',boxShadow:'0 8px 28px rgba(37,99,235,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:10}}>
               {paying?(<><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>)
-                :(<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(grand)}</>)}
+                :(<><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(total)}</>)}
             </button>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <div style={{flex:1,height:1,background:C.border}}/>

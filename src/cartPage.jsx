@@ -92,8 +92,6 @@ export default function CartPage() {
 
   const total = cartItems.reduce((a, i) => a + i.price * i.qty, 0);
   const itemCount = cartItems.reduce((a, i) => a + i.qty, 0);
-  const tax = total * 0.075;
-  const grand = total + tax;
 
   const handlePayNow = async () => {
     if (!cartItems.length || !user) return;
@@ -102,24 +100,52 @@ export default function CartPage() {
       const firstItem = cartItems[0];
       const productNames = cartItems.map(i => i.name).join(', ');
       const sellerIds = [...new Set(cartItems.map(i => i.sellerId).filter(Boolean))];
-      let sellerSubaccountId = null;
       let sellerId = sellerIds[0] || null;
-      if (sellerIds.length === 1 && sellerIds[0]) {
-        try {
-          const { data: bankRow } = await supabase.from('seller_bank_details').select('flutterwave_subaccount_id').eq('user_id', sellerIds[0]).maybeSingle();
-          if (bankRow?.flutterwave_subaccount_id) sellerSubaccountId = bankRow.flutterwave_subaccount_id;
-        } catch (e) { console.warn('Could not fetch seller subaccount:', e); }
-      }
+      // No subaccount split — money is held until buyer confirms delivery
       await payForProduct({
-        amount: grand,
+        amount: total,
         email: user.email || '',
         name: user.user_metadata?.full_name || user.email || 'Customer',
         productName: productNames.length > 60 ? productNames.slice(0, 57) + '...' : productNames,
         productId: firstItem.id,
         sellerName: firstItem.seller || 'Seller',
         sellerId,
-        sellerSubaccountId,
-        onSuccess: () => { setPaying(false); navigate('/products'); },
+        sellerSubaccountId: null,
+        onSuccess: async (response) => {
+          // Create order records for each seller so we can track delivery & payout
+          try {
+            const orderItems = cartItems.map(item => ({
+              buyer_id: user.id,
+              seller_id: item.sellerId || null,
+              product_id: item.id,
+              product_name: item.name,
+              product_image: item.src || '',
+              seller_name: item.seller || 'Seller',
+              quantity: item.qty,
+              unit_price: item.price,
+              total_price: item.price * item.qty,
+              status: 'paid',
+              flutterwave_tx_ref: response.tx_ref || response.txRef || '',
+              flutterwave_tx_id: response.transaction_id?.toString() || '',
+            }));
+            await supabase.from('orders').insert(orderItems);
+            // Notify each seller
+            const uniqueSellers = [...new Set(cartItems.map(i => i.sellerId).filter(Boolean))];
+            for (const sid of uniqueSellers) {
+              const sellerItems = cartItems.filter(i => i.sellerId === sid);
+              const sellerTotal = sellerItems.reduce((s, i) => s + i.price * i.qty, 0);
+              supabase.from('notifications').insert([{
+                seller_id: sid,
+                type: 'new_order',
+                title: 'New order received!',
+                message: `${user.user_metadata?.full_name || 'A buyer'} ordered ${sellerItems.length} item(s) for ₦${sellerTotal.toLocaleString()}. Payment is held until delivery is confirmed.`,
+                is_read: false,
+              }]).catch(() => {});
+            }
+          } catch (err) { console.warn('Order record failed:', err); }
+          setPaying(false);
+          navigate('/orders');
+        },
         onClose: () => { setPaying(false); },
       });
     } catch (err) { console.error('Cart payment error:', err); setPaying(false); }
@@ -188,20 +214,19 @@ export default function CartPage() {
             {/* Order Summary */}
             <div style={{background:'white',borderRadius:20,padding:'20px 22px',marginBottom:20,border:`1.5px solid ${C.borderLight}`,boxShadow:'0 2px 12px rgba(200,75,17,0.06)'}}>
               <p style={{fontSize:11,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:14}}>Order Summary</p>
-              {[
-                { l: 'Subtotal', v: formatCurrency(total) },
-                { l: 'Tax (7.5%)', v: formatCurrency(tax) },
-              ].map(r => (
-                <div key={r.l} style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
-                  <span style={{fontSize:14,color:C.textMuted,fontWeight:500}}>{r.l}</span>
-                  <span style={{fontSize:14,fontWeight:700,color:C.text}}>{r.v}</span>
-                </div>
-              ))}
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+                <span style={{fontSize:14,color:C.textMuted,fontWeight:500}}>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
+                <span style={{fontSize:14,fontWeight:700,color:C.text}}>{formatCurrency(total)}</span>
+              </div>
               <div style={{height:1,background:C.border,margin:'14px 0'}}/>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <span style={{fontSize:17,fontWeight:900,color:C.text}}>Total</span>
-                <span style={{fontSize:28,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(grand)}</span>
+                <span style={{fontSize:28,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(total)}</span>
               </div>
+              <p style={{fontSize:11,color:C.textFaint,fontWeight:500,marginTop:10,lineHeight:1.5}}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textFaint} strokeWidth="2" style={{verticalAlign:'-2px',marginRight:4}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Payment is held securely until you confirm delivery
+              </p>
             </div>
 
             {/* Checkout buttons */}
@@ -214,7 +239,7 @@ export default function CartPage() {
                 {paying ? (
                   <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>
                 ) : (
-                  <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(grand)}</>
+                  <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(total)}</>
                 )}
               </button>
 
