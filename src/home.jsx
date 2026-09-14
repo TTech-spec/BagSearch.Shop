@@ -4,7 +4,7 @@ import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import specialOfferImg from './images/shopping-bag.png';
-import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.jpg';
+import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "About Us", "Visual Search", "Contact Us"];
@@ -716,7 +716,7 @@ function BlogSection() {
             {/* Featured post */}
             <div className="blog-featured" style={{ display: "grid", gridTemplateColumns: "1.35fr 1fr", borderRadius: 20, overflow: "hidden", marginBottom: 20, boxShadow: "0 8px 32px rgba(26,10,0,0.07)", opacity: visible ? 1 : 0, animation: visible ? "blogIn 0.7s ease both" : "none", cursor: "pointer" }} onMouseEnter={() => setHoveredCard("featured")} onMouseLeave={() => setHoveredCard(null)}>
               <div className="blog-featured-img" style={{ position: "relative", height: 400, overflow: "hidden" }}>
-                <img src={posts[0].image_url || posts[0].img || BLOG_FALLBACK[0].img} alt={posts[0].title} className="blog-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = BLOG_FALLBACK[0].img; }} />
+                <img src={posts[0].image_url || posts[0].img || BLOG_FALLBACK[0].img} alt={posts[0].title} className="blog-img" loading="lazy" width="600" height="400" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = BLOG_FALLBACK[0].img; }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, transparent 55%, rgba(26,10,0,0.25))" }} />
                 <div style={{ position: "absolute", top: 18, left: 18, background: "#C94B2C", color: "white", fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 4 }}>{posts[0].category?.[0] || posts[0].cat || "Featured"}</div>
               </div>
@@ -736,7 +736,7 @@ function BlogSection() {
               {posts.slice(1).map((post, i) => (
                 <article key={post.article_id || post.id || i} className="blog-card" onMouseEnter={() => setHoveredCard(i)} onMouseLeave={() => setHoveredCard(null)} style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(26,10,0,0.07)", background: "#FFFFFF", opacity: visible ? 1 : 0, animation: visible ? `blogIn 0.6s ease ${0.1 + i * 0.08}s both` : "none" }}>
                   <div style={{ position: "relative", height: 196, overflow: "hidden" }}>
-                    <img src={post.image_url || post.img || BLOG_FALLBACK[i + 1]?.img} alt={post.title} className="blog-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { e.target.src = BLOG_FALLBACK[Math.min(i + 1, BLOG_FALLBACK.length - 1)].img; }} />
+                    <img src={post.image_url || post.img || BLOG_FALLBACK[i + 1]?.img} alt={post.title} className="blog-img" loading="lazy" width="400" height="196" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { e.target.src = BLOG_FALLBACK[Math.min(i + 1, BLOG_FALLBACK.length - 1)].img; }} />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.45) 0%, transparent 55%)" }} />
                     <span style={{ position: "absolute", bottom: 10, left: 10, background: "rgba(26,10,0,0.65)", backdropFilter: "blur(4px)", color: "#F9DDD0", fontSize: 9, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 4 }}>{post.category?.[0] || post.cat || "Editorial"}</span>
                   </div>

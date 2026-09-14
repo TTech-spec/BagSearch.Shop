@@ -8,9 +8,9 @@ import { markOnboardingSeen } from './utils/onboardingState';
 import LogoIcon from './components/Logo.jsx';
 import OnboardingDots from './components/OnboardingDots.jsx';
 
-import slide1Img from './assets/images/onboarding/From Klickpin.com- Save this easy pilates flow roundup that make everything look instantly polished with practical inspiration you can use right a.jpg';
+import slide1Img from './assets/images/onboarding/From Klickpin.com- Save this easy pilates flow roundup that make everything look instantly polished with practical inspiration you can use right a.webp';
 import slide2Video from './assets/images/onboarding/From Klickpin.com- Bookmark these 33 Refined natural skincare routine ideas that feel fresh elevated and surprisingly easy to recreate at home for.mp4';
-import slide3Img from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.jpg';
+import slide3Img from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.webp';
 
 // Brand accent — rhymes with the terracotta/orange used everywhere else on
 // BagSearch (login, register, products), instead of a mismatched violet.
