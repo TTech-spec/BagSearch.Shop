@@ -761,6 +761,9 @@ const LoginPage = () => {
             <img
               src={BANNER_IMAGE}
               alt="BagSearch premium bags"
+              loading="eager"
+              width="600"
+              height="290"
               style={{ width: '100%', height: 290, objectFit: 'cover', objectPosition: 'center', display: 'block' }}
             />
             {/* Subtle top-to-transparent gradient so buttons stay readable */}

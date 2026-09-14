@@ -360,7 +360,7 @@ function UploadReelModal({ open, onClose, user, onUploaded }) {
                         background: isSelected ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
                         color: 'white', cursor: 'pointer', fontFamily: "'Manrope',sans-serif",
                       }}>
-                      {img && <img src={img} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />}
+                      {img && <img src={img} alt="" loading="lazy" width="32" height="32" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />}
                       <div style={{ textAlign: 'left' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                         {p.price && <div style={{ fontSize: 11, color: C.primaryLight, fontWeight: 700 }}>₦{Number(p.price).toLocaleString()}</div>}

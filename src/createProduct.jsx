@@ -718,7 +718,7 @@ export default function CreateProduct() {
                     border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                     animationDelay: `${idx * 50}ms`
                   }}>
-                    <img src={img.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={img.preview} alt="" loading="lazy" width="120" height="120" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <button type="button" className="remove-btn" onClick={e => { e.stopPropagation(); removeImage(idx); }}
                       style={{
                         position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%",

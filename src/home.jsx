@@ -245,6 +245,9 @@ function SpecialOffersBanner({ navigate }) {
             <img
               src={SPECIAL_OFFER_SLIDES[0]}
               alt="Special offer bag"
+              loading="lazy"
+              width="200"
+              height="200"
               className={`special-offer-img-icon${activeSlide === 0 && !fading ? '' : ' special-offer-img-fading'}`}
               style={{ pointerEvents: 'none', opacity: activeSlide === 0 && !fading ? 1 : 0 }}
             />
@@ -254,6 +257,9 @@ function SpecialOffersBanner({ navigate }) {
                 key={i + 1}
                 src={src}
                 alt={`Special offer ${i + 2}`}
+                loading="lazy"
+                width="600"
+                height="400"
                 className={`special-offer-img-photo${activeSlide === i + 1 && !fading ? '' : ' special-offer-img-fading'}`}
                 style={{ opacity: activeSlide === i + 1 && !fading ? 1 : 0 }}
               />
@@ -371,8 +377,8 @@ function NewArrivalsSection({ navigate, sectionRef }) {
         </div>
         <div className="arrivals-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: 6, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(30px)", transition: "opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s" }}>
           <div className="arrivals-img" style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", borderRadius: "16px 0 0 16px", cursor: "pointer" }} onClick={() => navigate("/register")}>
-            {prevItem && <img src={prevItem.src} alt={prevItem.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: `exitImg${dir > 0 ? "L" : "R"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` }} />}
-            <img key={`img-${active}`} src={item.src} alt={item.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: animating ? `enterImg${dir > 0 ? "R" : "L"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` : "none" }} />
+            {prevItem && <img src={prevItem.src} alt={prevItem.name} width="500" height="625" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: `exitImg${dir > 0 ? "L" : "R"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` }} />}
+            <img key={`img-${active}`} src={item.src} alt={item.name} width="500" height="625" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", animation: animating ? `enterImg${dir > 0 ? "R" : "L"} 0.65s cubic-bezier(0.77,0,0.175,1) forwards` : "none" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.45) 100%)" }} />
             <div style={{ position: "absolute", top: 16, left: 16, background: "#C94B2C", color: "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", padding: "4px 10px", borderRadius: 4 }}>{item.tag}</div>
             <button onClick={e => { e.stopPropagation(); setLiked(s => { const n = new Set(s); n.has(active) ? n.delete(active) : n.add(active); return n; }); }} style={{ position: "absolute", top: 12, right: 12, width: 38, height: 38, borderRadius: "50%", background: liked.has(active) ? "#C94B2C" : "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", color: liked.has(active) ? "white" : "#C94B2C" }}><Icon name={liked.has(active) ? "favorite" : "favorite_border"} size={17} /></button>
@@ -402,7 +408,7 @@ function NewArrivalsSection({ navigate, sectionRef }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 10, overflowX: "auto", paddingBottom: 2, opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.4s" }}>
-          {NEW_ARRIVALS.map((a, i) => (<div key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ flexShrink: 0, width: active === i ? 104 : 60, height: 60, borderRadius: 10, overflow: "hidden", cursor: "pointer", transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)", outline: active === i ? "2.5px solid #C94B2C" : "2.5px solid transparent", outlineOffset: 2 }}><img src={a.src} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: active === i ? "brightness(1)" : "brightness(0.5) saturate(0.3)", transition: "filter 0.4s" }} /></div>))}
+          {NEW_ARRIVALS.map((a, i) => (<div key={i} onClick={() => { goTo(i); resetAuto(); }} style={{ flexShrink: 0, width: active === i ? 104 : 60, height: 60, borderRadius: 10, overflow: "hidden", cursor: "pointer", transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)", outline: active === i ? "2.5px solid #C94B2C" : "2.5px solid transparent", outlineOffset: 2 }}><img src={a.src} alt={a.name} loading="lazy" width="104" height="60" style={{ width: "100%", height: "100%", objectFit: "cover", filter: active === i ? "brightness(1)" : "brightness(0.5) saturate(0.3)", transition: "filter 0.4s" }} /></div>))}
         </div>
       </div>
       <style>{`
@@ -906,7 +912,7 @@ export default function LuxeBag() {
               <div className="category-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
                 {CATEGORIES.map((cat, i) => (
                   <div key={cat.name} className={`product-card scroll-reveal-scale delay-${i + 1}`} style={{ position: "relative", height: 360, borderRadius: 16, overflow: "hidden", cursor: "pointer" }}>
-                    <img src={cat.src} alt={cat.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <img src={cat.src} alt={cat.name} className="card-img" loading="lazy" width="400" height="360" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,10,0,0.75) 0%, transparent 55%)" }} />
                     <div style={{ position: "absolute", bottom: 24, left: 24 }}>
                       <h3 style={{ fontSize: 20, fontWeight: 800, color: "white", marginBottom: 8 }}>{cat.name}</h3>
@@ -922,7 +928,7 @@ export default function LuxeBag() {
           <section style={{ padding: "80px 24px", maxWidth: 1280, margin: "0 auto" }}>
             <div className="scroll-reveal-scale visual-search-container" style={{ background: "#C94B2C", borderRadius: 20, overflow: "hidden", position: "relative", minHeight: 340, display: "flex", alignItems: "center" }}>
               <div className="visual-search-image" style={{ position: "absolute", right: 0, top: 0, width: "48%", height: "100%" }}>
-                <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" alt="Visual Search" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
+                <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop&q=80" alt="Visual Search" loading="lazy" width="800" height="340" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }} />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(201,75,44,0.8) 0%, rgba(201,75,44,0.4) 50%, transparent 80%)" }} />
               </div>
               <div style={{ position: "absolute", right: "48%", top: "-40px", width: 200, height: 200, borderRadius: "50%", background: "rgba(249,221,208,0.1)" }} />
@@ -948,7 +954,7 @@ export default function LuxeBag() {
               {TRENDING.map((item, i) => (
                 <div key={item.name} className={`product-card scroll-reveal delay-${i + 1}`} style={{ cursor: "pointer" }}>
                   <div style={{ position: "relative", aspectRatio: "1/1", borderRadius: 14, overflow: "hidden", marginBottom: 14, background: "#F9DDD0" }}>
-                    <img src={item.src} alt={item.name} className="card-img" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <img src={item.src} alt={item.name} className="card-img" loading="lazy" width="300" height="300" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                     <div>
