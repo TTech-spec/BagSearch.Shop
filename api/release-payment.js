@@ -23,8 +23,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!SECRET_KEY) return res.status(500).json({ error: 'Payment configuration missing' });
+  const SECRET_KEY = (process.env.FLUTTERWAVE_SECRET_KEY || '').trim();
+  if (!SECRET_KEY) return res.status(500).json({ error: 'Payment configuration missing — FLUTTERWAVE_SECRET_KEY not set' });
 
   try {
     const { order_id } = req.body;

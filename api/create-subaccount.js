@@ -19,9 +19,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
+  const SECRET_KEY = (process.env.FLUTTERWAVE_SECRET_KEY || '').trim();
   if (!SECRET_KEY) {
-    return res.status(500).json({ error: 'Payment configuration missing' });
+    return res.status(500).json({ error: 'Payment configuration missing — FLUTTERWAVE_SECRET_KEY not set' });
+  }
+  if (!SECRET_KEY.startsWith('FLWSECK')) {
+    console.error('FLUTTERWAVE_SECRET_KEY does not start with FLWSECK — got prefix:', SECRET_KEY.substring(0, 8));
+    return res.status(500).json({ error: 'Invalid payment key format. The secret key should start with FLWSECK.' });
   }
 
   try {

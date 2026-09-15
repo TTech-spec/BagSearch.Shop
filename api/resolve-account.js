@@ -17,8 +17,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!SECRET_KEY) return res.status(500).json({ error: 'Payment configuration missing' });
+  const SECRET_KEY = (process.env.FLUTTERWAVE_SECRET_KEY || '').trim();
+  if (!SECRET_KEY) return res.status(500).json({ error: 'Payment configuration missing — FLUTTERWAVE_SECRET_KEY not set' });
+  if (!SECRET_KEY.startsWith('FLWSECK')) {
+    console.error('FLUTTERWAVE_SECRET_KEY does not start with FLWSECK — got prefix:', SECRET_KEY.substring(0, 8));
+    return res.status(500).json({ error: 'Invalid payment key format. The secret key should start with FLWSECK.' });
+  }
 
   try {
     const { account_number, bank_code } = req.body;
@@ -45,7 +49,14 @@ export default async function handler(req, res) {
         account_number: data.data.account_number,
       });
     } else {
-      return res.status(400).json({ error: data.message || 'Could not resolve account', flw_status: response.status });
+      const msg = data.message || 'Could not resolve account';
+      console.error('Flutterwave resolve failed:', response.status, msg);
+      if (response.status === 401 || msg.toLowerCase().includes('invalid authorization')) {
+        return res.status(400).json({
+          error: 'Flutterwave authorization failed. Please check that your secret key is correct and active in your Flutterwave dashboard (API Settings → Secret Key).',
+        });
+      }
+      return res.status(400).json({ error: msg });
     }
   } catch (err) {
     console.error('Account resolve error:', err);
