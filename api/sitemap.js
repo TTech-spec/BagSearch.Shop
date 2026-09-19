@@ -87,6 +87,14 @@ const STATIC_PAGES = [
   { path: '/contact',        changefreq: 'monthly', priority: '0.5' },
   { path: '/policy',         changefreq: 'monthly', priority: '0.6' },
   { path: '/terms-of-service', changefreq: 'monthly', priority: '0.5' },
+  { path: '/products?location=lagos',           changefreq: 'daily', priority: '0.8' },
+  { path: '/products?location=abuja',           changefreq: 'daily', priority: '0.8' },
+  { path: '/products?location=port-harcourt',   changefreq: 'daily', priority: '0.7' },
+  { path: '/products?location=ibadan',          changefreq: 'daily', priority: '0.7' },
+  { path: '/products?location=lekki',           changefreq: 'daily', priority: '0.7' },
+  { path: '/products?location=victoria-island', changefreq: 'daily', priority: '0.7' },
+  { path: '/products?location=ikeja',           changefreq: 'daily', priority: '0.7' },
+  { path: '/products?location=enugu',           changefreq: 'daily', priority: '0.7' },
 ];
 
 export default async function handler(req, res) {
