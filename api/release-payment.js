@@ -1,12 +1,5 @@
-/**
- * POST /api/release-payment
- *
- * Called when a buyer confirms delivery. Transfers the order amount
- * to the seller's bank account via Flutterwave Transfer API.
- *
- * Body: { order_id }
- */
 import { createClient } from '@supabase/supabase-js';
+import { getFlutterwaveConfig, authHeaders } from './_flutterwave-auth.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
@@ -23,14 +16,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!SECRET_KEY) return res.status(500).json({ error: 'Payment configuration missing' });
-
   try {
+    const config = await getFlutterwaveConfig();
+    if (!config) return res.status(500).json({ error: 'Payment configuration missing' });
+
     const { order_id } = req.body;
     if (!order_id) return res.status(400).json({ error: 'Missing order_id' });
 
-    // Fetch the order
     const { data: order, error: orderErr } = await supabase
       .from('orders')
       .select('*')
@@ -49,7 +41,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No seller associated with this order' });
     }
 
-    // Get seller bank details
     const { data: bankDetails } = await supabase
       .from('seller_bank_details')
       .select('bank_code, account_number, account_name')
@@ -57,20 +48,14 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (!bankDetails?.account_number || !bankDetails?.bank_code) {
-      // Mark as credited anyway since we can't transfer without bank details
-      // Seller will need to add bank details to receive future payouts
       await supabase.from('orders').update({ status: 'seller_credited', credited_at: new Date().toISOString() }).eq('id', order_id);
       return res.status(200).json({ success: true, message: 'Order completed. Seller has no bank details on file — they should add bank details to receive payouts.' });
     }
 
-    // Transfer money to seller via Flutterwave
     const transferRef = `BS-PAYOUT-${order_id}-${Date.now()}`;
-    const response = await fetch('https://api.flutterwave.com/v3/transfers', {
+    const response = await fetch(`${config.baseUrl}/transfers`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(config.token),
       body: JSON.stringify({
         account_bank: bankDetails.bank_code,
         account_number: bankDetails.account_number,
@@ -85,7 +70,6 @@ export default async function handler(req, res) {
     const data = await response.json();
     console.log('Flutterwave transfer response:', response.status, JSON.stringify(data));
 
-    // Update order status regardless — the transfer is initiated
     await supabase.from('orders').update({
       status: 'seller_credited',
       credited_at: new Date().toISOString(),

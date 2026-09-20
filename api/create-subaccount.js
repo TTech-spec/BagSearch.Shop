@@ -1,15 +1,6 @@
-/**
- * POST /api/create-subaccount
- *
- * Creates a Flutterwave subaccount for a seller so they receive
- * payment directly when a buyer purchases their product.
- *
- * Requires FLUTTERWAVE_SECRET_KEY in Vercel environment variables.
- *
- * Body: { bank_code, account_number, business_name, split_value, user_id }
- */
+import { getFlutterwaveConfig, authHeaders } from './_flutterwave-auth.js';
+
 export default async function handler(req, res) {
-  // CORS
   const origin = req.headers.origin || '';
   const allowed = ['https://www.bagsearch.shop', 'https://bagsearch.shop'];
   res.setHeader('Access-Control-Allow-Origin', allowed.includes(origin) ? origin : allowed[0]);
@@ -19,25 +10,19 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!SECRET_KEY) {
-    return res.status(500).json({ error: 'Payment configuration missing' });
-  }
-
   try {
+    const config = await getFlutterwaveConfig();
+    if (!config) return res.status(500).json({ error: 'Payment configuration missing' });
+
     const { bank_code, account_number, business_name, user_id } = req.body;
 
     if (!bank_code || !account_number || !business_name) {
       return res.status(400).json({ error: 'Missing required fields: bank_code, account_number, business_name' });
     }
 
-    // Create subaccount on Flutterwave
-    const response = await fetch('https://api.flutterwave.com/v3/subaccounts', {
+    const response = await fetch(`${config.baseUrl}/subaccounts`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SECRET_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders(config.token),
       body: JSON.stringify({
         account_bank: bank_code,
         account_number: account_number,
@@ -48,7 +33,7 @@ export default async function handler(req, res) {
         business_mobile: '08000000000',
         country: 'NG',
         split_type: 'flat',
-        split_value: 0, // No commission — seller gets everything minus Flutterwave fees
+        split_value: 0,
       }),
     });
 
