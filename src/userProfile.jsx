@@ -453,6 +453,181 @@ function DangerZone({ onDelete, visible }) {
   );
 }
 
+// ─── Mobile: grouped list row (reference app style) ───────────────────────────
+function ListRow({ icon, label, value, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        all:'unset', boxSizing:'border-box', cursor: onClick ? 'pointer' : 'default',
+        width:'100%', display:'flex', alignItems:'center', gap:13,
+        padding:'14px 16px',
+        WebkitTapHighlightColor:'transparent',
+      }}
+    >
+      <div style={{
+        width:32, height:32, borderRadius:9, flexShrink:0,
+        background: danger ? '#fef2f2' : T.orangePale,
+        border:`1px solid ${danger ? '#fecaca' : T.orange+'33'}`,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        color: danger ? T.red : T.orange,
+      }}>
+        {icon}
+      </div>
+      <span style={{ flex:1, fontSize:14, fontWeight:500, color: danger ? T.red : T.textPrimary, textAlign:'left' }}>{label}</span>
+      {value && <span style={{ fontSize:13, color:T.textMuted, marginRight:2 }}>{value}</span>}
+      {onClick && (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.textFaint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// ─── Mobile: seller avatar row (recently interacted) ──────────────────────────
+function SellerRow({ seller, navigate }) {
+  const displayName = seller.brand_name || seller.full_name || 'Seller';
+  const initials = displayName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return (
+    <button
+      onClick={() => navigate(seller.profile_slug ? `/vendor/${seller.profile_slug}` : `/vendor/${seller.user_id}`)}
+      style={{
+        all:'unset', boxSizing:'border-box', cursor:'pointer',
+        display:'flex', alignItems:'center', gap:12,
+        padding:'10px 16px', width:'100%',
+        WebkitTapHighlightColor:'transparent',
+      }}
+    >
+      {seller.avatar_url ? (
+        <img src={seller.avatar_url} alt={displayName} style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', flexShrink:0, border:`1px solid ${T.border}` }}/>
+      ) : (
+        <div style={{ width:44, height:44, borderRadius:'50%', flexShrink:0, background:`linear-gradient(135deg,${T.orange},${T.orangeLight})`, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:15, fontWeight:700 }}>
+          {initials}
+        </div>
+      )}
+      <div style={{ flex:1, minWidth:0, textAlign:'left' }}>
+        <p style={{ fontSize:14, fontWeight:600, color:T.textPrimary, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{displayName}</p>
+        <p style={{ fontSize:12, color:T.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginTop:1 }}>
+          Viewed {seller.productName || 'a product'} · {fmtShort(seller.lastViewedAt)}
+        </p>
+      </div>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.textFaint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  );
+}
+
+// ─── Mobile: buyer profile (matches the reference app's list-card layout) ─────
+function BuyerMobileProfile({ profile, history, recentSellers, loading, navigate, initials, onEditSave }) {
+  return (
+    <div className="buyer-mobile-profile" style={{ minHeight:'100vh', background:T.bg }}>
+      <style>{GLOBAL_CSS}</style>
+      <style>{`
+        .bm-card { background:${T.bgCard}; border-radius:16px; border:1px solid ${T.border}; overflow:hidden; }
+        .bm-row + .bm-row { border-top:1px solid ${T.border}; }
+        .bm-section-title { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:${T.textMuted}; padding:0 4px; margin-bottom:8px; }
+      `}</style>
+
+      <div style={{ padding:'20px 16px 100px', maxWidth:480, margin:'0 auto' }}>
+
+        <h1 style={{ fontSize:18, fontWeight:700, color:T.textPrimary, textAlign:'center', marginBottom:22 }}>Profile</h1>
+
+        {/* Avatar header card */}
+        <div className="bm-card" style={{ display:'flex', alignItems:'center', gap:14, padding:'16px', marginBottom:20 }}>
+          {loading ? <Skel w={56} h={56} r={999} /> : (
+            profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile?.full_name} style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', flexShrink:0 }}/>
+            ) : (
+              <div style={{ width:56, height:56, borderRadius:'50%', flexShrink:0, background:`linear-gradient(135deg,${T.orange},${T.orangeLight})`, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:19, fontWeight:700 }}>
+                {initials}
+              </div>
+            )
+          )}
+          <div style={{ flex:1, minWidth:0 }}>
+            {loading ? <Skel h={17} w={140} style={{ marginBottom:6 }}/> : (
+              <p style={{ fontSize:16, fontWeight:700, color:T.textPrimary, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{profile?.full_name || 'Buyer'}</p>
+            )}
+            {loading ? <Skel h={13} w={170}/> : (
+              <p style={{ fontSize:13, color:T.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginTop:2 }}>{profile?.email}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recently interacted sellers */}
+        <p className="bm-section-title">Recent Sellers</p>
+        <div className="bm-card" style={{ marginBottom:20, paddingBlock: recentSellers.length ? 4 : 0 }}>
+          {loading ? (
+            <div style={{ padding:16, display:'flex', flexDirection:'column', gap:12 }}>
+              {[...Array(2)].map((_,i)=><Skel key={i} h={44} r={10}/>)}
+            </div>
+          ) : recentSellers.length === 0 ? (
+            <div style={{ padding:'22px 16px', textAlign:'center' }}>
+              <p style={{ fontSize:13, color:T.textMuted }}>No sellers viewed yet</p>
+            </div>
+          ) : (
+            recentSellers.map(s => (
+              <div className="bm-row" key={s.user_id}>
+                <SellerRow seller={s} navigate={navigate} />
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Recent searches */}
+        <p className="bm-section-title">Recent Searches</p>
+        <div className="bm-card" style={{ marginBottom:20 }}>
+          {loading ? (
+            <div style={{ padding:16, display:'flex', flexDirection:'column', gap:10 }}>
+              {[...Array(3)].map((_,i)=><Skel key={i} h={16} r={6}/>)}
+            </div>
+          ) : history.length === 0 ? (
+            <div style={{ padding:'22px 16px', textAlign:'center' }}>
+              <p style={{ fontSize:13, color:T.textMuted }}>No searches yet</p>
+            </div>
+          ) : (
+            history.slice(0, 6).map((item, i) => (
+              <div className="bm-row" key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 16px' }}>
+                <div style={{ width:28, height:28, borderRadius:8, background:T.orangePale, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  {item.type === 'image'
+                    ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5L9 19"/></svg>
+                    : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.orange} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  }
+                </div>
+                <span style={{ flex:1, fontSize:13.5, color:T.textPrimary, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.query}</span>
+                <span style={{ fontSize:11.5, color:T.textFaint, flexShrink:0 }}>{fmtShort(item.created_at)}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Account info — editable */}
+        <p className="bm-section-title">Account</p>
+        <div className="bm-card" style={{ marginBottom:20, padding:'4px 2px' }}>
+          <div style={{ padding:'8px 12px 4px' }}>
+            <NameEditor value={profile?.full_name} onSave={onEditSave} loading={loading} />
+          </div>
+          <div style={{ borderTop:`1px solid ${T.border}`, marginTop:8 }}>
+            <div style={{ padding:'4px 4px 0' }}>
+              <EditField icon={<Mail size={13}/>} label="Email" field="email" type="email" value={profile?.email} onSave={onEditSave} loading={loading} accentColor={T.orange}/>
+              <EditField icon={<Phone size={13}/>} label="Phone" field="phone" type="tel" value={profile?.phone} onSave={onEditSave} loading={loading} accentColor={T.green}/>
+            </div>
+          </div>
+        </div>
+
+        {/* Support / misc */}
+        <p className="bm-section-title">Support</p>
+        <div className="bm-card">
+          <div className="bm-row"><ListRow icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>} label="Help Center" onClick={() => navigate('/contact')} /></div>
+          <div className="bm-row"><ListRow icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>} label="Terms of Service" onClick={() => navigate('/terms-of-service')} /></div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
@@ -467,12 +642,13 @@ export default function UserProfile() {
     noindex: true,
   });
 
-  const [profile,  setProfile ] = useState(null);
-  const [history,  setHistory ] = useState([]);
-  const [stats,    setStats   ] = useState(null);
-  const [loading,  setLoading ] = useState(true);
-  const [error,    setError   ] = useState(null);
-  const [toast,    setToast   ] = useState({ visible:false, msg:'', type:'success' });
+  const [profile,      setProfile     ] = useState(null);
+  const [history,      setHistory     ] = useState([]);
+  const [stats,        setStats       ] = useState(null);
+  const [recentSellers,setRecentSellers] = useState([]);
+  const [loading,      setLoading     ] = useState(true);
+  const [error,        setError       ] = useState(null);
+  const [toast,        setToast       ] = useState({ visible:false, msg:'', type:'success' });
 
   const [delModal, setDelModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -508,7 +684,7 @@ export default function UserProfile() {
       setLoading(true); setError(null);
       try {
         const uid = authUser.id;
-        const { data: pd } = await supabase.from('users').select('user_id,full_name,email,phone,role,created_at').eq('user_id',uid).maybeSingle();
+        const { data: pd } = await supabase.from('users').select('user_id,full_name,email,phone,role,created_at,avatar_url').eq('user_id',uid).maybeSingle();
         setProfile(pd || { user_id:authUser.id, full_name:authUser.user_metadata?.full_name||'User', email:authUser.email, phone:authUser.user_metadata?.phone||'', role:authUser.user_metadata?.role||'buyer', created_at:authUser.created_at });
         const { data:hist } = await supabase.from('search_history').select('query,created_at,type').eq('user_id',uid).order('created_at',{ascending:false}).limit(10);
         setHistory(hist ?? []);
@@ -518,6 +694,48 @@ export default function UserProfile() {
           supabase.from('saved_items').select('id',{count:'exact',head:true}).eq('user_id',uid),
         ]);
         setStats({ totalSearches:total, imageSearches:imgs, orders:ord.error?0:(ord.count??0), savedItems:sav.error?0:(sav.count??0) });
+
+        // Recently interacted sellers — sellers whose products this buyer viewed,
+        // most recent view first, de-duplicated by seller. Two-step query
+        // (product_views -> products -> users) to match this codebase's
+        // existing pattern rather than assuming a PostgREST FK-embed exists.
+        const { data:views, error:viewsErr } = await supabase
+          .from('product_views')
+          .select('viewed_at,product_id')
+          .eq('buyer_id', uid)
+          .order('viewed_at', { ascending:false })
+          .limit(40);
+        if (viewsErr) {
+          console.warn('Recent sellers: could not load product_views (likely an RLS policy gap — buyers may not have SELECT access to their own rows yet):', viewsErr.message);
+        } else if (views?.length) {
+          const productIds = [...new Set(views.map(v => v.product_id))];
+          const { data:prods } = await supabase
+            .from('products')
+            .select('id,name,user_id')
+            .in('id', productIds);
+          const productMap = new Map((prods ?? []).map(p => [p.id, p]));
+
+          const bySeller = new Map();
+          for (const v of views) {
+            const product = productMap.get(v.product_id);
+            const sellerId = product?.user_id;
+            if (!sellerId || bySeller.has(sellerId)) continue;
+            bySeller.set(sellerId, { sellerId, lastViewedAt:v.viewed_at, productName:product?.name });
+          }
+          const sellerIds = [...bySeller.keys()].slice(0, 6);
+          if (sellerIds.length) {
+            const { data:sellers } = await supabase
+              .from('users')
+              .select('user_id,full_name,brand_name,avatar_url,profile_slug')
+              .in('user_id', sellerIds);
+            const merged = sellerIds.map(id => {
+              const s = sellers?.find(s => s.user_id === id);
+              const v = bySeller.get(id);
+              return s ? { ...s, lastViewedAt:v.lastViewedAt, productName:v.productName } : null;
+            }).filter(Boolean);
+            setRecentSellers(merged);
+          }
+        }
       } catch(e) { setError(e.message||'Failed to load'); }
       finally { setLoading(false); }
     }
@@ -554,6 +772,13 @@ export default function UserProfile() {
   const isSeller = profile?.role === 'seller';
   const initials = profile?.full_name ? profile.full_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : 'U';
 
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   if (!loading && error) return (
     <div style={{ minHeight:'100vh', background:T.bg, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'DM Sans',sans-serif", padding:24 }}>
       <style>{GLOBAL_CSS}</style>
@@ -567,6 +792,20 @@ export default function UserProfile() {
       </div>
     </div>
   );
+
+  if (isMobile && !isSeller) {
+    return (
+      <BuyerMobileProfile
+        profile={profile}
+        history={history}
+        recentSellers={recentSellers}
+        loading={loading}
+        navigate={navigate}
+        initials={initials}
+        onEditSave={handleSave}
+      />
+    );
+  }
 
   return (
     <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"'DM Sans',sans-serif", color:T.textPrimary, position:'relative', overflowX:'hidden' }}>

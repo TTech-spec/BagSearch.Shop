@@ -8,7 +8,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../services/api';
 
-const FLW_PUBLIC_KEY = 'FLWPUBK-7e4afdcd444955fea510c96d737a5f37-X';
+const FLW_PUBLIC_KEY = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
 const SCRIPT_URL = 'https://checkout.flutterwave.com/v3.js';
 
 // ─── Script loader (singleton) ────────────────────────────────────────────────
@@ -29,6 +29,25 @@ function loadFlutterwaveScript() {
     s.onerror = () => { scriptLoading = false; loadQueue.forEach(fn => fn()); loadQueue.length = 0; };
     document.head.appendChild(s);
   });
+}
+
+/**
+ * Look up a seller's Flutterwave subaccount ID from seller_bank_details.
+ * Returns null if not set up yet — payment falls back to master account.
+ */
+export async function getSellerSubaccountId(sellerId) {
+  if (!sellerId) return null;
+  try {
+    const { data } = await supabase
+      .from('seller_bank_details')
+      .select('flutterwave_subaccount_id')
+      .eq('user_id', sellerId)
+      .eq('is_verified', true)
+      .maybeSingle();
+    return data?.flutterwave_subaccount_id || null;
+  } catch {
+    return null;
+  }
 }
 
 /**

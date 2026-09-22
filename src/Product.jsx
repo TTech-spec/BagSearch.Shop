@@ -8,7 +8,7 @@ import { visualSearch } from './services/visualSearch';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import LogoIcon from './components/Logo.jsx';
 import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
-import { payForProduct } from './components/FlutterwavePayment';
+import { payForProduct, getSellerSubaccountId } from './components/FlutterwavePayment';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
@@ -1742,6 +1742,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
       const productNames=cartItems.map(i=>i.name).join(', ');
       const sellerIds=[...new Set(cartItems.map(i=>i.sellerId).filter(Boolean))];
       let sellerId=sellerIds[0]||null;
+      const sellerSubaccountId=await getSellerSubaccountId(sellerId);
       await payForProduct({
         amount:total,
         email:user?.email||'',
@@ -1750,7 +1751,7 @@ function CartPage({cartItems,onUpdateQty,onRemove,onClose,isAuthed,onRequireAuth
         productId:firstItem.id,
         sellerName:firstItem.seller||'Seller',
         sellerId,
-        sellerSubaccountId:null,
+        sellerSubaccountId,
         onSuccess:()=>{setPaying(false);onClose();},
         onClose:()=>{setPaying(false);},
       });

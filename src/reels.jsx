@@ -435,7 +435,7 @@ function CommentsPanel({ open, onClose, variant, reel, user }) {
     const { data, error } = await supabase.from('reel_comments').insert([{
       reel_id: reel.id,
       user_id: user.id,
-      user_name: user.user_metadata?.full_name || 'User',
+      author_name: user.user_metadata?.full_name || 'User',
       text,
     }]).select();
     if (!error && data?.[0]) {
@@ -476,11 +476,11 @@ function CommentsPanel({ open, onClose, variant, reel, user }) {
         {comments.map(c => (
           <div key={c.id} style={{ display: 'flex', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${C.primary},${C.primaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-              {(c.user_name || 'U').charAt(0).toUpperCase()}
+              {(c.author_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{c.user_name}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{c.author_name}</span>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{timeAgo(c.created_at)}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, wordBreak: 'break-word' }}>{c.text}</p>
@@ -860,8 +860,10 @@ export default function Reels() {
 
     if (isLiked) {
       await supabase.from('reel_likes').delete().eq('reel_id', reelId).eq('user_id', user.id);
+      supabase.rpc('decrement_reel_likes', { reel_uuid: reelId }).catch(() => {});
     } else {
       await supabase.from('reel_likes').insert([{ reel_id: reelId, user_id: user.id }]);
+      supabase.rpc('increment_reel_likes', { reel_uuid: reelId }).catch(() => {});
       // Send notification to reel owner
       const reel = reels.find(r => r.id === reelId);
       if (reel && reel.user_id !== user.id) {

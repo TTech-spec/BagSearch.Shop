@@ -8,6 +8,7 @@ import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { upsertUserProfile } from './services/userProfileService';
 import { useSEO } from './hooks/useSEO';
+import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face Mask Ideas for Entertaining-pin-id-1092052609666393734.jpg';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -233,16 +234,12 @@ const LoginPage = () => {
       const { data: profile, error: profileError } = await supabase
         .from('users').select('role').eq('user_id', userId).single();
 
-      if (profile && profile.role && profile.role !== role) {
-        await supabase.auth.signOut();
-        throw new Error(
-          `Invalid details. Please toggle to role you registered for (${profile.role === 'seller' ? 'Seller' : 'Buyer'}) to login.`
-        );
-      }
       if (profileError && profileError.code !== 'PGRST116' && profileError.name !== 'AbortError') {
         console.error('Error fetching user profile:', JSON.stringify(profileError, null, 2));
       }
-      const finalRole = profile?.role || role;
+      // Trust the account's actual stored role instead of a UI-selected one —
+      // the account already knows whether it's a buyer or seller.
+      const finalRole = profile?.role || 'buyer';
       const { error: upsertError } = await upsertUserProfile({
         userId,
         email: sanitizedEmail,
@@ -531,6 +528,81 @@ const LoginPage = () => {
             flex:1;
           }
 
+          /* ── Photo login layout (mobile) — matches reference: photo on top, sheet below ─ */
+          .mobile-view--photo {
+            display:flex;
+            flex-direction:column;
+            min-height:100vh;
+            background:${C.surface};
+          }
+          .photo-panel {
+            position:relative;
+            flex-shrink:0;
+            height:46vh;
+            min-height:320px;
+            background-size:cover;
+            background-position:center 30%;
+            display:flex;
+            flex-direction:column;
+          }
+          .photo-panel::after {
+            content:'';
+            position:absolute;inset:0;
+            background:linear-gradient(180deg, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.05) 100%);
+            pointer-events:none;
+          }
+          .floating-pill {
+            position:absolute;
+            top:64px;right:20px;
+            z-index:2;
+            border:none;cursor:pointer;
+            background:rgba(255,255,255,0.92);
+            color:${C.text};
+            font-size:14.5px;font-weight:700;
+            padding:11px 22px;
+            border-radius:999px;
+            box-shadow:0 4px 16px rgba(0,0,0,0.18);
+            font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+            transition:background 0.2s,transform 0.15s;
+          }
+          .floating-pill:hover { background:#fff;transform:translateY(-1px); }
+          .floating-pill:active { transform:translateY(0); }
+
+          .bottom-sheet--photo {
+            position:relative;
+            z-index:2;
+            flex:1;
+            margin-top:-24px;
+            border-radius:26px 26px 0 0;
+            box-shadow:0 -10px 30px rgba(0,0,0,0.1);
+          }
+          .sheet-close-btn {
+            all:unset;
+            position:absolute;
+            top:18px;right:18px;
+            cursor:pointer;
+            width:34px;height:34px;
+            border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            background:${C.surfaceDim};
+            -webkit-tap-highlight-color:transparent;
+          }
+
+          /* Dark social button (matches the reference's Google/Apple style, in brand ink) */
+          .m-social-dark {
+            display:flex;align-items:center;justify-content:center;gap:10px;
+            height:52px;border:none;border-radius:999px;
+            background:${C.text};color:#fff;
+            font-size:15px;font-weight:700;cursor:pointer;
+            transition:background 0.2s,transform 0.15s;
+            width:100%;font-family:inherit;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          }
+          .m-social-dark:hover:not(:disabled) { background:#000;transform:translateY(-1px); }
+          .m-social-dark:active:not(:disabled) { transform:translateY(0); }
+          .m-social-dark:disabled { opacity:0.6;cursor:not-allowed; }
+
           /* Focus ring */
           .fr:focus-visible { outline:2px solid ${C.primary};outline-offset:2px; }
         `}</style>
@@ -754,130 +826,79 @@ const LoginPage = () => {
         {/* ════════════════════════════════════════════════════════════════
             MOBILE  (< 1024 px) — new bottom-sheet design
         ════════════════════════════════════════════════════════════════ */}
-        <div className="mobile-view">
+        <div className="mobile-view mobile-view--photo">
 
-          {/* Banner — same image as the desktop panel */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <img
-              src={BANNER_IMAGE}
-              alt="BagSearch premium bags"
-              loading="eager"
-              width="600"
-              height="290"
-              style={{ width: '100%', height: 290, objectFit: 'cover', objectPosition: 'center', display: 'block' }}
-            />
-            {/* Subtle top-to-transparent gradient so buttons stay readable */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 55%)',
-            }} />
-            {/* Top bar: back button ← | logo | spacer */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '14px 18px',
-            }}>
-              <button
-                aria-label="Go back"
-                onClick={() => navigate(-1)}
-                style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.88)',
-                  border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                  stroke={C.text} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <LogoIcon size={20} />
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.35)' }}>
-                  Bag<span style={{ opacity: 0.82 }}>Search</span>
-                </span>
-              </div>
-              <div style={{ width: 36 }} />{/* balance spacer */}
-            </div>
+          {/* Photo — top portion only, like the reference (not full-bleed behind the sheet) */}
+          <div className="photo-panel" style={{ backgroundImage: `url(${loginBgImage})` }}>
+            {/* Floating "Sign up" pill — mirrors the reference's opposite-action button */}
+            <button
+              type="button"
+              onClick={() => navigate('/register')}
+              className="floating-pill"
+            >
+              Sign up
+            </button>
           </div>
 
-          {/* Bottom sheet card */}
-          <div className="bottom-sheet">
-            {/* Drag handle */}
-            <div style={{
-              width: 36, height: 4, background: C.border,
-              borderRadius: 999, margin: '0 auto 20px',
-            }} />
+          {/* Bottom sheet card — covers the lower portion, photo stays visible above it */}
+          <div className="bottom-sheet bottom-sheet--photo">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              aria-label="Close"
+              className="sheet-close-btn"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2.2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
 
             {/* Heading */}
-            <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 27, fontWeight: 900, letterSpacing: '-0.02em', color: C.text, margin: 0, marginBottom: 4 }}>
-                Welcome back
-              </h2>
-              <p style={{ color: C.textMuted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-                Enter your details to access your account.
-              </p>
-            </div>
+            <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.01em', color: C.primary, margin: '0 0 22px', textAlign: 'center' }}>
+              Welcome back
+            </h2>
 
             {/* Error */}
             {errorMsg && (
               <div role="alert" style={{
                 padding: '10px 14px',
                 background: C.primaryBg, border: `1px solid ${C.primary}`,
-                color: C.primary, borderRadius: 10, fontSize: 14, marginBottom: 16, lineHeight: 1.5,
+                color: C.primary, borderRadius: 10, fontSize: 13.5, marginBottom: 14, lineHeight: 1.5,
               }}>
                 {errorMsg}
               </div>
             )}
 
-            {/* Role toggle */}
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ marginBottom: 8, fontSize: 11.5, fontWeight: 700, color: C.textMuted, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-                I am a…
-              </p>
-              <div className="role-track">
-                <div className={`role-pill ${role}`}><div className="pill-shimmer" /></div>
-                <button type="button" className={`role-btn ${role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => setRole('buyer')}>
-                  <span className="role-icon">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                      stroke={role === 'buyer' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                      <line x1="3" y1="6" x2="21" y2="6"/>
-                      <path d="M16 10a4 4 0 01-8 0"/>
-                    </svg>
-                  </span>
-                  Buyer
-                  <span className="role-dot" />
-                </button>
-                <button type="button" className={`role-btn ${role === 'seller' ? 'active' : 'inactive'}`} onClick={() => setRole('seller')}>
-                  <span className="role-icon">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                      stroke={role === 'seller' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                      <line x1="8" y1="21" x2="16" y2="21"/>
-                      <line x1="12" y1="17" x2="12" y2="21"/>
-                      <path d="M9 11l3-3 3 3"/>
-                    </svg>
-                  </span>
-                  Seller
-                  <span className="role-dot" />
-                </button>
+            {/* Social buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+              <button className="m-social-dark fr" onClick={handleGoogleLogin} disabled={loading} type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div style={{ position: 'relative', padding: '0 0 18px' }}>
+              <div style={{ position: 'absolute', inset: 0, top: '50%', display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
               </div>
-              <div style={{ marginTop: 8 }}>
-                <span className="role-status-label">
-                  {role === 'buyer' ? '🛍 Shopping mode' : '🏪 Store mode'}
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <span style={{ background: C.surface, padding: '0 14px', color: C.textMuted, fontSize: 12.5 }}>
+                  or sign in with email
                 </span>
               </div>
             </div>
 
             {/* Mobile Form */}
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }} noValidate>
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} noValidate>
 
               <div>
-                <label htmlFor="m-email" style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+                <label htmlFor="m-email" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: C.textMuted, marginBottom: 6 }}>
                   Email
                 </label>
                 <input
@@ -893,7 +914,7 @@ const LoginPage = () => {
               </div>
 
               <div>
-                <label htmlFor="m-password" style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+                <label htmlFor="m-password" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, color: C.textMuted, marginBottom: 6 }}>
                   Password
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -925,7 +946,7 @@ const LoginPage = () => {
               </div>
 
               {/* Remember me + Forgot */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2px 0 4px' }}>
                 <div
                   role="checkbox"
                   aria-checked={rememberMe}
@@ -961,53 +982,10 @@ const LoginPage = () => {
                 </button>
               </div>
 
-              <button type="submit" className="m-submit fr" disabled={loading} style={{ marginTop: 6 }}>
-                {loading ? 'Verifying…' : 'Login'}
+              <button type="submit" className="m-submit fr" disabled={loading}>
+                {loading ? 'Verifying…' : 'Sign in with email'}
               </button>
             </form>
-
-            {/* Divider */}
-            <div style={{ position: 'relative', padding: '18px 0' }}>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
-                <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
-              </div>
-              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                <span style={{ background: C.surface, padding: '0 14px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            {/* Google */}
-            <button className="m-social fr" onClick={handleGoogleLogin} disabled={loading} type="button">
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Google
-            </button>
-
-            {/* Sign up */}
-            <p style={{ textAlign: 'center', fontSize: 14, color: C.textMuted, margin: '18px 0 0' }}>
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/register')}
-                className="fr"
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: C.primary, fontWeight: 700, fontSize: 14,
-                  padding: 0, fontFamily: 'inherit',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-                onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-              >
-                Sign Up
-              </button>
-            </p>
 
           </div>{/* /bottom-sheet */}
         </div>{/* /mobile-view */}

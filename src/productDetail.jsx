@@ -8,7 +8,7 @@ import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { slugify, extractIdFromParam, productPath } from './utils/slugify';
 import { triggerGoogleReviewSurvey } from './components/GoogleCustomerReviews';
-import { payForProduct, useFlutterwavePreload } from './components/FlutterwavePayment';
+import { payForProduct, useFlutterwavePreload, getSellerSubaccountId } from './components/FlutterwavePayment';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
@@ -450,6 +450,7 @@ export default function ProductDetail() {
     setBuyingNow(true);
 
     let sellerId = product.user_id || null;
+    const sellerSubaccountId = await getSellerSubaccountId(sellerId);
 
     payForProduct({
       amount: price * quantity,
@@ -459,7 +460,7 @@ export default function ProductDetail() {
       productId: product.id || '',
       sellerName: product.seller || '',
       sellerId,
-      sellerSubaccountId: null, // No direct split — payment held until delivery confirmed
+      sellerSubaccountId,
       onSuccess: async (response) => {
         setBuyingNow(false);
         // Create order record

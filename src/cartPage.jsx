@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { supabase } from './services/api';
-import { payForProduct } from './components/FlutterwavePayment';
+import { payForProduct, getSellerSubaccountId } from './components/FlutterwavePayment';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
 
 const C = {
@@ -101,7 +101,8 @@ export default function CartPage() {
       const productNames = cartItems.map(i => i.name).join(', ');
       const sellerIds = [...new Set(cartItems.map(i => i.sellerId).filter(Boolean))];
       let sellerId = sellerIds[0] || null;
-      // No subaccount split — money is held until buyer confirms delivery
+      // Look up seller's subaccount ID for direct payout
+      const sellerSubaccountId = await getSellerSubaccountId(sellerId);
       await payForProduct({
         amount: total,
         email: user.email || '',
@@ -110,7 +111,7 @@ export default function CartPage() {
         productId: firstItem.id,
         sellerName: firstItem.seller || 'Seller',
         sellerId,
-        sellerSubaccountId: null,
+        sellerSubaccountId,
         onSuccess: async (response) => {
           // Create order records for each seller so we can track delivery & payout
           try {

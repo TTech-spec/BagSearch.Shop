@@ -1514,7 +1514,7 @@ export default function SellerProfile() {
 
     // Check if seller has bank details set up
     if (user?.id) {
-      supabase.from('seller_bank_details').select('id').eq('user_id', user.id).eq('is_verified', true).maybeSingle()
+      supabase.from('seller_bank_details').select('id').eq('user_id', user.id).maybeSingle()
         .then(({ data }) => { setHasBankDetails(!!data); })
         .catch(() => { /* graceful fallback */ });
     }
