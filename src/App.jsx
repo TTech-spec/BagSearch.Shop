@@ -4,6 +4,8 @@ import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
+import VideoLoader from './components/VideoLoader.jsx';
+import WelcomeCard from './components/WelcomeCard.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
@@ -38,62 +40,10 @@ const SellerBankDetails = lazy(() => import('./sellerBankDetails.jsx'));
 const Cart = lazy(() => import('./cartPage.jsx'));
 const Orders = lazy(() => import('./ordersPage.jsx'));
 
-// Loading spinner component
+// Loading screen (auth check + lazy route chunks) — plays the brand video
 function LoadingSpinner() {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: 'linear-gradient(180deg, #fff8f4 0%, #fdf4ee 55%, #ffffff 100%)',
-      gap: '14px',
-      padding: '24px'
-    }}>
-      <style>{`
-        @keyframes appLoaderSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes appLoaderPulse {
-          0%, 100% { opacity: 0.55; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.04); }
-        }
-      `}</style>
-
-      <div style={{
-        width: '56px',
-        height: '56px',
-        borderRadius: '50%',
-        border: '4px solid #fde8d8',
-        borderTopColor: '#c84b11',
-        borderRightColor: '#f97316',
-        animation: 'appLoaderSpin 0.9s linear infinite',
-        boxShadow: '0 8px 24px rgba(200,75,17,0.12)'
-      }} />
-
-      <div style={{
-        fontSize: '24px',
-        fontWeight: 900,
-        letterSpacing: '-0.03em',
-        color: '#1a0a00',
-        animation: 'appLoaderPulse 1.4s ease-in-out infinite'
-      }}>
-        Bag<span style={{ color: '#c84b11' }}>Search</span>
-      </div>
-
-      <div style={{
-        color: '#9a6348',
-        fontSize: '13px',
-        fontWeight: 700,
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase'
-      }}>
-        Loading
-      </div>
-    </div>
-  );
+  // Fixed to the viewport so #root's max-width/padding (App.css) can't box it in on wide screens
+  return <VideoLoader />;
 }
 
 function AuthListener() {
@@ -241,6 +191,7 @@ function App() {
 
           {/* Products page - public (auth-gated actions handled inside Product.jsx) */}
           <Route path="/products" element={<Product />} />
+          <Route path="/vendors" element={<Product />} />
 
           {/* Seller storefront from vendor cards */}
           <Route path="/seller-products" element={<SellerProduct />} />
@@ -336,6 +287,7 @@ function App() {
         </Routes>
       </Suspense>
       <MobileBottomNav />
+      <WelcomeCard />
       <GoogleReviewsBadge />
     </Router>
     </CartProvider>

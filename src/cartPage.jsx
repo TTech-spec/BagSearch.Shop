@@ -1,23 +1,43 @@
 /**
  * Cart Page — full standalone page at /cart
+ * Items are grouped by seller (each seller is paid and notified separately).
  */
-import { useState, useEffect, useRef, useContext, useMemo } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from './context/AuthContext';
 import { useCart } from './context/CartContext';
 import { supabase } from './services/api';
 import { payForProduct, getSellerSubaccountId } from './components/FlutterwavePayment';
 import { buildWhatsAppUrl, normalizeWhatsAppNumber } from './utils/whatsapp';
+import { productPath } from './utils/slugify';
 
-const C = {
-  primary:'#c84b11',primaryLight:'#f97316',primaryBg:'#fff8f3',primaryBorder:'#fcd4be',primaryPale:'#fffaf7',
-  accent:'#ea580c',text:'#1a0a00',textMid:'#5c3317',textMuted:'#8b6f5a',textFaint:'#b8a090',
-  border:'#e8ddd4',borderLight:'#f0e6dc',surfaceDim:'#faf6f2',
-  success:'#16a34a',successBg:'#dcfce7',danger:'#dc2626',
-  whatsapp:'#25d366',whatsappDark:'#128c7e',
+const K = {
+  ink: '#1E1A17',
+  muted: '#6F6761',
+  faint: '#A69E98',
+  line: '#EFE9E5',
+  pill: '#F4F1EF',
+  paper: '#F7F4F1',
+  yellow: '#F3B41E',
+  green: '#7DAF5C',
+  accent: '#C84B11',
+  price: '#C2361F',
+  safeBg: '#E7F4EA',
+  safeFg: '#2F6B3E',
+  waBg: '#E7F7EE',
+  waFg: '#0F7B53',
+  font: "'Poppins', system-ui, sans-serif",
 };
+const PASTELS = ['#A6DFAE', '#9ADFE1', '#E6D3F5', '#F8C9A5'];
+const SELLER_TONES = ['#3F4656', '#D2553F', '#7E6A93', '#5B8A8C', '#C9A36B'];
+const spring = { type: 'spring', stiffness: 100, damping: 20 };
+const snappy = { type: 'spring', stiffness: 380, damping: 30 };
 
-function formatCurrency(n) { return `₦${Number(n||0).toLocaleString()}`; }
+function formatCurrency(n) { return `₦${Number(n || 0).toLocaleString()}`; }
+// What the buyer actually pays per unit — the sale price when there is one
+const unitPrice = item => Number(item.discountedPrice || item.price || 0);
+const initialsOf = name => (name || '').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || 'S';
 
 function getOptimizedImageUrl(url, w, h) {
   if (!url || typeof url !== 'string') return url;
@@ -28,79 +48,212 @@ function getOptimizedImageUrl(url, w, h) {
   return url;
 }
 
-function WaIcon({ size = 16, color = 'white' }) {
+const Svg = ({ size = 16, sw = 1.9, children }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+);
+const WaIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.2 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.28-.2-.57-.35z" />
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 2.03.51 3.94 1.4 5.61L.05 23.34a.75.75 0 0 0 .92.92l5.72-1.35A11.94 11.94 0 0 0 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 21.75a9.71 9.71 0 0 1-5.27-1.55.75.75 0 0 0-.57-.1l-3.5.82.82-3.5a.75.75 0 0 0-.1-.57A9.71 9.71 0 0 1 2.25 12c0-5.39 4.37-9.75 9.75-9.75s9.75 4.36 9.75 9.75-4.36 9.75-9.75 9.75z" />
+  </svg>
+);
+
+function Spinner({ light }) {
+  return <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+    style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${light ? 'rgba(255,255,255,.3)' : 'rgba(30,26,23,.2)'}`, borderTopColor: light ? '#fff' : K.ink, display: 'inline-block' }} />;
+}
+
+function QtyStepper({ qty, onDec, onInc, name }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.025.506 3.937 1.395 5.613L.05 23.335a.75.75 0 00.916.916l5.722-1.345A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.71 9.71 0 01-5.265-1.547.75.75 0 00-.574-.1l-3.502.823.823-3.502a.75.75 0 00-.1-.574A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', borderRadius: 999, background: K.pill, padding: 3 }}>
+      <motion.button type="button" whileTap={{ scale: 0.85 }} onClick={onDec} aria-label={`Fewer ${name}`}
+        style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: '#fff', cursor: 'pointer', fontSize: 16, color: K.ink, fontFamily: K.font }}>−</motion.button>
+      <span style={{ width: 32, textAlign: 'center', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', height: 20, position: 'relative' }}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span key={qty} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} transition={snappy} style={{ display: 'block' }}>{qty}</motion.span>
+        </AnimatePresence>
+      </span>
+      <motion.button type="button" whileTap={{ scale: 0.85 }} onClick={onInc} aria-label={`More ${name}`}
+        style={{ width: 32, height: 32, border: 'none', borderRadius: '50%', background: K.ink, color: '#fff', cursor: 'pointer', fontSize: 16, fontFamily: K.font }}>+</motion.button>
+    </div>
   );
 }
 
-function CartItemRow({ item, onUpdateQty, onRemove }) {
-  const [removing, setRemoving] = useState(false);
-  const handleRemove = () => { setRemoving(true); setTimeout(() => onRemove(item.id), 350); };
-  const waNumber = normalizeWhatsAppNumber(item.whatsapp || '');
-  const waMsg = encodeURIComponent(`Hi! I'd like to order *${item.name}* — ${formatCurrency(item.price)}`);
-  const waLink = waNumber ? `https://wa.me/${waNumber}?text=${waMsg}` : null;
-
+function CartItemRow({ item, index, onUpdateQty, onRemove, onOpen }) {
+  const unit = unitPrice(item);
+  const colour = (item.colors || [])[0];
   return (
-    <div style={{
-      display:'flex',gap:14,background:'white',borderRadius:16,padding:16,
-      border:`1.5px solid ${C.borderLight}`,boxShadow:'0 2px 10px rgba(200,75,17,0.05)',
-      opacity:removing?0:1,transform:removing?'translateX(60px) scale(0.9)':'translateX(0)',
-      transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',maxHeight:removing?0:200,overflow:'hidden',
-    }}>
-      <div style={{position:'relative',flexShrink:0}}>
-        <img src={getOptimizedImageUrl(item.src,96,96)} alt={item.name} loading="lazy"
-          style={{width:80,height:80,objectFit:'cover',borderRadius:12,display:'block',border:`1px solid ${C.borderLight}`}}/>
-        {waLink && (
-          <a href={waLink} target="_blank" rel="noopener noreferrer"
-            style={{position:'absolute',bottom:-6,left:-6,width:26,height:26,borderRadius:'50%',background:C.whatsapp,display:'flex',alignItems:'center',justifyContent:'center',textDecoration:'none',boxShadow:'0 3px 10px rgba(37,211,102,0.5)',border:'2.5px solid white',zIndex:2}}>
-            <WaIcon size={12} color="white" />
-          </a>
-        )}
-      </div>
-      <div style={{flex:1,minWidth:0}}>
-        <h4 style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</h4>
-        <p style={{fontSize:12,color:C.textFaint,fontWeight:500,marginBottom:10}}>{item.seller}</p>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div style={{display:'flex',alignItems:'center',background:C.surfaceDim,borderRadius:10,border:`1.5px solid ${C.border}`,overflow:'hidden'}}>
-            <button onClick={() => item.qty > 1 ? onUpdateQty(item.id, item.qty - 1) : handleRemove()}
-              style={{width:32,height:32,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid}}>−</button>
-            <span style={{width:28,textAlign:'center',fontSize:13,fontWeight:800,color:C.text}}>{item.qty}</span>
-            <button onClick={() => onUpdateQty(item.id, item.qty + 1)}
-              style={{width:32,height:32,border:'none',background:'transparent',cursor:'pointer',fontSize:16,fontWeight:700,color:C.textMid}}>+</button>
-          </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:17,fontWeight:900,color:C.primary}}>{formatCurrency(item.price * item.qty)}</div>
-            <button onClick={handleRemove} style={{fontSize:10,color:C.danger,fontWeight:700,background:'none',border:'none',cursor:'pointer',padding:'2px 0'}}>Remove</button>
-          </div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 80, height: 0, paddingTop: 0, paddingBottom: 0, transition: { duration: 0.28 } }}
+      transition={spring}
+      className="ck-item"
+      style={{ padding: 14, display: 'flex', gap: 14, borderBottom: `1px solid #F4EFEB`, overflow: 'hidden' }}
+    >
+      <button type="button" onClick={() => onOpen(item)} aria-label={`Open ${item.name}`}
+        style={{ width: 92, height: 92, border: 'none', borderRadius: 20, background: PASTELS[index % PASTELS.length], padding: 7, boxSizing: 'border-box', flexShrink: 0, cursor: 'pointer' }}>
+        <div style={{ width: '100%', height: '100%', borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
+          <img src={getOptimizedImageUrl(item.src, 180, 180)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </div>
+      </button>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+          <p style={{ margin: 0, flex: 1, fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</p>
+          <motion.button type="button" whileTap={{ scale: 0.85 }} onClick={() => onRemove(item.id)} aria-label={`Remove ${item.name}`} className="ck-bin"
+            style={{ width: 32, height: 32, margin: '-5px -6px 0 0', border: 'none', borderRadius: 10, background: 'none', color: K.faint, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Svg size={16}><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></Svg>
+          </motion.button>
+        </div>
+        <p style={{ margin: '3px 0 0', fontSize: 11.5, color: K.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {colour && <span style={{ width: 9, height: 9, borderRadius: '50%', background: colour.hex || colour, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.1)' }} />}
+          {formatCurrency(unit)} each
+          {item.discountedPrice && <span style={{ textDecoration: 'line-through', color: K.faint }}>{formatCurrency(item.price)}</span>}
+        </p>
+        <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <motion.span key={unit * item.qty} initial={{ scale: 0.92, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }} transition={snappy}
+            style={{ fontSize: 15, fontWeight: 600, color: K.price }}>{formatCurrency(unit * item.qty)}</motion.span>
+          <QtyStepper
+            qty={item.qty} name={item.name}
+            onDec={() => (item.qty > 1 ? onUpdateQty(item.id, item.qty - 1) : onRemove(item.id))}
+            onInc={() => onUpdateQty(item.id, item.qty + 1)}
+          />
         </div>
       </div>
+    </motion.div>
+  );
+}
+
+function SellerGroup({ group, index, onUpdateQty, onRemove, onOpen, onChat }) {
+  return (
+    <motion.section
+      layout
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
+      transition={{ ...spring, delay: index * 0.06 }}
+      style={{ border: `1px solid ${K.line}`, borderRadius: 24, overflow: 'hidden', background: '#fff' }}
+    >
+      <div style={{ minHeight: 60, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `1px solid ${K.line}` }}>
+        <span style={{ width: 36, height: 36, borderRadius: '50%', background: SELLER_TONES[index % SELLER_TONES.length], color: '#fff', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initialsOf(group.seller)}</span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.seller}</span>
+          <span style={{ display: 'block', fontSize: 11.5, color: K.muted }}>{group.count} {group.count === 1 ? 'item' : 'items'}</span>
+        </span>
+        {group.whatsapp && (
+          <motion.button type="button" whileTap={{ scale: 0.95 }} onClick={() => onChat(group)} aria-label={`Order from ${group.seller} on WhatsApp`}
+            style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 999, background: K.waBg, color: K.waFg, fontFamily: K.font, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <WaIcon size={13} /> WhatsApp
+          </motion.button>
+        )}
+      </div>
+      <AnimatePresence initial={false}>
+        {group.items.map((item, i) => (
+          <CartItemRow key={item.id} item={item} index={index * 2 + i} onUpdateQty={onUpdateQty} onRemove={onRemove} onOpen={onOpen} />
+        ))}
+      </AnimatePresence>
+      <div style={{ height: 44, padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: K.muted, background: '#FBFAF9' }}>
+        <span>From {group.seller}</span>
+        <motion.span key={group.subtotal} initial={{ opacity: 0.4 }} animate={{ opacity: 1 }} style={{ fontWeight: 600, color: K.ink }}>{formatCurrency(group.subtotal)}</motion.span>
+      </div>
+    </motion.section>
+  );
+}
+
+function SafeNote({ compact }) {
+  return (
+    <div style={{ padding: compact ? '0 14px' : 14, minHeight: compact ? 44 : 'auto', borderRadius: compact ? 14 : 18, background: K.safeBg, color: K.safeFg, fontSize: 12.5, lineHeight: 1.5, display: 'flex', alignItems: compact ? 'center' : 'flex-start', gap: 10 }}>
+      <motion.span animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} style={{ display: 'flex', flexShrink: 0 }}>
+        <Svg size={17} sw={2}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></Svg>
+      </motion.span>
+      {compact ? 'Your payment is held until you confirm delivery' : 'Your money is held safely and only released to the seller after you confirm the bag arrived.'}
     </div>
+  );
+}
+
+function PayButton({ total, paying, onPay, big }) {
+  return (
+    <motion.button type="button" onClick={onPay} disabled={paying} whileTap={{ scale: 0.98 }} className="ck-pay"
+      style={{ width: '100%', height: big ? 56 : 54, border: 'none', borderRadius: 999, background: K.ink, color: '#fff', fontFamily: K.font, fontSize: 15, fontWeight: 500, cursor: paying ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, position: 'relative', overflow: 'hidden' }}>
+      {paying ? <><Spinner light /> Opening secure checkout…</> : <>
+        <Svg size={17} sw={2}><rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></Svg>
+        Pay {formatCurrency(total)} securely
+        <span aria-hidden="true" className="ck-shine" />
+      </>}
+    </motion.button>
   );
 }
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { cartItems, updateQty, removeFromCart } = useCart();
-  const [chatting, setChatting] = useState(false);
-  const [chatted, setChatted] = useState(false);
+  const { cartItems, updateQty, removeFromCart, addToCart } = useCart();
   const [paying, setPaying] = useState(false);
+  const [chattedSeller, setChattedSeller] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 960);
 
-  const total = cartItems.reduce((a, i) => a + i.price * i.qty, 0);
+  useEffect(() => {
+    const onResize = () => setIsWide(window.innerWidth >= 960);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const total = cartItems.reduce((a, i) => a + unitPrice(i) * i.qty, 0);
   const itemCount = cartItems.reduce((a, i) => a + i.qty, 0);
 
+  const groups = useMemo(() => {
+    const map = new Map();
+    cartItems.forEach(item => {
+      const key = item.sellerId || item.seller || 'seller';
+      if (!map.has(key)) map.set(key, { key, seller: item.seller || 'Seller', whatsapp: item.whatsapp || '', items: [] });
+      const g = map.get(key);
+      g.items.push(item);
+      if (!g.whatsapp && item.whatsapp) g.whatsapp = item.whatsapp;
+    });
+    return [...map.values()].map(g => ({
+      ...g,
+      count: g.items.reduce((a, i) => a + i.qty, 0),
+      subtotal: g.items.reduce((a, i) => a + unitPrice(i) * i.qty, 0),
+    }));
+  }, [cartItems]);
+
+  // A few other bags to suggest (not already in the cart)
+  const cartIds = cartItems.map(i => i.id).join(',');
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('products')
+        .select('id,name,price,discounted_price,images,seller_name,user_id,seller_id,whatsapp')
+        .order('created_at', { ascending: false })
+        .limit(16);
+      if (cancelled || !data) return;
+      const inCart = new Set(cartIds.split(','));
+      setSuggestions(data.filter(p => !inCart.has(String(p.id))).slice(0, 8).map(p => ({
+        id: p.id,
+        name: p.name,
+        price: parseFloat(p.price),
+        discountedPrice: p.discounted_price ? parseFloat(p.discounted_price) : null,
+        src: p.images?.[0] || '',
+        seller: p.seller_name || 'Seller',
+        sellerId: p.seller_id || p.user_id || null,
+        whatsapp: p.whatsapp || '',
+      })));
+    })();
+    return () => { cancelled = true; };
+  }, [cartIds]);
+
+  const openProduct = item => navigate(productPath(item.name, item.id));
+
   const handlePayNow = async () => {
-    if (!cartItems.length || !user) return;
+    if (!cartItems.length) return;
+    if (!user) { navigate('/login'); return; }
     setPaying(true);
     try {
       const firstItem = cartItems[0];
       const productNames = cartItems.map(i => i.name).join(', ');
       const sellerIds = [...new Set(cartItems.map(i => i.sellerId).filter(Boolean))];
-      let sellerId = sellerIds[0] || null;
+      const sellerId = sellerIds[0] || null;
       // Look up seller's subaccount ID for direct payout
       const sellerSubaccountId = await getSellerSubaccountId(sellerId);
       await payForProduct({
@@ -123,18 +276,17 @@ export default function CartPage() {
               product_image: item.src || '',
               seller_name: item.seller || 'Seller',
               quantity: item.qty,
-              unit_price: item.price,
-              total_price: item.price * item.qty,
+              unit_price: unitPrice(item),
+              total_price: unitPrice(item) * item.qty,
               status: 'paid',
               flutterwave_tx_ref: response.tx_ref || response.txRef || '',
               flutterwave_tx_id: response.transaction_id?.toString() || '',
             }));
             await supabase.from('orders').insert(orderItems);
             // Notify each seller
-            const uniqueSellers = [...new Set(cartItems.map(i => i.sellerId).filter(Boolean))];
-            for (const sid of uniqueSellers) {
+            for (const sid of sellerIds) {
               const sellerItems = cartItems.filter(i => i.sellerId === sid);
-              const sellerTotal = sellerItems.reduce((s, i) => s + i.price * i.qty, 0);
+              const sellerTotal = sellerItems.reduce((s, i) => s + unitPrice(i) * i.qty, 0);
               supabase.from('notifications').insert([{
                 seller_id: sid,
                 type: 'new_order',
@@ -152,121 +304,174 @@ export default function CartPage() {
     } catch (err) { console.error('Cart payment error:', err); setPaying(false); }
   };
 
-  const handleChatSellers = () => {
-    if (!cartItems.length) return;
-    setChatting(true);
-    const bySellerMap = cartItems.reduce((acc, item) => {
-      const key = item.seller || 'Seller';
-      if (!acc[key]) acc[key] = { whatsapp: item.whatsapp || '', items: [] };
-      acc[key].items.push(item);
-      return acc;
-    }, {});
-    Object.entries(bySellerMap).forEach(([sellerName, { whatsapp, items }], idx) => {
-      const number = normalizeWhatsAppNumber(whatsapp || '');
-      if (!number) return;
-      const itemLines = items.map(i => `• ${i.qty}x *${i.name}* — ₦${(i.price * i.qty).toLocaleString()}`).join('\n');
-      const sellerTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-      const msg = encodeURIComponent(`Hi ${sellerName}! 👋\n\nI'd like to order:\n\n${itemLines}\n\n*Subtotal: ₦${sellerTotal.toLocaleString()}*\n\nPlease confirm availability. Thank you! 🛍️`);
-      setTimeout(() => { window.open(`https://wa.me/${number}?text=${msg}`, '_blank'); }, idx * 600);
-    });
-    setTimeout(() => { setChatting(false); setChatted(true); }, 1000);
-    setTimeout(() => { setChatted(false); }, 3400);
+  const handleChatSeller = group => {
+    const number = normalizeWhatsAppNumber(group.whatsapp || '');
+    if (!number) return;
+    const itemLines = group.items.map(i => `• ${i.qty}x *${i.name}* — ₦${(unitPrice(i) * i.qty).toLocaleString()}`).join('\n');
+    const msg = `Hi ${group.seller}!\n\nI'd like to order:\n\n${itemLines}\n\n*Subtotal: ₦${group.subtotal.toLocaleString()}*\n\nPlease confirm availability. Thank you!`;
+    window.open(buildWhatsAppUrl(number, msg), '_blank', 'noopener,noreferrer');
+    setChattedSeller(group.key);
+    setTimeout(() => setChattedSeller(null), 2400);
   };
 
-  return (
-    <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#fff8f3 0%,#ffffff 40%)'}}>
-      {/* Header */}
-      <div style={{maxWidth:720,margin:'0 auto',padding:'0 16px'}}>
-        <div style={{display:'flex',alignItems:'center',gap:14,padding:'24px 0 20px'}}>
-          <button onClick={() => navigate(-1)}
-            style={{width:40,height:40,borderRadius:12,border:`1.5px solid ${C.border}`,background:'white',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.textMid} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <div>
-            <h1 style={{fontSize:22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:2}}>Your Cart</h1>
-            <p style={{fontSize:13,color:C.textMuted,fontWeight:600}}>{itemCount} {itemCount === 1 ? 'item' : 'items'}{itemCount > 0 ? ` · ${formatCurrency(total)} subtotal` : ''}</p>
-          </div>
-        </div>
+  const empty = cartItems.length === 0;
 
-        {cartItems.length === 0 ? (
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',paddingTop:80,paddingBottom:80}}>
-            <div style={{width:80,height:80,borderRadius:24,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:20,border:`1.5px solid ${C.primaryBorder}`}}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={C.textFaint} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="20" r="1.4" fill={C.textFaint} stroke="none"/><circle cx="18" cy="20" r="1.4" fill={C.textFaint} stroke="none"/>
-                <path d="M2.5 3h2.4l2.13 11.39A2 2 0 009 16h8.4a2 2 0 001.95-1.55L21 6H6"/>
-              </svg>
+  const summary = (
+    <motion.aside
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }}
+      style={{ borderRadius: isWide ? 28 : 24, background: K.paper, padding: isWide ? 26 : 18, position: isWide ? 'sticky' : 'static', top: 24 }}
+    >
+      {isWide && <h2 style={{ margin: '0 0 18px', fontSize: 18, fontWeight: 600 }}>Order summary</h2>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: K.muted }}>
+        {isWide
+          ? groups.map(g => (
+            <div key={g.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.seller} · {g.count} {g.count === 1 ? 'item' : 'items'}</span>
+              <span style={{ color: K.ink, flexShrink: 0 }}>{formatCurrency(g.subtotal)}</span>
             </div>
-            <h3 style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:8}}>Your cart is empty</h3>
-            <p style={{fontSize:14,color:C.textMuted,textAlign:'center',fontWeight:500,lineHeight:1.7,maxWidth:280,marginBottom:24}}>Discover beautiful bags and add them to your cart</p>
-            <button onClick={() => navigate('/products')}
-              style={{padding:'14px 32px',background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`,color:'white',borderRadius:14,border:'none',cursor:'pointer',fontWeight:800,fontSize:15,boxShadow:`0 6px 20px ${C.primary}44`}}>
-              Browse Bags
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Cart items */}
-            <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
-              {cartItems.map((item, i) => (
-                <CartItemRow key={item.id} item={item} onUpdateQty={updateQty} onRemove={removeFromCart} />
-              ))}
-            </div>
-
-            {/* Order Summary */}
-            <div style={{background:'white',borderRadius:20,padding:'20px 22px',marginBottom:20,border:`1.5px solid ${C.borderLight}`,boxShadow:'0 2px 12px rgba(200,75,17,0.06)'}}>
-              <p style={{fontSize:11,fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',color:C.textFaint,marginBottom:14}}>Order Summary</p>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
-                <span style={{fontSize:14,color:C.textMuted,fontWeight:500}}>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-                <span style={{fontSize:14,fontWeight:700,color:C.text}}>{formatCurrency(total)}</span>
-              </div>
-              <div style={{height:1,background:C.border,margin:'14px 0'}}/>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <span style={{fontSize:17,fontWeight:900,color:C.text}}>Total</span>
-                <span style={{fontSize:28,fontWeight:900,color:C.primary,letterSpacing:'-0.04em'}}>{formatCurrency(total)}</span>
-              </div>
-              <p style={{fontSize:11,color:C.textFaint,fontWeight:500,marginTop:10,lineHeight:1.5}}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textFaint} strokeWidth="2" style={{verticalAlign:'-2px',marginRight:4}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Payment is held securely until you confirm delivery
-              </p>
-            </div>
-
-            {/* Checkout buttons */}
-            <div style={{paddingBottom:100}}>
-              <button onClick={handlePayNow} disabled={paying}
-                style={{width:'100%',padding:'16px 0',borderRadius:16,border:'none',cursor:'pointer',
-                  background:paying?'linear-gradient(135deg,#9ca3af,#6b7280)':'linear-gradient(135deg,#2563eb,#3b82f6)',
-                  color:'white',fontWeight:900,fontSize:16,transition:'all 0.5s',
-                  boxShadow:'0 8px 28px rgba(37,99,235,0.4)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:12}}>
-                {paying ? (
-                  <><div style={{width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',animation:'ldSpin 0.7s linear infinite'}}/>Processing…</>
-                ) : (
-                  <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>Pay Now · {formatCurrency(total)}</>
-                )}
-              </button>
-
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-                <div style={{flex:1,height:1,background:C.border}}/>
-                <span style={{fontSize:12,color:C.textFaint,fontWeight:700}}>OR</span>
-                <div style={{flex:1,height:1,background:C.border}}/>
-              </div>
-
-              <button onClick={handleChatSellers}
-                style={{width:'100%',padding:'14px 0',borderRadius:16,border:`1.5px solid ${C.whatsapp}`,cursor:'pointer',
-                  background:'white',color:C.whatsapp,fontWeight:800,fontSize:15,transition:'all 0.5s',
-                  display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-                {chatted ? (
-                  <><svg width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke={C.whatsapp}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Chats Opened!</>
-                ) : chatting ? (
-                  <><div style={{width:16,height:16,borderRadius:'50%',border:'2.5px solid rgba(37,211,102,0.3)',borderTopColor:C.whatsapp,animation:'ldSpin 0.7s linear infinite'}}/>Opening WhatsApp…</>
-                ) : (
-                  <><WaIcon size={16} color={C.whatsapp} />Chat Sellers on WhatsApp</>
-                )}
-              </button>
-            </div>
-          </>
-        )}
+          ))
+          : <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal · {itemCount} {itemCount === 1 ? 'item' : 'items'}</span><span style={{ color: K.ink }}>{formatCurrency(total)}</span></div>}
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Delivery</span><span style={{ color: K.ink }}>Agreed with seller</span></div>
       </div>
-      <style>{`@keyframes ldSpin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ height: 1, background: '#E6E0DC', margin: '16px 0' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>Total</span>
+        <motion.span key={total} initial={{ y: 8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={snappy}
+          style={{ fontSize: isWide ? 32 : 26, fontWeight: 600, letterSpacing: '-0.02em' }}>{formatCurrency(total)}</motion.span>
+      </div>
+      {isWide && <>
+        <div style={{ marginTop: 20 }}><PayButton total={total} paying={paying} onPay={handlePayNow} big /></div>
+        <p style={{ margin: '10px 0 0', textAlign: 'center', fontSize: 11.5, color: K.faint }}>Card, bank transfer or USSD · Powered by Flutterwave</p>
+        <div style={{ marginTop: 18 }}><SafeNote /></div>
+      </>}
+    </motion.aside>
+  );
+
+  return (
+    <div style={{ minHeight: '100dvh', background: '#fff', fontFamily: K.font, color: K.ink }}>
+      <style>{`
+        .ck-item{transition:background .2s}
+        .ck-item:hover{background:#FCFAF8}
+        .ck-bin:hover{color:${K.price};background:#FDEBEC}
+        .ck-pay:not(:disabled):hover{background:#000}
+        .ck-shine{position:absolute;top:0;bottom:0;width:36%;left:-50%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:ckShine 3.4s ease-in-out 1.2s infinite}
+        @keyframes ckShine{0%{left:-50%}45%,100%{left:130%}}
+        .ck-hscroll{scrollbar-width:none}.ck-hscroll::-webkit-scrollbar{display:none}
+      `}</style>
+
+      <div style={{ maxWidth: isWide ? 1440 : 640, margin: '0 auto', padding: isWide ? '0 clamp(24px,5vw,72px)' : '0 16px' }}>
+        {/* Header */}
+        <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={spring}
+          style={{ minHeight: isWide ? 110 : 76, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <motion.button type="button" whileTap={{ scale: 0.92 }} onClick={() => navigate(-1)} aria-label="Back"
+            style={{ width: 44, height: 44, border: 'none', borderRadius: 14, background: K.pill, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: K.ink, flexShrink: 0 }}>
+            <Svg size={18} sw={2}><path d="M19 12H5M11 18l-6-6 6-6" /></Svg>
+          </motion.button>
+          <div style={{ flex: 1 }}>
+            <h1 style={{ margin: 0, fontSize: isWide ? 34 : 21, fontWeight: 600, letterSpacing: '-0.02em' }}>Your cart</h1>
+            <p style={{ margin: 0, fontSize: isWide ? 14 : 12, color: K.muted }}>
+              {empty ? 'No bags yet' : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}${groups.length > 1 ? ` from ${groups.length} sellers` : ''}`}
+            </p>
+          </div>
+          {isWide && !empty && <button type="button" onClick={() => navigate('/products')} style={{ border: 'none', background: 'none', fontFamily: K.font, fontSize: 13, color: K.accent, cursor: 'pointer' }}>← Keep shopping</button>}
+        </motion.header>
+
+        <AnimatePresence mode="wait" initial={false}>
+          {empty ? (
+            <motion.div key="empty" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}
+              style={{ padding: isWide ? '40px 0 100px' : '40px 12px 140px', textAlign: 'center' }}>
+              <div style={{ position: 'relative', width: 180, height: 180, margin: '0 auto' }}>
+                <motion.span initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 160, damping: 14 }}
+                  style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: K.yellow }} />
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.15 }}
+                  style={{ position: 'absolute', right: -6, bottom: 6, width: 64, height: 64, borderRadius: '50%', background: K.green }} />
+                <motion.img src="/logo.webp" alt="" width="140" height="140"
+                  animate={{ y: [0, -10, 0], rotate: [-4, 3, -4] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ position: 'absolute', left: 20, top: 16, width: 140, height: 140, objectFit: 'contain' }} />
+              </div>
+              <h2 style={{ margin: '26px 0 0', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>Your cart is empty</h2>
+              <p style={{ margin: '8px auto 0', maxWidth: 300, fontSize: 13.5, lineHeight: 1.6, color: K.muted }}>Bags you add will wait for you here. Start with what is trending, or search with a photo.</p>
+              <div style={{ margin: '24px auto 0', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => navigate('/products')} className="ck-pay"
+                  style={{ height: 52, border: 'none', borderRadius: 999, background: K.ink, color: '#fff', fontFamily: K.font, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+                  Browse bags
+                </motion.button>
+                <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => navigate('/products', { state: { openPhotoSearch: true } })}
+                  style={{ height: 52, border: `1.5px solid ${K.ink}`, borderRadius: 999, background: '#fff', color: K.ink, fontFamily: K.font, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <Svg size={16} sw={1.8}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></Svg>
+                  Search by photo
+                </motion.button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ display: isWide ? 'grid' : 'block', gridTemplateColumns: 'minmax(0, 1fr) 420px', gap: 32, alignItems: 'start', paddingBottom: isWide ? 80 : 190 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isWide ? 20 : 16 }}>
+                {!isWide && <SafeNote compact />}
+                <AnimatePresence initial={false}>
+                  {groups.map((g, i) => (
+                    <div key={g.key} style={{ position: 'relative' }}>
+                      <SellerGroup group={g} index={i} onUpdateQty={updateQty} onRemove={removeFromCart} onOpen={openProduct} onChat={handleChatSeller} />
+                      <AnimatePresence>
+                        {chattedSeller === g.key && (
+                          <motion.span initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            style={{ position: 'absolute', right: 12, top: -14, height: 26, padding: '0 10px', borderRadius: 999, background: K.ink, color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
+                            WhatsApp opened
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </AnimatePresence>
+                {!isWide && summary}
+
+                {suggestions.length > 0 && (
+                  <motion.section initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring} style={{ marginTop: 8 }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Pairs well with</h2>
+                    <div className="ck-hscroll" style={{ marginTop: 12, display: 'flex', gap: 12, overflowX: 'auto', margin: isWide ? '12px 0 0' : '12px -16px 0', padding: isWide ? '0 0 6px' : '0 16px 6px', scrollSnapType: 'x mandatory' }}>
+                      {suggestions.map((p, i) => (
+                        <motion.div key={p.id} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ ...spring, delay: i * 0.05 }}
+                          style={{ width: 150, flexShrink: 0, scrollSnapAlign: 'start' }}>
+                          <button type="button" onClick={() => openProduct(p)} aria-label={`Open ${p.name}`}
+                            style={{ position: 'relative', width: '100%', height: 130, border: 'none', borderRadius: 20, background: PASTELS[i % PASTELS.length], padding: 8, boxSizing: 'border-box', cursor: 'pointer' }}>
+                            <div style={{ width: '100%', height: '100%', borderRadius: 13, overflow: 'hidden', background: '#fff' }}>
+                              <img src={getOptimizedImageUrl(p.src, 280, 240)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                          </button>
+                          <p style={{ margin: '8px 0 0', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</p>
+                          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: K.price }}>{formatCurrency(unitPrice(p))}</span>
+                            <motion.button type="button" whileTap={{ scale: 0.85 }} onClick={() => addToCart(p)} aria-label={`Add ${p.name} to cart`}
+                              style={{ width: 30, height: 30, border: 'none', borderRadius: 10, background: K.ink, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Svg size={14} sw={2.2}><path d="M12 5v14M5 12h14" /></Svg>
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.section>
+                )}
+              </div>
+              {isWide && summary}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Phone: sticky checkout bar above the bottom nav */}
+      <AnimatePresence>
+        {!empty && !isWide && (
+          <motion.div
+            initial={{ y: 140 }} animate={{ y: 0 }} exit={{ y: 160 }} transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+            style={{ position: 'fixed', left: 0, right: 0, bottom: 'calc(84px + env(safe-area-inset-bottom))', zIndex: 40, padding: '0 12px' }}
+          >
+            <div style={{ maxWidth: 616, margin: '0 auto', padding: 10, borderRadius: 28, background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 18px 40px -16px rgba(30,26,23,.35), 0 0 0 1px rgba(30,26,23,.05)' }}>
+              <PayButton total={total} paying={paying} onPay={handlePayNow} />
+              <p style={{ margin: '6px 0 0', textAlign: 'center', fontSize: 10.5, color: K.faint }}>Card, bank transfer or USSD · Powered by Flutterwave</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

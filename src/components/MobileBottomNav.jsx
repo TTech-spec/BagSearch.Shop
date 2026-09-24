@@ -46,6 +46,17 @@ function IconReels({ size = 22, color = 'currentColor' }) {
   );
 }
 
+function IconStore({ size = 22, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 9 5 4h14l1.5 5" />
+      <path d="M3.5 9a2.8 2.8 0 0 0 5.6 0 2.8 2.8 0 0 0 5.8 0 2.8 2.8 0 0 0 5.6 0" />
+      <path d="M5 11.5V20h14v-8.5" />
+      <path d="M10 20v-4.5h4V20" />
+    </svg>
+  );
+}
+
 function IconCart({ size = 22, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -66,8 +77,8 @@ function IconUser({ size = 22, color = 'currentColor' }) {
 }
 
 /**
- * Floating pill bottom nav, mobile only — Home / Reels / [List Bag or New
- * Arrivals] / Cart / Profile. Rendered once in App.jsx (outside <Routes>) so
+ * Floating pill bottom nav, mobile only — Home / Vendors / Reels / [List Bag
+ * or New Arrivals] / Cart / Profile. Rendered once in App.jsx (outside <Routes>) so
  * it persists across pages.
  * The third slot is "List Bag" for sellers, or "New Arrivals" for everyone
  * else, since buyers don't have anything to list. Cart and New Arrivals have
@@ -99,6 +110,11 @@ export default function MobileBottomNav() {
       onClick: () => navigate('/products'),
     },
     {
+      key: 'vendors', label: 'Vendors', Icon: IconStore,
+      active: location.pathname === '/vendors' || location.pathname.startsWith('/vendor/') || location.pathname.startsWith('/seller/'),
+      onClick: () => navigate('/vendors'),
+    },
+    {
       key: 'reels', label: 'Reels', Icon: IconReels,
       active: location.pathname === '/reels',
       onClick: () => navigate('/reels'),
@@ -127,8 +143,8 @@ export default function MobileBottomNav() {
       }}
     >
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        background: '#ffffff', borderRadius: 999, padding: '8px 12px',
+        display: 'flex', alignItems: 'center', gap: 4,
+        background: '#ffffff', borderRadius: 999, padding: '7px 9px',
         boxShadow: '0 12px 32px rgba(200,75,17,0.14), 0 2px 10px rgba(0,0,0,0.06)',
         border: '1.5px solid #f7ece4',
         pointerEvents: 'auto',
@@ -142,7 +158,7 @@ export default function MobileBottomNav() {
             style={{
               position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 52, height: 52, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
               background: 'transparent',
             }}
           >
@@ -156,7 +172,7 @@ export default function MobileBottomNav() {
               />
             )}
             <span style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
-              <item.Icon size={22} color={item.active ? '#ffffff' : '#5c3317'} />
+              <item.Icon size={21} color={item.active ? '#ffffff' : '#5c3317'} />
             </span>
             {item.isNew && !item.active && (
               <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#16a34a', border: '2px solid white', zIndex: 1 }} />

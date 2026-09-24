@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import VideoLoader from './components/VideoLoader.jsx';
+import AuthPromptModal from './components/auth/AuthPromptModal.jsx';
 import specialOfferImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
 
@@ -51,82 +53,9 @@ const Icon = ({ name, size = 22 }) => (
   <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", wordWrap: "normal", whiteSpace: "nowrap", direction: "ltr" }}>{name}</span>
 );
 
-/* ─── AUTH GATE MODAL ─── */
-function AuthGateModal({ open, onClose, navigate }) {
-  const [phase, setPhase] = useState(0);
-  useEffect(() => {
-    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
-    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
-  }, [open]);
-  if (phase === 0) return null;
-  const visible = phase === 2;
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,10,0,0.55)", backdropFilter: "blur(8px)", opacity: visible ? 1 : 0, transition: "opacity 0.35s ease" }} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 420, background: "#FFFFFF", border: "1px solid rgba(201,75,44,0.15)", borderRadius: 20, overflow: "hidden", boxShadow: "0 32px 80px rgba(26,10,0,0.18)", opacity: visible ? 1 : 0, transform: visible ? "translateY(0) scale(1)" : "translateY(32px) scale(0.95)", transition: "opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-        <div style={{ height: 6, background: "linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
-        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: "50%", border: "1px solid #E8D5CC", background: "#FFF5F2", color: "#999", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; e.currentTarget.style.color = "#C94B2C"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; e.currentTarget.style.color = "#999"; }}><Icon name="close" size={15} /></button>
-        <div style={{ padding: "36px 36px 32px", textAlign: "center" }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F9DDD0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "#C94B2C", animation: visible ? "authFloat 3s ease-in-out infinite" : "none" }}><Icon name="lock" size={28} /></div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1A0A00", letterSpacing: "-0.04em", marginBottom: 8, fontFamily: "'Outfit', sans-serif" }}>Members Only</h2>
-          <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, marginBottom: 28 }}>Sign in to unlock visual search, wishlists & more.</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-            {[{ icon: "image_search", label: "Visual Search" }, { icon: "favorite", label: "Wishlist" }, { icon: "notifications", label: "Alerts" }].map(({ icon, label }) => (
-              <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 9999, background: "#F9DDD0", fontSize: 10, fontWeight: 700, color: "#C94B2C" }}><Icon name={icon} size={12} /> {label}</span>
-            ))}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={() => { onClose(); navigate("/register"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 800, fontSize: 14, border: "none", borderRadius: 10, cursor: "pointer", boxShadow: "0 6px 20px rgba(201,75,44,0.35)" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>Create Free Account</button>
-            <button onClick={() => { onClose(); navigate("/login?force=true"); }} style={{ width: "100%", padding: "12px 0", background: "#FFF5F2", color: "#C94B2C", fontWeight: 700, fontSize: 13, border: "1px solid #F0C8BB", borderRadius: 10, cursor: "pointer" }} onMouseEnter={e => { e.currentTarget.style.background = "#F9DDD0"; }} onMouseLeave={e => { e.currentTarget.style.background = "#FFF5F2"; }}>Already a member? Sign In</button>
-          </div>
-        </div>
-        <div style={{ padding: "12px 36px", borderTop: "1px solid #F5EAE5", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#FDFAFA" }}>
-          <LogoIcon /><span style={{ fontSize: 12, fontWeight: 800, color: "#1A0A00" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span>
-        </div>
-      </div>
-      <style>{`@keyframes authFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }`}</style>
-    </div>
-  );
-}
-
 /* ─── LUXURY LOADER ─── */
 function LuxuryLoader({ onDone }) {
-  const [phase, setPhase] = useState(0);
-  const [progress, setProgress] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setPhase(1), 400); return () => clearTimeout(t); }, []);
-  useEffect(() => {
-    if (phase !== 1) return;
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 4 + 1.5;
-      if (p >= 100) { p = 100; clearInterval(interval); setProgress(100); setTimeout(() => setPhase(2), 600); setTimeout(() => onDone(), 1400); }
-      else setProgress(Math.min(p, 100));
-    }, 40);
-    return () => clearInterval(interval);
-  }, [phase, onDone]);
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#F9DDD0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", transition: phase === 2 ? "opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s" : "none", opacity: phase === 2 ? 0 : 1, transform: phase === 2 ? "translateY(-4%)" : "none", pointerEvents: phase === 2 ? "none" : "all" }}>
-      <div style={{ position: "absolute", top: "50%", left: "50%", width: "70vw", height: "70vw", maxWidth: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(201,75,44,0.18) 0%, transparent 65%)", transform: "translate(-50%,-50%)", animation: "loaderPulse 2.4s ease-in-out infinite" }} />
-      <div style={{ position: "relative", width: 100, height: 100, marginBottom: 36 }}>
-        <svg width="100" height="100" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0, animation: "spinRing 2.5s linear infinite" }}>
-          <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(201,75,44,0.15)" strokeWidth="1.5" />
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#C94B2C" strokeWidth="2" strokeDasharray={`${2 * Math.PI * 44 * progress / 100} ${2 * Math.PI * 44 * (1 - progress / 100)}`} strokeLinecap="round" style={{ transition: "stroke-dasharray 0.1s ease", transformOrigin: "50px 50px" }} />
-        </svg>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", animation: phase === 1 ? "logoBreathe 1.8s ease-in-out infinite" : "none" }}><LogoIcon /></div>
-      </div>
-      <div style={{ fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: "#1A0A00", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.04em", marginBottom: 6, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.3s" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></div>
-      <p style={{ fontSize: 9, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(26,10,0,0.35)", marginBottom: 40, fontWeight: 700, opacity: phase >= 1 ? 1 : 0, transition: "opacity 0.5s ease 0.6s" }}>Luxury Redefined</p>
-      <div style={{ width: "min(220px,60vw)", height: 2, background: "rgba(26,10,0,0.08)", borderRadius: 2, overflow: "hidden", opacity: phase >= 1 ? 1 : 0 }}>
-        <div style={{ height: "100%", background: "#C94B2C", width: `${progress}%`, transition: "width 0.1s ease", borderRadius: 2 }} />
-      </div>
-      <div style={{ fontSize: 10, letterSpacing: "0.2em", color: "rgba(26,10,0,0.3)", marginTop: 10, fontWeight: 700, opacity: phase >= 1 ? 1 : 0 }}>{Math.round(progress)}%</div>
-      <style>{`
-        @keyframes loaderPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.5} 50%{transform:translate(-50%,-50%) scale(1.12);opacity:1} }
-        @keyframes spinRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes logoBreathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-      `}</style>
-    </div>
-  );
+  return <VideoLoader duration={2600} onDone={onDone} />;
 }
 
 /* ─── TYPEWRITER H1 ─── */
@@ -1047,7 +976,7 @@ export default function LuxeBag() {
           </div>
         </aside>
 
-        <AuthGateModal open={authGateOpen} onClose={() => setAuthGateOpen(false)} navigate={navigate} />
+        <AuthPromptModal variant="gate" open={authGateOpen} onClose={() => setAuthGateOpen(false)} navigate={navigate} />
       </div>
     </div>
   );

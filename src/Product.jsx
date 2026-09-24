@@ -1,5 +1,15 @@
 import React, { useState, useRef, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import MobileVendorList from './components/vendors/MobileVendorList.jsx';
+import InstallAppCard from './components/InstallAppCard.jsx';
+import FeedbackSheet from './components/FeedbackSheet.jsx';
+import AuthPromptModal from './components/auth/AuthPromptModal.jsx';
+import { PhotoSearchSheet, PhotoScanOverlay } from './components/photo/PhotoSearch.jsx';
+import WelcomeTour from './components/tour/WelcomeTour.jsx';
+import { tourAlreadyDone } from './components/tour/tourState';
+import { DesktopTopBar, MobileTopBar, DesktopHero, MobileHero, PhotoSearchFab, CategoryChips, FilterChips, PastelProductCard, Shelf, SectionHeader, PromoBanner, ResultsHeader, SortSelect, EmptyResults, SkeletonGrid, ShopStyles } from './components/products/Storefront.jsx';
+import heroShoppersImg from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
+import sellBannerImg from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from './context/AuthContext';
 import { useCart } from './context/CartContext';
@@ -12,7 +22,6 @@ import { payForProduct, getSellerSubaccountId } from './components/FlutterwavePa
 import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
-import mobileHeroImg from './assets/images/onboarding/From Klickpin.com- 90 Impressive Digital Product Ideas-pin-id-1152217885962599326-story-1.webp';
 import { productPath } from './utils/slugify';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
@@ -482,7 +491,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Sellers</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'Start Selling',href:'/register'},{label:'Seller Dashboard',href:'/seller-profile'},{label:'Vendor Directory',href:'/products'},{label:'Pricing & Fees',href:'/'},{label:'Seller Guidelines',href:'/'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'Start Selling',href:'/register'},{label:'Seller Dashboard',href:'/seller-profile'},{label:'Vendor Directory',href:'/vendors'},{label:'Pricing & Fees',href:'/'},{label:'Seller Guidelines',href:'/'}])}</ul>
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Account</p>
@@ -547,19 +556,6 @@ const PageLoader = ({ onDone }) => {
   );
 };
 
-function useWordCycle(phrases, intervalMs = 2400) {
-  const [idx, setIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => { setIdx(i => (i + 1) % phrases.length); setVisible(true); }, 320);
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [phrases, intervalMs]);
-  return { word: phrases[idx], visible };
-}
-
 const NIGERIAN_LOCATIONS = [
   {id:'all',name:'All Nigeria',emoji:'🇳🇬',state:''},{id:'lagos',name:'Lagos State',emoji:'🌊',state:'Lagos'},
   {id:'lagos-island',name:'Lagos Island',emoji:'🏙️',state:'Lagos'},
@@ -596,127 +592,6 @@ const WaIcon = ({ size = 16, color = 'currentColor' }) => (
   </svg>
 );
 
-function FeedbackBox({ onClose, user }) {
-  const [phase, setPhase] = useState(0);
-  const [step, setStep] = useState('rate');
-  const [rating, setRating] = useState(0);
-  const [hovRating, setHovRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [particles, setParticles] = useState([]);
-  useEffect(() => { setTimeout(() => setPhase(1), 50); setTimeout(() => setPhase(2), 100); }, []);
-  const handleClose = () => { setPhase(3); setTimeout(() => onClose(), 450); };
-  const spawnParticles = () => {
-    const emojis = ['🎉','✨','👜','🛍️','💛','🧡'];
-    const p = Array.from({length: 12}, (_, i) => ({ id:i,emoji:emojis[Math.floor(Math.random()*emojis.length)],x:40+Math.random()*20,angle:(Math.random()-0.5)*160,dist:60+Math.random()*80,delay:Math.random()*200 }));
-    setParticles(p); setTimeout(() => setParticles([]), 1200);
-  };
-  const handleRating = (r) => { setRating(r); setTimeout(() => setStep('comment'), 400); };
-  const handleSubmit = async () => {
-    if (!comment.trim() && rating === 0) return;
-    setSubmitting(true);
-    setSubmitError('');
-    try {
-      const feedbackData = {
-        rating,
-        comment: comment.trim(),
-        user_id: user?.id || null,
-        user_email: user?.email || null,
-        user_name: user?.user_metadata?.full_name || user?.user_metadata?.name || 'Anonymous',
-        page: window.location.pathname,
-        user_agent: navigator.userAgent,
-      };
-      const { error } = await supabase.from('feedback').insert([feedbackData]);
-      if (error) throw error;
-      setSubmitting(false);
-      setStep('thanks');
-      spawnParticles();
-      setTimeout(() => handleClose(), 3200);
-    } catch (err) {
-      console.error('Feedback submit error:', err);
-      setSubmitting(false);
-      setSubmitError('Failed to send. Please try again.');
-    }
-  };
-  const ratingLabels = ['','Terrible 😤','Bad 😕','Okay 😐','Good 😊','Amazing! 🤩'];
-  const ratingColors = ['','#dc2626','#ea580c','#d97706','#16a34a','#c84b11'];
-  const visible = phase === 2;
-  return (
-    <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'0 0 24px',pointerEvents:'none' }}>
-      <div onClick={handleClose} style={{ position:'absolute',inset:0,background:'rgba(26,10,0,0.45)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',opacity:visible?1:0,transition:'opacity 0.4s ease',pointerEvents:'all',cursor:'pointer' }} />
-      <div style={{ position:'relative',zIndex:1,width:'min(480px,96vw)',background:'white',borderRadius:28,overflow:'hidden',boxShadow:'0 -4px 0 0 #c84b11, 0 32px 80px rgba(200,75,17,0.22)',pointerEvents:'all',opacity:visible?1:0,transform:visible?'translateY(0) scale(1)':'translateY(40px) scale(0.96)',transition:'opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1)' }}>
-        <div style={{ height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',backgroundSize:'200% 100%',animation:'shimFeedback 2.5s linear infinite' }} />
-        {particles.map(p=>(
-          <div key={p.id} style={{ position:'absolute',top:'30%',left:`${p.x}%`,fontSize:20,zIndex:10,pointerEvents:'none',animation:`particleBurst 1s cubic-bezier(0.22,1,0.36,1) ${p.delay}ms both`,'--angle':`${p.angle}deg`,'--dist':`${p.dist}px` }}>{p.emoji}</div>
-        ))}
-        <button onClick={handleClose} style={{ position:'absolute',top:16,right:16,width:32,height:32,borderRadius:'50%',border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:800,transition:'all 0.2s',zIndex:5 }}
-          onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';}} onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;}}>
-          <Icons.X size={14} color="currentColor" />
-        </button>
-        <div style={{ padding:'28px 28px 32px' }}>
-          {step==='rate'&&(
-            <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
-              <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:20 }}>
-                <div style={{ width:48,height:48,borderRadius:16,background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 18px rgba(200,75,17,0.35)' }}><Icons.MessageCircle size={22} color="white" /></div>
-                <div><h3 style={{ fontSize:20,fontWeight:900,color:C.text,letterSpacing:'-0.03em',margin:0,marginBottom:2 }}>Help Us Improve</h3><p style={{ fontSize:13,color:C.textMuted,fontWeight:500,margin:0 }}>What can we improve about BagSearch?</p></div>
-              </div>
-              <div style={{ display:'flex',justifyContent:'center',gap:8,marginBottom:14,padding:'8px 0' }}>
-                {[1,2,3,4,5].map(star=>(
-                  <button key={star} onMouseEnter={()=>setHovRating(star)} onMouseLeave={()=>setHovRating(0)} onClick={()=>handleRating(star)}
-                    style={{ background:'none',border:'none',cursor:'pointer',padding:4,transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',transform:(hovRating||rating)>=star?'scale(1.35) rotate(-8deg)':'scale(1)' }}>
-                    <Icons.Star size={36} color={(hovRating||rating)>=star?'#f97316':'#f0d9cc'} filled={(hovRating||rating)>=star} />
-                  </button>
-                ))}
-              </div>
-              <div style={{ textAlign:'center',height:20,marginBottom:16 }}>
-                <span style={{ fontSize:14,fontWeight:800,color:ratingColors[hovRating||rating]||C.textFaint,transition:'all 0.2s',opacity:(hovRating||rating)?1:0.4 }}>{ratingLabels[hovRating||rating]||'Tap a star to rate'}</span>
-              </div>
-              <div style={{ display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center' }}>
-                {['🛍️ Great selection','🚀 Fast loading','💎 Good quality','📱 Easy to use','💸 Fair prices'].map(chip=>(
-                  <button key={chip} onClick={()=>{ setComment(chip.replace(/^[^\s]+\s/,'')); setStep('comment'); }}
-                    style={{ fontSize:12,fontWeight:700,padding:'7px 14px',borderRadius:20,border:`1.5px solid ${C.primaryBorder}`,background:C.primaryBg,color:C.primary,cursor:'pointer',transition:'all 0.2s' }}
-                    onMouseEnter={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.color='white';e.currentTarget.style.transform='translateY(-2px)';}} onMouseLeave={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;e.currentTarget.style.transform='none';}}>
-                    {chip}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {step==='comment'&&(
-            <div style={{ animation:'feedStep 0.4s cubic-bezier(0.22,1,0.36,1) both' }}>
-              <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:18 }}>
-                <button onClick={()=>setStep('rate')} style={{ width:32,height:32,borderRadius:10,border:'none',background:C.primaryBg,color:C.primary,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0 }}><Icons.ChevronLeft size={16} color="currentColor" /></button>
-                <div>
-                  <h3 style={{ fontSize:18,fontWeight:900,color:C.text,letterSpacing:'-0.02em',margin:0,marginBottom:1 }}>Tell us more</h3>
-                  <div style={{ display:'flex',gap:3 }}>{[1,2,3,4,5].map(s=>(<Icons.Star key={s} size={13} color={s<=rating?'#f97316':'#f0d9cc'} filled={s<=rating} />))}</div>
-                </div>
-              </div>
-              <div style={{ position:'relative',marginBottom:16 }}>
-                <textarea autoFocus value={comment} onChange={e=>setComment(e.target.value)} placeholder="What did you love? What could be better?"
-                  style={{ width:'100%',minHeight:110,padding:'14px 16px',borderRadius:16,border:`1.5px solid ${C.border}`,background:C.surfaceDim,fontSize:14,fontFamily:'inherit',fontWeight:500,color:C.text,resize:'none',outline:'none',transition:'border-color 0.2s,box-shadow 0.2s',lineHeight:1.6,boxSizing:'border-box' }}
-                  onFocus={e=>{e.target.style.borderColor=C.primary;e.target.style.boxShadow=`0 0 0 3px rgba(200,75,17,0.12)`;}} onBlur={e=>{e.target.style.borderColor=C.border;e.target.style.boxShadow='none';}}/>
-                <div style={{ position:'absolute',bottom:10,right:12,fontSize:11,color:C.textFaint,fontWeight:600 }}>{comment.length}/300</div>
-              </div>
-              <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%',padding:'14px 0',borderRadius:14,border:'none',background:submitting?C.primaryBg:'linear-gradient(135deg,#c84b11,#f97316)',color:submitting?C.primary:'white',fontWeight:900,fontSize:15,cursor:submitting?'default':'pointer',transition:'all 0.35s',boxShadow:submitting?'none':'0 6px 20px rgba(200,75,17,0.38)',display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}>
-                {submitting?<><div style={{ width:18,height:18,borderRadius:'50%',border:'2.5px solid rgba(200,75,17,0.3)',borderTopColor:C.primary,animation:'ldSpin 0.7s linear infinite' }}/>Sending…</>:<>Send Feedback <Icons.Sparkles size={16} color="white" /></>}
-              </button>
-              {submitError&&<p style={{ color:'#dc2626',fontSize:12,fontWeight:600,textAlign:'center',marginTop:10 }}>{submitError}</p>}
-            </div>
-          )}
-          {step==='thanks'&&(
-            <div style={{ textAlign:'center',padding:'12px 0',animation:'feedStep 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-              <div style={{ width:72,height:72,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',boxShadow:'0 8px 28px rgba(200,75,17,0.4)',animation:'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}><Icons.Check size={36} color="white" /></div>
-              <h3 style={{ fontSize:22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:8 }}>Thank you!</h3>
-              <p style={{ fontSize:14,color:C.textMuted,fontWeight:500,lineHeight:1.6,maxWidth:280,margin:'0 auto' }}>Your feedback helps us build a better BagSearch 🧡</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function MobileMenuButton({ onClick, isVisible }) {
   const [pulse, setPulse] = useState(false);
   const [ripple, setRipple] = useState(false);
@@ -735,69 +610,6 @@ function MobileMenuButton({ onClick, isVisible }) {
       <Icons.Menu size={28} color="white" />
       <style>{`@keyframes floatIn{0%{opacity:0;transform:scale(0) translateY(20px)}100%{opacity:1;transform:scale(1) translateY(0)}}@keyframes floatOut{0%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:0;transform:scale(0) translateY(20px)}}@keyframes pingRing{0%{opacity:.8;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}@keyframes rippleOut{0%{opacity:.5;transform:scale(.5)}100%{opacity:0;transform:scale(2)}}`}</style>
     </button>
-  );
-}
-
-function MobileAuthPrompt({ open, onClose, navigate }) {
-  const [phase, setPhase] = useState(0);
-  useEffect(() => {
-    if (open) { setPhase(1); setTimeout(() => setPhase(2), 50); }
-    else { setPhase(3); setTimeout(() => setPhase(0), 400); }
-  }, [open]);
-  if (phase === 0) return null;
-  const visible = phase === 2;
-  return (
-    <div style={{ position:'fixed',inset:0,zIndex:9999,display:'flex',alignItems:'flex-end',justifyContent:'center',pointerEvents:visible?'all':'none' }}>
-      <div onClick={onClose} style={{ position:'absolute',inset:0,background:'rgba(26,10,0,0.65)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',opacity:visible?1:0,transition:'opacity 0.4s ease',cursor:'pointer' }} />
-      <div style={{ position:'relative',zIndex:2,width:'100%',maxWidth:'420px',background:'linear-gradient(135deg,#ffffff 0%,#fdf8f5 100%)',borderTopLeftRadius:32,borderTopRightRadius:32,boxShadow:'0 -8px 32px rgba(200,75,17,0.15), 0 16px 64px rgba(26,10,0,0.2)',opacity:visible?1:0,transform:visible?'translateY(0) scale(1)':'translateY(100%) scale(0.95)',transition:'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)',overflow:'hidden' }}>
-        <div style={{ height:6,background:'linear-gradient(90deg, #c84b11, #f97316, #ea580c, #c84b11)',backgroundSize:'200% 100%',animation:'shimGradient 3s linear infinite' }} />
-        <button onClick={onClose} style={{ position:'absolute',top:16,right:16,width:36,height:36,borderRadius:'50%',border:'none',background:'rgba(200,75,17,0.08)',color:'#c84b11',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s',zIndex:3 }}>
-          <Icons.X size={16} color="currentColor" />
-        </button>
-        <div style={{ padding:'32px 28px 36px',textAlign:'center' }}>
-          <div style={{ width:80,height:80,borderRadius:'50%',background:'linear-gradient(135deg,#c84b11,#f97316)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px',boxShadow:'0 12px 32px rgba(200,75,17,0.35)' }}><Icons.ShoppingBag size={40} color="white" /></div>
-          <h2 style={{ fontSize:24,fontWeight:900,color:'#1a0a00',letterSpacing:'-0.03em',marginBottom:8 }}>Welcome to BagSearch</h2>
-          <p style={{ fontSize:14,color:'#9a6348',fontWeight:500,lineHeight:1.6,marginBottom:28 }}>Sign in to save favorites, get exclusive deals, and connect with sellers across Nigeria</p>
-          <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
-            <button onClick={()=>{ onClose(); navigate("/register"); }} style={{ width:'100%',padding:'16px 0',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:900,fontSize:16,border:'none',borderRadius:16,cursor:'pointer',boxShadow:'0 8px 24px rgba(200,75,17,0.4)',transition:'all 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>Create Free Account</button>
-            <button onClick={()=>{ onClose(); navigate("/login?force=true"); }} style={{ width:'100%',padding:'14px 0',background:'rgba(200,75,17,0.08)',color:'#c84b11',fontWeight:800,fontSize:15,border:'2px solid rgba(200,75,17,0.15)',borderRadius:16,cursor:'pointer',transition:'all 0.3s' }}>Already have an account? Sign In</button>
-          </div>
-        </div>
-      </div>
-      <style>{`@keyframes shimGradient{0%{background-position:-200% 0}100%{background-position:200% 0}}`}</style>
-    </div>
-  );
-}
-
-function AuthGateModal({ open, onClose, navigate }) {
-  const [phase, setPhase] = useState(0);
-  useEffect(() => {
-    if (open) { setPhase(1); const t = setTimeout(() => setPhase(2), 20); return () => clearTimeout(t); }
-    else { setPhase(3); const t = setTimeout(() => setPhase(0), 400); return () => clearTimeout(t); }
-  }, [open]);
-  if (phase === 0) return null;
-  const visible = phase === 2;
-  return (
-    <div style={{ position:"fixed",inset:0,zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px" }}>
-      <div onClick={onClose} style={{ position:"absolute",inset:0,background:"rgba(26,10,0,0.55)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",opacity:visible?1:0,transition:"opacity 0.35s ease" }} />
-      <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:420,background:"#FFFFFF",border:"1px solid rgba(201,75,44,0.15)",borderRadius:20,overflow:"hidden",boxShadow:"0 32px 80px rgba(26,10,0,0.18)",opacity:visible?1:0,transform:visible?"translateY(0) scale(1)":"translateY(32px) scale(0.95)",transition:"opacity 0.4s cubic-bezier(0.22,1,0.36,1), transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-        <div style={{ height:6,background:"linear-gradient(90deg, #C94B2C, #E8856A, #C94B2C)" }} />
-        <button onClick={onClose} style={{ position:"absolute",top:16,right:16,width:32,height:32,borderRadius:"50%",border:"1px solid #E8D5CC",background:"#FFF5F2",color:"#999",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s" }}><Icons.X size={15} color="currentColor" /></button>
-        <div style={{ padding:"36px 36px 32px",textAlign:"center" }}>
-          <div style={{ width:64,height:64,borderRadius:"50%",background:"#F9DDD0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",color:"#C94B2C" }}><Icons.Lock size={28} color="#C94B2C" /></div>
-          <h2 style={{ fontSize:"1.5rem",fontWeight:800,color:"#1A0A00",letterSpacing:"-0.04em",marginBottom:8 }}>Members Only</h2>
-          <p style={{ fontSize:13,color:"#888",lineHeight:1.6,marginBottom:28 }}>Sign in to unlock visual search, wishlists & more.</p>
-          <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
-            <button onClick={()=>{ onClose(); navigate("/register"); }} style={{ width:"100%",padding:"13px 0",background:"#C94B2C",color:"white",fontWeight:800,fontSize:14,border:"none",borderRadius:10,cursor:"pointer",boxShadow:"0 6px 20px rgba(201,75,44,0.35)",transition:"all 0.25s" }}>Create Free Account</button>
-            <button onClick={()=>{ onClose(); navigate("/login?force=true"); }} style={{ width:"100%",padding:"12px 0",background:"#FFF5F2",color:"#C94B2C",fontWeight:700,fontSize:13,border:"1px solid #F0C8BB",borderRadius:10,cursor:"pointer",transition:"all 0.2s" }}>Already a member? Sign In</button>
-          </div>
-        </div>
-        <div style={{ padding:"12px 36px",borderTop:"1px solid #F5EAE5",display:"flex",alignItems:"center",justifyContent:"center",gap:8,background:"#FDFAFA" }}>
-          <div style={{ color:"#C94B2C" }}><LogoIcon /></div>
-          <span style={{ fontSize:12,fontWeight:800,color:"#1A0A00",letterSpacing:"-0.02em" }}>Bag<span style={{ color:"#C94B2C" }}>Search</span></span>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1202,13 +1014,20 @@ function ProductCard({product,index,navigate,onAddToCart,isAuthed,onRequireAuth}
     <a href={productPath(product.name,product.id)} ref={ref} onClick={(e)=>{e.preventDefault();if(e.target.closest('button'))return;navigate(productPath(product.name,product.id));}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{display:'block',textDecoration:'none',color:'inherit',background:'white',borderRadius:18,overflow:'hidden',border:`1.5px solid ${hov?C.primaryBorder:C.borderLight}`,cursor:'pointer',position:'relative',opacity:vis?1:0,transform:vis?'translateY(0) scale(1)':'translateY(28px) scale(0.97)',transition:`opacity 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,transform 0.55s cubic-bezier(0.22,1,0.36,1) ${(index%4)*80}ms,box-shadow 0.3s,border-color 0.3s`,boxShadow:hov?`0 20px 50px rgba(200,75,17,0.12),0 4px 16px rgba(0,0,0,0.05)`:'0 2px 10px rgba(0,0,0,0.04)'}}>
       <div style={{position:'relative',overflow:'hidden',aspectRatio:'4/3',background:C.primaryBg}}>
-        <img
-          src={product.src}
-          alt={product.brand ? `${product.brand} ${product.name}` : product.name}
-          loading="lazy"
-          decoding="async"
-          width="400" height="300"
-          style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}/>
+        {product.src
+          ? <img
+              src={product.src}
+              alt={product.brand ? `${product.brand} ${product.name}` : product.name}
+              loading="lazy"
+              decoding="async"
+              width="400" height="300"
+              style={{width:'100%',height:'100%',objectFit:'cover',display:'block',transition:'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)',transform:hov?'scale(1.07)':'scale(1)'}}
+              onError={e=>{e.currentTarget.style.display='none';e.currentTarget.nextSibling&&(e.currentTarget.nextSibling.style.display='flex');}}
+            />
+          : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:`linear-gradient(135deg,${C.primaryPale},${C.primaryBg})`}}><Icons.ShoppingBag size={40} color={C.primaryBorder}/></div>
+        }
+        {/* error fallback shown by onError above */}
+        <div style={{width:'100%',height:'100%',display:'none',alignItems:'center',justifyContent:'center',background:`linear-gradient(135deg,${C.primaryPale},${C.primaryBg})`,position:'absolute',inset:0}}><Icons.ShoppingBag size={40} color={C.primaryBorder}/></div>
         <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,transparent 55%,rgba(26,10,0,0.3) 100%)',opacity:hov?1:0,transition:'opacity 0.4s'}}/>
         <div style={{position:'absolute',top:10,left:10,display:'flex',flexDirection:'column',gap:5,alignItems:'flex-start',zIndex:2}}>
           {product.lowStock&&<span style={{background:'#dc2626',color:'white',fontSize:9,fontWeight:800,letterSpacing:'0.08em',textTransform:'uppercase',padding:'3px 8px',borderRadius:20,boxShadow:'0 2px 8px rgba(220,38,38,0.4)',animation:'pulseBadge 2s ease-in-out infinite',display:'flex',alignItems:'center',gap:4,whiteSpace:'nowrap'}}><span style={{width:5,height:5,borderRadius:'50%',background:'white',display:'inline-block',flexShrink:0}}/>Low Stock</span>}
@@ -1928,70 +1747,6 @@ function ResponsiveHeader({ headerVisible, setIsSidebarOpen, navigate, handlePro
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
-function WelcomeBackBadge({ user, isMobile }) {
-  const [hov, setHov] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [exiting, setExiting] = useState(false);
-
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
-
-  useEffect(() => {
-    if (!user) return;
-
-    setVisible(true);
-    setExiting(false);
-
-    const startExitTimer = setTimeout(() => {
-      setExiting(true);
-    }, 55000);
-
-    const hideTimer = setTimeout(() => {
-      setVisible(false);
-    }, 60000);
-
-    return () => {
-      clearTimeout(startExitTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [user?.id]);
-
-  if (!user || !visible) return null;
-
-  return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        position: 'fixed',
-        top: isMobile ? 70 : 82,
-        left: isMobile ? 12 : 20,
-        zIndex: 44,
-        maxWidth: isMobile ? 'calc(100vw - 92px)' : 280,
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        border: `1.5px solid ${hov ? C.primaryBorder : C.borderLight}`,
-        borderRadius: 18,
-        padding: isMobile ? '10px 12px' : '12px 14px',
-        boxShadow: hov ? '0 12px 30px rgba(200,75,17,0.16)' : '0 4px 16px rgba(0,0,0,0.06)',
-        transform: hov ? 'translateY(-3px) scale(1.02)' : 'translateY(0) scale(1)',
-        transition: 'all 0.25s ease',
-        pointerEvents: 'auto',
-        overflow: 'hidden',
-        opacity: exiting ? 0 : 1,
-        animation: exiting ? 'welcomeBadgeOut 0.7s ease forwards' : 'welcomeBadgeIn 0.7s cubic-bezier(0.22,1,0.36,1) both, welcomeBadgeFloat 4s ease-in-out 0.9s infinite',
-      }}
-    >
-      <div style={{ position:'absolute', inset:0, background:'linear-gradient(110deg, transparent 25%, rgba(249,115,22,0.08) 50%, transparent 75%)', animation:'shimCat 2.8s ease-in-out infinite', pointerEvents:'none' }} />
-      <p style={{ position:'relative', fontSize: isMobile ? 10 : 11, fontWeight: 800, color: C.textFaint, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        Hi {displayName}
-      </p>
-      <p style={{ position:'relative', fontSize: isMobile ? 13 : 14, fontWeight: 800, color: C.text, lineHeight: 1.25 }}>
-        👋 Welcome back
-      </p>
-    </div>
-  );
-}
 
 export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
@@ -2021,11 +1776,21 @@ export default function Product(){
   const[visualSearching,setVisualSearching]=useState(false);
   const[visualSearchSuccess,setVisualSearchSuccess]=useState(false);
   const[visualSearchCount,setVisualSearchCount]=useState(0);
-  const[isSidebarOpen,setIsSidebarOpen]=useState(false);const[searchFocused,setSearchFocused]=useState(false);
-  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[searchVisible,setSearchVisible]=useState(false);const[catVisible,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
+  const[isSidebarOpen,setIsSidebarOpen]=useState(false);
+  const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[,setSearchVisible]=useState(false);const[,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
   const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
-  const[activeTab,setActiveTab]=useState('products');const[vendorSearch,setVendorSearch]=useState('');const[vendorSearchFocused,setVendorSearchFocused]=useState(false);const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
+  const[activeTab,setActiveTab]=useState(location.pathname==='/vendors'?'vendors':'products');const[vendorSearch,setVendorSearch]=useState('');const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
+  const[sortBy,setSortBy]=useState('relevance');
+  const[photoSheetOpen,setPhotoSheetOpen]=useState(()=>!!location.state?.openPhotoSearch);
+  const[tourDone,setTourDone]=useState(tourAlreadyDone);
+  const[searching,setSearching]=useState(false);
+  const[productsReady,setProductsReady]=useState(false);
+  const pendingSearch=useRef(0);
+  // Vendors live on their own route (/vendors) instead of a tab toggle; keep the
+  // tab in sync when the user moves between /products and /vendors.
+  const[tabPath,setTabPath]=useState(location.pathname);
+  if(tabPath!==location.pathname){setTabPath(location.pathname);if(location.pathname==='/vendors')setActiveTab('vendors');else if(location.pathname==='/products'&&activeTab==='vendors')setActiveTab('products');}
   const{cartItems,addToCart,updateQty:handleUpdateQty,removeFromCart:handleRemoveFromCart,cartCount}=useCart();
   const[floatMsg,setFloatMsg]=useState(null);const[authGateOpen,setAuthGateOpen]=useState(false);
   const[uploadPromptOpen,setUploadPromptOpen]=useState(false);
@@ -2121,9 +1886,6 @@ export default function Product(){
   // cartCount comes from useCart() above
   const isMobile=windowWidth<=768;
 
-  const HERO_PHRASES=['Perfect Bag','Dream Clutch','Ideal Tote','Luxury Satchel','Everyday Crossbody'];
-  const{word:heroWord,visible:heroWordVisible}=useWordCycle(HERO_PHRASES,2600);
-
   useEffect(()=>{const h=()=>setWindowWidth(window.innerWidth);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);
   useEffect(()=>{setTimeout(()=>setHeaderVisible(true),60);setTimeout(()=>setHeroVisible(true),180);setTimeout(()=>setSearchVisible(true),340);setTimeout(()=>setCatVisible(true),480);},[]);
 
@@ -2166,7 +1928,7 @@ export default function Product(){
       const allProductIds=(products||[]).map(p=>p.id).filter(Boolean);
       const viewCountMap={};let viewRows=[];
       if(allProductIds.length>0){const{data}=await supabase.from('product_views').select('product_id,buyer_id,buyer_email,buyer_phone,buyer_name').in('product_id',allProductIds);viewRows=data||[];(viewRows||[]).forEach(row=>{viewCountMap[row.product_id]=(viewCountMap[row.product_id]||0)+1;});}
-      const allSellers=(sellerRows||[]).map(s=>{const pids=sellerProductIds[s.user_id]||[];const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];return{id:s.user_id,name:s.brand_name||s.full_name||'Anonymous Seller',avatar:'👜',location:'all',rating:4.6,reviews:0,communityTrusted:!!s.community_trusted,ninApproved:false,views,products:sellerProductCount[s.user_id]||0,joined:'N/A',specialty:cats[0]||'Bags',badge:'',description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,tags:cats,profile_slug:s.profile_slug||'',colors:['#c84b11','#f97316']};});
+      const allSellers=(sellerRows||[]).map(s=>{const pids=sellerProductIds[s.user_id]||[];const views=pids.reduce((sum,pid)=>sum+(viewCountMap[pid]||0),0);const cats=Array.isArray(s.bag_categories)&&s.bag_categories.length>0?s.bag_categories:['bags'];return{id:s.user_id,name:s.brand_name||s.full_name||'Anonymous Seller',avatar:'👜',location:'all',rating:4.6,reviews:0,communityTrusted:!!s.community_trusted,ninApproved:false,views,products:sellerProductCount[s.user_id]||0,joined:'N/A',specialty:cats[0]||'Bags',badge:'',description:s.brand_story||`Trusted seller of ${cats[0]||'bags'}`,tags:cats,profile_slug:s.profile_slug||'',avatarUrl:s.avatar_url||'',colors:['#c84b11','#f97316']};});
       const knownIds=new Set(allSellers.map(v=>v.id));
       const extra=buildVendorsFromProducts((products||[]).filter(p=>{const sid=p.sellerId||p.user_id||p.seller_id;return sid&&!knownIds.has(sid);}));
       const final=[...allSellers,...extra];
@@ -2188,6 +1950,31 @@ export default function Product(){
     }catch(err){const derived=sortVendorsVerifiedFirst(buildVendorsFromProducts(products||[]));setVendorStats({vendors:derived.length,products:(products||[]).length,buyers:800,reviews:0});setVendors(derived);setFilteredVendors(derived);return derived;}
   },[buildVendorsFromProducts,countUniqueBuyers]);
 
+  // Maps a raw `products` row into the shape every card/section expects (image URLs, numbers, colour swatches).
+  const mapProductRow=useCallback((p,boostMap={})=>{
+        let rawColors=[];
+        if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
+        const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[];
+        const qty=p.quantity!=null?parseInt(p.quantity):null;
+
+        // ── Robust image extraction ──────────────────────────────────────────
+        // p.images can be: a JS array, a JSON string like '["url1","url2"]',
+        // a plain URL string, or null/undefined. Handle all cases.
+        let imagesArr = [];
+        if (Array.isArray(p.images)) {
+          imagesArr = p.images;
+        } else if (typeof p.images === 'string' && p.images.trim().startsWith('[')) {
+          try { imagesArr = JSON.parse(p.images); } catch { imagesArr = []; }
+        } else if (typeof p.images === 'string' && p.images.trim().startsWith('http')) {
+          imagesArr = [p.images.trim()];
+        }
+        const rawSrc = imagesArr.find(u => typeof u === 'string' && u.startsWith('http')) || '';
+
+        const sellerId=p.seller_id||p.user_id||'db';
+        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId,sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:rawSrc?getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height):'',srcHero:rawSrc?getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height):'',srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||'',boostRank:boostMap[sellerId]||0};
+  },[mapCategory]);
+  const mapProductRows=useCallback(rows=>(rows||[]).map(r=>mapProductRow(r)),[mapProductRow]);
+
   const fetchProducts=useCallback(async(locationId='all')=>{
     try{
       const LAGOS_IDS=['lagos','lagos-island','lagos-mainland','victoria-island','lekki'];
@@ -2203,22 +1990,14 @@ export default function Product(){
         if(subs){subs.forEach(s=>{boostMap[s.user_id]=s.plan==='premium'?2:s.plan==='pro'?1:0;});}
       }catch(e){console.warn('Could not fetch subscriptions for boosting:',e);}
 
-      const products=(data||[]).map(p=>{
-        let rawColors=[];
-        if(p.colors){if(Array.isArray(p.colors))rawColors=p.colors;else if(typeof p.colors==='string'){try{rawColors=JSON.parse(p.colors);}catch{rawColors=[p.colors];}}}
-        const mappedColors=rawColors.length>0?rawColors.map(c=>{if(typeof c==='string'){const key=c.toLowerCase().trim();const hex=BAG_COLOR_MAP[key];return{id:key,hex:hex||'#c84b11'};}const key=String(c.id||'').toLowerCase().trim();return{id:key,hex:c.hex||BAG_COLOR_MAP[key]||'#c84b11'};}):[];
-        const qty=p.quantity!=null?parseInt(p.quantity):null;
-        const rawSrc=p.images?.length>0?p.images[0]:'https://via.placeholder.com/400';
-        const sellerId=p.seller_id||p.user_id||'db';
-        return{id:p.id,name:p.name,seller:p.seller_name||'Anonymous Seller',sellerId,sub:`${p.brand} • ${p.condition}`,price:parseFloat(p.price),quantity:qty,lowStock:qty!=null&&qty>0&&qty<5,category:mapCategory(p.category),location:p.location||'all',colors:mappedColors,src:getOptimizedImageUrl(rawSrc,IMG_SIZES.card.width,IMG_SIZES.card.height),srcHero:getOptimizedImageUrl(rawSrc,IMG_SIZES.hero.width,IMG_SIZES.hero.height),srcRaw:rawSrc,brand:p.brand||'',condition:p.condition||'',description:p.description||'',discountedPrice:p.discounted_price?parseFloat(p.discounted_price):null,discountLabel:p.discount_label||null,whatsapp:p.whatsapp||'',boostRank:boostMap[sellerId]||0};
-      });
+      const products=(data||[]).map(p=>mapProductRow(p,boostMap));
       // Sort: Premium (2) first, then Pro (1), then Free (0), within same rank keep original order
       products.sort((a,b)=>b.boostRank-a.boostRank);
       return products;
     }catch(err){console.error('Failed to load products:',err);return[];}
-  },[mapCategory]);
+  },[mapProductRow]);
 
-  useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
+  useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);setProductsReady(true);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);setProductsReady(true);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
 
   // Nudge logged-in sellers who haven't earned a trust badge yet to upload their
   // NIN or collect reviews. Checked once per seller and remembered in localStorage
@@ -2306,17 +2085,23 @@ export default function Product(){
   // which reads as "results only show once I stop typing / finish the whole name". Each
   // call stamps a shared request id and bails if a newer call has since started, so only
   // the latest keystroke's response is ever applied — partial names resolve live.
-  const handleSearch=async q=>{setSearchQuery(q);const reqId=++searchReqId.current;let results;if(q.trim()){results=await searchProducts(q,selectedLocation.id,activeCategory);}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
-  const handleCategoryChange=async id=>{setActiveCategory(id);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=await searchProducts(searchQuery,selectedLocation.id,id);}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
-  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=await searchProducts(searchQuery,loc.id,activeCategory);}else{results=await fetchProducts(loc.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);};
+  const handleSearch=async q=>{setSearchQuery(q);const reqId=++searchReqId.current;let results;if(q.trim()){results=mapProductRows(await searchProducts(q,selectedLocation.id,activeCategory));}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
+  const handleCategoryChange=async id=>{setActiveCategory(id);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,selectedLocation.id,id));}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
+  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,loc.id,activeCategory));}else{results=await fetchProducts(loc.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);};
   const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false);setVisualSearchCount(0);};
-  const handleImageUpload=async e=>{
-    const f=e.target.files[0];if(!f)return;
-    setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setVisualSearching(true);setResultsKey(k=>k+1);
-    try{const results=await visualSearch(f,allProducts);if(results.length>0){setDisplayedProducts(results);setVisualSearchSuccess(true);setVisualSearchCount(results.length);setTimeout(()=>setVisualSearchSuccess(false),3500);setFloatMsg({text:`Found ${results.length} similar bags!`,type:'success'});}else{setDisplayedProducts([]);setVisualSearchSuccess(false);setVisualSearchCount(0);setFloatMsg({text:'No similar bags found. Try another image!',type:'info'});}}
-    catch(err){setFloatMsg({text:'Visual search temporarily unavailable.',type:'danger'});setDisplayedProducts([]);}
-    finally{setVisualSearching(false);e.target.value='';}
+  // Visual search from a photo (File/Blob). A token lets Cancel ignore a search that is still running.
+  const visualToken=useRef(0);
+  const runVisualSearch=async f=>{
+    if(!f)return;
+    const tok=++visualToken.current;
+    setUploadedImage(URL.createObjectURL(f));setIsFiltered(true);setVisualSearching(true);setResultsKey(k=>k+1);setSortBy('relevance');
+    try{const results=await visualSearch(f,allProducts);if(tok!==visualToken.current)return;if(results.length>0){setDisplayedProducts(results);setVisualSearchSuccess(true);setVisualSearchCount(results.length);setTimeout(()=>setVisualSearchSuccess(false),3500);setFloatMsg({text:`Found ${results.length} similar bags!`,type:'success'});}else{setDisplayedProducts([]);setVisualSearchSuccess(false);setVisualSearchCount(0);setFloatMsg({text:'No similar bags found. Try another image!',type:'info'});}}
+    catch(err){if(tok!==visualToken.current)return;setFloatMsg({text:'Visual search temporarily unavailable.',type:'danger'});setDisplayedProducts([]);}
+    finally{if(tok===visualToken.current)setVisualSearching(false);}
   };
+  const cancelVisualSearch=()=>{visualToken.current++;setVisualSearching(false);handleClearSearch();};
+  const handleImageUpload=e=>{const f=e.target.files[0];e.target.value='';runVisualSearch(f);};
+  const openPhotoSearch=()=>setPhotoSheetOpen(true);
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
   const handleViewVendorProducts=useCallback((vendor)=>{navigate(`/vendor/${vendor.id}`);},[navigate]);
   const handleRequireAuth=useCallback(()=>setAuthGateOpen(true),[]);
@@ -2364,41 +2149,75 @@ export default function Product(){
   // The actual search UI (product search w/ budget+camera, or vendor search) — a single
   // source of JSX so mobile can relocate it into the new welcome/hero panel below while
   // desktop keeps it in its original spot, without maintaining two copies of the markup.
-  const searchBarBlock=(<>
-    {/* Always mounted (not just on the products tab) so the visual-search hero
-        card below can trigger it regardless of which tab is active. */}
-    <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>
-    {activeTab==='products'?(
-      <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${searchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:searchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.25s'}}>
-        <Icons.Search size={isMobile?18:20} color={searchFocused?C.primary:C.textFaint} />
-        <input type="text" placeholder={isMobile?"Search bags...":"Search bags by name, material, or seller…"} value={searchQuery} onChange={e=>handleSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-        {isFiltered&&<button onClick={handleClearSearch} style={{width:isMobile?22:26,height:isMobile?22:26,borderRadius:'50%',border:'none',background:C.primaryBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icons.X size={isMobile?12:13} color={C.primary} /></button>}
-        <button onClick={()=>setBudgetOpen(true)} title="Set your budget" style={{position:'relative',width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:`1.5px solid ${budgetActive?C.primary:C.border}`,background:budgetActive?C.primaryBg:C.surfaceDim,color:budgetActive?C.primary:C.textMid,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',fontWeight:900,fontSize:isMobile?14:16}}>
-          ₦
-          {budgetActive&&<span style={{position:'absolute',top:-3,right:-3,width:9,height:9,borderRadius:'50%',background:'#16a34a',border:'2px solid white'}}/>}
-        </button>
-        <button onClick={()=>fileInputRef.current.click()} style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:isMobile?8:10,border:'none',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'all 0.2s',boxShadow:'0 4px 12px rgba(200,75,17,0.35)'}}><Icons.Camera size={isMobile?14:16} color="white" /></button>
-      </div>
-    ):(
-      <div style={{display:'flex',alignItems:'center',background:'white',border:`1.5px solid ${vendorSearchFocused?C.primary:C.border}`,borderRadius:isMobile?12:16,padding:isMobile?'10px 12px':'12px 16px',gap:isMobile?8:10,boxShadow:vendorSearchFocused?`0 0 0 4px rgba(200,75,17,0.1),0 4px 18px rgba(0,0,0,0.04)`:`0 2px 10px rgba(0,0,0,0.03)`,transition:'all 0.3s'}}>
-        <Icons.Search size={isMobile?18:20} color={vendorSearchFocused?C.primary:C.textFaint} />
-        <input type="text" placeholder={isMobile?"Search vendors...":"Search vendors by name, specialty or tag…"} value={vendorSearch} onChange={e=>handleVendorSearch(e.target.value)} onFocus={()=>setVendorSearchFocused(true)} onBlur={()=>setVendorSearchFocused(false)} style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:isMobile?13:14,color:C.text,fontFamily:'inherit',fontWeight:500}}/>
-        {vendorSearch&&<button onClick={()=>handleVendorSearch('')} style={{border:'none',background:'none',cursor:'pointer'}}><Icons.X size={13} color={C.textFaint} /></button>}
-      </div>
-    )}
-    {uploadedImage&&activeTab==='products'&&<div style={{marginTop:12,display:'flex',alignItems:'center',gap:12,padding:'12px 16px',background:C.primaryBg,border:`1px solid ${C.primaryBorder}`,borderRadius:12,animation:'slideInPreview 0.35s ease both'}}>
-      <img src={uploadedImage} alt="" loading="lazy" width="48" height="48" style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
-      <div style={{flex:1}}><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Image uploaded</p><p style={{fontSize:11,color:C.textMuted}}>Showing visually similar bags</p></div>
-      <button onClick={handleClearSearch} style={{fontSize:12,color:C.primary,fontWeight:700,background:'none',border:'none',cursor:'pointer'}}>Remove</button>
-    </div>}
-  </>);
+  // Always mounted (not just on the products tab) so the visual-search hero
+  // card / desktop camera button can trigger it regardless of which tab is active.
+  const fileInputEl=<input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload}/>;
 
-  // Greeting shown in the mobile-only welcome/hero panel below.
-  const greetingName=user?(user.user_metadata?.full_name||user.email?.split('@')[0]||'there'):'Guest';
-  const greetingLabel=user?'Welcome Back':'Welcome to BagSearch';
+  // ── Desktop storefront helpers ──
+  const newIds=new Set(newArrivals.map(p=>p.id));
+  const hotIds=new Set(mostClickedProducts.slice(0,6).map(p=>p.id));
+  const cardTags=(p,i)=>{
+    const tags=[];
+    // Photo search results come back best match first
+    if(uploadedImage&&i===0&&sortBy==='relevance')tags.push({label:'CLOSEST MATCH',bg:'#1E1A17'});
+    if(newIds.has(p.id))tags.push({label:'NEW',bg:'#2449B8'});
+    if(hotIds.has(p.id))tags.push({label:'HOT',bg:'#B53F0E'});
+    if(p.discountedPrice&&p.price>p.discountedPrice)tags.push({label:`-${Math.round((1-p.discountedPrice/p.price)*100)}%`,bg:'#2449B8'});
+    if(p.lowStock)tags.push({label:'LAST FEW',bg:'#B53F0E'});
+    return tags.slice(0,2);
+  };
+  const handleChatSeller=p=>{
+    if(!user){setAuthGateOpen(true);return;}
+    const number=normalizeWhatsAppNumber(p.whatsapp||'');
+    if(!number){alert('Seller WhatsApp number is missing for this product.');return;}
+    const productLink=`${window.location.origin}/products/${p.id}`;
+    const msg=`Hi! I'm interested in *${p.name}* 👜\n💰 Price: ${p.discountedPrice?'₦'+p.discountedPrice.toLocaleString()+' (sale)':'₦'+p.price.toLocaleString()}\n\n🔗 View product: ${productLink}`;
+    window.open(buildWhatsAppUrl(number,msg),'_blank','noopener,noreferrer');
+    setTimeout(()=>triggerGoogleReviewSurvey({email:user?.email||'',productName:p.name||'',productId:p.id||''}),1500);
+  };
+  const handleBuyNow=p=>{if(!user){setAuthGateOpen(true);return;}navigate(productPath(p.name,p.id));};
+  // compact = phone layout; withChat = show the WhatsApp button (skipped on the tight 2-column phone grid)
+  const renderCard=(p,i,{compact=isMobile,withChat=!isMobile}={})=>(
+    <PastelProductCard key={p.id} product={p} index={i} href={productPath(p.name,p.id)} compact={compact}
+      categoryLabel={CATEGORIES.find(c=>c.id===p.category&&c.id!=='all')?.label||'Bag'}
+      tags={cardTags(p,i)}
+      priceLabel={formatCurrency(p.discountedPrice||p.price)}
+      wasLabel={p.discountedPrice?formatCurrency(p.price):null}
+      onOpen={prod=>navigate(productPath(prod.name,prod.id))}
+      onAddToCart={handleAddToCart}
+      onBuyNow={handleBuyNow}
+      onChat={withChat?handleChatSeller:undefined}/>
+  );
+  const renderShelfCard=(p,i)=>renderCard(p,i,{withChat:true});
+  const scrollToId=id=>{const el=document.getElementById(id)||document.getElementById('all-bags');el?.scrollIntoView({behavior:'smooth',block:'start'});};
+  const handleHeroAction=id=>{if(id==='snap'){openPhotoSearch();return;}scrollToId(id==='new'?'new-arrivals':'all-bags');};
+
+  // Search mode: a text query, a photo search or a budget — the hero and shelves step aside for results.
+  const searchMode=!!searchQuery.trim()||!!uploadedImage||budgetActive;
+  const runSearch=async q=>{const id=++pendingSearch.current;setSearching(true);try{await handleSearch(q);}finally{if(id===pendingSearch.current)setSearching(false);}};
+  const runCategory=async id=>{const req=++pendingSearch.current;setSearching(true);try{await handleCategoryChange(id);}finally{if(req===pendingSearch.current)setSearching(false);}};
+  const priceOf=p=>p.discountedPrice||p.price||0;
+  const sortedResults=sortBy==='price-asc'?[...budgetFilteredProducts].sort((a,b)=>priceOf(a)-priceOf(b))
+    :sortBy==='price-desc'?[...budgetFilteredProducts].sort((a,b)=>priceOf(b)-priceOf(a))
+    :budgetFilteredProducts;
+  const chipCategories=CATEGORIES.map(c=>({id:c.id,label:c.id==='all'?'All':c.label}));
+  const filterChips=[
+    budgetActive&&{key:'budget',label:`₦${budgetMin?Number(budgetMin).toLocaleString():'0'} – ₦${budgetMax?Number(budgetMax).toLocaleString():'any'}`,onEdit:()=>setBudgetOpen(true),onRemove:clearBudget},
+    selectedLocation.id!=='all'&&{key:'loc',label:selectedLocation.name,onEdit:()=>setLocationModalOpen(true),onRemove:()=>handleLocationChange(NIGERIAN_LOCATIONS[0])},
+  ].filter(Boolean);
+  const resultsCountLabel=`${sortedResults.length.toLocaleString()} ${sortedResults.length===1?'bag':'bags'}${selectedLocation.id!=='all'?` in ${selectedLocation.name}`:''}`;
+  const searchTitle=uploadedImage?'Bags that look like your photo':searchQuery.trim()?`“${searchQuery.trim()}”`:'Bags in your budget';
+  const allBagsTitle=selectedVendor?selectedVendor.name:activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'All bags';
+  const isSeller=user?.user_metadata?.role==='seller';
+
+  const mobileVendors=isMobile&&activeTab==='vendors';
 
    return(
-     <div style={{minHeight:'100vh',background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`,fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
+     <div style={{minHeight:'100vh',background:isMobile?`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`:'#ffffff',fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
+       <ShopStyles/>
+       <PhotoSearchSheet open={photoSheetOpen} onClose={()=>setPhotoSheetOpen(false)} onSearch={runVisualSearch} isMobile={isMobile}/>
+       <PhotoScanOverlay open={visualSearching} image={uploadedImage} onCancel={cancelVisualSearch}/>
+       <WelcomeTour ready={productsReady&&activeTab==='products'&&!searchMode&&!photoSheetOpen} isMobile={isMobile} onFinish={()=>setTourDone(true)}/>
 
        <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
@@ -2406,9 +2225,6 @@ export default function Product(){
         @keyframes wordFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
         @keyframes pulseBadge{0%,100%{box-shadow:0 2px 8px rgba(220,38,38,0.4)}50%{box-shadow:0 2px 18px rgba(220,38,38,0.7)}}
-        @keyframes welcomeBadgeIn{0%{opacity:0;transform:translateX(-24px) translateY(10px) scale(0.92)}60%{opacity:1;transform:translateX(4px) translateY(-2px) scale(1.03)}100%{opacity:1;transform:translateX(0) translateY(0) scale(1)}}
-        @keyframes welcomeBadgeOut{0%{opacity:1;transform:translateX(0) scale(1)}100%{opacity:0;transform:translateX(-18px) translateY(-6px) scale(0.94)}}
-        @keyframes welcomeBadgeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
         @keyframes bounceIn{0%{opacity:0;transform:scale(0.7) translateY(20px)}60%{opacity:1;transform:scale(1.06) translateY(-4px)}100%{transform:scale(1) translateY(0)}}
         @keyframes catIn{from{opacity:0;transform:translateY(14px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes shimCat{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
@@ -2454,19 +2270,55 @@ export default function Product(){
       </div>}
 
       {/* Cart is now a standalone page at /cart */}
-      <AuthGateModal open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
+      <AuthPromptModal variant="gate" open={authGateOpen} onClose={()=>setAuthGateOpen(false)} navigate={navigate}/>
       <SellerVerifyNudgeModal open={sellerVerifyNudgeOpen} onClose={()=>setSellerVerifyNudgeOpen(false)} navigate={navigate}/>
       <NinStatusModal status={ninStatusModal?.status} reason={ninStatusModal?.reason} open={!!ninStatusModal} onClose={()=>{const after=ninStatusModal?.onAfterClose;setNinStatusModal(null);if(after)after();}} navigate={navigate}/>
       <TrustBadgeUpsellModal open={!!trustUpsellModal} reviewCount={trustUpsellModal?.reviewCount||0} onClose={()=>setTrustUpsellModal(null)} navigate={navigate}/>
-      <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);fileInputRef.current?.click();}}/>
-      <MobileAuthPrompt open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
-      {feedbackOpen&&<FeedbackBox onClose={()=>setFeedbackOpen(false)} user={user}/>}
-      <WelcomeBackBadge user={user} isMobile={isMobile}/>
-      {!feedbackOpen&&<InstallButton visible={showInstallBtn} label={installButtonLabel} onClick={handleInstallApp} isMobile={isMobile}/>}
+      <UploadPromptModal open={uploadPromptOpen} onClose={()=>setUploadPromptOpen(false)} onUpload={()=>{setUploadPromptOpen(false);openPhotoSearch();}}/>
+      <AuthPromptModal variant="welcome" open={mobileAuthPromptOpen} onClose={()=>setMobileAuthPromptOpen(false)} navigate={navigate}/>
+      {feedbackOpen&&<FeedbackSheet onClose={()=>setFeedbackOpen(false)} user={user} isMobile={isMobile}/>}
+      <InstallAppCard available={showInstallBtn&&tourDone} isIOS={getIsIOSDevice()} isMobile={isMobile} onInstall={handleInstallApp}/>
       {!feedbackOpen&&<FeedbackTrigger onClick={()=>setFeedbackOpen(true)} isMobile={isMobile}/>}
 
       {/* Header — NO location selector here anymore */}
-      <ResponsiveHeader headerVisible={headerVisible} setIsSidebarOpen={setIsSidebarOpen} navigate={navigate} handleProfileClick={handleProfileClick} cartCount={cartCount} setCartOpen={()=>navigate('/cart')} user={user} handleLogout={handleLogout} isMobile={isMobile}/>
+      {isMobile
+        ?<MobileTopBar
+          visible={headerVisible}
+          user={user}
+          locationName={selectedLocation.name}
+          showSearch={activeTab==='products'}
+          searchValue={searchQuery}
+          searchPlaceholder="Search bags or sellers"
+          onSearch={runSearch}
+          showClear={!!searchQuery||!!uploadedImage}
+          onClearSearch={handleClearSearch}
+          budgetActive={budgetActive}
+          onBudget={()=>setBudgetOpen(true)}
+          onCamera={()=>openPhotoSearch()}
+          onMenu={()=>setIsSidebarOpen(true)}
+          onLocation={()=>setLocationModalOpen(true)}
+          onHome={()=>navigate('/')}
+          onLogin={()=>navigate('/login')}
+        />
+        :<DesktopTopBar
+          visible={headerVisible}
+          user={user}
+          cartCount={cartCount}
+          locationName={selectedLocation.name}
+          searchValue={activeTab==='vendors'?vendorSearch:searchQuery}
+          searchPlaceholder={activeTab==='vendors'?'Search sellers':'Search bags or sellers'}
+          onSearch={activeTab==='vendors'?handleVendorSearch:runSearch}
+          showClear={activeTab==='vendors'?!!vendorSearch:(!!searchQuery||!!uploadedImage)}
+          onClearSearch={activeTab==='vendors'?()=>handleVendorSearch(''):handleClearSearch}
+          budgetActive={budgetActive}
+          onBudget={activeTab==='products'?()=>setBudgetOpen(true):undefined}
+          onMenu={()=>setIsSidebarOpen(true)}
+          onProfile={handleProfileClick}
+          onCart={()=>navigate('/cart')}
+          onLocation={()=>setLocationModalOpen(true)}
+          onHome={()=>navigate('/')}
+          onLogin={()=>navigate('/login')}
+        />}
 
       {/* Sidebar */}
       <div onClick={()=>setIsSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(26,10,0,0.45)',zIndex:60,opacity:isSidebarOpen?1:0,pointerEvents:isSidebarOpen?'all':'none',transition:'opacity 0.3s'}}/>
@@ -2488,20 +2340,44 @@ export default function Product(){
 
         <div style={{height:1,background:C.borderLight,marginBottom:12}}/>
 
-                 {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
+                 {(user?[{label:'Profile',icon:Icons.User,action:()=>{handleProfileClick();setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Vendors',icon:Icons.ShoppingBag,action:()=>{navigate('/vendors');setIsSidebarOpen(false);}},{label:'Reels',icon:Icons.Sparkles,action:()=>{navigate('/reels');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}},{label:'Logout',icon:Icons.Logout,action:()=>{handleLogout();setIsSidebarOpen(false);}}]:[{label:'Login',icon:Icons.User,action:()=>{navigate('/login');setIsSidebarOpen(false);}},{label:'Register',icon:Icons.User,action:()=>{navigate('/register');setIsSidebarOpen(false);}},{label:'Cart',icon:Icons.Cart,action:()=>{navigate('/cart');setIsSidebarOpen(false);}},{label:'Vendors',icon:Icons.ShoppingBag,action:()=>{navigate('/vendors');setIsSidebarOpen(false);}},{label:'Reels',icon:Icons.Sparkles,action:()=>{navigate('/reels');setIsSidebarOpen(false);}},{label:'Contact',icon:Icons.MessageCircle,action:()=>{navigate('/contact');setIsSidebarOpen(false);}},{label:'Hot Deals',icon:Icons.TrendingUp,action:()=>{navigate('/hot-deals');setIsSidebarOpen(false);}},{label:'About',icon:Icons.User,action:()=>{navigate('/about');setIsSidebarOpen(false);}},{label:'Feedback',icon:Icons.MessageCircle,action:()=>{setFeedbackOpen(true);setIsSidebarOpen(false);}}]).map(({icon:IconComponent,label,action})=>(
           <button key={label} onClick={action} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent',cursor:'pointer',color:label==='Logout'?C.danger:label==='Contact'?C.primary:C.text,fontSize:15,fontWeight:600,marginBottom:4,textAlign:'left',transition:'all 0.18s',width:'100%'}}
             onMouseEnter={e=>{e.currentTarget.style.background=label==='Logout'?C.dangerBg:C.primaryBg;e.currentTarget.style.transform='translateX(4px)';e.currentTarget.style.color=label==='Logout'?C.danger:C.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=label==='Logout'?'#fef2f2':label==='Contact'?C.primaryBg:'transparent';e.currentTarget.style.transform='none';e.currentTarget.style.color=label==='Logout'?C.danger:label==='Contact'?C.primary:C.text;}}>
             <IconComponent size={20} color="currentColor" />{label}
           </button>
         ))}
+        {showInstallBtn&&(
+          <button onClick={()=>{setIsSidebarOpen(false);handleInstallApp();}} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:12,border:'none',background:'#1E1A17',cursor:'pointer',color:'white',fontSize:15,fontWeight:600,marginTop:8,textAlign:'left',width:'100%'}}>
+            <Icons.Download size={20} color="currentColor" />{installButtonLabel}
+          </button>
+        )}
       </aside>
 
       <LocationModal isOpen={locationModalOpen} onClose={()=>setLocationModalOpen(false)} selectedLocation={selectedLocation} onSelect={handleLocationChange}/>
 
-      <div style={{flex:1,maxWidth:1280,margin:'0 auto',width:'100%',padding:isMobile?'24px 12px 80px':'36px 20px 80px'}}>
+      {fileInputEl}
+
+      {/* Hero carousel — hidden while showing search results */}
+      <AnimatePresence initial={false}>
+        {activeTab==='products'&&!searchMode&&(
+          <motion.div
+            key="hero"
+            initial={{opacity:0,y:-16}}
+            animate={{opacity:heroVisible?1:0,y:0}}
+            exit={{opacity:0,y:-16,transition:{duration:0.18}}}
+            transition={{type:'spring',stiffness:120,damping:22}}
+            style={{position:'relative',width:'100%',maxWidth:1440,margin:'0 auto',paddingTop:isMobile?6:0}}
+          >
+            {isMobile?<MobileHero onAction={handleHeroAction}/>:<DesktopHero onAction={handleHeroAction}/>}
+            <PhotoSearchFab compact={isMobile} onClick={()=>openPhotoSearch()}/>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div style={{flex:1,maxWidth:isMobile?1280:1440,margin:'0 auto',width:'100%',padding:isMobile?(activeTab==='products'?(searchMode?'16px 16px 120px':'48px 16px 120px'):'24px 12px 80px'):(searchMode?'40px clamp(24px,5vw,72px) 80px':'56px clamp(24px,5vw,72px) 80px')}}>
 
         {activeTab==='vendorDetail'&&selectedVendorDetail&&(
-          <VendorDetailView vendor={selectedVendorDetail} onClose={()=>{setSelectedVendorDetail(null);setActiveTab('vendors');navigate('/products');}} allProducts={allProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
+          <VendorDetailView vendor={selectedVendorDetail} onClose={()=>{setSelectedVendorDetail(null);setActiveTab('vendors');navigate('/vendors');}} allProducts={allProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>
         )}
         {activeTab==='vendorDetail'&&!selectedVendorDetail&&(
           <div style={{textAlign:'center',padding:'80px 20px'}}><div style={{fontSize:48,marginBottom:16}}>🏪</div><p style={{fontSize:16,color:C.textMuted,fontWeight:600}}>Loading vendor…</p></div>
@@ -2509,186 +2385,125 @@ export default function Product(){
 
         {activeTab!=='vendorDetail'&&<>
 
-        {/* Hero — desktop keeps the existing word-cycling banner. */}
-        {!isMobile && (
-        <div style={{marginBottom:24,opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(20px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)'}}>
-          <div className="hero-banner" style={{background:C.primaryBg,borderRadius:24,padding:'34px 38px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:20,border:`1.5px solid ${C.primaryBorder}`,position:'relative',overflow:'hidden',boxShadow:`0 8px 32px rgba(200,75,17,0.1)`}}>
-            <div style={{position:'absolute',right:-40,top:-40,width:200,height:200,borderRadius:'50%',background:'rgba(200,75,17,0.07)',filter:'blur(20px)'}}/>
-            <div style={{position:'relative',width:'auto'}}>
-              <h1 style={{fontSize:'clamp(1.7rem,4vw,2.4rem)',fontWeight:900,color:C.text,letterSpacing:'-0.04em',lineHeight:1.2,marginBottom:10}}>
-                Find Your{' '}
-                <span style={{color:C.primary,display:'inline-block',minWidth:'10ch',opacity:heroWordVisible?1:0,transform:heroWordVisible?'translateY(0)':'translateY(5px)',transition:'opacity 0.3s ease, transform 0.3s ease'}}>{heroWord}</span>
-              </h1>
-              <p style={{color:C.textMuted,fontSize:15,fontWeight:500,lineHeight:1.6,maxWidth:380}}>Shop luxury designer bags in Nigeria — Chanel, Hermès, Louis Vuitton & more from verified sellers. Got a bag to sell? <a href="/register" style={{color:C.primary,fontWeight:700,textDecoration:'underline'}}>List it free</a>.</p>
-            </div>
-            <div className="hero-icons" style={{display:'flex',gap:12,position:'relative'}}>
-              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><img src={shoppingBagImg} alt="" loading="lazy" decoding="async" style={{width:38,height:38,objectFit:'contain'}}/></div>
-              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`,transform:'translateY(-8px)'}}><Icons.ShoppingBag size={28} color={C.primary} /></div>
-              <div style={{width:62,height:62,borderRadius:'50%',background:'white',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 16px rgba(200,75,17,0.15)`,border:`2px solid ${C.primaryBorder}`}}><Icons.Sparkles size={28} color={C.primaryLight} /></div>
-            </div>
-          </div>
-        </div>
-        )}
-
-        {/* Mobile-only welcome + search + discount hero panel, replacing the
-            desktop banner above. Bleeds past the page's own side padding so
-            it reaches the viewport edges, with rounded bottom corners. */}
-        {isMobile && (
-        <div style={{margin:'-24px -12px 20px',opacity:heroVisible?1:0,transform:heroVisible?'translateY(0)':'translateY(-14px)',transition:'opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)',background:`linear-gradient(165deg,${C.primary} 0%,${C.primaryLight} 55%,${C.primary} 100%)`,borderRadius:'0 0 28px 28px',padding:'18px 16px 22px',position:'relative',overflow:'hidden',boxShadow:'0 12px 32px rgba(200,75,17,0.25)'}}>
-          <div style={{position:'absolute',right:-50,top:-60,width:200,height:200,borderRadius:'50%',background:'rgba(255,255,255,0.12)',filter:'blur(30px)',pointerEvents:'none'}}/>
-
-          {/* Greeting row */}
-          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16,position:'relative'}}>
-            <button onClick={()=>user?handleProfileClick():navigate('/login')} aria-label="Your account" style={{width:44,height:44,borderRadius:'50%',border:'none',cursor:'pointer',background:'white',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 14px rgba(0,0,0,0.2)'}}>
-              <Icons.User size={20} color={C.primary} />
-            </button>
-            <div style={{flex:1,minWidth:0}}>
-              <p style={{fontSize:10.5,fontWeight:700,color:'rgba(255,255,255,0.75)',letterSpacing:'0.02em',marginBottom:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingLabel}</p>
-              <p style={{fontSize:15,fontWeight:800,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{greetingName}</p>
-            </div>
-          </div>
-
-          {/* Search — same functional search bar as desktop, relocated here */}
-          <div style={{position:'relative'}}>{searchBarBlock}</div>
-
-          {/* Visual-search hero card using the requested photo — promotes the real
-              upload-a-photo feature (same fileInputRef/handleImageUpload as the
-              camera button in the search bar above) instead of a fake discount claim. */}
-          <div onClick={()=>{setActiveTab('products');fileInputRef.current?.click();}} style={{marginTop:16,borderRadius:18,overflow:'hidden',position:'relative',minHeight:150,cursor:'pointer',boxShadow:'0 10px 28px rgba(0,0,0,0.28)'}}>
-            <img src={mobileHeroImg} alt="" loading="eager" decoding="async" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',objectPosition:'top center'}}/>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg, rgba(160,55,10,0.94) 38%, rgba(160,55,10,0.4) 75%, rgba(160,55,10,0.1) 100%)'}}/>
-            <div style={{position:'relative',padding:'20px 100px 20px 18px'}}>
-              <p style={{fontSize:10.5,fontWeight:800,color:'#ffe3cc',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:5}}>AI Visual Search</p>
-              <h3 style={{fontSize:'1.45rem',fontWeight:900,color:'white',lineHeight:1.15,letterSpacing:'-0.02em',marginBottom:8}}>Upload Your Dream Bag<br/>Get The Similar One</h3>
-              <p style={{fontSize:11.5,color:'rgba(255,255,255,0.85)',fontWeight:500,lineHeight:1.5,marginBottom:14}}>Snap a photo of any bag you love — we'll instantly find matching styles from real sellers</p>
-              <button onClick={e=>{e.stopPropagation();setActiveTab('products');fileInputRef.current?.click();}} style={{padding:'9px 20px',borderRadius:30,border:'none',background:'white',color:C.primary,fontWeight:800,fontSize:12.5,cursor:'pointer'}}>Upload Photo</button>
-            </div>
-          </div>
-        </div>
-        )}
-
-        {/* ── LOCATION CONTEXT BAR — creative new placement right below hero ── */}
-        <LocationContextBar
-          selectedLocation={selectedLocation}
-          onOpenModal={()=>setLocationModalOpen(true)}
-          isMobile={isMobile}
-          visible={heroVisible}
-        />
-
-        {/* Tab + Search */}
-        <div style={{marginBottom:isMobile?20:26,opacity:searchVisible?1:0,transition:'opacity 0.5s ease'}}>
-          <div style={{display:'inline-flex',background:'white',border:`1.5px solid ${C.border}`,borderRadius:isMobile?12:16,padding:5,gap:4,boxShadow:`0 2px 10px rgba(200,75,17,0.07)`,marginBottom:16,width:isMobile?'100%':'auto'}}>
-            {[{id:'products',label:'Products',icon:Icons.ShoppingBag},{id:'vendors',label:'Vendors',icon:Icons.User}].map(tab=>(
-              <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{flex:isMobile?1:'none',padding:isMobile?'8px 12px':'9px 18px',borderRadius:isMobile?8:11,border:'none',cursor:'pointer',fontWeight:800,fontSize:isMobile?12:13,transition:'all 0.3s cubic-bezier(0.34,1.2,0.64,1)',background:activeTab===tab.id?'linear-gradient(135deg,#c84b11,#f97316)':'transparent',color:activeTab===tab.id?'white':C.textMuted,boxShadow:activeTab===tab.id?'0 4px 16px rgba(200,75,17,0.4)':'none',transform:activeTab===tab.id?'scale(1.02)':'scale(1)',display:'flex',alignItems:'center',justifyContent:'center',gap:isMobile?4:7}}>
-                <tab.icon size={isMobile?14:16} color="currentColor" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Mobile's copy of this search bar now lives in the welcome/hero panel above. */}
-          {!isMobile&&searchBarBlock}
-        </div>
-
-        {/* PRODUCTS TAB */}
+        {/* PRODUCTS TAB — shared storefront (compact = phone layout) */}
         {activeTab==='products'&&<>
-          <div style={{marginBottom:isMobile?20:26,opacity:catVisible?1:0,transform:catVisible?'translateY(0)':'translateY(18px)',transition:'opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}><div style={{width:18,height:2.5,background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2}}/><span style={{fontSize:11,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:C.textFaint}}>Browse by Category</span></div>
-            <div className="cat-track" style={{display:'flex',gap:9,overflowX:'auto',paddingBottom:6,paddingTop:4}}>
-              {CATEGORIES.map((cat,i)=>(<CategoryPill key={cat.id} cat={cat} isActive={activeCategory===cat.id} onClick={()=>handleCategoryChange(cat.id)} index={i}/>))}
-            </div>
-            <div style={{marginTop:10,height:2,background:C.borderLight,borderRadius:2,overflow:'hidden',position:'relative'}}>
-              {(()=>{const idx=CATEGORIES.findIndex(c=>c.id===activeCategory);const cat=CATEGORIES[idx];return <div style={{position:'absolute',left:`${(idx/CATEGORIES.length)*100}%`,width:`${100/CATEGORIES.length}%`,height:'100%',background:cat?.color||C.primary,borderRadius:2,transition:'left 0.4s cubic-bezier(0.34,1.56,0.64,1)'}}/>;})()}
-            </div>
-          </div>
-
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isMobile?16:20,flexWrap:'wrap',gap:10,opacity:searchVisible?1:0,transition:'opacity 0.5s ease 0.1s'}}>
-            <div>
-              <h2 style={{fontSize:isMobile?16:18,fontWeight:800,color:C.text,marginBottom:2,letterSpacing:'-0.02em'}}>{selectedVendor?`${selectedVendor.avatar} ${selectedVendor.name}`:(isFiltered||budgetActive)?(activeCategory!=='all'?CATEGORIES.find(c=>c.id===activeCategory)?.label:'Search Results'):'All Luxury Designer Bags'}</h2>
-              <p style={{fontSize:isMobile?11:12,color:C.textFaint,fontWeight:500}}>{budgetFilteredProducts.length} {budgetFilteredProducts.length===1?'item':'items'} found{selectedLocation.id!=='all'&&` in ${selectedLocation.name}`}</p>
-            </div>
-            <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
-              {budgetActive&&<button onClick={()=>setBudgetOpen(true)} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-                💰 ₦{budgetMin?Number(budgetMin).toLocaleString():'0'} – ₦{budgetMax?Number(budgetMax).toLocaleString():'∞'}
-                <span onClick={e=>{e.stopPropagation();clearBudget();}} style={{display:'flex'}}><Icons.X size={10} color="currentColor" /></span>
-              </button>}
-              {activeCategory!=='all'&&(()=>{const cat=CATEGORIES.find(c=>c.id===activeCategory);return <button onClick={()=>handleCategoryChange('all')} style={{background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-                {typeof cat.icon==='function'?cat.icon({size:12,color:cat.color}):cat.icon} {cat.label} <Icons.X size={10} color="currentColor" />
-              </button>;})()}
-              {selectedLocation.id!=='all'&&<button onClick={()=>handleLocationChange(NIGERIAN_LOCATIONS[0])} style={{background:C.primaryBg,color:C.primary,border:`1px solid ${C.primaryBorder}`,padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-                {selectedLocation.emoji} {selectedLocation.name} <Icons.X size={10} color="currentColor" />
-              </button>}
-              {(isFiltered||budgetActive)&&<button onClick={clearAllFilters} style={{background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca',padding:'4px 12px',borderRadius:20,fontSize:isMobile?10:11,fontWeight:700,cursor:'pointer'}}>Clear All</button>}
-            </div>
-          </div>
-
           <BudgetModal isOpen={budgetOpen} onClose={()=>setBudgetOpen(false)} min={budgetMin} max={budgetMax} setMin={setBudgetMin} setMax={setBudgetMax} onClear={clearBudget}/>
 
-          {!isFiltered&&!budgetActive&&!selectedVendor&&<SpecialOfferCard navigate={navigate} isMobile={isMobile}/>}
-
-          {!isFiltered&&!budgetActive&&!selectedVendor&&mostClickedProducts.length>0&&(
-            <HorizontalSection title="Most Clicked Products" subtitle="What everyone's tapping on right now" icon={<Icons.TrendingUp size={20} color="#2563eb"/>} accentColor="#2563eb" accentBg="#eff6ff" products={mostClickedProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Trending" badgeColor="#2563eb" onSeeAll={()=>handleCategoryChange('all')}/>
-          )}
-
-          {/* Visual Search overlays (unchanged) */}
-          {visualSearching&&(
-            <div style={{position:'fixed',inset:0,zIndex:200,background:'rgba(26,10,0,0.6)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',display:'flex',alignItems:'center',justifyContent:'center',animation:'fadeIn 0.35s ease both'}}>
-              <div style={{background:'white',borderRadius:28,padding:'44px 36px 40px',maxWidth:360,width:'90vw',textAlign:'center',boxShadow:'0 32px 80px rgba(200,75,17,0.22)',position:'relative',overflow:'hidden'}}>
-                <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:'linear-gradient(90deg,#c84b11,#f97316,#ea580c,#c84b11)',backgroundSize:'200% 100%',animation:'shimFeedback 2.5s linear infinite'}}/>
-                <div style={{position:'relative',width:180,height:180,margin:'0 auto 28px'}}>
-                  <div style={{position:'absolute',inset:0,borderRadius:'50%',border:'3.5px solid transparent',borderTopColor:'#c84b11',borderRightColor:'#f97316',animation:'vsSpin 1.1s linear infinite'}}/>
-                  <div style={{position:'absolute',inset:22,borderRadius:'50%',overflow:'hidden',background:'#fdf4ee',boxShadow:'0 8px 24px rgba(200,75,17,0.18)'}}>
-                    {uploadedImage?<img src={uploadedImage} alt="" loading="lazy" width="180" height="180" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#fde8d8,#fdf4ee)',display:'flex',alignItems:'center',justifyContent:'center'}}><Icons.Camera size={32} color={C.primary}/></div>}
-                  </div>
-                </div>
-                <h3 style={{fontSize:20,fontWeight:900,color:'#1a0a00',letterSpacing:'-0.03em',marginBottom:8}}>Finding similar bags...</h3>
-                <p style={{fontSize:13,color:'#9a6348',fontWeight:500,lineHeight:1.65}}>Scanning thousands of listings across Nigeria for your perfect match</p>
+          {searchMode?(
+            /* ── Search results ── */
+            <section aria-label="Search results" style={{fontFamily:"'Poppins',system-ui,sans-serif"}}>
+              <ResultsHeader
+                compact={isMobile}
+                title={searchTitle}
+                subtitle={searching&&sortedResults.length===0?'Searching…':resultsCountLabel}
+                image={uploadedImage}
+                onRemoveImage={handleClearSearch}
+                sort={sortBy}
+                onSort={setSortBy}
+              />
+              <div style={{marginTop:isMobile?16:24,display:'flex',flexDirection:'column',gap:12}}>
+                <CategoryChips compact={isMobile} idPrefix="search-cat" categories={chipCategories} active={activeCategory} onChange={runCategory}/>
+                <FilterChips chips={filterChips} onClearAll={clearAllFilters}/>
               </div>
-            </div>
-          )}
-
-          {/* Results */}
-          <div style={{position:'relative',minHeight:'auto'}}>
-            {budgetFilteredProducts.length>0
-              ?<ProductGrid products={budgetFilteredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} resultsKey={resultsKey}/>
-              :!visualSearching&&(
-                <div style={{textAlign:'center',padding:'80px 20px',animation:'bounceIn 0.6s ease both'}}>
-                  <Icons.Search size={56} color={C.textFaint} />
-                  <h3 style={{fontSize:20,fontWeight:800,color:C.text,marginBottom:8,marginTop:16}}>No bags found</h3>
-                  <p style={{color:C.textMuted,marginBottom:24,fontSize:14}}>Try adjusting your search or browse all bags</p>
-                  <button onClick={clearAllFilters} style={{padding:'11px 24px',background:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontWeight:700,fontSize:14}}>View All Bags</button>
-                </div>
-              )
-            }
-          </div>
-
-          {!isFiltered&&displayedProducts.length>0&&(
-            <div style={{marginTop:isMobile?40:60,borderTop:`1px solid ${C.borderLight}`,paddingTop:isMobile?36:52}}>
-              {user?.user_metadata?.role!=='seller'&&<HotDealsPromoCard dealCount={hotDealProducts.length} navigate={navigate} isMobile={isMobile}/>}
-              {hotDealProducts.length>0&&<HotDealsCarousel products={hotDealProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)}/>}
-              <HorizontalSection title="Featured Picks" subtitle="Handpicked by our style team just for you" icon={<Icons.Sparkles size={20} color={C.primary}/>} accentColor={C.primary} accentBg={C.primaryBg} products={featuredProducts} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Featured" badgeColor={C.primary} onSeeAll={()=>handleCategoryChange('all')}/>
-              <HorizontalSection id="new-arrivals" highlighted={highlightSection==='new-arrivals'} title="New Arrivals" subtitle="Fresh styles added to our collection" icon={<Icons.Sparkles size={20} color="#be185d"/>} accentColor="#be185d" accentBg="#fdf2f8" products={newArrivals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="New" badgeColor="#be185d" onSeeAll={()=>handleCategoryChange('all')}/>
-              {topDeals.length>0&&<HorizontalSection title="Under ₦2,000" subtitle="Amazing bags that won't break the bank" icon={<Icons.Zap size={20} color="#15803d"/>} accentColor="#15803d" accentBg="#dcfce7" products={topDeals} navigate={navigate} onAddToCart={handleAddToCart} isAuthed={!!user} onRequireAuth={()=>setAuthGateOpen(true)} badge="Budget Pick" badgeColor="#15803d" onSeeAll={()=>handleCategoryChange('all')}/>}
-              {user?.user_metadata?.role!=='seller'&&(
-              <div style={{borderRadius:isMobile?16:20,background:'linear-gradient(135deg,#1a0a00 0%,#4a1a06 60%,#c84b11 100%)',padding:isMobile?'24px 20px':'32px 36px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',justifyContent:'space-between',gap:20,marginBottom:48,position:'relative',overflow:'hidden'}}>
-                <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:'radial-gradient(circle at 25% 50%,white 1px,transparent 1px)',backgroundSize:'28px 28px'}}/>
-                <div style={{position:'relative'}}>
-                  <p style={{fontSize:isMobile?10:11,fontWeight:800,letterSpacing:'0.18em',textTransform:'uppercase',color:'rgba(255,255,255,0.55)',marginBottom:8}}>Exclusive Offer</p>
-                  <h3 style={{fontSize:isMobile?'clamp(1.1rem,4vw,1.4rem)':'clamp(1.3rem,3vw,1.9rem)',fontWeight:900,color:'white',letterSpacing:'-0.03em',lineHeight:1.2,marginBottom:10}}>Sell Your Bags on BagSearch<br/><span style={{color:'#f97316'}}>Reach 10,000+ Buyers</span></h3>
-                  <p style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,0.6)',fontWeight:500,maxWidth:isMobile?'100%':360}}>Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on first 30 days.</p>
-                </div>
-                <button onClick={()=>navigate('/register')} style={{position:'relative',padding:isMobile?'12px 24px':'14px 28px',background:'linear-gradient(135deg,#f97316,#c84b11)',color:'white',border:'none',borderRadius:isMobile?12:14,fontWeight:900,fontSize:isMobile?13:14,cursor:'pointer',boxShadow:'0 8px 28px rgba(200,75,17,0.5)',transition:'all 0.3s',whiteSpace:'nowrap',width:isMobile?'100%':'auto'}}
-                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}} onMouseLeave={e=>{e.currentTarget.style.transform='none';}}>
-                  Start Selling Free →
-                </button>
+              <div style={{marginTop:isMobile?22:32,position:'relative'}}>
+                {searching&&sortedResults.length===0
+                  ?<SkeletonGrid compact={isMobile} count={isMobile?4:8}/>
+                  :sortedResults.length>0
+                    ?<div className={isMobile?'ds-grid-m':'ds-grid'} key={resultsKey} style={{opacity:searching?0.55:1,transition:'opacity .25s'}}>{sortedResults.map((p,i)=>renderCard(p,i))}</div>
+                    :!visualSearching&&(
+                      <EmptyResults
+                        compact={isMobile}
+                        title={searchQuery.trim()?`No bags match “${searchQuery.trim()}”`:'No bags match these filters'}
+                        body={uploadedImage?'We could not find a close match for your photo. Try another angle or clear the search to browse everything.':'Try a shorter word, a brand like “Gucci”, a style like “tote”, or widen your budget.'}
+                        onClear={clearAllFilters}
+                        onPhoto={uploadedImage?undefined:()=>openPhotoSearch()}
+                      />
+                    )}
               </div>
+            </section>
+          ):(
+            /* ── Home: shelves + all bags ── */
+            <div style={{fontFamily:"'Poppins',system-ui,sans-serif"}}>
+              {!isFiltered&&!selectedVendor&&(
+                <Shelf
+                  title="Trending bags"
+                  subtitle="What buyers across Nigeria are tapping on right now"
+                  items={mostClickedProducts.slice(0,10)}
+                  renderCard={renderShelfCard}
+                  onSeeAll={()=>scrollToId('all-bags')}
+                  compact={isMobile}
+                />
               )}
+
+              <section id="all-bags" aria-label="All bags" style={{scrollMarginTop:isMobile?132:100,marginBottom:isMobile?44:72}}>
+                <SectionHeader
+                  compact={isMobile}
+                  title={allBagsTitle}
+                  subtitle={resultsCountLabel}
+                  action={<SortSelect value={sortBy} onChange={setSortBy} compact={isMobile}/>}
+                />
+                <div style={{marginTop:isMobile?14:22,display:'flex',flexDirection:'column',gap:12}}>
+                  <CategoryChips compact={isMobile} categories={chipCategories} active={activeCategory} onChange={runCategory}/>
+                  {filterChips.length>0&&<FilterChips chips={filterChips} onClearAll={clearAllFilters}/>}
+                </div>
+                <div style={{marginTop:isMobile?20:30}}>
+                  {(!productsReady||searching)&&sortedResults.length===0
+                    ?<SkeletonGrid compact={isMobile} count={isMobile?4:8}/>
+                    :sortedResults.length>0
+                      ?<div className={isMobile?'ds-grid-m':'ds-grid'} key={resultsKey} style={{opacity:searching?0.55:1,transition:'opacity .25s'}}>{sortedResults.map((p,i)=>renderCard(p,i))}</div>
+                      :<EmptyResults compact={isMobile} title="No bags here yet" body="Nothing is listed in this category or location right now. Try another one, or browse all bags." onClear={clearAllFilters}/>}
+                </div>
+              </section>
+
+              {!isFiltered&&displayedProducts.length>0&&<>
+                {!isSeller&&(
+                  <PromoBanner
+                    compact={isMobile}
+                    tone="#F3B41E"
+                    eyebrow="Hot deals"
+                    title={hotDealProducts.length>0?`${hotDealProducts.length} bags on sale or almost gone`:'Deals worth catching'}
+                    body="Discounted and low-stock bags from sellers across Nigeria. Grab them before they sell out."
+                    cta="See hot deals"
+                    onClick={()=>navigate('/hot-deals')}
+                    image={heroShoppersImg}
+                  />
+                )}
+                <Shelf title="Hot deals" subtitle="On sale or running low" items={hotDealProducts} renderCard={renderShelfCard} onSeeAll={()=>navigate('/hot-deals')} compact={isMobile}/>
+                <Shelf title="Featured picks" subtitle="Handpicked by our style team" items={featuredProducts} renderCard={renderShelfCard} onSeeAll={()=>scrollToId('all-bags')} compact={isMobile}/>
+                <Shelf id="new-arrivals" highlighted={highlightSection==='new-arrivals'} title="New arrivals" subtitle="Fresh styles just added" items={newArrivals} renderCard={renderShelfCard} onSeeAll={()=>scrollToId('all-bags')} compact={isMobile}/>
+                <Shelf title="Under ₦2,000" subtitle="Great bags that won't break the bank" items={topDeals} renderCard={renderShelfCard} compact={isMobile}/>
+                {!isSeller&&(
+                  <PromoBanner
+                    compact={isMobile}
+                    dark
+                    tone="#1E1A17"
+                    eyebrow="For sellers"
+                    title="Sell your bags on BagSearch"
+                    body="Join Nigeria's fastest-growing bag marketplace. Free to list, zero commission on your first 30 days."
+                    cta="Start selling free"
+                    onClick={()=>navigate('/register')}
+                    image={sellBannerImg}
+                  />
+                )}
+              </>}
             </div>
           )}
         </>}
 
-        {/* VENDORS TAB */}
-        {activeTab==='vendors'&&<div>
+        {/* VENDORS — mobile gets the ranked list layout */}
+        {mobileVendors&&(
+          <MobileVendorList
+            vendors={filteredVendors}
+            loading={vendors.length===0&&allProducts.length===0}
+            search={vendorSearch}
+            onSearch={handleVendorSearch}
+            onBack={()=>navigate(-1)}
+            onOpen={handleViewVendorProducts}
+          />
+        )}
+
+        {/* VENDORS — desktop */}
+        {activeTab==='vendors'&&!isMobile&&<div>
           <div style={{marginBottom:22}}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><div style={{width:18,height:2.5,background:`linear-gradient(90deg,${C.primary},${C.primaryLight})`,borderRadius:2}}/><span style={{fontSize:11,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:C.textFaint}}>Our Sellers</span></div>
             <h2 style={{fontSize:isMobile?20:22,fontWeight:900,color:C.text,letterSpacing:'-0.03em',marginBottom:4}}>Meet Our Vendors</h2>
@@ -2963,18 +2778,6 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
           ))}
       </div>
     </div>
-  );
-}
-
-function InstallButton({ onClick, visible, label, isMobile }) {
-  const [hov, setHov] = useState(false);
-  if (!visible) return null;
-  return (
-    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position:'fixed',bottom:isMobile?150:84,right:20,zIndex:800,display:'flex',alignItems:'center',gap:hov?10:0,height:50,paddingLeft:hov?18:14,paddingRight:hov?20:14,borderRadius:25,border:'none',background:'linear-gradient(135deg,#1e1b4b,#312e81)',color:'white',cursor:'pointer',boxShadow:`0 8px 28px rgba(30,27,75,${hov?0.55:0.38})`,transition:'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',transform:hov?'translateY(-3px) scale(1.04)':'translateY(0) scale(1)',overflow:'hidden',whiteSpace:'nowrap',animation:'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-      <Icons.Download size={20} color="white" />
-      <span style={{ fontSize:13,fontWeight:800,maxWidth:hov?160:0,overflow:'hidden',transition:'max-width 0.35s cubic-bezier(0.22,1,0.36,1)',letterSpacing:'0.01em' }}>{label}</span>
-    </button>
   );
 }
 

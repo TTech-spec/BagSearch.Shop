@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from './context/AuthContext.jsx';
 import { supabase, ensureSupabaseReady } from './services/api';
 import { upsertUserProfile } from './services/userProfileService';
-import LogoIcon from './components/Logo.jsx';
+import AuthDesktopShell, { RevealItem, AuthField, AuthCheck, PasswordToggle, GoogleMark } from './components/auth/AuthDesktopShell.jsx';
+import regDesktopImage from './assets/images/onboarding/From Klickpin.com- 117867715236230969-pin-id-117867715236230969.jpg';
 import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { useSEO } from './hooks/useSEO';
+import VideoLoader from './components/VideoLoader.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -35,36 +37,7 @@ const C = {
 };
 
 // ─── SIMPLE MINIMAL PAGE LOADER ───────────────────────────────────────────────
-const PageLoader = ({ onDone }) => {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(() => onDone(), 400);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [onDone]);
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99999,
-      background: C.surface,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.4s ease',
-      pointerEvents: visible ? 'all' : 'none',
-    }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <div style={{
-        width: 36, height: 36, borderRadius: '50%',
-        border: `3px solid ${C.primaryBg}`,
-        borderTopColor: C.primary,
-        animation: 'spin 0.75s linear infinite',
-      }} />
-    </div>
-  );
-};
-
+const PageLoader = ({ onDone }) => <VideoLoader duration={1200} onDone={onDone} />;
 // ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
 const SuccessCard = ({ show, onClose }) => {
   const [mounted, setMounted] = useState(false);
@@ -181,6 +154,17 @@ const Reg = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Desktop splits the name into two fields and asks for password confirmation;
+  // both still feed the same formData.fullName / formData.password as mobile.
+  const [nameParts, setNameParts] = useState({ first: '', last: '' });
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleNamePart = (part, value) => {
+    const next = { ...nameParts, [part]: sanitizeInput(value) };
+    setNameParts(next);
+    setFormData(f => ({ ...f, fullName: `${next.first} ${next.last}`.trim() }));
+  };
 
   // ─── MOBILE MULTI-STEP FLOW ─────────────────────────────────────────────
   // Desktop stays a single page; mobile splits into: 0 Role, 1 Details, 2 Password.
@@ -363,6 +347,16 @@ const Reg = () => {
     }
   };
 
+  const handleDesktopSubmit = (e) => {
+    e.preventDefault();
+    if (formData.password !== confirmPassword) {
+      validateForm();
+      setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      return;
+    }
+    handleSubmit(e);
+  };
+
   const handleGoogleAuth = async () => {
     try {
       setLoading(true);
@@ -408,161 +402,12 @@ const Reg = () => {
         <style>{`
           *, *::before, *::after { box-sizing: border-box; }
 
-          /* ── Shared: role toggle (same on both layouts) ─────────────── */
-          .role-track {
-            position:relative;display:flex;align-items:center;
-            background:#fff;border-radius:20px;padding:6px;
-            box-shadow:0 2px 8px rgba(201,75,44,0.08),
-                        0 0 0 1.5px rgba(201,75,44,0.15),
-                        inset 0 1px 0 rgba(255,255,255,0.9);
-            width:100%;
-          }
-          .role-pill {
-            position:absolute;top:6px;left:6px;
-            width:calc(50% - 6px);height:calc(100% - 12px);
-            border-radius:14px;z-index:0;
-            background:linear-gradient(135deg,#C94B2C 0%,#E8856A 100%);
-            box-shadow:0 6px 20px rgba(201,75,44,0.35),0 2px 6px rgba(201,75,44,0.2);
-            transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
-          }
-          .role-pill.seller { transform:translateX(100%); }
-          .role-pill.buyer  { transform:translateX(0); }
-          .pill-shimmer { position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none; }
-          @keyframes shimmer {
-            0%{opacity:0;transform:translateX(-100%) skewX(-15deg)}
-            50%{opacity:1}
-            100%{opacity:0;transform:translateX(300%) skewX(-15deg)}
-          }
-          .pill-shimmer::after {
-            content:'';position:absolute;top:0;left:0;width:40%;height:100%;
-            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
-            animation:shimmer 2.4s ease-in-out infinite 0.8s;
-          }
-          .role-btn {
-            flex:1;position:relative;z-index:1;border:none;background:transparent;
-            border-radius:14px;padding:13px 8px;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            font-family:inherit;font-size:13.5px;font-weight:700;
-            transition:color 0.25s ease;
-            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-          }
-          .role-btn.active   { color:#fff; }
-          .role-btn.inactive { color:#B07060; }
-          .role-icon {
-            width:24px;height:24px;border-radius:50%;flex-shrink:0;
-            display:flex;align-items:center;justify-content:center;
-            transition:background 0.25s ease,transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-          }
-          .role-btn.active .role-icon   { background:rgba(255,255,255,0.22);transform:scale(1.15); }
-          .role-btn.inactive .role-icon { background:#F9DDD0; }
-          .role-dot {
-            width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.75);
-            position:absolute;bottom:9px;left:50%;
-            transform:translateX(-50%) scale(0);
-            transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1) 0.1s;
-          }
-          .role-btn.active .role-dot { transform:translateX(-50%) scale(1); }
-          .role-status-label {
-            font-size:11.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
-            padding:5px 14px;border-radius:999px;
-            background:rgba(201,75,44,0.08);color:#C94B2C;display:inline-block;
-          }
-
           /* ── DESKTOP layout — shown at ≥ 1024 px ───────────────────── */
           .desktop-view { display: none; }
 
           @media (min-width: 1024px) {
             .mobile-view  { display: none !important; }
-            .desktop-view {
-              display: flex; flex-direction: column; min-height: 100vh;
-            }
-
-            .image-panel {
-              display:flex; width:50%;
-              position:relative; overflow:hidden;
-              background:${C.primaryBg};
-            }
-
-            .reg-input {
-              width:100%;display:block;
-              border-radius:8px;
-              border:1px solid ${C.border};
-              background:${C.surface};
-              padding:14px 16px;
-              font-size:16px;
-              color:${C.text};
-              outline:none;
-              transition:border-color 0.2s,box-shadow 0.2s;
-              font-family:inherit;
-            }
-            .reg-input:focus {
-              border-color:${C.primary};
-              box-shadow:0 0 0 2px ${C.primary}20;
-            }
-            .reg-input::placeholder { color:${C.textFaint}; }
-
-            .reg-date {
-              width:100%;display:block;
-              border-radius:8px;
-              border:1px solid ${C.border};
-              background:${C.surface};
-              padding:14px 16px 14px 42px;
-              font-size:16px;
-              color:${C.text};
-              outline:none;
-              transition:border-color 0.2s,box-shadow 0.2s;
-              font-family:inherit;
-              appearance:none;
-              -webkit-appearance:none;
-            }
-            .reg-date:focus {
-              border-color:${C.primary};
-              box-shadow:0 0 0 2px ${C.primary}20;
-            }
-            .reg-date:not(:valid) { color:${C.textFaint}; }
-            .reg-date::-webkit-inner-spin-button { display:none; }
-            .reg-date::-webkit-calendar-picker-indicator {
-              cursor:pointer;padding:6px;border-radius:8px;opacity:1;
-              filter:invert(41%) sepia(53%) saturate(1553%) hue-rotate(337deg) brightness(90%) contrast(89%);
-              transition:background 0.2s;
-            }
-            .reg-date::-webkit-calendar-picker-indicator:hover { background:${C.primaryBg}; }
-
-            .submit-btn {
-              width:100%;height:54px;
-              background:${C.primary};color:#fff;
-              font-size:16px;font-weight:700;
-              border:none;border-radius:8px;
-              cursor:pointer;transition:background 0.2s,transform 0.15s;
-              box-shadow:0 4px 12px ${C.primary}40;
-              font-family:inherit;
-              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-            }
-            .submit-btn:hover:not(:disabled) { background:${C.accent};transform:translateY(-2px); }
-            .submit-btn:active:not(:disabled) { transform:translateY(0); }
-            .submit-btn:disabled { opacity:0.65;cursor:not-allowed; }
-
-            .social-btn {
-              display:flex;align-items:center;justify-content:center;gap:8px;
-              height:48px;border:1px solid ${C.border};border-radius:8px;
-              background:transparent;color:${C.text};
-              font-size:14px;font-weight:600;cursor:pointer;
-              transition:background 0.2s;width:100%;font-family:inherit;
-              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-            }
-            .social-btn:hover:not(:disabled) { background:${C.primaryBg}; }
-            .social-btn:disabled { opacity:0.6;cursor:not-allowed; }
-
-            .header-nav { display:flex;gap:24px; }
-
-            .form-panel {
-              width:50%;
-              display:flex;flex-direction:column;
-              justify-content:center;align-items:center;
-              padding:48px;
-              background:${C.surface};
-            }
-            .form-inner { width:100%;max-width:440px; }
+            .desktop-view { display: flex; flex-direction: column; min-height: 100dvh; }
           }
 
           /* ── MOBILE layout — shown below 1024 px ───────────────────── */
@@ -571,7 +416,9 @@ const Reg = () => {
             flex-direction: column;
             min-height: 100vh;
             background: ${C.surfaceDim};
+            font-family: 'Poppins', system-ui, sans-serif;
           }
+          .mobile-view button, .mobile-view input { font-family: inherit; }
 
           /* Mobile inputs */
           .m-input {
@@ -732,296 +579,177 @@ const Reg = () => {
         `}</style>
 
         {/* ════════════════════════════════════════════════════════════════
-            DESKTOP  (≥ 1024 px) — matching login.jsx layout
+            DESKTOP  (≥ 1024 px) — split photo / form panel
         ════════════════════════════════════════════════════════════════ */}
         <div className="desktop-view">
+          <AuthDesktopShell
+            image={regDesktopImage}
+            imagePosition="58% 22%"
+            tone="#8E5E66"
+            headline="Find your next bag."
+            blurb="Shop verified sellers, search by photo, and save the pieces you love. Selling? Open a storefront in minutes."
+            footer="bagsearch.shop"
+          >
+            <RevealItem>
+              <h2 className="ads-title">Welcome to BagSearch.</h2>
+              <p className="ads-sub">Let's help you get started.</p>
+            </RevealItem>
 
-          {/* Header */}
-          <header style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${C.border}`,
-            padding: '12px 20px',
-            background: C.surface, zIndex: 10,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <LogoIcon size={24} />
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                Bag<span style={{ color: C.primary }}>Search</span>
-              </h2>
-            </div>
-            <nav className="header-nav">
-              {['Shop', 'Collections'].map(label => (
-                <a key={label} href="#"
-                  style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                  onMouseLeave={e => e.currentTarget.style.color = C.text}>
-                  {label}
-                </a>
-              ))}
-            </nav>
-            <button
-              onClick={() => navigate('/login?force=true')}
-              style={{
-                background: C.primary, color: C.textLight, border: 'none',
-                borderRadius: 8, padding: '8px 16px',
-                fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                transition: 'background 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = C.accent}
-              onMouseLeave={e => e.currentTarget.style.background = C.primary}>
-              Login
-            </button>
-          </header>
+            <RevealItem>
+              <p className="ads-switch">
+                Already have an account?{' '}
+                <button type="button" className="ads-link" onClick={() => navigate('/login?force=true')}>
+                  Log in
+                </button>
+              </p>
+            </RevealItem>
 
-          <main style={{ flex: 1, display: 'flex' }}>
-            <div style={{ display: 'flex', width: '100%' }}>
-
-              {/* Image panel */}
-              <div className="image-panel">
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundImage: "url('https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop')",
-                  backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.8,
-                }} />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `linear-gradient(to right, ${C.primary}80, transparent)`,
-                }} />
-                <div style={{
-                  position: 'relative', zIndex: 10,
-                  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                  padding: 80, color: C.textLight, width: '100%',
-                }}>
-                  <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, marginBottom: 16, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-                    Step into the future of luxury.
-                  </h1>
-                  <p style={{ fontSize: 20, fontWeight: 500, opacity: 0.9, maxWidth: 400 }}>
-                    Join 50,000+ fashion enthusiasts discovering perfect matches with our advanced Visual Search AI.
-                  </p>
-                </div>
-              </div>
-
-              {/* Form panel */}
-              <div className="form-panel">
-                <div className="form-inner">
-
-                  <div style={{ marginBottom: 28 }}>
-                    <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color: C.text, margin: 0, marginBottom: 6 }}>
-                      Create Account
-                    </h2>
-                    <p style={{ color: C.textMuted, margin: 0, fontSize: 16, lineHeight: 1.5 }}>
-                      Ready to explore or start selling with BagSearch?
-                    </p>
-                  </div>
-
-                  {/* Error Banner */}
-                  {errorMessage && (
-                    <div style={{
-                      padding: '12px 16px', background: C.dangerBg, border: `1px solid ${C.danger}40`,
-                      color: C.danger, borderRadius: 10, fontSize: 14, marginBottom: 20, lineHeight: 1.5,
-                    }}>
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {/* Role Toggle */}
-                  <div style={{ marginBottom: 24 }}>
-                    <p style={{ marginBottom: 10, fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                      I want to…
-                    </p>
-                    <div className="role-track">
-                      <div className={`role-pill ${formData.role}`}><div className="pill-shimmer" /></div>
-                      <button type="button" className={`role-btn ${formData.role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('buyer')}>
-                        <span className="role-icon">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke={formData.role === 'buyer' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <path d="M16 10a4 4 0 01-8 0"/>
-                          </svg>
-                        </span>
-                        Buy Bags
-                        <span className="role-dot" />
-                      </button>
-                      <button type="button" className={`role-btn ${formData.role === 'seller' ? 'active' : 'inactive'}`} onClick={() => handleRoleChange('seller')}>
-                        <span className="role-icon">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                            stroke={formData.role === 'seller' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                            <line x1="8" y1="21" x2="16" y2="21"/>
-                            <line x1="12" y1="17" x2="12" y2="21"/>
-                            <path d="M9 11l3-3 3 3"/>
-                          </svg>
-                        </span>
-                        Start Selling
-                        <span className="role-dot" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Registration Form */}
-                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Full Name</label>
-                        <input
-                          className="reg-input fr"
-                          placeholder="John Doe"
-                          name="fullName"
-                          value={formData.fullName}
-                          onChange={handleChange}
-                          required
-                        />
-                        {errors.fullName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.fullName}</span>}
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Phone Number</label>
-                        <input
-                          className="reg-input fr"
-                          placeholder="+1 (555) 000-0000"
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                        />
-                        {errors.phone && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
-                      </div>
-                    </div>
-
-                    {formData.role === 'seller' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Business Name</label>
-                          <input
-                            className="reg-input fr"
-                            placeholder="e.g. Chioma's Bag Boutique"
-                            name="businessName"
-                            value={formData.businessName}
-                            onChange={handleChange}
-                            required
-                          />
-                          {errors.businessName && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.businessName}</span>}
-                          <span style={{ fontSize: 11, color: C.textMuted, marginTop: 4, display: 'block' }}>Shown to buyers on your storefront instead of your name.</span>
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Date of Birth <span style={{ color: C.textMuted, fontWeight: 500 }}>(optional)</span></label>
-                          <div style={{ position: 'relative' }}>
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                              style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                              <rect x="3" y="4" width="18" height="18" rx="3" />
-                              <path d="M16 2v4M8 2v4M3 10h18" />
-                            </svg>
-                            <input
-                              className="reg-date fr"
-                              type="date"
-                              name="dateOfBirth"
-                              value={formData.dateOfBirth}
-                              onChange={handleChange}
-                              max={new Date().toISOString().split('T')[0]}
-                            />
-                          </div>
-                        </div>
-                      </div>
+            <RevealItem>
+              <div className="ads-seg" role="group" aria-label="Account type">
+                {[['buyer', 'I want to buy'], ['seller', 'I want to sell']].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={formData.role === value}
+                    onClick={() => handleRoleChange(value)}
+                  >
+                    {formData.role === value && (
+                      <motion.span
+                        layoutId="ads-role-pill"
+                        className="ads-seg-pill"
+                        style={{ zIndex: -1 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
                     )}
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Email Address</label>
-                      <input
-                        className="reg-input fr"
-                        placeholder="name@example.com"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                      {errors.email && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Password</label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          className="reg-input fr"
-                          style={{ paddingRight: 48 }}
-                          placeholder="••••••••"
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleChange}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          style={{
-                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                            background: 'transparent', border: 'none', color: C.textMuted, cursor: 'pointer', padding: 4,
-                          }}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{showPassword ? 'visibility_off' : 'visibility'}</span>
-                        </button>
-                      </div>
-                      {errors.password && <span style={{ color: C.danger, fontSize: 12, marginTop: 4, display: 'block' }}>{errors.password}</span>}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <input
-                        id="terms-desktop"
-                        type="checkbox"
-                        name="terms"
-                        checked={formData.terms}
-                        onChange={handleChange}
-                        required
-                        style={{ marginTop: 3, width: 16, height: 16, accentColor: C.primary, cursor: 'pointer' }}
-                      />
-                      <label htmlFor="terms-desktop" style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5, cursor: 'pointer' }}>
-                        I agree to the <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Terms of Service</a> and <a href="/policy" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
-                      </label>
-                    </div>
-                    {errors.terms && <span style={{ color: C.danger, fontSize: 12 }}>{errors.terms}</span>}
-
-                    <button type="submit" className="submit-btn fr" disabled={loading} style={{ marginTop: 8 }}>
-                      {loading ? 'Creating Account…' : 'Create Account'}
-                    </button>
-                  </form>
-
-                  <div style={{ position: 'relative', margin: '24px 0' }}>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
-                      <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
-                    </div>
-                    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                      <span style={{ background: C.surface, padding: '0 12px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase' }}>Or</span>
-                    </div>
-                  </div>
-
-                  <button className="social-btn fr" onClick={handleGoogleAuth} disabled={loading} type="button">
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Continue with Google
+                    {label}
                   </button>
-
-                  <p style={{ textAlign: 'center', color: C.textMuted, fontSize: 15, marginTop: 24 }}>
-                    Already have an account?{' '}
-                    <span
-                      onClick={() => navigate('/login?force=true')}
-                      style={{ color: C.primary, fontWeight: 700, cursor: 'pointer', marginLeft: 2 }}
-                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
-                      Login
-                    </span>
-                  </p>
-
-                </div>
+                ))}
               </div>
+            </RevealItem>
 
-            </div>
-          </main>
+            {errorMessage && (
+              <div role="alert" className="ads-alert">{errorMessage}</div>
+            )}
+
+            <form onSubmit={handleDesktopSubmit} noValidate>
+              <RevealItem className="ads-grid">
+                <AuthField
+                  id="d-first"
+                  label="First Name"
+                  value={nameParts.first}
+                  onChange={e => handleNamePart('first', e.target.value)}
+                  autoComplete="given-name"
+                  error={errors.fullName}
+                />
+                <AuthField
+                  id="d-last"
+                  label="Last Name"
+                  value={nameParts.last}
+                  onChange={e => handleNamePart('last', e.target.value)}
+                  autoComplete="family-name"
+                />
+                <AuthField
+                  id="d-phone"
+                  label={formData.role === 'seller' ? 'Phone (WhatsApp)' : 'Phone'}
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  autoComplete="tel"
+                  error={errors.phone}
+                />
+                <AuthField
+                  id="d-email"
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  error={errors.email}
+                />
+
+                <AnimatePresence initial={false}>
+                  {formData.role === 'seller' && (
+                    <motion.div
+                      key="seller-fields"
+                      className="span-2"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                      style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}
+                    >
+                      <AuthField
+                        id="d-business"
+                        label="Business Name"
+                        name="businessName"
+                        value={formData.businessName}
+                        onChange={handleChange}
+                        autoComplete="organization"
+                        error={errors.businessName}
+                        hint="Shown to buyers on your storefront."
+                      />
+                      <AuthField
+                        id="d-dob"
+                        label="Date of Birth (optional)"
+                        type="date"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth}
+                        onChange={handleChange}
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AuthField
+                  id="d-password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  error={errors.password}
+                  trailing={<PasswordToggle shown={showPassword} onToggle={() => setShowPassword(v => !v)} />}
+                />
+                <AuthField
+                  id="d-confirm"
+                  label="Confirm Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  error={errors.confirmPassword}
+                />
+              </RevealItem>
+
+              <RevealItem style={{ marginTop: 26 }}>
+                <AuthCheck
+                  id="d-terms"
+                  checked={formData.terms}
+                  onChange={e => setFormData(f => ({ ...f, terms: e.target.checked }))}
+                  error={errors.terms}
+                >
+                  I agree to the{' '}
+                  <a href="/terms-of-service" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                  {' '}and{' '}
+                  <a href="/policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                </AuthCheck>
+              </RevealItem>
+
+              <RevealItem className="ads-actions">
+                <button type="submit" className="ads-btn" disabled={loading}>
+                  {loading ? 'Creating account…' : 'Sign Up'}
+                </button>
+                <button type="button" className="ads-ghost" onClick={handleGoogleAuth} disabled={loading}>
+                  <GoogleMark />
+                  Continue with Google
+                </button>
+              </RevealItem>
+            </form>
+          </AuthDesktopShell>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════

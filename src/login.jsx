@@ -2,13 +2,15 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
-import LogoIcon from './components/Logo.jsx';
+import AuthDesktopShell, { RevealItem, AuthField, AuthCheck, PasswordToggle, GoogleMark } from './components/auth/AuthDesktopShell.jsx';
 import { sanitizeInput, validateRequired, validateEmail } from './utils/securityUtils';
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { upsertUserProfile } from './services/userProfileService';
 import { useSEO } from './hooks/useSEO';
+import VideoLoader from './components/VideoLoader.jsx';
 import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face Mask Ideas for Entertaining-pin-id-1092052609666393734.jpg';
+import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -34,41 +36,8 @@ const C = {
   textFaint:    '#E8C4B5',
 };
 
-// Same Unsplash image already used in the original desktop panel
-const BANNER_IMAGE =
-  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop';
-
 // ─── PAGE LOADER ─────────────────────────────────────────────────────────────
-const PageLoader = ({ onDone }) => {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(() => onDone(), 400);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [onDone]);
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99999,
-      background: C.surface,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      opacity: visible ? 1 : 0,
-      transition: 'opacity 0.4s ease',
-      pointerEvents: visible ? 'all' : 'none',
-    }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <div style={{
-        width: 36, height: 36, borderRadius: '50%',
-        border: `3px solid ${C.primaryBg}`,
-        borderTopColor: C.primary,
-        animation: 'spin 0.75s linear infinite',
-      }} />
-    </div>
-  );
-};
-
+const PageLoader = ({ onDone }) => <VideoLoader duration={1200} onDone={onDone} />;
 // ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
 const SuccessCard = ({ show, onClose }) => {
   const [mounted, setMounted] = useState(false);
@@ -187,7 +156,7 @@ const LoginPage = () => {
   const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe]     = useState(false);
-  const [role, setRole]                 = useState('buyer');
+  const [role]                          = useState('buyer');
   const [loading, setLoading]           = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [showSuccess, setShowSuccess]   = useState(false);
@@ -312,136 +281,12 @@ const LoginPage = () => {
         <style>{`
           *, *::before, *::after { box-sizing: border-box; }
 
-          /* ── Shared: role toggle (same on both layouts) ─────────────── */
-          .role-track {
-            position:relative;display:flex;align-items:center;
-            background:#fff;border-radius:20px;padding:6px;
-            box-shadow:0 2px 8px rgba(201,75,44,0.08),
-                        0 0 0 1.5px rgba(201,75,44,0.15),
-                        inset 0 1px 0 rgba(255,255,255,0.9);
-            width:100%;
-          }
-          .role-pill {
-            position:absolute;top:6px;left:6px;
-            width:calc(50% - 6px);height:calc(100% - 12px);
-            border-radius:14px;z-index:0;
-            background:linear-gradient(135deg,#C94B2C 0%,#E8856A 100%);
-            box-shadow:0 6px 20px rgba(201,75,44,0.35),0 2px 6px rgba(201,75,44,0.2);
-            transition:transform 0.42s cubic-bezier(0.34,1.56,0.64,1);
-          }
-          .role-pill.seller { transform:translateX(100%); }
-          .role-pill.buyer  { transform:translateX(0); }
-          .pill-shimmer { position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none; }
-          @keyframes shimmer {
-            0%{opacity:0;transform:translateX(-100%) skewX(-15deg)}
-            50%{opacity:1}
-            100%{opacity:0;transform:translateX(300%) skewX(-15deg)}
-          }
-          .pill-shimmer::after {
-            content:'';position:absolute;top:0;left:0;width:40%;height:100%;
-            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);
-            animation:shimmer 2.4s ease-in-out infinite 0.8s;
-          }
-          .role-btn {
-            flex:1;position:relative;z-index:1;border:none;background:transparent;
-            border-radius:14px;padding:13px 8px;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            font-family:inherit;font-size:13.5px;font-weight:700;
-            transition:color 0.25s ease;
-            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-          }
-          .role-btn.active   { color:#fff; }
-          .role-btn.inactive { color:#B07060; }
-          .role-icon {
-            width:24px;height:24px;border-radius:50%;flex-shrink:0;
-            display:flex;align-items:center;justify-content:center;
-            transition:background 0.25s ease,transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-          }
-          .role-btn.active .role-icon   { background:rgba(255,255,255,0.22);transform:scale(1.15); }
-          .role-btn.inactive .role-icon { background:#F9DDD0; }
-          .role-dot {
-            width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.75);
-            position:absolute;bottom:9px;left:50%;
-            transform:translateX(-50%) scale(0);
-            transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1) 0.1s;
-          }
-          .role-btn.active .role-dot { transform:translateX(-50%) scale(1); }
-          .role-status-label {
-            font-size:11.5px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
-            padding:5px 14px;border-radius:999px;
-            background:rgba(201,75,44,0.08);color:#C94B2C;display:inline-block;
-          }
-
           /* ── DESKTOP layout — shown at ≥ 1024 px ───────────────────── */
           .desktop-view { display: none; }
 
           @media (min-width: 1024px) {
             .mobile-view  { display: none !important; }
-            .desktop-view {
-              display: flex; flex-direction: column; min-height: 100vh;
-            }
-
-            .image-panel {
-              display:flex; width:50%;
-              position:relative; overflow:hidden;
-              background:${C.primaryBg};
-            }
-
-            .login-input {
-              width:100%;display:block;
-              border-radius:8px;
-              border:1px solid ${C.border};
-              background:${C.surface};
-              padding:14px 16px;
-              font-size:16px;
-              color:${C.text};
-              outline:none;
-              transition:border-color 0.2s,box-shadow 0.2s;
-              font-family:inherit;
-            }
-            .login-input:focus {
-              border-color:${C.primary};
-              box-shadow:0 0 0 2px ${C.primary}20;
-            }
-            .login-input::placeholder { color:${C.textFaint}; }
-
-            .submit-btn {
-              width:100%;height:54px;
-              background:${C.primary};color:#fff;
-              font-size:16px;font-weight:700;
-              border:none;border-radius:8px;
-              cursor:pointer;transition:background 0.2s,transform 0.15s;
-              box-shadow:0 4px 12px ${C.primary}40;
-              font-family:inherit;
-              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-            }
-            .submit-btn:hover:not(:disabled) { background:${C.accent};transform:translateY(-2px); }
-            .submit-btn:active:not(:disabled) { transform:translateY(0); }
-            .submit-btn:disabled { opacity:0.65;cursor:not-allowed; }
-
-            .social-btn {
-              display:flex;align-items:center;justify-content:center;gap:8px;
-              height:48px;border:1px solid ${C.border};border-radius:8px;
-              background:transparent;color:${C.text};
-              font-size:14px;font-weight:600;cursor:pointer;
-              transition:background 0.2s;width:100%;font-family:inherit;
-              -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-            }
-            .social-btn:hover:not(:disabled) { background:${C.primaryBg}; }
-            .social-btn:disabled { opacity:0.6;cursor:not-allowed; }
-
-            .header-nav { display:flex;gap:24px; }
-
-            .form-panel {
-              width:50%;
-              display:flex;flex-direction:column;
-              justify-content:center;align-items:center;
-              padding:48px;
-              background:${C.surface};
-            }
-            .form-inner { width:100%;max-width:400px; }
-            .social-grid { display:flex;justify-content:center;margin-bottom:16px; }
-            .social-grid .social-btn { max-width:280px; }
+            .desktop-view { display: flex; flex-direction: column; min-height: 100dvh; }
           }
 
           /* ── MOBILE layout — shown below 1024 px ───────────────────── */
@@ -450,7 +295,9 @@ const LoginPage = () => {
             flex-direction: column;
             min-height: 100vh;
             background: ${C.surfaceDim};
+            font-family: 'Poppins', system-ui, sans-serif;
           }
+          .mobile-view button, .mobile-view input { font-family: inherit; }
 
           /* Mobile inputs */
           .m-input {
@@ -608,218 +455,80 @@ const LoginPage = () => {
         `}</style>
 
         {/* ════════════════════════════════════════════════════════════════
-            DESKTOP  (≥ 1024 px) — original code, pixel-perfect unchanged
+            DESKTOP  (≥ 1024 px) — split photo / form panel
         ════════════════════════════════════════════════════════════════ */}
         <div className="desktop-view">
+          <AuthDesktopShell
+            image={loginDesktopImage}
+            imagePosition="62% 30%"
+            tone="#8A5A36"
+            headline="Carry what matters."
+            blurb="Sign in to pick up your saved bags, track orders and message sellers directly on WhatsApp."
+            footer="bagsearch.shop"
+          >
+            <RevealItem>
+              <h2 className="ads-title">Welcome back.</h2>
+              <p className="ads-sub">Log in to continue where you left off.</p>
+            </RevealItem>
 
-          {/* Header */}
-          <header style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${C.border}`,
-            padding: '12px 20px',
-            background: C.surface, zIndex: 10,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <LogoIcon size={24} />
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                Bag<span style={{ color: C.primary }}>Search</span>
-              </h2>
-            </div>
-            <nav className="header-nav">
-              {['Shop', 'Collections'].map(label => (
-                <a key={label} href="#"
-                  style={{ color: C.text, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                  onMouseLeave={e => e.currentTarget.style.color = C.text}>
-                  {label}
-                </a>
-              ))}
-            </nav>
-            <button style={{
-              background: C.primary, color: C.textLight, border: 'none',
-              borderRadius: 8, padding: '8px 12px',
-              fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              transition: 'background 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
-              WebkitTapHighlightColor: 'transparent',
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = C.accent}
-              onMouseLeave={e => e.currentTarget.style.background = C.primary}>
-              WhatsApp Support
-            </button>
-          </header>
+            <RevealItem>
+              <p className="ads-switch">
+                New to BagSearch?{' '}
+                <button type="button" className="ads-link" onClick={() => navigate('/register')}>
+                  Create an account
+                </button>
+              </p>
+            </RevealItem>
 
-          <main style={{ flex: 1, display: 'flex' }}>
-            <div style={{ display: 'flex', width: '100%' }}>
+            {errorMsg && (
+              <RevealItem>
+                <div role="alert" className="ads-alert">{errorMsg}</div>
+              </RevealItem>
+            )}
 
-              {/* Image panel */}
-              <div className="image-panel">
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundImage: `url('${BANNER_IMAGE}')`,
-                  backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.8,
-                }} />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `linear-gradient(to right, ${C.primary}80, transparent)`,
-                }} />
-                <div style={{
-                  position: 'relative', zIndex: 10,
-                  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                  padding: 80, color: C.textLight, width: '100%',
-                }}>
-                  <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.2, marginBottom: 16, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-                    Elevate Your Everyday.
-                  </h1>
-                  <p style={{ fontSize: 20, fontWeight: 500, opacity: 0.9, maxWidth: 400 }}>
-                    Discover our exclusive collection of premium bags.
-                  </p>
-                </div>
-              </div>
+            <form onSubmit={handleLogin} noValidate>
+              <RevealItem className="ads-grid">
+                <AuthField
+                  id="d-email"
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+                <AuthField
+                  id="d-password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                  trailing={<PasswordToggle shown={showPassword} onToggle={() => setShowPassword(v => !v)} />}
+                />
+              </RevealItem>
 
-              {/* Form panel */}
-              <div className="form-panel">
-                <div className="form-inner">
+              <RevealItem style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 26 }}>
+                <AuthCheck id="d-remember" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)}>
+                  Keep me signed in on this device
+                </AuthCheck>
+                <button type="button" className="ads-link" style={{ fontSize: 12 }} onClick={() => navigate('/forgot-password')}>
+                  Forgot password?
+                </button>
+              </RevealItem>
 
-                  <div style={{ marginBottom: 28 }}>
-                    <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color: C.text, margin: 0, marginBottom: 6 }}>
-                      Welcome Back
-                    </h2>
-                    <p style={{ color: C.textMuted, margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-                      Enter your details to access your account.
-                    </p>
-                  </div>
-
-                  {errorMsg && (
-                    <div style={{
-                      padding: '10px 14px',
-                      background: C.primaryBg, border: `1px solid ${C.primary}`,
-                      color: C.primary, borderRadius: 8, fontSize: 14, marginBottom: 20, lineHeight: 1.5,
-                    }}>
-                      {errorMsg}
-                    </div>
-                  )}
-
-                  {/* Role Toggle */}
-                  <div style={{ marginBottom: 22 }}>
-                    <p style={{ marginBottom: 10, fontSize: 12, fontWeight: 700, color: C.textMuted, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-                      I am a…
-                    </p>
-                    <div className="role-track">
-                      <div className={`role-pill ${role}`}><div className="pill-shimmer" /></div>
-                      <button type="button" className={`role-btn ${role === 'buyer' ? 'active' : 'inactive'}`} onClick={() => setRole('buyer')}>
-                        <span className="role-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                            stroke={role === 'buyer' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <path d="M16 10a4 4 0 01-8 0"/>
-                          </svg>
-                        </span>
-                        Buyer
-                        <span className="role-dot" />
-                      </button>
-                      <button type="button" className={`role-btn ${role === 'seller' ? 'active' : 'inactive'}`} onClick={() => setRole('seller')}>
-                        <span className="role-icon">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                            stroke={role === 'seller' ? '#fff' : C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                            <line x1="8" y1="21" x2="16" y2="21"/>
-                            <line x1="12" y1="17" x2="12" y2="21"/>
-                            <path d="M9 11l3-3 3 3"/>
-                          </svg>
-                        </span>
-                        Seller
-                        <span className="role-dot" />
-                      </button>
-                    </div>
-                    <div style={{ marginTop: 10 }}>
-                      <span className="role-status-label">
-                        {role === 'buyer' ? '🛍 Shopping mode' : '🏪 Store mode'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Desktop Form */}
-                  <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 7 }}>
-                        Email Address
-                      </label>
-                      <input
-                        className="login-input"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                        autoComplete="email"
-                      />
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                        <label style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Password</label>
-                        <span
-                          onClick={() => navigate('/forgot-password')}
-                          style={{ color: C.primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                          onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                          onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
-                          Forgot Password?
-                        </span>
-                      </div>
-                      <input
-                        className="login-input"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                        autoComplete="current-password"
-                      />
-                    </div>
-                    <button type="submit" className="submit-btn" disabled={loading}>
-                      {loading ? 'Verifying…' : 'Sign In'}
-                    </button>
-                  </form>
-
-                  {/* Divider */}
-                  <div style={{ position: 'relative', padding: '22px 0' }}>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
-                      <div style={{ width: '100%', borderTop: `1px solid ${C.border}` }} />
-                    </div>
-                    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-                      <span style={{ background: C.surface, padding: '0 14px', color: C.textMuted, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="social-grid">
-                    <button className="social-btn" onClick={handleGoogleLogin} disabled={loading}>
-                      <svg width="18" height="18" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      Google
-                    </button>
-                  </div>
-
-                  <p style={{ textAlign: 'center', fontSize: 14, color: C.textMuted, margin: 0 }}>
-                    Don't have an account?{' '}
-                    <span
-                      onClick={() => navigate('/register')}
-                      style={{ color: C.primary, fontWeight: 700, cursor: 'pointer' }}
-                      onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                      onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
-                      Create an account
-                    </span>
-                  </p>
-
-                </div>
-              </div>
-            </div>
-          </main>
+              <RevealItem className="ads-actions">
+                <button type="submit" className="ads-btn" disabled={loading}>
+                  {loading ? 'Signing in…' : 'Log In'}
+                </button>
+                <button type="button" className="ads-ghost" onClick={handleGoogleLogin} disabled={loading}>
+                  <GoogleMark />
+                  Continue with Google
+                </button>
+              </RevealItem>
+            </form>
+          </AuthDesktopShell>
         </div>{/* /desktop-view */}
 
 
