@@ -1,8 +1,10 @@
-import { useState, useContext, useRef, useEffect, useCallback } from 'react';
+import { useState, useContext, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'framer-motion';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
 import LogoIcon from './components/Logo.jsx';
+import CountUp from './components/ui/CountUp.jsx';
 import { sanitizeInput, validateRequired, validatePrice, validatePhone } from './utils/securityUtils';
 import { uploadLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
@@ -10,29 +12,8 @@ import { normalizeWhatsAppNumber } from './utils/whatsapp';
 import { getImageEmbeddingFromSource, upsertProductImageEmbedding } from './services/imageEmbeddings';
 import { useSEO } from './hooks/useSEO';
 import { useUploadLimit, recordUpload } from './hooks/useUploadLimit';
-
-// ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
-const C = {
-  primary:      '#C94B2C',
-  primaryLight: '#E8856A',
-  primaryBg:    '#F9DDD0',
-  primaryPale:  '#FFF5F2',
-  primaryBorder:'#F0C8BB',
-  accent:       '#B33A1E',
-  success:      '#C94B2C',
-  successBg:    '#F9DDD0',
-  successLight: '#FCE8E0',
-  danger:       '#DC2626',
-  dangerBg:     '#FEF2F2',
-  surface:      '#FFFFFF',
-  surfaceDim:   '#FDF8F5',
-  border:       '#F0D9CC',
-  borderLight:  '#F7ECE4',
-  text:         '#1A0A00',
-  textMid:      '#7A4030',
-  textMuted:    '#B07060',
-  textFaint:    '#E8C4B5',
-};
+import { useIsMobileViewport } from './hooks/useIsMobileViewport';
+import { T, FONT_SANS, FONT_SERIF, EASE_OUT, naira } from './theme/luxe';
 
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
@@ -44,12 +25,6 @@ if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     uploadPreset: CLOUDINARY_UPLOAD_PRESET ? 'set' : 'missing'
   });
 }
-
-const MS = ({ name, size = 22, style: s = {} }) => (
-  <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", whiteSpace: "nowrap", direction: "ltr", fontVariationSettings: "'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24", ...s }}>
-    {name}
-  </span>
-);
 
 // ─── Nigerian locations ───────────────────────────────────────────────────────
 const NIGERIAN_LOCATIONS = [
@@ -121,21 +96,6 @@ const BAG_COLORS = [
   { id: 'multicolor',   label: 'Multi',        hex: 'linear-gradient(135deg,#C94B2C,#E8856A,#F9DDD0,#2255CC,#2D6A3F)' },
 ];
 
-// ─── Progress steps definition ────────────────────────────────────────────────
-const STEPS = [
-  { id: 'images',      label: 'Photos',      icon: 'photo_camera',      field: 'images' },
-  { id: 'name',        label: 'Bag Name',    icon: 'label',             field: 'name' },
-  { id: 'brand',       label: 'Brand',       icon: 'workspace_premium', field: 'brand' },
-  { id: 'category',    label: 'Category',    icon: 'category',          field: 'category' },
-  { id: 'condition',   label: 'Condition',   icon: 'star',              field: 'condition' },
-  { id: 'colors',      label: 'Colors',      icon: 'palette',           field: 'colors' },
-  { id: 'quantity',    label: 'Quantity',    icon: 'inventory_2',       field: 'quantity' },
-  { id: 'price',       label: 'Price',       icon: 'payments',          field: 'price' },
-  { id: 'location',    label: 'Location',    icon: 'location_on',       field: 'location' },
-  { id: 'whatsapp',    label: 'WhatsApp',    icon: 'chat',              field: 'whatsapp' },
-  { id: 'description', label: 'Description', icon: 'description',       field: 'description' },
-];
-
 // ─── Utility ──────────────────────────────────────────────────────────────────
 function formatNaira(value) {
   if (!value) return '';
@@ -189,10 +149,128 @@ async function uploadImageToCloudinary(file, userId) {
   }
 }
 
+const MAX_PHOTOS = 10;
+
+const CONDITIONS = [
+  { value: 'Pristine (Like New)',    title: 'Pristine',  hint: 'Like new, no signs of use' },
+  { value: 'Excellent (Minor Wear)', title: 'Excellent', hint: 'Minor wear, hard to spot' },
+  { value: 'Very Good (Gentle Use)', title: 'Very good', hint: 'Gentle, visible use' },
+  { value: 'Fair (Visible Wear)',    title: 'Fair',      hint: 'Clear wear, priced to match' },
+];
+const BRANDS = ['Chanel', 'Hermès', 'Louis Vuitton', 'Gucci', 'Prada', 'Dior', 'Balenciaga', 'Fendi', 'Celine', 'Bottega Veneta', 'Other'];
+const CATEGORIES = ['Handbags', 'Shoulder Bags', 'Clutches', 'Totes', 'Backpacks', 'Crossbody', 'Evening Bags', 'Mini Bags', 'Satchels'];
+const QUICK_DETAILS = ['Dust bag included', 'Authenticity card included', 'Original box included', 'No visible flaws'];
+const LOCATIONS_BY_STATE = Object.entries(
+  NIGERIAN_LOCATIONS.reduce((acc, l) => { (acc[l.state] = acc[l.state] || []).push(l); return acc; }, {})
+);
+
+// Dark tick on pale swatches, white tick on dark ones
+function isLightHex(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return false;
+  const n = parseInt(m[1], 16);
+  const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 160;
+}
+
+const Icon = {
+  bag: (s = 40) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5L6 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>
+  ),
+  plus: (s = 22) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  ),
+  camera: (s = 26) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+  ),
+  close: (s = 12) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+  ),
+  star: (s = 14) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" /></svg>
+  ),
+  search: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+  ),
+  tag: (s = 18) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg>
+  ),
+  back: (s = 22) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+  ),
+  up: (s = 18) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+  ),
+  alert: (s = 18) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></svg>
+  ),
+  whatsapp: (s = 18) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.8h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.89 9.89-9.89 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.88 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.41z" /></svg>
+  ),
+};
+
+function DrawnTick({ size = 18, color = '#fff', delay = 0 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <motion.path d="M5 12.5l4.5 4.5L19 7.5" stroke={color} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.35, ease: 'easeOut', delay }} />
+    </svg>
+  );
+}
+
+function Section({ n, title, subtitle, optional, isMobile, children }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.55, ease: EASE_OUT }}
+      aria-labelledby={`cp-sec-${n}`}
+      style={{
+        background: T.surface, border: `1px solid ${T.line}`, borderRadius: 20,
+        padding: isMobile ? 20 : '28px 32px', display: 'flex', flexDirection: 'column', gap: isMobile ? 18 : 22,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 14 }}>
+        <span aria-hidden="true" style={{
+          width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', flexShrink: 0,
+          background: T.accentSoft, color: T.accentInk, fontWeight: 800, fontSize: isMobile ? 13 : 14,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>{n}</span>
+        <div>
+          <h2 id={`cp-sec-${n}`} style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 600, fontSize: isMobile ? 25 : 28, lineHeight: 1.1 }}>
+            {title}
+            {optional && <span style={{ fontFamily: FONT_SANS, fontSize: isMobile ? 13 : 14, fontWeight: 600, color: T.muted, marginLeft: 8 }}>optional</span>}
+          </h2>
+          {subtitle && !isMobile && <p style={{ margin: '2px 0 0', fontSize: 14, color: T.muted }}>{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </motion.section>
+  );
+}
+
+function Field({ label, htmlFor, hint, optional, children }) {
+  const LabelTag = htmlFor ? 'label' : 'span';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+      <LabelTag htmlFor={htmlFor} style={{ fontSize: 14, fontWeight: 700, color: T.ink }}>
+        {label}{optional && <span style={{ fontWeight: 500, color: T.muted }}> (optional)</span>}
+      </LabelTag>
+      {children}
+      {hint && <p style={{ margin: 0, fontSize: 13, color: T.muted, lineHeight: 1.5 }}>{hint}</p>}
+    </div>
+  );
+}
+
 export default function CreateProduct() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
+  const errorRef = useRef(null);
+  const idRef = useRef(0);
+  const isMobile = useIsMobileViewport();
+  const reduce = useReducedMotion();
   const { canUpload, plan, used, limit, loading: limitLoading } = useUploadLimit('product');
 
   useSEO({
@@ -206,7 +284,7 @@ export default function CreateProduct() {
     name: '', brand: '', category: '',
     condition: 'Pristine (Like New)',
     description: '', price: '', location: '', whatsapp: '',
-    quantity: '',
+    quantity: '1',
     discountEnabled: false,
     discountType: 'percentage',
     discountValue: '',
@@ -216,31 +294,27 @@ export default function CreateProduct() {
   const [selectedColors, setSelectedColors] = useState([]);
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState('');
+  const [published, setPublished] = useState(false);
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [showAllColours, setShowAllColours] = useState(false);
+  // One full row on desktop, two rows of 7 on phones
+  const COLOURS_COLLAPSED = isMobile ? 14 : 13;
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
+  // Free the preview blobs when the page goes away
+  const imagesRef = useRef(images);
+  useEffect(() => { imagesRef.current = images; }, [images]);
+  useEffect(() => () => imagesRef.current.forEach(img => URL.revokeObjectURL(img.preview)), []);
 
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  }, [error, reduce]);
 
+  const set = (patch) => setFormData(prev => ({ ...prev, ...patch }));
   const toggleColor = (colorId) => {
-    setSelectedColors(prev =>
-      prev.includes(colorId) ? prev.filter(c => c !== colorId) : [...prev, colorId]
-    );
+    setSelectedColors(prev => prev.includes(colorId) ? prev.filter(c => c !== colorId) : [...prev, colorId]);
   };
-
-  const getStepDone = useCallback((step) => {
-    if (step.field === 'images')   return images.length > 0;
-    if (step.field === 'condition') return true;
-    if (step.field === 'colors')   return selectedColors.length > 0;
-    if (step.field === 'quantity') return !!formData.quantity && parseInt(formData.quantity) >= 1;
-    return !!formData[step.field]?.toString().trim();
-  }, [formData, images, selectedColors]);
-
-  const completedCount = STEPS.filter(s => getStepDone(s)).length;
-  const progressPct = Math.round((completedCount / STEPS.length) * 100);
-  const progressColor = progressPct < 35 ? C.primary : progressPct < 70 ? C.primaryLight : C.primary;
-  const progressLabel = progressPct < 35 ? 'Just getting started' : progressPct < 70 ? 'Making great progress!' : progressPct < 100 ? 'Almost ready to list!' : '🎉 Ready to list!';
 
   const rawPrice = parseInt((formData.price || '0').toString().replace(/,/g, '')) || 0;
   const discountVal = parseFloat(formData.discountValue) || 0;
@@ -250,6 +324,30 @@ export default function CreateProduct() {
       : Math.max(0, rawPrice - discountVal)
     : null;
   const savingsAmount = discountedPrice !== null ? rawPrice - discountedPrice : 0;
+  const discountShown = rawPrice > 0 && discountedPrice !== null && discountedPrice > 0 && savingsAmount > 0;
+  const buyerPays = discountShown ? discountedPrice : rawPrice;
+
+  const checklist = [
+    { label: 'Photos',    done: images.length > 0 },
+    { label: 'Bag name',  done: !!formData.name.trim() },
+    { label: 'Brand',     done: !!formData.brand },
+    { label: 'Category',  done: !!formData.category },
+    { label: 'Condition', done: !!formData.condition },
+    { label: 'Colours',   done: selectedColors.length > 0 },
+    { label: 'Quantity',  done: parseInt(formData.quantity) >= 1 },
+    { label: 'Price',     done: rawPrice > 0 },
+    { label: 'City',      done: !!formData.location },
+    { label: 'WhatsApp',  done: !!formData.whatsapp.trim() },
+  ];
+  const doneCount = checklist.filter(c => c.done).length;
+  const missing = [
+    !images.length && 'photos', !formData.name.trim() && 'bag name', !formData.brand && 'brand',
+    !formData.category && 'category', !rawPrice && 'price', !formData.location && 'city',
+    !formData.whatsapp.trim() && 'WhatsApp number',
+  ].filter(Boolean);
+  const limitReached = !limitLoading && !canUpload;
+  const planName = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : 'Free';
+  const locationLabel = NIGERIAN_LOCATIONS.find(l => l.id === formData.location)?.label;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -257,49 +355,60 @@ export default function CreateProduct() {
     setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
   };
 
-  const handleUploadAreaClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const processFile = (file) => {
+  const processFiles = (files) => {
+    if (!files.length) return;
     if (!uploadLimiter.isAllowed(user?.id || 'anonymous')) {
-      const secureError = SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload');
-      setError(secureError.message);
+      setError(SecureErrorHandler.handleError(new Error('Too many upload attempts. Please try again later.'), 'file_upload').message);
       return;
     }
-    try {
-      validateFile(file);
-      if (images.length >= 10) throw new Error('Max 10 photos');
-      setImages(prev => [...prev, { file, preview: URL.createObjectURL(file) }]);
-      setError(null);
-    } catch (error) {
-      const secureError = SecureErrorHandler.handleError(error, 'file_upload');
-      setError(secureError.message);
+    const accepted = [];
+    let problem = null;
+    for (const file of files) {
+      try { validateFile(file); accepted.push(file); }
+      catch (err) { problem = SecureErrorHandler.handleError(err, 'file_upload').message; }
     }
+    const room = MAX_PHOTOS - images.length;
+    if (accepted.length > room) {
+      problem = room > 0 ? `You can add up to ${MAX_PHOTOS} photos, so only the first ${room} were added.` : `You've already added ${MAX_PHOTOS} photos, the most a listing can have.`;
+    }
+    const toAdd = accepted.slice(0, Math.max(0, room)).map(file => ({ id: ++idRef.current, file, preview: URL.createObjectURL(file) }));
+    if (toAdd.length) setImages(prev => [...prev, ...toAdd]);
+    setError(problem);
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    processFile(file);
+    processFiles(Array.from(e.target.files || []));
     e.target.value = '';
   };
 
   const handleDrop = (e) => {
     e.preventDefault(); setDragOver(false);
-    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
-    if (!file) return;
-    processFile(file);
+    processFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
   };
 
-  const removeImage = (index) => setImages(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (id) => setImages(prev => {
+    const gone = prev.find(img => img.id === id);
+    if (gone) URL.revokeObjectURL(gone.preview);
+    return prev.filter(img => img.id !== id);
+  });
+  const makeCover = (id) => setImages(prev => {
+    const pick = prev.find(img => img.id === id);
+    return pick ? [pick, ...prev.filter(img => img.id !== id)] : prev;
+  });
+
+  const addDetail = (text) => {
+    const current = formData.description.trimEnd();
+    const next = current ? `${current}\n${text}.` : `${text}.`;
+    if (next.length <= 1000) set({ description: next });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (uploading || published) return;
     try {
       if (!user) throw new Error('You must be logged in to list a product');
-      if (!canUpload) throw new Error(`You've reached your ${plan === 'free' ? 'Free' : plan} plan limit (${limit} listings). Upgrade your plan at /pricing for unlimited listings.`);
-      if (images.length === 0) throw new Error('Please upload at least one image');
+      if (!canUpload) throw new Error(`You've reached today's limit of ${limit} listings on the ${planName} plan. Upgrade at /pricing to list more.`);
+      if (images.length === 0) throw new Error('Please add at least one photo');
 
       const sanitizedName = sanitizeInput(formData.name);
       validateRequired(sanitizedName, 'Product name');
@@ -327,10 +436,12 @@ export default function CreateProduct() {
       const sanitizedWhatsApp = sanitizeInput(formData.whatsapp);
 
       const uploadedImageUrls = [];
-      for (const img of images) {
-        const imageUrl = await uploadImageToCloudinary(img.file, user.id);
+      for (let i = 0; i < images.length; i++) {
+        setStatus(images.length > 1 ? `Uploading photo ${i + 1} of ${images.length}…` : 'Uploading photo…');
+        const imageUrl = await uploadImageToCloudinary(images[i].file, user.id);
         uploadedImageUrls.push(imageUrl);
       }
+      setStatus('Saving your listing…');
 
       const price = formData.price.toString().replace(/,/g, '');
       const insertData = {
@@ -373,938 +484,646 @@ export default function CreateProduct() {
         console.warn('Product created but embedding setup failed:', embeddingError);
       }
 
-      navigate('/products');
+      setPublished(true);
+      setTimeout(() => navigate('/products'), reduce ? 400 : 1200);
     } catch (err) {
       // Log the real error to console so it's visible during debugging
       console.error('[performListing] Upload failed:', err?.message || err);
       // Show the actual error message directly — don't hide it behind a generic string
-      const msg = err?.message || 'Upload failed. Please try again.';
-      setError(msg);
+      setError(err?.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
+      setStatus('');
     }
   };
 
+  // ── pieces ────────────────────────────────────────────────────────────────
+  const tileSize = isMobile ? 104 : undefined;
+
+  const photoTile = (img, idx) => (
+    <motion.div
+      key={img.id}
+      layout={!reduce}
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.18 } }}
+      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+      style={{
+        position: 'relative', borderRadius: 14, overflow: 'hidden', background: T.photo,
+        aspectRatio: '1 / 1', width: tileSize, flexShrink: 0,
+      }}
+    >
+      <img src={img.preview} alt={idx === 0 ? 'Cover photo' : `Photo ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      {idx === 0 ? (
+        <motion.span layoutId={reduce ? undefined : 'cp-cover-badge'} style={{ position: 'absolute', left: 8, bottom: 8, padding: '4px 9px', borderRadius: 999, background: T.ink, color: '#fff', fontSize: 11, fontWeight: 800, letterSpacing: '0.04em' }}>
+          COVER
+        </motion.span>
+      ) : (
+        <button type="button" className="cp-tile-btn" onClick={() => makeCover(img.id)} aria-label={`Make photo ${idx + 1} the cover`}
+          style={{ position: 'absolute', left: 6, bottom: 6, height: 32, padding: '0 10px', borderRadius: 999, border: 'none', background: 'rgba(28,20,16,.66)', color: '#fff', font: `700 11px ${FONT_SANS}`, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
+          {Icon.star(12)} Cover
+        </button>
+      )}
+      <button type="button" className="cp-tile-btn" onClick={() => removeImage(img.id)} aria-label={`Remove photo ${idx + 1}`}
+        style={{ position: 'absolute', top: 6, right: 6, width: 32, height: 32, borderRadius: '50%', border: 'none', background: 'rgba(28,20,16,.66)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        {Icon.close(12)}
+      </button>
+    </motion.div>
+  );
+
+  const addTile = images.length < MAX_PHOTOS && (
+    <motion.button
+      key="add" type="button" layout={!reduce} onClick={() => fileInputRef.current?.click()}
+      whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+      style={{
+        aspectRatio: '1 / 1', width: tileSize, flexShrink: 0, borderRadius: 14,
+        border: `2px dashed ${T.lineStrong}`, background: T.bg, color: T.accentInk,
+        font: `700 13px ${FONT_SANS}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer',
+      }}
+    >
+      {isMobile ? Icon.camera(24) : Icon.plus(24)}
+      {isMobile ? <span>Camera or<br />gallery</span> : 'Add photos'}
+    </motion.button>
+  );
+
+  const priceSummary = (
+    <AnimatePresence initial={false}>
+      {discountShown && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.3, ease: EASE_OUT }}
+          role="status"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, background: T.greenSoft, color: T.green, fontSize: 14 }}
+        >
+          {Icon.tag(18)}
+          <span>Buyers pay <b><CountUp value={discountedPrice} format={naira} duration={0.6} /></b> and save {naira(savingsAmount)}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const publishLabel = published ? (
+    <><DrawnTick size={20} /> Published</>
+  ) : uploading ? (
+    <><span className="cp-spin" aria-hidden="true" /> {status || 'Publishing…'}</>
+  ) : (
+    <>{Icon.up(18)} Publish listing</>
+  );
+
+  const publishButton = (height = 56) => (
+    <motion.button
+      type="submit" disabled={uploading || published || limitReached}
+      whileHover={uploading || published || limitReached ? undefined : { y: -1 }}
+      whileTap={uploading || published || limitReached ? undefined : { scale: 0.98 }}
+      animate={{ backgroundColor: published ? T.green : limitReached ? T.lineStrong : T.accent }}
+      transition={{ duration: 0.3 }}
+      aria-live="polite"
+      style={{
+        height, width: '100%', border: 'none', borderRadius: 14, color: '#fff',
+        font: `700 16px ${FONT_SANS}`, cursor: uploading || published || limitReached ? 'default' : 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, whiteSpace: 'nowrap', overflow: 'hidden',
+      }}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span key={published ? 'done' : uploading ? 'busy' : 'idle'}
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {publishLabel}
+        </motion.span>
+      </AnimatePresence>
+    </motion.button>
+  );
+
+  const readyText = limitReached
+    ? `You've used all ${limit} listings for today on the ${planName} plan.`
+    : missing.length ? `Still needed: ${missing.join(', ')}.` : 'All set. Buyers can find it as soon as you publish.';
+
+  const progressBar = (h = 6) => (
+    <div style={{ height: h, borderRadius: h, background: T.lineSoft, overflow: 'hidden' }}>
+      <motion.div
+        initial={false} animate={{ scaleX: doneCount / checklist.length }}
+        transition={{ type: 'spring', stiffness: 120, damping: 22 }}
+        style={{ height: '100%', background: T.accent, borderRadius: h, transformOrigin: 'left center' }}
+      />
+    </div>
+  );
+
+  // ── page ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: C.surfaceDim, minHeight: "100vh", fontFamily: "'Manrope', sans-serif", color: C.text }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <MotionConfig reducedMotion="user">
+      <div style={{ background: T.bg, minHeight: '100vh', fontFamily: FONT_SANS, color: T.ink }}>
+        <style>{`
+          .cp-input{width:100%;height:50px;box-sizing:border-box;border:1.5px solid ${T.line};border-radius:12px;padding:0 16px;font:500 16px ${FONT_SANS};color:${T.ink};background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+          .cp-input::placeholder{color:#9A8A80}
+          .cp-input:hover{border-color:${T.lineStrong}}
+          .cp-input:focus{border-color:${T.accent};box-shadow:0 0 0 4px rgba(180,65,14,.12)}
+          select.cp-input{cursor:pointer}
+          textarea.cp-input{height:auto;min-height:140px;padding:14px 16px;line-height:1.55;resize:vertical}
+          .cp-input::-webkit-inner-spin-button,.cp-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+          .cp-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:40px;align-items:start}
+          .cp-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+          .cp-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+          .cp-cond{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+          .cp-photos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+          .cp-tile-btn{transition:background .2s}
+          .cp-tile-btn:hover{background:rgba(28,20,16,.85)!important}
+          .cp-chip{transition:background .2s,color .2s,border-color .2s}
+          .cp-chip:hover:not(:disabled){background:${T.accentSoft}!important;color:${T.accentInk}!important}
+          .cp-spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:cpSpin .7s linear infinite}
+          @keyframes cpSpin{to{transform:rotate(360deg)}}
+          button:focus-visible,a:focus-visible{outline:3px solid rgba(180,65,14,.45);outline-offset:2px}
+          @media (max-width:1100px){.cp-grid{grid-template-columns:minmax(0,1fr) 320px;gap:28px}.cp-cond{grid-template-columns:repeat(2,minmax(0,1fr))}.cp-photos{grid-template-columns:repeat(4,minmax(0,1fr))}}
+          @media (max-width:560px){.cp-2,.cp-3{grid-template-columns:minmax(0,1fr)}}
+          @media (prefers-reduced-motion:reduce){.cp-spin{animation-duration:1.6s}}
+        `}</style>
 
-        @keyframes fadeSlideUp   { from{opacity:0;transform:translateY(28px)}  to{opacity:1;transform:translateY(0)} }
-        @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes scaleIn       { from{opacity:0;transform:scale(0.94)}       to{opacity:1;transform:scale(1)}     }
-        @keyframes fadeIn        { from{opacity:0}                              to{opacity:1}                        }
-        @keyframes shimmerProg   { 0%{transform:translateX(-120%)} 100%{transform:translateX(320%)} }
-        @keyframes stepPop       { 0%{transform:scale(0.7)} 60%{transform:scale(1.18)} 100%{transform:scale(1)} }
-        @keyframes stepRipple    { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(2.4);opacity:0} }
-        @keyframes pctBounce     { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
-        @keyframes imgAppear     { from{opacity:0;transform:scale(0.8) rotate(-3deg)} to{opacity:1;transform:scale(1) rotate(0)} }
-        @keyframes bounce        { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-        @keyframes uploadPulse   { 0%,100%{opacity:1} 50%{opacity:0.55} }
-        @keyframes sectionIn     { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes tickDraw      { from{stroke-dashoffset:30} to{stroke-dashoffset:0} }
-        @keyframes waPing        { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.2);opacity:0} }
-        @keyframes colorPop      { 0%{transform:scale(0.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
-        @keyframes discountSlide { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes priceCross    { from{width:0} to{width:100%} }
-        @keyframes savingsPop    { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
-        @keyframes tagWiggle     { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
-        @keyframes spin          { to{transform:rotate(360deg)} }
-        @keyframes adModalIn     { from{opacity:0;transform:scale(0.9) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
-
-        ::-webkit-scrollbar        { width: 5px; }
-        ::-webkit-scrollbar-track  { background: transparent; }
-        ::-webkit-scrollbar-thumb  { background: ${C.textFaint}; border-radius: 3px; }
-
-        .field-input {
-          width: 100%; height: 46px; padding: 0 16px;
-          border: 1.5px solid ${C.border}; border-radius: 12px;
-          font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 500;
-          color: ${C.text}; background: white; outline: none;
-          letter-spacing: normal; word-spacing: normal;
-          transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease;
-        }
-        .field-input:focus {
-          border-color: ${C.primary};
-          box-shadow: 0 0 0 3px rgba(201,75,44,0.12);
-          transform: translateY(-1px);
-        }
-        .field-input:not(:placeholder-shown):not(:focus) {
-          border-color: ${C.primaryLight};
-          background: ${C.successBg};
-        }
-        .field-select { appearance: none; cursor: pointer; }
-
-        .img-thumb { animation: imgAppear 0.4s cubic-bezier(0.22,1,0.36,1) both; }
-        .img-thumb:hover .remove-btn { opacity: 1 !important; transform: scale(1) !important; }
-
-        .qty-input-wrap {
-          display: flex; align-items: stretch;
-          border: 1.5px solid ${C.border}; border-radius: 14px;
-          overflow: hidden; background: white;
-          transition: border-color 0.25s, box-shadow 0.25s;
-        }
-        .qty-input-wrap:focus-within {
-          border-color: ${C.primary};
-          box-shadow: 0 0 0 3px rgba(201,75,44,0.12);
-        }
-        .qty-spin-btn {
-          width: 44px; border: none; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          background: ${C.primaryPale}; color: ${C.primary};
-          transition: background 0.18s, transform 0.12s;
-          flex-shrink: 0; font-size: 20px; font-weight: 700;
-          user-select: none;
-        }
-        .qty-spin-btn:hover:not(:disabled) { background: ${C.primaryBg}; }
-        .qty-spin-btn:active:not(:disabled) { transform: scale(0.9); }
-        .qty-spin-btn:disabled { background: ${C.surfaceDim}; color: ${C.textFaint}; cursor: not-allowed; }
-        .qty-number-input {
-          flex: 1; border: none; outline: none; text-align: center;
-          font-size: 22px; font-weight: 900; color: ${C.text};
-          font-family: 'Manrope', sans-serif; background: white;
-          min-width: 0; padding: 10px 4px;
-          -moz-appearance: textfield;
-        }
-        .qty-number-input::-webkit-inner-spin-button,
-        .qty-number-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .qty-number-input:focus { background: ${C.primaryPale}; color: ${C.primary}; }
-
-        .color-swatch {
-          width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-          transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
-          position: relative; flex-shrink: 0;
-          border: 2.5px solid transparent;
-        }
-        .color-swatch:hover { transform: scale(1.18); }
-        .color-swatch.selected {
-          transform: scale(1.18);
-          animation: colorPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
-        }
-        .color-swatch.selected::after {
-          content: '✓';
-          position: absolute; inset: 0;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 14px; font-weight: 900;
-          color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-          border-radius: 50%;
-        }
-
-        .discount-toggle {
-          position: relative; display: inline-flex; align-items: center;
-          width: 48px; height: 26px; cursor: pointer;
-        }
-        .discount-toggle input { opacity: 0; width: 0; height: 0; }
-        .discount-slider {
-          position: absolute; inset: 0; border-radius: 13px;
-          transition: background 0.3s;
-        }
-        .discount-slider::before {
-          content: ''; position: absolute;
-          width: 20px; height: 20px; border-radius: 50%;
-          left: 3px; top: 3px; background: white;
-          transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        .discount-toggle input:checked + .discount-slider::before { transform: translateX(22px); }
-
-        .discount-type-btn {
-          flex: 1; padding: 9px 0; border: 1.5px solid ${C.border};
-          background: white; color: ${C.textMid}; font-family: 'Manrope',sans-serif;
-          font-size: 13px; font-weight: 700; cursor: pointer;
-          transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .discount-type-btn:first-child { border-radius: 10px 0 0 10px; border-right: none; }
-        .discount-type-btn:last-child  { border-radius: 0 10px 10px 0; }
-        .discount-type-btn.active {
-          background: ${C.primary}; color: white; border-color: ${C.primary};
-          box-shadow: 0 2px 8px ${C.primary}50;
-        }
-
-        .discount-body { animation: discountSlide 0.35s cubic-bezier(0.22,1,0.36,1) both; }
-
-        .price-original-crossed {
-          position: relative; display: inline-block; color: ${C.textMuted};
-        }
-        .price-original-crossed::after {
-          content: ''; position: absolute;
-          height: 2px; background: ${C.danger};
-          top: 50%; left: 0; right: 0;
-          animation: priceCross 0.4s ease 0.1s both;
-        }
-
-        .savings-badge { animation: savingsPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
-        .discount-tag-icon { animation: tagWiggle 1.4s ease-in-out infinite; display: inline-block; }
-
-        @media (max-width: 768px) {
-          .create-title { font-size: 28px !important; }
-        }
-        @media (max-width: 480px) {
-          .create-main { padding: 24px 12px 60px !important; }
-          .create-title { font-size: 24px !important; }
-        }
-      `}</style>
-
-      {/* ── HEADER ── */}
-      <header style={{
-        background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)",
-        borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 50,
-        boxShadow: "0 1px 20px rgba(0,0,0,0.05)",
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? "translateY(0)" : "translateY(-100%)",
-        transition: "opacity 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)"
-      }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: C.primary }} onClick={() => navigate('/products')}>
-            <LogoIcon size={24} />
-            <span style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: "-0.5px" }}>Bag<span style={{ color: C.primary }}>Search</span></span>
-          </div>
-          <button onClick={() => navigate('/seller-profile')} style={{
-            display: "flex", alignItems: "center", gap: 7, padding: "8px 18px", borderRadius: 10,
-            border: "none", background: C.primary, color: "white", fontSize: 13, fontWeight: 700,
-            cursor: "pointer", transition: "all 0.2s", boxShadow: `0 2px 8px ${C.primary}80`
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.transform = "none"; }}>
-            <MS name="person" size={17} /> Profile
-          </button>
-        </div>
-      </header>
-
-      <main style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 20px 80px" }} className="create-main">
-
-        {/* Breadcrumb */}
-        <nav style={{
-          display: "flex", gap: 6, alignItems: "center", fontSize: 13, color: C.textMuted, marginBottom: 24,
-          opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideDown 0.5s ease 0.1s both" : "none"
-        }}>
-          <a href="#" onClick={e => { e.preventDefault(); navigate('/seller-profile'); }} style={{ color: C.primary, fontWeight: 700, textDecoration: "none" }}>Dashboard</a>
-          <MS name="chevron_right" size={16} style={{ color: C.textFaint }} />
-          <span style={{ color: C.text, fontWeight: 600 }}>List a Bag</span>
-        </nav>
-
-        {/* Page title */}
-        <div style={{ marginBottom: 32, opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.6s cubic-bezier(0.22,1,0.36,1) 0.15s both" : "none" }}>
-          <h1 style={{
-            fontSize: "clamp(2rem,5vw,2.8rem)", fontWeight: 900, color: C.text,
-            letterSpacing: "-0.04em", lineHeight: 1.1, fontFamily: "'DM Serif Display', serif", marginBottom: 8
-          }} className="create-title">List Your Bag</h1>
-          <p style={{ color: C.textMuted, fontSize: 15, fontWeight: 500, maxWidth: 520 }}>
-            Fill in all details below. Our AI visual search will index your bag for maximum buyer visibility.
-          </p>
-        </div>
-
-        {/* ── LIVE PROGRESS TRACKER ── */}
-        <div style={{
-          background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
-          padding: "24px 24px 20px", marginBottom: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          opacity: mounted ? 1 : 0, animation: mounted ? "scaleIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both" : "none",
-          overflow: "hidden", position: "relative"
-        }}>
-          {progressPct === 100 && (
-            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C.primary}10 0%, ${C.primaryLight}15 100%)`, pointerEvents: "none", borderRadius: 20 }} />
-          )}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: C.textMuted, marginBottom: 3 }}>Listing Progress</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{progressLabel}</div>
+        {/* ── Top bar ── */}
+        {isMobile ? (
+          <motion.header
+            initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: EASE_OUT }}
+            style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: `1px solid ${T.line}`, padding: 'calc(6px + env(safe-area-inset-top)) 8px 12px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: 48 }}>
+              <button type="button" onClick={() => navigate(-1)} aria-label="Back"
+                style={{ width: 44, height: 44, border: 'none', background: 'none', color: T.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                {Icon.back()}
+              </button>
+              <h1 style={{ flexGrow: 1, margin: 0, fontSize: 17, fontWeight: 800 }}>List a bag</h1>
+              <span style={{ padding: '0 12px', fontSize: 14, fontWeight: 700, color: T.accentInk }} aria-label={`${doneCount} of ${checklist.length} details added`}>
+                {doneCount} of {checklist.length}
+              </span>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span style={{ fontSize: 36, fontWeight: 900, color: progressColor, letterSpacing: "-0.04em", transition: "color 0.5s ease", lineHeight: 1 }}>{progressPct}</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: progressColor }}>%</span>
+            <div style={{ margin: '4px 12px 0' }}>{progressBar(5)}</div>
+          </motion.header>
+        ) : (
+          <motion.header
+            initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.4, ease: EASE_OUT }}
+            style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: `1px solid ${T.line}` }}
+          >
+            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 72, display: 'flex', alignItems: 'center', gap: 36 }}>
+              <a href="/products" onClick={e => { e.preventDefault(); navigate('/products'); }} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: T.accent }}>
+                <LogoIcon size={24} />
+                <span style={{ fontSize: 21, fontWeight: 800, color: T.ink }}>Bag<span style={{ color: T.accent }}>Search</span></span>
+              </a>
+              <nav aria-label="Seller" style={{ display: 'flex', gap: 28, flexGrow: 1 }}>
+                {[['Dashboard', '/seller-profile'], ['My listings', '/seller-listing']].map(([label, to]) => (
+                  <a key={to} href={to} onClick={e => { e.preventDefault(); navigate(to); }} style={{ fontSize: 15, fontWeight: 600, color: T.ink2, textDecoration: 'none' }}>{label}</a>
+                ))}
+              </nav>
             </div>
-          </div>
-          <div style={{ height: 10, background: C.borderLight, borderRadius: 9999, overflow: "hidden", marginBottom: 20, position: "relative" }}>
-            <div style={{
-              height: "100%", background: `linear-gradient(90deg, ${C.primary}, ${C.primaryLight})`,
-              borderRadius: 9999, width: `${progressPct}%`,
-              transition: "width 0.65s cubic-bezier(0.34,1.56,0.64,1)",
-              position: "relative", overflow: "hidden",
-              boxShadow: `0 0 12px ${C.primary}88`,
-            }}>
-              {progressPct > 5 && (
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.3) 50%, transparent 80%)", animation: "shimmerProg 2s ease-in-out infinite" }} />
-              )}
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-            {STEPS.map((step) => {
-              const done = getStepDone(step);
-              return (
-                <div key={step.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0, minWidth: 56 }}>
-                  <div style={{ position: "relative", width: 36, height: 36 }}>
-                    {done && <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `2px solid ${C.primary}`, opacity: 0.4, animation: "stepRipple 1.8s ease-out infinite" }} />}
-                    <div style={{
-                      width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-                      background: done ? C.primary : C.borderLight,
-                      border: done ? `2px solid ${C.primary}` : `2px solid ${C.border}`,
-                      transition: "all 0.4s cubic-bezier(0.34,1.56,0.64,1)",
-                      transform: done ? "scale(1)" : "scale(0.92)",
-                      animation: done ? "stepPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both" : "none",
-                      position: "relative", zIndex: 1,
-                      boxShadow: done ? `0 3px 12px ${C.primary}80` : "none",
-                    }}>
-                      {done ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" style={{ strokeDasharray: 30, strokeDashoffset: 0, animation: "tickDraw 0.3s ease both" }} />
-                        </svg>
-                      ) : (
-                        <MS name={step.icon} size={16} style={{ color: C.textMuted }} />
-                      )}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: done ? C.primary : C.textMuted, letterSpacing: "0.06em", textAlign: "center", textTransform: "uppercase", transition: "color 0.3s" }}>{step.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div style={{
-            background: C.dangerBg, border: `1px solid ${C.danger}40`, color: C.danger,
-            padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 600, marginBottom: 20,
-            display: "flex", alignItems: "center", gap: 8, animation: "scaleIn 0.3s ease both"
-          }}>
-            <MS name="error" size={18} style={{ color: C.danger, flexShrink: 0 }} /> {error}
-          </div>
+          </motion.header>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <input ref={fileInputRef} type="file" accept={ALLOWED_TYPES.join(',')} multiple style={{ display: 'none' }} onChange={handleImageChange} />
 
-          {/* ── SECTION 1: Images ── */}
-          <FormSection icon="photo_camera" title="Upload Photos" subtitle="Add up to 10 clear photos" delay={0.35} mounted={mounted}>
-
-            <div
-              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={handleUploadAreaClick}
-              style={{
-                border: `2px dashed ${dragOver ? C.primary : images.length > 0 ? C.primaryLight : C.border}`,
-                borderRadius: 16, padding: "36px 20px", cursor: "pointer", textAlign: "center",
-                background: dragOver ? C.primaryPale : images.length > 0 ? C.successBg : C.surfaceDim,
-                transition: "all 0.3s ease", transform: dragOver ? "scale(1.01)" : "none",
-                position: 'relative',
-              }}>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
-
-              <div style={{
-                width: 60, height: 60, borderRadius: "50%",
-                background: images.length > 0 ? C.successBg : C.primaryPale,
-                margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center",
-                animation: dragOver ? "bounce 0.6s ease infinite" : images.length === 0 ? "uploadPulse 2s ease-in-out infinite" : "none"
-              }}>
-                <MS name={images.length > 0 ? "check_circle" : "cloud_upload"} size={30} style={{ color: C.primary }} />
+        <main style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '20px 16px 220px' : '40px 24px 96px' }}>
+          {/* ── Page header ── */}
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, marginBottom: 32, flexWrap: 'wrap' }}>
+              <div>
+                <motion.nav aria-label="Breadcrumb" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} style={{ fontSize: 14, color: T.muted, marginBottom: 12 }}>
+                  <a href="/seller-profile" onClick={e => { e.preventDefault(); navigate('/seller-profile'); }} style={{ color: T.muted }}>Dashboard</a> / <span style={{ color: T.ink }}>List a bag</span>
+                </motion.nav>
+                <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.12 }}
+                  style={{ margin: 0, fontFamily: FONT_SERIF, fontWeight: 600, fontSize: 56, lineHeight: 1 }}>
+                  List a bag
+                </motion.h1>
+                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.22 }}
+                  style={{ margin: '10px 0 0', fontSize: 16, color: T.ink2 }}>
+                  Buyers can find it by name, brand or photo as soon as you publish.
+                </motion.p>
               </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 5 }}>
-                {images.length > 0
-                  ? `${images.length} photo${images.length > 1 ? 's' : ''} added — add another?`
-                  : "Drag & drop or click to upload"}
-              </p>
-              <p style={{ fontSize: 12, color: C.textMuted }}>
-                One photo at a time · up to 10 total (Front, Back, Inside, Serial Number)
-              </p>
+              {!limitLoading && limit > 0 && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 999, background: T.surface, border: `1px solid ${T.line}`, fontSize: 14, color: T.ink2 }}>
+                  <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', background: limitReached ? T.redInk : T.green }} />
+                  {planName} plan · <b style={{ color: T.ink }}>{used} of {limit}</b> listings used today
+                </motion.div>
+              )}
             </div>
+          )}
+          {isMobile && !limitLoading && limit > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.ink2, marginBottom: 16 }}>
+              <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '50%', background: limitReached ? T.redInk : T.green }} />
+              {planName} plan · <b style={{ color: T.ink }}>{used} of {limit}</b> listings used today
+            </div>
+          )}
 
-            {images.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10, marginTop: 16 }}>
-                {images.map((img, idx) => (
-                  <div key={idx} className="img-thumb" style={{
-                    aspectRatio: "1", borderRadius: 12, overflow: "hidden", position: "relative",
-                    border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                    animationDelay: `${idx * 50}ms`
-                  }}>
-                    <img src={img.preview} alt="" loading="lazy" width="120" height="120" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <button type="button" className="remove-btn" onClick={e => { e.stopPropagation(); removeImage(idx); }}
-                      style={{
-                        position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: "50%",
-                        border: "none", background: C.danger, color: "white", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        opacity: 0, transform: "scale(0.8)", transition: "all 0.2s"
-                      }}>
-                      <MS name="close" size={14} />
-                    </button>
-                    {idx === 0 && <span style={{
-                      position: "absolute", bottom: 4, left: 4, fontSize: 9, fontWeight: 800,
-                      letterSpacing: "0.08em", textTransform: "uppercase", background: C.text,
-                      color: "white", padding: "2px 6px", borderRadius: 4
-                    }}>Main</span>}
-                  </div>
-                ))}
-              </div>
+          <AnimatePresence>
+            {limitReached && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 14, background: T.amberSoft, border: `1px solid ${T.amberLine}`, color: T.amberInk, fontSize: 14, marginBottom: 20, flexWrap: 'wrap' }}>
+                {Icon.alert(18)}
+                <span style={{ flex: '1 1 240px' }}>You&apos;ve reached today&apos;s limit of {limit} listings on the {planName} plan.</span>
+                <a href="/pricing" onClick={e => { e.preventDefault(); navigate('/pricing'); }} style={{ fontWeight: 700, color: T.amberInk }}>See plans</a>
+              </motion.div>
             )}
-          </FormSection>
+          </AnimatePresence>
 
-          {/* ── SECTION 2: Bag Details ── */}
-          <FormSection icon="label" title="Bag Details" subtitle="Basic information about your bag" delay={0.45} mounted={mounted}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
-
-              <FieldGroup label="Bag Name" done={!!formData.name}>
-                <input name="name" value={formData.name} onChange={handleInputChange} required className="field-input" placeholder="e.g., Chanel Classic Flap Caviar" type="text" />
-              </FieldGroup>
-
-              <FieldGroup label="Brand" done={!!formData.brand}>
-                <div style={{ position: "relative" }}>
-                  <select name="brand" value={formData.brand} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
-                    <option value="">Select a brand</option>
-                    {['Chanel','Hermès','Louis Vuitton','Gucci','Prada','Dior','Balenciaga','Fendi','Celine','Bottega Veneta','Other'].map(b => <option key={b}>{b}</option>)}
-                  </select>
-                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="Category" done={!!formData.category}>
-                <div style={{ position: "relative" }}>
-                  <select name="category" value={formData.category} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
-                    <option value="">Select category</option>
-                    {['Handbags','Shoulder Bags','Clutches','Totes','Backpacks','Crossbody','Evening Bags','Mini Bags','Satchels'].map(c => <option key={c}>{c}</option>)}
-                  </select>
-                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="Condition" done={true}>
-                <div style={{ position: "relative" }}>
-                  <select name="condition" value={formData.condition} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
-                    {['Pristine (Like New)','Excellent (Minor Wear)','Very Good (Gentle Use)','Fair (Visible Wear)'].map(c => <option key={c}>{c}</option>)}
-                  </select>
-                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="Quantity Available" done={!!formData.quantity && parseInt(formData.quantity) >= 1}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div className="qty-input-wrap">
-                    <button type="button" className="qty-spin-btn"
-                      disabled={!formData.quantity || parseInt(formData.quantity) <= 1}
-                      onClick={() => setFormData(p => ({ ...p, quantity: String(Math.max(1, (parseInt(p.quantity) || 1) - 1)) }))}>
-                      −
-                    </button>
-                    <input
-                      type="number" min="1"
-                      className="qty-number-input"
-                      value={formData.quantity}
-                      placeholder="0"
-                      onChange={e => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v))
-                          setFormData(p => ({ ...p, quantity: v }));
-                      }}
-                      onBlur={e => {
-                        const v = parseInt(e.target.value);
-                        if (!v || v < 1) setFormData(p => ({ ...p, quantity: '1' }));
-                      }}
-                    />
-                    <button type="button" className="qty-spin-btn"
-                      onClick={() => setFormData(p => ({ ...p, quantity: String((parseInt(p.quantity) || 0) + 1) }))}>
-                      +
-                    </button>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {[1, 2, 3, 5, 10, 20].map(n => {
-                      const active = parseInt(formData.quantity) === n;
-                      return (
-                        <button key={n} type="button"
-                          onClick={() => setFormData(p => ({ ...p, quantity: String(n) }))}
-                          style={{
-                            padding: "4px 13px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-                            cursor: "pointer", transition: "all 0.22s cubic-bezier(0.34,1.56,0.64,1)",
-                            fontFamily: "'Manrope', sans-serif",
-                            border: `1.5px solid ${active ? C.primary : C.border}`,
-                            background: active ? C.primary : "white",
-                            color: active ? "white" : C.textMid,
-                            transform: active ? "scale(1.08)" : "scale(1)",
-                            boxShadow: active ? `0 3px 10px ${C.primary}50` : "none",
-                          }}>
-                          {n}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {formData.quantity && parseInt(formData.quantity) > 1 && (
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 7, padding: "8px 13px", borderRadius: 10,
-                      background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
-                      animation: "scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both",
-                    }}>
-                      <MS name="inventory_2" size={15} style={{ color: C.primary, flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>
-                        {parseInt(formData.quantity) >= 50
-                          ? `${formData.quantity} bags in stock — bulk ready! 🎉`
-                          : parseInt(formData.quantity) >= 10
-                          ? `${formData.quantity} bags in stock — perfect for bulk buyers!`
-                          : `${formData.quantity} bags available — great selection!`}
-                      </span>
-                    </div>
+          <form onSubmit={handleSubmit} noValidate={false}>
+            <div className={isMobile ? undefined : 'cp-grid'}>
+              {/* ── FORM COLUMN ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24, minWidth: 0 }}>
+                <AnimatePresence>
+                  {error && (
+                    <motion.div ref={errorRef} role="alert"
+                      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0, x: reduce ? 0 : [0, -6, 6, -3, 3, 0] }} exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.4 }}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 16px', borderRadius: 14, background: T.redSoft, color: T.redInk, fontSize: 14, fontWeight: 600, lineHeight: 1.5 }}>
+                      <span style={{ flexShrink: 0, marginTop: 1 }}>{Icon.alert(18)}</span>
+                      <span style={{ flexGrow: 1 }}>{error}</span>
+                      <button type="button" onClick={() => setError(null)} aria-label="Dismiss" style={{ width: 32, height: 32, marginTop: -6, marginRight: -6, border: 'none', background: 'none', color: T.redInk, cursor: 'pointer', flexShrink: 0 }}>{Icon.close(12)}</button>
+                    </motion.div>
                   )}
-                </div>
-              </FieldGroup>
+                </AnimatePresence>
 
-            </div>
-
-            {/* ── BAG COLORS ── */}
-            <div style={{ marginTop: 22, borderTop: `1px solid ${C.borderLight}`, paddingTop: 20 }}>
-              <FieldGroup label="Available Colors" done={selectedColors.length > 0}>
-                <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 12, marginTop: -4 }}>
-                  Select all colors this bag is available in
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-                  {BAG_COLORS.map(color => {
-                    const isSelected = selectedColors.includes(color.id);
-                    const isMulti = color.id === 'multicolor';
-                    return (
-                      <div key={color.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                        <button
-                          type="button"
-                          className={`color-swatch${isSelected ? ' selected' : ''}`}
-                          onClick={() => toggleColor(color.id)}
-                          title={color.label}
-                          style={{
-                            background: isMulti ? color.hex : color.hex,
-                            backgroundImage: isMulti ? color.hex : undefined,
-                            borderColor: isSelected ? C.primary : (color.border || 'transparent'),
-                            boxShadow: isSelected
-                              ? `0 0 0 3px ${C.primary}40, 0 3px 10px rgba(0,0,0,0.15)`
-                              : '0 1px 4px rgba(0,0,0,0.12)',
-                          }}
-                        />
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, textTransform: "uppercase",
-                          letterSpacing: "0.05em", color: isSelected ? C.primary : C.textMuted,
-                          transition: "color 0.2s",
-                        }}>{color.label}</span>
+                {/* 1 — Photos */}
+                <Section n={1} title="Photos" subtitle="The first photo is your cover. Use the star to change it." isMobile={isMobile}>
+                  <div
+                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false); }}
+                    onDrop={handleDrop}
+                    style={{ position: 'relative', borderRadius: 16 }}
+                  >
+                    {images.length === 0 && !isMobile ? (
+                      <motion.button type="button" onClick={() => fileInputRef.current?.click()}
+                        animate={{ scale: dragOver ? 1.01 : 1, borderColor: dragOver ? T.accent : T.lineStrong, backgroundColor: dragOver ? T.accentSoft : T.bg }}
+                        whileHover={{ borderColor: T.accent }}
+                        style={{ width: '100%', padding: '44px 20px', borderRadius: 16, border: '2px dashed', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, font: `500 15px ${FONT_SANS}`, color: T.ink2 }}>
+                        <motion.span animate={reduce ? undefined : { y: dragOver ? -6 : [0, -4, 0] }} transition={dragOver ? { duration: 0.2 } : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                          style={{ width: 56, height: 56, borderRadius: '50%', background: T.accentSoft, color: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {Icon.camera(26)}
+                        </motion.span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>{dragOver ? 'Drop to add' : 'Drag photos here or browse'}</span>
+                        <span style={{ fontSize: 13, color: T.muted }}>Front, back, inside and any serial number or tag</span>
+                      </motion.button>
+                    ) : (
+                      <div className={isMobile ? undefined : 'cp-photos'}
+                        style={isMobile ? { display: 'flex', gap: 10, overflowX: 'auto', margin: '0 -20px', padding: '2px 20px 4px', scrollSnapType: 'x proximity' } : undefined}>
+                        {isMobile && addTile}
+                        <AnimatePresence initial={false}>
+                          {images.map(photoTile)}
+                        </AnimatePresence>
+                        {!isMobile && addTile}
                       </div>
-                    );
-                  })}
-                </div>
-                {selectedColors.length > 0 && (
-                  <div style={{
-                    display: "flex", flexWrap: "wrap", gap: 7, padding: "10px 14px",
-                    background: C.primaryPale, borderRadius: 12, border: `1px solid ${C.primaryBorder}`,
-                    animation: "scaleIn 0.3s ease both",
-                  }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: 4 }}>
-                      <MS name="palette" size={14} style={{ color: C.primary }} /> Selected:
+                    )}
+                    <AnimatePresence>
+                      {dragOver && images.length > 0 && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          style={{ position: 'absolute', inset: -6, borderRadius: 18, border: `2px dashed ${T.accent}`, background: 'rgba(246,230,218,.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: T.accentInk, pointerEvents: 'none' }}>
+                          Drop to add
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <p style={{ margin: 0, fontSize: 13, color: T.muted }}>
+                      JPG, PNG or WEBP · up to 5 MB each · {images.length} of {MAX_PHOTOS} added
+                      {isMobile && images.length > 1 ? ' · tap Cover to change your cover photo' : ''}
+                    </p>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.green, fontWeight: 600 }}>
+                      {Icon.search(16)} Bright, clear photos show up better in photo search
                     </span>
-                    {selectedColors.map(cid => {
-                      const c = BAG_COLORS.find(x => x.id === cid);
-                      return (
-                        <span key={cid} style={{
-                          display: "inline-flex", alignItems: "center", gap: 5,
-                          padding: "3px 10px 3px 6px", borderRadius: 20,
-                          background: "white", border: `1.5px solid ${C.primaryBorder}`,
-                          fontSize: 11, fontWeight: 700, color: C.textMid,
-                        }}>
-                          <span style={{
-                            width: 12, height: 12, borderRadius: "50%", flexShrink: 0,
-                            background: c?.id === 'multicolor' ? undefined : c?.hex,
-                            backgroundImage: c?.id === 'multicolor' ? c?.hex : undefined,
-                            border: `1px solid ${c?.border || 'rgba(0,0,0,0.1)'}`,
-                            display: "inline-block",
-                          }} />
-                          {c?.label}
-                          <button type="button" onClick={() => toggleColor(cid)} style={{
-                            width: 14, height: 14, borderRadius: "50%", border: "none",
-                            background: C.textFaint, color: C.textMid, cursor: "pointer",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 9, fontWeight: 900, padding: 0, marginLeft: 1,
-                          }}>✕</button>
-                        </span>
-                      );
-                    })}
                   </div>
-                )}
-              </FieldGroup>
-            </div>
-          </FormSection>
+                </Section>
 
-          {/* ── SECTION 3: Pricing & Location ── */}
-          <FormSection icon="payments" title="Pricing & Location" subtitle="Set your price in Naira and where you're selling from" delay={0.55} mounted={mounted}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18, marginBottom: 24 }}>
-
-              <FieldGroup label="Price (₦)" done={!!formData.price}>
-                <div style={{ position: "relative" }}>
-                  <span style={{
-                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
-                    fontSize: 16, fontWeight: 800, color: formData.price ? C.primary : C.textMuted,
-                    lineHeight: 1, transition: "color 0.25s", userSelect: "none"
-                  }}>₦</span>
-                  <input
-                    name="price" value={formData.price ? formatNaira(formData.price) : ''} required
-                    onChange={e => {
-                      const raw = e.target.value.replace(/,/g, '');
-                      if (/^\d*$/.test(raw)) setFormData(prev => ({ ...prev, price: raw }));
-                    }}
-                    className="field-input" placeholder="e.g., 2,500,000" type="text"
-                    style={{ paddingLeft: 32 }}
-                  />
-                </div>
-                {formData.price && (
-                  <p style={{ fontSize: 11, color: C.primary, fontWeight: 700, marginTop: 5 }}>
-                    ≈ ${(parseInt(formData.price) / 1600).toFixed(0)} USD at current rate
-                  </p>
-                )}
-              </FieldGroup>
-
-              <FieldGroup label="Your Location" done={!!formData.location}>
-                <div style={{ position: "relative" }}>
-                  <select name="location" value={formData.location} onChange={handleInputChange} required className="field-input field-select" style={{ paddingRight: 40 }}>
-                    <option value="">Select your city</option>
-                    {Object.entries(NIGERIAN_LOCATIONS.reduce((acc, l) => { (acc[l.state] = acc[l.state] || []).push(l); return acc; }, {})).map(([state, locs]) => (
-                      <optgroup key={state} label={`── ${state}`}>
-                        {locs.map(l => <option key={l.id} value={l.id}>{l.emoji} {l.label}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <MS name="expand_more" size={18} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
-                </div>
-                {formData.location && (() => {
-                  const loc = NIGERIAN_LOCATIONS.find(l => l.id === formData.location);
-                  return loc ? (
-                    <div style={{
-                      marginTop: 8, display: "flex", alignItems: "center", gap: 7,
-                      padding: "7px 12px", background: C.primaryPale, border: `1px solid ${C.primaryBorder}`,
-                      borderRadius: 8, animation: "scaleIn 0.3s ease both"
-                    }}>
-                      <span style={{ fontSize: 16 }}>{loc.emoji}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: C.primary }}>{loc.label}, {loc.state}</span>
-                    </div>
-                  ) : null;
-                })()}
-              </FieldGroup>
-
-            </div>
-
-            {/* ── DISCOUNT MODULE ── */}
-            <div style={{
-              borderRadius: 16, border: `1.5px solid ${formData.discountEnabled ? C.primary : C.border}`,
-              overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
-              boxShadow: formData.discountEnabled ? `0 0 0 3px ${C.primary}15, 0 4px 20px ${C.primary}20` : "none",
-            }}>
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 18px",
-                background: formData.discountEnabled
-                  ? `linear-gradient(135deg, ${C.primary}18 0%, ${C.primaryLight}12 100%)`
-                  : C.surfaceDim,
-                transition: "background 0.4s",
-                cursor: "pointer",
-              }} onClick={() => setFormData(p => ({ ...p, discountEnabled: !p.discountEnabled }))}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-                    background: formData.discountEnabled ? C.primary : C.primaryPale,
-                    transition: "background 0.3s",
-                  }}>
-                    <span className="discount-tag-icon" style={{ fontSize: 17 }}>🏷️</span>
+                {/* 2 — About the bag */}
+                <Section n={2} title="About the bag" subtitle="What buyers search for." isMobile={isMobile}>
+                  <Field label="Bag name" htmlFor="cp-name">
+                    <input id="cp-name" name="name" className="cp-input" value={formData.name} onChange={handleInputChange} required placeholder="e.g. Chanel Classic Flap Caviar" autoComplete="off" />
+                  </Field>
+                  <div className="cp-2">
+                    <Field label="Brand" htmlFor="cp-brand">
+                      <select id="cp-brand" name="brand" className="cp-input" value={formData.brand} onChange={handleInputChange} required style={{ color: formData.brand ? T.ink : T.muted }}>
+                        <option value="">Select a brand</option>
+                        {BRANDS.map(b => <option key={b}>{b}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Category" htmlFor="cp-category">
+                      <select id="cp-category" name="category" className="cp-input" value={formData.category} onChange={handleInputChange} required style={{ color: formData.category ? T.ink : T.muted }}>
+                        <option value="">Select a category</option>
+                        {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                      </select>
+                    </Field>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: formData.discountEnabled ? C.primary : C.text, transition: "color 0.3s" }}>
-                      Run a Discount
-                    </div>
-                    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 1 }}>
-                      {formData.discountEnabled ? "Discount is active — buyers will see the sale price" : "Attract more buyers with a special offer"}
-                    </div>
-                  </div>
-                </div>
-                <label className="discount-toggle" onClick={e => e.stopPropagation()}>
-                  <input type="checkbox" name="discountEnabled" checked={formData.discountEnabled} onChange={handleInputChange} />
-                  <span className="discount-slider" style={{ background: formData.discountEnabled ? C.primary : C.textFaint }} />
-                </label>
-              </div>
-
-              {formData.discountEnabled && (
-                <div className="discount-body" style={{ padding: "18px 18px 20px", borderTop: `1px solid ${C.primaryBorder}`, background: C.primaryPale }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Discount Type</div>
-                    <div style={{ display: "flex" }}>
-                      <button type="button" className={`discount-type-btn${formData.discountType === 'percentage' ? ' active' : ''}`}
-                        onClick={() => setFormData(p => ({ ...p, discountType: 'percentage', discountValue: '' }))}>
-                        <span style={{ fontSize: 16 }}>%</span> Percentage
-                      </button>
-                      <button type="button" className={`discount-type-btn${formData.discountType === 'fixed' ? ' active' : ''}`}
-                        onClick={() => setFormData(p => ({ ...p, discountType: 'fixed', discountValue: '' }))}>
-                        <span style={{ fontSize: 14, fontWeight: 900 }}>₦</span> Fixed Amount
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
-                        {formData.discountType === 'percentage' ? 'Discount %' : 'Amount Off (₦)'}
-                      </div>
-                      <div style={{ position: "relative" }}>
-                        <span style={{
-                          position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-                          fontSize: 14, fontWeight: 800, color: C.primary, userSelect: "none"
-                        }}>
-                          {formData.discountType === 'percentage' ? '%' : '₦'}
-                        </span>
-                        <input
-                          type="number" min="1" max={formData.discountType === 'percentage' ? 99 : undefined}
-                          name="discountValue" value={formData.discountValue}
-                          onChange={handleInputChange}
-                          className="field-input"
-                          placeholder={formData.discountType === 'percentage' ? 'e.g., 15' : 'e.g., 50000'}
-                          style={{ paddingLeft: 30, background: "white" }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: C.textMid, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
-                        Sale Label <span style={{ color: C.textFaint, fontWeight: 600 }}>(optional)</span>
-                      </div>
-                      <input
-                        name="discountLabel" value={formData.discountLabel}
-                        onChange={handleInputChange}
-                        className="field-input"
-                        placeholder='e.g., "Flash Sale" or "Weekend Deal"'
-                        style={{ background: "white" }}
-                      />
-                    </div>
-                  </div>
-                  {formData.discountType === 'percentage' && (
-                    <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-                      {[5, 10, 15, 20, 25, 30, 50].map(pct => {
-                        const active = formData.discountValue === String(pct);
+                  <Field label="Condition">
+                    <div role="radiogroup" aria-label="Condition" className={isMobile ? undefined : 'cp-cond'} style={isMobile ? { display: 'flex', flexDirection: 'column', gap: 8 } : undefined}>
+                      {CONDITIONS.map(c => {
+                        const on = formData.condition === c.value;
                         return (
-                          <button key={pct} type="button"
-                            onClick={() => setFormData(p => ({ ...p, discountValue: String(pct) }))}
+                          <motion.button key={c.value} type="button" role="radio" aria-checked={on} onClick={() => set({ condition: c.value })}
+                            whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}
                             style={{
-                              padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 800,
-                              cursor: "pointer", transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-                              fontFamily: "'Manrope', sans-serif",
-                              border: `1.5px solid ${active ? C.primary : C.primaryBorder}`,
-                              background: active ? C.primary : "white",
-                              color: active ? "white" : C.textMid,
-                              transform: active ? "scale(1.1)" : "scale(1)",
-                              boxShadow: active ? `0 3px 10px ${C.primary}50` : "none",
+                              position: 'relative', minHeight: isMobile ? 60 : 84, padding: isMobile ? '12px 14px' : 14, borderRadius: 14,
+                              border: `1.5px solid ${on ? 'transparent' : T.line}`, background: on ? T.accentSoft : T.surface,
+                              textAlign: 'left', cursor: 'pointer', color: T.ink, font: `500 14px ${FONT_SANS}`,
+                              display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'flex-start', gap: isMobile ? 12 : 4,
+                              transition: 'background .25s',
                             }}>
-                            {pct}% off
-                          </button>
+                            {on && (
+                              <motion.span layoutId={reduce ? undefined : 'cp-cond-ring'} aria-hidden="true"
+                                transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                                style={{ position: 'absolute', inset: 0, borderRadius: 14, border: `1.5px solid ${T.accent}`, boxShadow: '0 0 0 3px rgba(180,65,14,.12)', pointerEvents: 'none' }} />
+                            )}
+                            {isMobile && (
+                              <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, boxSizing: 'border-box', border: on ? `6px solid ${T.accent}` : `2px solid ${T.lineStrong}`, background: '#fff', transition: 'border .2s' }} />
+                            )}
+                            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <span style={{ fontSize: 15, fontWeight: 800 }}>{c.title}</span>
+                              <span style={{ fontSize: isMobile ? 13 : 12, color: T.muted, lineHeight: 1.4 }}>{c.hint}</span>
+                            </span>
+                          </motion.button>
                         );
                       })}
                     </div>
-                  )}
-                  {rawPrice > 0 && discountVal > 0 && discountedPrice !== null && discountedPrice > 0 && (
-                    <div style={{
-                      padding: "14px 16px", borderRadius: 14,
-                      background: "white", border: `1.5px solid ${C.primaryBorder}`,
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      flexWrap: "wrap", gap: 10,
-                      animation: "savingsPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both",
-                    }}>
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: C.textMuted, marginBottom: 5 }}>
-                          {formData.discountLabel || 'Sale'} Preview
-                        </div>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                          <span className="price-original-crossed" style={{ fontSize: 16, fontWeight: 700 }}>
-                            ₦{formatNaira(rawPrice)}
-                          </span>
-                          <span style={{ fontSize: 22, fontWeight: 900, color: C.primary, letterSpacing: "-0.03em" }}>
-                            ₦{formatNaira(discountedPrice)}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>
-                          ≈ ${(discountedPrice / 1600).toFixed(0)} USD
-                        </div>
+                  </Field>
+                  <Field label={<>Colours <span style={{ fontWeight: 500, color: T.muted }}>· {selectedColors.length ? BAG_COLORS.filter(c => selectedColors.includes(c.id)).map(c => c.label).join(', ') : 'pick all that apply'}</span></>}>
+                    <motion.div layout={!reduce} style={isMobile
+                      ? { display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 8, justifyItems: 'center' }
+                      : { display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      <AnimatePresence initial={false}>
+                        {(showAllColours ? BAG_COLORS : BAG_COLORS.slice(0, COLOURS_COLLAPSED)).map((c, i) => {
+                          const on = selectedColors.includes(c.id);
+                          const gradient = c.hex.startsWith('linear');
+                          return (
+                            <motion.button key={c.id} type="button" onClick={() => toggleColor(c.id)} aria-pressed={on} aria-label={c.label} title={c.label}
+                              initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }}
+                              transition={{ duration: 0.25, delay: i >= COLOURS_COLLAPSED ? (i - COLOURS_COLLAPSED) * 0.02 : 0 }}
+                              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                              style={{
+                                width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', padding: 0,
+                                background: c.hex, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: on ? '2px solid #fff' : `1.5px solid ${c.border || T.lineStrong}`,
+                                boxShadow: on ? `0 0 0 2.5px ${T.ink}` : 'none', transition: 'box-shadow .2s, border .2s',
+                              }}>
+                              <AnimatePresence>
+                                {on && (
+                                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 26 }} style={{ display: 'flex', filter: gradient ? 'drop-shadow(0 1px 2px rgba(0,0,0,.5))' : undefined }}>
+                                    <DrawnTick size={isMobile ? 16 : 18} color={!gradient && isLightHex(c.hex) ? T.ink : '#fff'} />
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </motion.div>
+                    {BAG_COLORS.length > COLOURS_COLLAPSED && (
+                      <button type="button" onClick={() => setShowAllColours(v => !v)} aria-expanded={showAllColours}
+                        style={{ alignSelf: 'flex-start', minHeight: 44, padding: '0 2px', border: 'none', background: 'none', font: `700 14px ${FONT_SANS}`, color: T.accentInk, cursor: 'pointer' }}>
+                        {showAllColours ? 'Show fewer colours' : `Show all ${BAG_COLORS.length} colours`}
+                      </button>
+                    )}
+                  </Field>
+                </Section>
+
+                {/* 3 — Price and stock */}
+                <Section n={3} title="Price and stock" subtitle="Buyers pay into escrow. You're paid once they confirm delivery." isMobile={isMobile}>
+                  <div className="cp-2">
+                    <Field label="Price" htmlFor="cp-price" hint={isMobile ? "Buyers pay into escrow. You're paid once they confirm delivery." : undefined}>
+                      <div style={{ position: 'relative' }}>
+                        <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: formData.price ? T.ink : T.muted }}>₦</span>
+                        <input id="cp-price" name="price" className="cp-input" inputMode="numeric" required placeholder="e.g. 45,000"
+                          value={formData.price ? formatNaira(formData.price) : ''}
+                          onChange={e => { const raw = e.target.value.replace(/,/g, ''); if (/^\d*$/.test(raw)) set({ price: raw }); }}
+                          style={{ paddingLeft: 36, fontWeight: 700 }} />
                       </div>
-                      <div className="savings-badge" style={{
-                        padding: "10px 16px", borderRadius: 12,
-                        background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`,
-                        color: "white", textAlign: "center",
-                        boxShadow: `0 4px 14px ${C.primary}60`,
-                      }}>
-                        <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>
-                          {formData.discountType === 'percentage' ? `${discountVal}%` : `₦${formatNaira(savingsAmount)}`}
-                        </div>
-                        <div style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.88, marginTop: 1 }}>
-                          {formData.discountType === 'percentage' ? `Save ₦${formatNaira(savingsAmount)}` : 'OFF'}
-                        </div>
+                    </Field>
+                    <Field label="Quantity in stock" htmlFor="cp-qty">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <motion.button type="button" whileTap={{ scale: 0.9 }} aria-label="Decrease quantity"
+                          disabled={(parseInt(formData.quantity) || 1) <= 1}
+                          onClick={() => set({ quantity: String(Math.max(1, (parseInt(formData.quantity) || 1) - 1)) })}
+                          style={{ width: 50, height: 50, flexShrink: 0, border: `1.5px solid ${T.line}`, borderRadius: 12, background: T.surface, font: `700 20px ${FONT_SANS}`, color: T.ink, cursor: 'pointer', opacity: (parseInt(formData.quantity) || 1) <= 1 ? 0.4 : 1 }}>−</motion.button>
+                        <input id="cp-qty" className="cp-input" type="number" min="1" inputMode="numeric" value={formData.quantity}
+                          onChange={e => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) set({ quantity: v }); }}
+                          onBlur={e => { const v = parseInt(e.target.value); if (!v || v < 1) set({ quantity: '1' }); }}
+                          style={{ textAlign: 'center', fontSize: 18, fontWeight: 800, padding: 0, MozAppearance: 'textfield' }} />
+                        <motion.button type="button" whileTap={{ scale: 0.9 }} aria-label="Increase quantity"
+                          onClick={() => set({ quantity: String((parseInt(formData.quantity) || 0) + 1) })}
+                          style={{ width: 50, height: 50, flexShrink: 0, border: `1.5px solid ${T.line}`, borderRadius: 12, background: T.surface, font: `700 20px ${FONT_SANS}`, color: T.ink, cursor: 'pointer' }}>+</motion.button>
                       </div>
+                    </Field>
+                  </div>
+
+                  <div style={{ border: `1px solid ${formData.discountEnabled ? T.lineStrong : T.line}`, borderRadius: 16, overflow: 'hidden', transition: 'border-color .3s' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', background: T.bg }}>
+                      <div style={{ flexGrow: 1 }}>
+                        <div id="cp-discount-label" style={{ fontSize: 15, fontWeight: 800 }}>Offer a discount</div>
+                        <div style={{ fontSize: 13, color: T.muted }}>Discounted bags get a Sale tag in the shop.</div>
+                      </div>
+                      <button type="button" role="switch" aria-checked={formData.discountEnabled} aria-labelledby="cp-discount-label"
+                        onClick={() => set({ discountEnabled: !formData.discountEnabled })}
+                        style={{ width: 52, height: 30, flexShrink: 0, borderRadius: 15, border: 'none', padding: 3, cursor: 'pointer', display: 'flex', justifyContent: formData.discountEnabled ? 'flex-end' : 'flex-start', background: formData.discountEnabled ? T.accent : T.lineStrong, transition: 'background .25s' }}>
+                        <motion.span layout={!reduce} transition={{ type: 'spring', stiffness: 600, damping: 32 }}
+                          style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,.25)' }} />
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </FormSection>
+                    <AnimatePresence initial={false}>
+                      {formData.discountEnabled && (
+                        <motion.div key="discount"
+                          initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.35, ease: EASE_OUT }} style={{ overflow: 'hidden' }}>
+                          <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 16, borderTop: `1px solid ${T.line}` }}>
+                            <div className="cp-3">
+                              <Field label="Type">
+                                <div style={{ display: 'flex', padding: 4, background: T.sand, borderRadius: 12, height: 50, boxSizing: 'border-box' }}>
+                                  {[['percentage', '% off'], ['fixed', '₦ off']].map(([val, label]) => {
+                                    const on = formData.discountType === val;
+                                    return (
+                                      <button key={val} type="button" aria-pressed={on} onClick={() => set({ discountType: val, discountValue: '' })}
+                                        style={{ position: 'relative', flex: 1, border: 'none', borderRadius: 9, background: 'transparent', cursor: 'pointer', font: `700 14px ${FONT_SANS}`, color: on ? T.ink : T.muted }}>
+                                        {on && <motion.span layoutId={reduce ? undefined : 'cp-disc-pill'} transition={{ type: 'spring', stiffness: 500, damping: 36 }} style={{ position: 'absolute', inset: 0, borderRadius: 9, background: '#fff', boxShadow: '0 1px 3px rgba(28,20,16,.12)' }} />}
+                                        <span style={{ position: 'relative' }}>{label}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </Field>
+                              <Field label={formData.discountType === 'percentage' ? 'Percent off' : 'Amount off'} htmlFor="cp-dv">
+                                <div style={{ position: 'relative' }}>
+                                  <span aria-hidden="true" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: T.muted }}>{formData.discountType === 'percentage' ? '%' : '₦'}</span>
+                                  <input id="cp-dv" name="discountValue" className="cp-input" type="number" min="1" max={formData.discountType === 'percentage' ? 99 : undefined} inputMode="numeric"
+                                    value={formData.discountValue} onChange={handleInputChange} placeholder={formData.discountType === 'percentage' ? 'e.g. 10' : 'e.g. 5000'} style={{ paddingLeft: 34 }} />
+                                </div>
+                              </Field>
+                              <Field label="Label" optional htmlFor="cp-dl">
+                                <input id="cp-dl" name="discountLabel" className="cp-input" value={formData.discountLabel} onChange={handleInputChange} placeholder="e.g. Weekend deal" />
+                              </Field>
+                            </div>
+                            {formData.discountType === 'percentage' && (
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                {[5, 10, 15, 20, 25, 30, 50].map(pct => {
+                                  const on = formData.discountValue === String(pct);
+                                  return (
+                                    <motion.button key={pct} type="button" className="cp-chip" whileTap={{ scale: 0.94 }} aria-pressed={on}
+                                      onClick={() => set({ discountValue: String(pct) })}
+                                      style={{ minHeight: 36, padding: '0 14px', borderRadius: 999, cursor: 'pointer', font: `700 13px ${FONT_SANS}`, border: `1.5px solid ${on ? T.accent : T.line}`, background: on ? T.accent : T.surface, color: on ? '#fff' : T.ink2 }}>
+                                      {pct}% off
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {priceSummary}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Section>
 
-          {/* ── SECTION 4: WhatsApp Contact ── */}
-          <FormSection icon="chat" title="WhatsApp Contact" subtitle="Buyers will reach you directly on WhatsApp" delay={0.65} mounted={mounted}>
-            <FieldGroup label="Your WhatsApp Number" done={!!formData.whatsapp}>
-              <div style={{ position: "relative" }}>
-                <div style={{
-                  position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-                  width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  {formData.whatsapp && <div style={{ position: "absolute", width: 22, height: 22, borderRadius: "50%", background: `${C.primary}30`, animation: "waPing 1.8s ease-out infinite" }} />}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill={formData.whatsapp ? C.primary : C.textMuted} style={{ position: "relative", zIndex: 1, transition: "fill 0.3s" }}>
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                </div>
-                <input name="whatsapp" value={formData.whatsapp} onChange={handleInputChange} required className="field-input" placeholder="e.g., 08012345678 or +2348012345678" type="tel" style={{ paddingLeft: 42 }} />
-              </div>
-              <p style={{ fontSize: 11, color: C.textMuted, marginTop: 5 }}>Buyers will tap "Chat on WhatsApp" to contact you directly about this listing.</p>
-              {formData.whatsapp && normalizeWhatsAppNumber(formData.whatsapp) && (
-                <a href={`https://wa.me/${normalizeWhatsAppNumber(formData.whatsapp)}`} target="_blank" rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 7, marginTop: 10,
-                    padding: "7px 14px", borderRadius: 8, background: C.successBg, border: `1px solid ${C.primaryBorder}`,
-                    color: C.primary, fontSize: 12, fontWeight: 700, textDecoration: "none",
-                    transition: "all 0.2s", animation: "scaleIn 0.3s ease both"
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.primaryBg}
-                  onMouseLeave={e => e.currentTarget.style.background = C.successBg}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  Test your WhatsApp link
-                </a>
-              )}
-            </FieldGroup>
-          </FormSection>
+                {/* 4 — Location and contact */}
+                <Section n={4} title="Location and contact" subtitle="Buyers near you see your bag first." isMobile={isMobile}>
+                  <div className="cp-2">
+                    <Field label="City" htmlFor="cp-location">
+                      <select id="cp-location" name="location" className="cp-input" value={formData.location} onChange={handleInputChange} required style={{ color: formData.location ? T.ink : T.muted }}>
+                        <option value="">Select your city</option>
+                        {LOCATIONS_BY_STATE.map(([state, locs]) => (
+                          <optgroup key={state} label={state}>
+                            {locs.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="WhatsApp number" htmlFor="cp-wa" hint="Buyers message you here before they buy.">
+                      <div style={{ position: 'relative' }}>
+                        <span aria-hidden="true" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', color: formData.whatsapp ? '#1D7044' : T.muted, transition: 'color .25s' }}>{Icon.whatsapp(18)}</span>
+                        <input id="cp-wa" name="whatsapp" className="cp-input" type="tel" autoComplete="tel" value={formData.whatsapp} onChange={handleInputChange} required placeholder="0801 234 5678" style={{ paddingLeft: 42 }} />
+                      </div>
+                      <AnimatePresence>
+                        {formData.whatsapp && normalizeWhatsAppNumber(formData.whatsapp) && (
+                          <motion.a initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            href={`https://wa.me/${normalizeWhatsAppNumber(formData.whatsapp)}`} target="_blank" rel="noopener noreferrer"
+                            style={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 700, color: T.accentInk }}>
+                            Test your WhatsApp link
+                          </motion.a>
+                        )}
+                      </AnimatePresence>
+                    </Field>
+                  </div>
+                </Section>
 
-          {/* ── SECTION 5: Description ── */}
-          <FormSection icon="description" title="Description" subtitle="Describe condition, history, and details" delay={0.75} mounted={mounted}>
-            <FieldGroup label="Detailed Description" done={!!formData.description}>
-              <div style={{
-                border: `1.5px solid ${formData.description ? C.primaryLight : C.border}`,
-                borderRadius: 12, overflow: "hidden", transition: "border-color 0.25s, box-shadow 0.25s"
-              }}
-                onFocusCapture={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.primary}20`; }}
-                onBlurCapture={e => { e.currentTarget.style.borderColor = formData.description ? C.primaryLight : C.border; e.currentTarget.style.boxShadow = "none"; }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 12px", background: C.surfaceDim, borderBottom: `1px solid ${C.border}` }}>
-                  {[["format_bold","Bold"],["format_italic","Italic"],["format_list_bulleted","List"]].map(([icon, label]) => (
-                    <button key={icon} type="button" title={label} style={{
-                      width: 28, height: 28, borderRadius: 6, border: "none", background: "transparent",
-                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                      color: C.textMuted, transition: "all 0.18s"
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.background = C.primaryBg; e.currentTarget.style.color = C.primary; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textMuted; }}>
-                      <MS name={icon} size={18} />
-                    </button>
-                  ))}
-                  <div style={{ marginLeft: "auto", fontSize: 10, color: C.textFaint, fontWeight: 700 }}>{formData.description.length}/1000</div>
-                </div>
-                <textarea name="description" value={formData.description} onChange={handleInputChange} required maxLength={1000}
-                  style={{
-                    width: "100%", minHeight: 130, padding: "14px 16px", border: "none", outline: "none",
-                    resize: "vertical", fontFamily: "inherit", fontSize: 14, color: C.text, lineHeight: 1.65,
-                    letterSpacing: "normal", wordSpacing: "normal",
-                    background: C.surface, whiteSpace: "pre-wrap", wordWrap: "break-word"
-                  }}
-                  placeholder="Describe any wear and tear, material details, authentication cards included, where and when purchased, any flaws to be transparent about…" />
-              </div>
-            </FieldGroup>
-          </FormSection>
+                {/* 5 — Description */}
+                <Section n={5} title="Description" optional subtitle="Honest details build trust and cut down on questions." isMobile={isMobile}>
+                  <Field label="Describe the bag" htmlFor="cp-desc">
+                    <textarea id="cp-desc" name="description" className="cp-input" maxLength={1000} value={formData.description} onChange={handleInputChange}
+                      placeholder="Wear and tear, material, what's included (dust bag, card, box), any flaws…" />
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {QUICK_DETAILS.map(text => {
+                          const added = formData.description.toLowerCase().includes(text.toLowerCase());
+                          return (
+                            <motion.button key={text} type="button" className="cp-chip" disabled={added} whileTap={{ scale: 0.95 }} onClick={() => addDetail(text)}
+                              style={{ minHeight: 36, padding: '0 12px', borderRadius: 999, border: 'none', background: added ? T.greenSoft : T.sand, color: added ? T.green : T.ink2, font: `600 13px ${FONT_SANS}`, cursor: added ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {added ? <DrawnTick size={14} color={T.green} /> : '+'} {text}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                      <span style={{ fontSize: 12, color: T.muted, whiteSpace: 'nowrap', paddingTop: 10 }}>{formData.description.length}/1000</span>
+                    </div>
+                  </Field>
+                </Section>
 
-          {/* ── SUBMIT FOOTER ── */}
-          <div style={{
-            marginTop: 28, background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
-            padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
-            opacity: mounted ? 1 : 0, animation: mounted ? "fadeSlideUp 0.5s ease 0.85s both" : "none"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.successBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={C.primary}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              </div>
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>Buyers contact via WhatsApp</p>
-                <p style={{ fontSize: 11, color: C.textMuted }}>Get live purchase inquiries directly to your phone</p>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button type="button" onClick={() => navigate('/seller-profile')} style={{
-                padding: "11px 20px", borderRadius: 12, border: `1px solid ${C.border}`,
-                background: "white", color: C.textMuted, fontSize: 13, fontWeight: 700,
-                cursor: "pointer", transition: "all 0.2s"
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.color = C.primary; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMuted; }}>
-                Cancel
-              </button>
-              <button type="submit" disabled={uploading} style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "11px 28px", borderRadius: 12,
-                border: "none", background: C.primary, color: "white", fontSize: 14, fontWeight: 800,
-                cursor: uploading ? "not-allowed" : "pointer",
-                transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-                boxShadow: `0 4px 16px ${C.primary}80`, opacity: uploading ? 0.7 : 1
-              }}
-                onMouseEnter={e => { if (!uploading) { e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"; e.currentTarget.style.boxShadow = `0 8px 24px ${C.primary}`; } }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 4px 16px ${C.primary}80`; }}>
-                {uploading ? (
-                  <>
-                    <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                    Uploading…
-                  </>
-                ) : (
-                  <>{progressPct === 100 ? '🎉 ' : ''}List My Bag <MS name="arrow_forward" size={18} /></>
+                {isMobile && (
+                  <p style={{ margin: '4px 0 0', fontSize: 13, color: T.muted, textAlign: 'center' }}>{readyText}</p>
                 )}
-              </button>
+              </div>
+
+              {/* ── PREVIEW + CHECKLIST (desktop) ── */}
+              {!isMobile && (
+                <motion.aside
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.25 }}
+                  style={{ position: 'sticky', top: 96, display: 'flex', flexDirection: 'column', gap: 20 }}
+                  aria-label="Listing preview"
+                >
+                  <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', color: T.muted }}>SHOP PREVIEW</span>
+                      <span style={{ fontSize: 12, color: T.muted }}>Updates as you type</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: 128, height: 160, flexShrink: 0, borderRadius: 14, background: T.photo, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A8927F' }}>
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        {images[0] ? (
+                          <motion.img key={images[0].id} src={images[0].preview} alt=""
+                            initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE_OUT }}
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <motion.span key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>{Icon.bag(48)}</motion.span>
+                        )}
+                      </AnimatePresence>
+                      <AnimatePresence>
+                        {discountShown && (
+                          <motion.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                            style={{ position: 'absolute', left: 8, top: 8, maxWidth: 'calc(100% - 16px)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '4px 9px', borderRadius: 999, background: T.accent, color: '#fff', fontSize: 11, fontWeight: 800 }}>
+                            {formData.discountLabel || 'Sale'}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    <div style={{ minWidth: 0, flexGrow: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: T.muted }}>{(formData.brand || 'Brand').toUpperCase()}</div>
+                      <div style={{ fontSize: 16, margin: '4px 0 8px', lineHeight: 1.35, color: formData.name ? T.ink : T.muted, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{formData.name || 'Your bag name'}</div>
+                      <div style={{ fontSize: 20, fontWeight: 800 }}>{buyerPays > 0 ? <CountUp value={buyerPays} format={naira} duration={0.6} /> : '₦—'}</div>
+                      {discountShown && <div style={{ fontSize: 14, color: T.muted, textDecoration: 'line-through' }}>{naira(rawPrice)}</div>}
+                      {locationLabel && <div style={{ fontSize: 13, color: T.muted, marginTop: 6 }}>{locationLabel}</div>}
+                    </div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 16, fontWeight: 800 }}>Ready to publish</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: T.accentInk }}>{doneCount} of {checklist.length}</span>
+                    </div>
+                    {progressBar(6)}
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px 12px' }}>
+                      {checklist.map(item => (
+                        <li key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: item.done ? T.ink : T.muted }}>
+                          <span style={{ position: 'relative', width: 18, height: 18, flexShrink: 0 }}>
+                            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `2px solid ${T.lineStrong}` }} />
+                            <AnimatePresence>
+                              {item.done && (
+                                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                                  style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <DrawnTick size={12} delay={0.08} />
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
+                          </span>
+                          {item.label}<span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{item.done ? ' done' : ' not done'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {publishButton(56)}
+                    <p style={{ margin: 0, fontSize: 13, color: T.muted, textAlign: 'center', lineHeight: 1.5 }}>{readyText}</p>
+                  </div>
+                </motion.aside>
+              )}
             </div>
-          </div>
-        </form>
 
-        {/* Footer */}
-        <footer style={{ marginTop: 40, textAlign: "center", opacity: mounted ? 1 : 0, animation: mounted ? "fadeIn 0.6s ease 1s both" : "none" }}>
-          <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 10 }}>
-            Need help? Chat with us on{' '}
-            <a href="https://wa.me/2348147061837" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 700, textDecoration: "none" }}>WhatsApp Support</a>
-          </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-            {['Terms','Privacy','Authentication Guide'].map(l => (
-              <a key={l} href="#" style={{ fontSize: 12, color: C.textFaint, textDecoration: "none" }}
-                onMouseEnter={e => e.currentTarget.style.color = C.primary}
-                onMouseLeave={e => e.currentTarget.style.color = C.textFaint}>{l}</a>
-            ))}
-          </div>
-        </footer>
-      </main>
-    </div>
-  );
-}
-
-function FormSection({ icon, title, subtitle, delay, mounted, children }) {
-  return (
-    <div style={{
-      background: C.surface, borderRadius: 20, border: `1px solid ${C.border}`,
-      overflow: "hidden", marginBottom: 20, boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
-      opacity: mounted ? 1 : 0, animation: mounted ? `sectionIn 0.55s cubic-bezier(0.22,1,0.36,1) ${delay}s both` : "none"
-    }}>
-      <div style={{
-        padding: "18px 24px", borderBottom: `1px solid ${C.borderLight}`,
-        background: C.surfaceDim, display: "flex", alignItems: "center", gap: 12
-      }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: C.primaryPale, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <MS name={icon} size={19} style={{ color: C.primary }} />
-        </div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: "-0.01em" }}>{title}</div>
-          {subtitle && <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>{subtitle}</div>}
-        </div>
+            {/* ── Sticky publish bar (mobile) — sits just above the bottom nav ── */}
+            {isMobile && (
+              <motion.div
+                initial={{ y: 120, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.3 }}
+                style={{
+                  position: 'fixed', left: 12, right: 12, bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))', zIndex: 45,
+                  background: T.surface, border: `1px solid ${T.line}`, borderRadius: 18, padding: 10,
+                  display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 12px 32px rgba(28,20,16,.16)',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, paddingLeft: 6 }}>
+                  <span style={{ fontSize: 12, color: T.muted }}>Buyers pay</span>
+                  <span style={{ fontSize: 18, fontWeight: 800, whiteSpace: 'nowrap' }}>{buyerPays > 0 ? <CountUp value={buyerPays} format={naira} duration={0.6} /> : '₦—'}</span>
+                </div>
+                <div style={{ flexGrow: 1, minWidth: 0 }}>{publishButton(52)}</div>
+              </motion.div>
+            )}
+          </form>
+        </main>
       </div>
-      <div style={{ padding: "22px 24px" }}>{children}</div>
-    </div>
-  );
-}
-
-function FieldGroup({ label, done, children }) {
-  return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
-        <span style={{ fontSize: 12, fontWeight: 800, color: done ? C.primary : C.textMid, letterSpacing: "0.02em", transition: "color 0.3s" }}>{label}</span>
-        {done && (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "stepPop 0.3s ease both" }}>
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
-      </div>
-      {children}
-    </div>
+    </MotionConfig>
   );
 }
