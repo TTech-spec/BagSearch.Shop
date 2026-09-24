@@ -6,6 +6,7 @@ import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
 import VideoLoader from './components/VideoLoader.jsx';
 import WelcomeCard from './components/WelcomeCard.jsx';
+import LoginSuccess from './components/auth/LoginSuccess.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { hasSeenOnboarding } from './utils/onboardingState';
@@ -288,6 +289,7 @@ function App() {
       </Suspense>
       <MobileBottomNav />
       <WelcomeCard />
+      <LoginSuccess />
       <GoogleReviewsBadge />
     </Router>
     </CartProvider>

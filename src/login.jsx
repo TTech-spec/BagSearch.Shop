@@ -11,6 +11,7 @@ import { useSEO } from './hooks/useSEO';
 import VideoLoader from './components/VideoLoader.jsx';
 import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face Mask Ideas for Entertaining-pin-id-1092052609666393734.jpg';
 import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
+import { announceLoginSuccess } from './components/auth/loginSuccessEvent';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -38,100 +39,6 @@ const C = {
 
 // ─── PAGE LOADER ─────────────────────────────────────────────────────────────
 const PageLoader = ({ onDone }) => <VideoLoader duration={1200} onDone={onDone} />;
-// ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
-const SuccessCard = ({ show, onClose }) => {
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 480);
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  useEffect(() => {
-    if (show) {
-      requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
-      const timer = setTimeout(() => {
-        setMounted(false);
-        setTimeout(() => onClose && onClose(), 400);
-      }, 4000);
-      return () => clearTimeout(timer);
-    } else {
-      setMounted(false);
-    }
-  }, [show, onClose]);
-
-  if (!show) return null;
-
-  const sharedCard = {
-    position: 'fixed', zIndex: 9999,
-    display: 'flex', alignItems: 'center', gap: 14,
-    background: C.surface,
-    border: `1.5px solid ${C.primaryBorder}`,
-    borderRadius: 14, padding: '14px 18px',
-    boxShadow: '0 8px 30px rgba(26,10,0,0.14)',
-    boxSizing: 'border-box',
-  };
-  const mobileCard = {
-    ...sharedCard,
-    bottom: 20, left: '50%',
-    width: 'calc(100vw - 32px)', maxWidth: 360,
-    transform: mounted ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(140%)',
-    opacity: mounted ? 1 : 0,
-    transition: mounted
-      ? 'transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease'
-      : 'transform 0.35s ease, opacity 0.3s ease',
-  };
-  const desktopCard = {
-    ...sharedCard,
-    bottom: 28, left: 28, minWidth: 260, maxWidth: 320,
-    animation: mounted
-      ? 'successSlideIn 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards'
-      : 'successSlideOut 0.35s ease forwards',
-  };
-
-  return (
-    <>
-      <style>{`
-        @keyframes successSlideIn { from{transform:translateX(-120%);opacity:0} to{transform:translateX(0);opacity:1} }
-        @keyframes successSlideOut { from{transform:translateX(0);opacity:1} to{transform:translateX(-120%);opacity:0} }
-      `}</style>
-      <div style={isMobile ? mobileCard : desktopCard}>
-        <div style={{
-          width: 38, height: 38, borderRadius: '50%',
-          background: C.primaryBg, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0, marginBottom: 2 }}>Login Successful</p>
-          <p style={{ fontSize: 12, color: C.textMuted, margin: 0 }}>Redirecting you now…</p>
-        </div>
-        <button
-          onClick={() => { setMounted(false); setTimeout(() => onClose && onClose(), 400); }}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            padding: 6, color: C.textMuted, flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-    </>
-  );
-};
-
 // ─── EYE ICON ────────────────────────────────────────────────────────────────
 const EyeIcon = ({ open }) => open ? (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
@@ -159,7 +66,6 @@ const LoginPage = () => {
   const [role]                          = useState('buyer');
   const [loading, setLoading]           = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
-  const [showSuccess, setShowSuccess]   = useState(false);
   const [pageLoading, setPageLoading]   = useState(true);
 
   const handleLoaderDone = useCallback(() => setPageLoading(false), []);
@@ -218,8 +124,9 @@ const LoginPage = () => {
         console.error('Error saving user role:', JSON.stringify(upsertError, null, 2));
       }
 
-      setShowSuccess(true);
-      setTimeout(() => navigate('/products'), 3500);
+      // Shown by <LoginSuccess/> in App, which also handles the redirect —
+      // this page unmounts as soon as LoginRoute sees the new session.
+      announceLoginSuccess({ role: finalRole, user: data.user });
     } catch (error) {
       const secureError = SecureErrorHandler.handleError(error, 'login');
       setErrorMsg(secureError.message);
@@ -275,7 +182,6 @@ const LoginPage = () => {
         flexDirection: 'column',
         minHeight: '100vh',
       }}>
-        <SuccessCard show={showSuccess} onClose={() => setShowSuccess(false)} />
 
         {/* ── ALL STYLES ─────────────────────────────────────────────────── */}
         <style>{`
