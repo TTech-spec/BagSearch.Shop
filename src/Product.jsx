@@ -2176,8 +2176,8 @@ export default function Product(){
     setTimeout(()=>triggerGoogleReviewSurvey({email:user?.email||'',productName:p.name||'',productId:p.id||''}),1500);
   };
   const handleBuyNow=p=>{if(!user){setAuthGateOpen(true);return;}navigate(productPath(p.name,p.id));};
-  // compact = phone layout; withChat = show the WhatsApp button (skipped on the tight 2-column phone grid)
-  const renderCard=(p,i,{compact=isMobile,withChat=!isMobile}={})=>(
+  // compact = phone layout; withChat = show the WhatsApp chat-seller button
+  const renderCard=(p,i,{compact=isMobile,withChat=true}={})=>(
     <PastelProductCard key={p.id} product={p} index={i} href={productPath(p.name,p.id)} compact={compact}
       categoryLabel={CATEGORIES.find(c=>c.id===p.category&&c.id!=='all')?.label||'Bag'}
       tags={cardTags(p,i)}
@@ -2188,7 +2188,7 @@ export default function Product(){
       onBuyNow={handleBuyNow}
       onChat={withChat?handleChatSeller:undefined}/>
   );
-  const renderShelfCard=(p,i)=>renderCard(p,i,{withChat:true});
+  const renderShelfCard=renderCard;
   const scrollToId=id=>{const el=document.getElementById(id)||document.getElementById('all-bags');el?.scrollIntoView({behavior:'smooth',block:'start'});};
   const handleHeroAction=id=>{if(id==='snap'){openPhotoSearch();return;}scrollToId(id==='new'?'new-arrivals':'all-bags');};
 
