@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useMemo, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useContext, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
@@ -6,32 +6,35 @@ import { deleteFromPinecone } from './services/visualSearch';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import { normalizeWhatsAppNumber } from './utils/whatsapp';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import SellerOverview from './components/seller/SellerOverview.jsx';
+import { T, FONT_SANS, FONT_SERIF, EASE_OUT } from './theme/luxe';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
-  primary:      '#c84b11',
-  primaryLight: '#f97316',
-  primaryBg:    '#fde8d8',
-  primaryPale:  '#fdf4ee',
-  primaryBorder:'#f9c4a0',
-  hero:         '#f5c5a8',
-  heroDark:     '#f0b090',
-  accent:       '#ea580c',
-  success:      '#16a34a',
-  successBg:    '#dcfce7',
-  danger:       '#dc2626',
-  dangerBg:     '#fef2f2',
-  surface:      '#ffffff',
-  surfaceDim:   '#fdf8f5',
-  surfacePeach: '#fde8d8',
-  border:       '#f0d9cc',
-  borderLight:  '#f7ece4',
-  cardBorder:   '#f5ddd0',
-  text:         '#1a0a00',
-  textDark:     '#2d1200',
-  textMid:      '#5c3317',
-  textMuted:    '#9a6348',
-  textFaint:    '#c4957a',
+  primary:      T.accent,
+  primaryLight: '#C9561F',
+  primaryBg:    T.accentSoft,
+  primaryPale:  T.bg,
+  primaryBorder:'#E9C9B2',
+  hero:         '#EAD3C1',
+  heroDark:     '#E0C2AC',
+  accent:       T.accentHover,
+  success:      T.green,
+  successBg:    T.greenSoft,
+  danger:       '#B42318',
+  dangerBg:     '#FDF1EF',
+  surface:      T.surface,
+  surfaceDim:   T.bg,
+  surfacePeach: T.sand,
+  border:       T.line,
+  borderLight:  T.lineSoft,
+  cardBorder:   T.line,
+  text:         T.ink,
+  textDark:     T.ink,
+  textMid:      T.ink2,
+  textMuted:    T.muted,
+  textFaint:    '#A08E82',
 };
 
 // ─── Bag categories ───────────────────────────────────────────────────────────
@@ -174,25 +177,6 @@ function SourceBadge({ source }) {
   );
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ stat, delay, ready }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{ background:"white", borderRadius:16, padding:"22px 20px", border:`1px solid ${C.borderLight}`, boxShadow:hov?`0 8px 32px ${stat.glow},0 2px 8px rgba(0,0,0,0.06)`:`0 2px 10px rgba(200,75,17,0.05)`, transition:"all 0.3s cubic-bezier(0.22,1,0.36,1)", transform:hov?"translateY(-4px)":"none", cursor:"default", opacity:ready?1:0, animation:ready?`fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) ${delay}ms both`:"none", position:"relative", overflow:"hidden" }}>
-      <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:stat.accent, opacity:hov?1:0, transition:"opacity 0.3s", borderRadius:"16px 16px 0 0" }}/>
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16 }}>
-        <div style={{ width:40, height:40, borderRadius:12, background:stat.glow, display:"flex", alignItems:"center", justifyContent:"center", transition:"transform 0.3s", transform:hov?"scale(1.1)":"scale(1)" }}>
-          <MS name={stat.icon} size={20} style={{ color:stat.accent }}/>
-        </div>
-        <span style={{ fontSize:10, fontWeight:800, padding:"3px 9px", borderRadius:20, background:`${stat.accent}15`, color:stat.accent, letterSpacing:"0.06em" }}>{stat.badge}</span>
-      </div>
-      <p style={{ fontSize:12, color:C.textMuted, fontWeight:600, marginBottom:4 }}>{stat.label}</p>
-      <p style={{ fontSize:24, fontWeight:900, color:C.text, letterSpacing:"-0.04em", lineHeight:1 }}>{stat.value}</p>
-    </div>
-  );
-}
-
 // ─── Desktop inquiry row ──────────────────────────────────────────────────────
 function InquiryRow({ row, index, ready }) {
   const [hov, setHov] = useState(false);
@@ -265,23 +249,6 @@ function InquiryCard({ row, index, ready }) {
           <span style={{ fontSize:11, color:C.textFaint, fontWeight:600 }}>No phone</span>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── Animated section heading ─────────────────────────────────────────────────
-function AnimatedHeading({ text, sub, ready, delay = 0 }) {
-  const chars = text.split('');
-  return (
-    <div style={{ opacity:ready?1:0, transition:`opacity 0.3s ease ${delay}ms` }}>
-      <h3 style={{ fontSize:18, fontWeight:800, color:C.text, letterSpacing:"-0.02em", marginBottom:4, display:'flex', flexWrap:'wrap' }}>
-        {chars.map((ch,i) => (
-          <span key={i} style={{ display:'inline-block', opacity:ready?1:0, transform:ready?'none':'translateY(12px)', transition:`opacity 0.4s ease ${delay+i*28}ms,transform 0.4s cubic-bezier(0.22,1,0.36,1) ${delay+i*28}ms` }}>
-            {ch===' '?'\u00a0':ch}
-          </span>
-        ))}
-      </h3>
-      {sub && <p style={{ fontSize:12, color:C.textMuted, fontWeight:500, opacity:ready?1:0, transform:ready?'none':'translateY(8px)', transition:`all 0.4s ease ${delay+chars.length*28+60}ms` }}>{sub}</p>}
     </div>
   );
 }
@@ -1455,21 +1422,12 @@ export default function SellerProfile() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeTab,         setActiveTab]         = useState('dashboard');
 
-  const [activeListingsCount, setActiveListingsCount] = useState(0);
-  const [totalViewsCount,     setTotalViewsCount]     = useState(0);
   const [buyerViews,          setBuyerViews]          = useState([]);
-  const [metricsLoading,      setMetricsLoading]      = useState(true);
   const [reviewCount,         setReviewCount]         = useState(0);
   const [reviewsLoading,      setReviewsLoading]      = useState(true);
   const [hasBankDetails,      setHasBankDetails]      = useState(true); // assume true to avoid flash
 
-  const [sidebarIn,     setSidebarIn]     = useState(false);
-  const [headerIn,      setHeaderIn]      = useState(false);
-  const [headingIn,     setHeadingIn]     = useState(false);
-  const [statsIn,       setStatsIn]       = useState(false);
-  const [tableIn,       setTableIn]       = useState(false);
-  const [bannerIn,      setBannerIn]      = useState(false);
-  const [tabIn,         setTabIn]         = useState(false);
+  const [ready,         setReady]         = useState(false);
   const [editPanelIn,   setEditPanelIn]   = useState(false);
   const [shareModalOpen,setShareModalOpen]= useState(false);
   const [deleteModalOpen,setDeleteModalOpen] = useState(false);
@@ -1486,15 +1444,8 @@ export default function SellerProfile() {
     noindex: true // Prevent indexing of private dashboard
   });
 
-  useEffect(()=>{
-    setTimeout(()=>setSidebarIn(true),  60);
-    setTimeout(()=>setHeaderIn(true),  120);
-    setTimeout(()=>setHeadingIn(true), 260);
-    setTimeout(()=>setStatsIn(true),   380);
-    setTimeout(()=>setTableIn(true),   520);
-    setTimeout(()=>setBannerIn(true),  660);
-    setTimeout(()=>setTabIn(true),     200);
-  },[]);
+  // Lets the verification cards play their entrance once the page has painted.
+  useEffect(()=>{ const t=setTimeout(()=>setReady(true),400); return ()=>clearTimeout(t); },[]);
 
   useEffect(()=>{
     async function loadSeller() {
@@ -1520,30 +1471,27 @@ export default function SellerProfile() {
     }
   },[user]);
 
+  // Recent buyers who viewed this seller's bags (with contact details when available)
   useEffect(()=>{
-    async function loadMetrics() {
+    async function loadRecentViewers() {
       try {
         if (!user) return;
-        setMetricsLoading(true);
-        const byUser = await supabase.from('products').select('*').eq('user_id',user.id).order('created_at',{ascending:false});
+        const byUser = await supabase.from('products').select('id').eq('user_id',user.id);
         let rows=byUser.data||[], queryError=byUser.error;
         if (rows.length===0||(queryError&&isMissingColumnError(queryError))) {
-          const bySeller=await supabase.from('products').select('*').eq('seller_id',user.id).order('created_at',{ascending:false});
+          const bySeller=await supabase.from('products').select('id').eq('seller_id',user.id);
           if(!bySeller.error){rows=bySeller.data||[];queryError=null;}
           else if(!queryError||isMissingColumnError(queryError)) queryError=bySeller.error;
         }
         if (queryError&&rows.length===0&&!isMissingColumnError(queryError)) throw queryError;
-        const getStatus=(row)=>{ const n=String(row?.status||'').toLowerCase(); return ['active','pending','inactive'].includes(n)?n:'active'; };
-        setActiveListingsCount(rows.filter(p=>getStatus(p)==='active').length);
         const productIds=rows.map(p=>p.id).filter(Boolean);
-        if (!productIds.length){ setTotalViewsCount(0); setBuyerViews([]); return; }
-        const {data:vd,count:vc,error:ve}=await supabase.from('product_views').select(`id,product_id,buyer_id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images)`,{count:'exact'}).in('product_id',productIds).order('viewed_at',{ascending:false}).limit(20);
-        if (!ve){ const enrichedViews=await enrichBuyerViewsWithProfiles(vd||[]); setTotalViewsCount(vc||0); setBuyerViews(enrichedViews.map(mapBuyerViewRow)); }
-        else { setTotalViewsCount(0); setBuyerViews([]); }
+        if (!productIds.length){ setBuyerViews([]); return; }
+        const {data:vd,error:ve}=await supabase.from('product_views').select(`id,product_id,buyer_id,viewed_at,source,buyer_name,buyer_phone,buyer_email,products:product_id(id,name,images)`).in('product_id',productIds).order('viewed_at',{ascending:false}).limit(20);
+        if (!ve){ const enrichedViews=await enrichBuyerViewsWithProfiles(vd||[]); setBuyerViews(enrichedViews.map(mapBuyerViewRow)); }
+        else setBuyerViews([]);
       } catch(e){ console.error(e); }
-      finally { setMetricsLoading(false); }
     }
-    loadMetrics();
+    loadRecentViewers();
   },[user]);
 
   useEffect(()=>{
@@ -1585,55 +1533,51 @@ export default function SellerProfile() {
     } catch(e){ console.error('Delete account error:',e); setDeleting(false); }
   }, [navigate]);
 
-  const stats = useMemo(()=>[
-    { icon:'payments',        label:'Total Revenue',   value:'—',                                             badge:'—',  accent:C.primary,    glow:'rgba(200,75,17,0.15)' },
-    { icon:'shopping_basket', label:'Active Listings', value:metricsLoading?'…':String(activeListingsCount), badge:'',   accent:'#f97316',    glow:'rgba(249,115,22,0.12)' },
-    { icon:'chat',            label:'Inquiries',       value:'—',                                             badge:'',   accent:'#22c55e',    glow:'rgba(34,197,94,0.12)' },
-    { icon:'visibility',      label:'Total Views',     value:metricsLoading?'…':String(totalViewsCount),     badge:'',   accent:'#a78bfa',    glow:'rgba(167,139,250,0.12)' },
-  ],[metricsLoading,activeListingsCount,totalViewsCount]);
-
   const switchTab = useCallback((tab) => {
     if (tab===activeTab) return;
     setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (tab==='edit'){ setEditPanelIn(false); setTimeout(()=>setEditPanelIn(true),80); }
   }, [activeTab]);
 
   if (loading) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)` }}>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ width:36, height:36, border:`3px solid ${C.borderLight}`, borderTopColor:C.primary, borderRadius:"50%", animation:"spin 0.7s linear infinite", margin:"0 auto 12px" }}/>
-        <p style={{ color:C.textMuted, fontSize:14, fontWeight:500 }}>Loading dashboard…</p>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:T.bg, fontFamily:FONT_SANS }}>
+      <div role="status" style={{ textAlign:"center" }}>
+        <div style={{ width:36, height:36, border:`3px solid ${T.line}`, borderTopColor:T.accent, borderRadius:"50%", animation:"spin 0.7s linear infinite", margin:"0 auto 12px" }}/>
+        <p style={{ color:T.ink2, fontSize:14, fontWeight:600 }}>Loading your dashboard…</p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   );
 
   if (error) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", background:T.bg, fontFamily:FONT_SANS }}>
       <div style={{ textAlign:"center", maxWidth:360, padding:32 }}>
-        <p style={{ color:C.danger, fontWeight:700, marginBottom:16 }}>Error: {error}</p>
-        <button onClick={()=>navigate('/products')} style={{ padding:"10px 22px", background:C.primary, color:"white", border:"none", borderRadius:9, cursor:"pointer", fontSize:13, fontWeight:700 }}>Back to Products</button>
+        <p style={{ color:T.redInk, fontWeight:700, marginBottom:16 }}>Something went wrong: {error}</p>
+        <button onClick={()=>navigate('/products')} style={{ height:44, padding:"0 22px", background:T.ink, color:"white", border:"none", borderRadius:10, cursor:"pointer", fontSize:14, fontWeight:700 }}>Back to shopping</button>
       </div>
     </div>
   );
 
   const initials = seller?.name ? seller.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : 'S';
+  const firstName = (seller?.name || 'there').split(' ')[0];
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const heading = activeTab==='edit' ? 'Your shop profile' : `${greeting}, ${firstName}`;
+  const today = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
 
   return (
-    <div style={{ display:"flex", minHeight:"100vh", background:`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`, fontFamily:"'Manrope',sans-serif", overflow:"hidden" }}>
+    <MotionConfig reducedMotion="user">
+    <div style={{ display:"flex", minHeight:"100vh", background:T.bg, fontFamily:FONT_SANS, color:T.ink }}>
       <BirthdayCelebration seller={seller}/>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        .sp-root :focus-visible{outline:2px solid ${T.accent};outline-offset:2px;border-radius:6px}
 
-        @keyframes slideRight   {from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
         @keyframes fadeUp       {from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)}}
         @keyframes rowSlide     {from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
         @keyframes cardSlideUp  {from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}}
         @keyframes pulse        {0%,100%{opacity:1}50%{opacity:0.5}}
-        @keyframes eyePing      {0%{transform:scale(1);opacity:0.6}100%{transform:scale(2.2);opacity:0}}
-        @keyframes eyeBounce    {0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-5px) scale(1.08)}}
         @keyframes spin         {to{transform:rotate(360deg)}}
         @keyframes confettiFall {0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
         @keyframes birthdayBounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
@@ -1642,280 +1586,184 @@ export default function SellerProfile() {
         @keyframes tabSlideIn   {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes progressPulse{0%{width:0%;opacity:1}70%{width:100%;opacity:1}100%{width:100%;opacity:0}}
         @keyframes modalPop     {from{opacity:0;transform:translate(-50%,-50%) scale(0.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @keyframes sparklePulse {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.7}}
         @keyframes verifyBorderWipe  {to{clip-path:inset(0 0% 0 0 round 22px)}}
         @keyframes verifyBorderShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
         @keyframes verifyBadgePop   {0%{transform:scale(0.6);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
-        .verify-frame{position:relative;border-radius:22px;padding:2px;background:linear-gradient(120deg,${C.primary},${C.primaryLight},#facc15,${C.primary});background-size:300% 300%;clip-path:inset(0 100% 0 0 round 22px)}
+        .verify-frame{position:relative;border-radius:22px;padding:2px;background:linear-gradient(120deg,${C.primary},${C.primaryLight},#D9A93A,${C.primary});background-size:300% 300%;clip-path:inset(0 100% 0 0 round 22px)}
         .verify-frame.is-visible{animation:verifyBorderWipe 0.9s cubic-bezier(0.22,1,0.36,1) forwards,verifyBorderShift 7s ease-in-out 0.9s infinite}
         .verify-badge-icon{animation:none}
         .verify-frame.is-visible .verify-badge-icon{animation:verifyBadgePop 0.6s cubic-bezier(0.22,1,0.36,1) 0.75s backwards}
+        @keyframes shareCardIn  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes scanLine     {0%{left:-40px}100%{left:calc(100% + 40px)}}
         @media (prefers-reduced-motion: reduce){
           .verify-frame{clip-path:inset(0 0% 0 0 round 22px) !important}
           .verify-frame.is-visible,.verify-frame.is-visible .verify-badge-icon{animation:none !important}
         }
-        @keyframes shareCardIn  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes scanLine     {0%{left:-40px}100%{left:calc(100% + 40px)}}
 
         .sidebar-desktop{display:flex!important}
-        .sidebar-mobile-overlay{display:none!important}
-        .main-content{margin-left:240px!important}
+        .main-content{margin-left:248px!important}
         .hamburger-btn{display:none!important}
         .inquiry-table{display:block!important}
         .inquiry-cards{display:none!important}
-        .header-search{display:flex!important}
+        .hide-sm{display:flex!important}
 
         @media(max-width:900px){
           .sidebar-desktop{display:none!important}
-          .sidebar-mobile-overlay{display:block!important}
           .main-content{margin-left:0!important}
           .hamburger-btn{display:flex!important}
           .inquiry-table{display:none!important}
           .inquiry-cards{display:block!important}
-          .header-search{display:none!important}
         }
         @media(max-width:600px){
-          .stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
-          .page-padding{padding:20px 16px 64px!important}
-          .header-inner{padding:0 16px!important}
+          .page-padding{padding:20px 16px 120px!important}
+          .header-inner{padding:0 12px!important}
+          .hide-sm{display:none!important}
         }
         ::-webkit-scrollbar{width:6px}
         ::-webkit-scrollbar-track{background:transparent}
-        ::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px}
+        ::-webkit-scrollbar-thumb{background:${T.lineStrong};border-radius:3px}
       `}</style>
 
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="sidebar-desktop" style={{ width:240, background:C.text, borderRight:"1px solid rgba(255,255,255,0.06)", position:"fixed", height:"100%", flexDirection:"column", zIndex:20, opacity:sidebarIn?1:0, transform:sidebarIn?"translateX(0)":"translateX(-100%)", transition:"opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
-        <SidebarContents initials={initials} seller={seller} sidebarIn={sidebarIn} navigate={navigate} activeTab={activeTab} switchTab={switchTab} onDeleteClick={()=>setDeleteModalOpen(true)}/>
-      </aside>
+      <motion.aside className="sidebar-desktop" initial={{ x:-40, opacity:0 }} animate={{ x:0, opacity:1 }} transition={{ duration:0.5, ease:EASE_OUT }}
+        style={{ width:248, background:T.ink, position:"fixed", top:0, bottom:0, flexDirection:"column", zIndex:20 }}>
+        <SidebarContents layoutGroup="desk" initials={initials} seller={seller} navigate={navigate} activeTab={activeTab} switchTab={switchTab} onDeleteClick={()=>setDeleteModalOpen(true)}/>
+      </motion.aside>
 
       {/* ── MOBILE SIDEBAR ── */}
-      <div className="sidebar-mobile-overlay">
-        {mobileSidebarOpen && <div onClick={()=>setMobileSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:40, animation:"overlayFade 0.25s ease both" }}/>}
-        <aside style={{ width:260, background:C.text, position:"fixed", top:0, left:0, height:"100%", display:"flex", flexDirection:"column", zIndex:50, transform:mobileSidebarOpen?"translateX(0)":"translateX(-100%)", transition:"transform 0.32s cubic-bezier(0.4,0,0.2,1)", boxShadow:"8px 0 32px rgba(0,0,0,0.3)" }}>
-          <button onClick={()=>setMobileSidebarOpen(false)} style={{ position:"absolute", top:16, right:16, width:32, height:32, borderRadius:"50%", border:"none", background:"rgba(255,255,255,0.08)", color:C.textMuted, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>✕</button>
-          <SidebarContents initials={initials} seller={seller} sidebarIn={mobileSidebarOpen} navigate={navigate} activeTab={activeTab} switchTab={(t)=>{switchTab(t);setMobileSidebarOpen(false);}} onNav={()=>setMobileSidebarOpen(false)} onDeleteClick={()=>{setMobileSidebarOpen(false);setDeleteModalOpen(true);}}/>
-        </aside>
-      </div>
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <>
+            <motion.div key="scrim" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={()=>setMobileSidebarOpen(false)}
+              style={{ position:"fixed", inset:0, background:"rgba(20,14,11,0.55)", zIndex:60 }}/>
+            <motion.aside key="drawer" role="dialog" aria-modal="true" aria-label="Seller menu"
+              initial={{ x:'-100%' }} animate={{ x:0 }} exit={{ x:'-100%' }} transition={{ duration:0.35, ease:EASE_OUT }}
+              style={{ width:272, background:T.ink, position:"fixed", top:0, left:0, bottom:0, display:"flex", flexDirection:"column", zIndex:70, boxShadow:"8px 0 32px rgba(0,0,0,0.3)" }}>
+              <button type="button" aria-label="Close menu" onClick={()=>setMobileSidebarOpen(false)}
+                style={{ position:"absolute", top:20, right:14, width:40, height:40, borderRadius:"50%", border:"none", background:"rgba(255,255,255,0.08)", color:T.onDark, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+              <SidebarContents layoutGroup="mob" initials={initials} seller={seller} navigate={navigate} activeTab={activeTab} switchTab={(t)=>{switchTab(t);setMobileSidebarOpen(false);}} onNav={()=>setMobileSidebarOpen(false)} onDeleteClick={()=>{setMobileSidebarOpen(false);setDeleteModalOpen(true);}}/>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── MAIN ── */}
-      <main className="main-content" style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
+      <main className="main-content sp-root" style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
 
-        {/* Header */}
-        <header style={{ height:64, background:"rgba(255,255,255,0.92)", backdropFilter:"blur(12px)", borderBottom:`1px solid ${C.borderLight}`, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:10, opacity:headerIn?1:0, transform:headerIn?"translateY(0)":"translateY(-100%)", transition:"opacity 0.4s ease,transform 0.4s cubic-bezier(0.22,1,0.36,1)", boxShadow:`0 1px 0 ${C.borderLight},0 4px 20px rgba(200,75,17,0.04)` }}>
-          <div className="header-inner" style={{ width:"100%", padding:"0 32px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12, flex:1 }}>
-              <button className="hamburger-btn" onClick={()=>setMobileSidebarOpen(true)} style={{ padding:8, borderRadius:10, border:`1px solid ${C.border}`, background:C.surfaceDim, cursor:"pointer", alignItems:"center", justifyContent:"center", color:C.textMuted, flexShrink:0 }}>
-                <svg style={{ width:20, height:20 }} fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+        <motion.header initial={{ y:-64 }} animate={{ y:0 }} transition={{ duration:0.45, ease:EASE_OUT }}
+          style={{ height:64, background:"rgba(250,246,241,0.88)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)", borderBottom:`1px solid ${T.line}`, display:"flex", alignItems:"center", position:"sticky", top:0, zIndex:30 }}>
+          <div className="header-inner" style={{ width:"100%", padding:"0 40px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <button type="button" className="hamburger-btn" aria-label="Open menu" onClick={()=>setMobileSidebarOpen(true)}
+                style={{ width:44, height:44, borderRadius:12, border:`1px solid ${T.line}`, background:T.surface, cursor:"pointer", alignItems:"center", justifyContent:"center", color:T.ink }}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
               </button>
-              <button onClick={()=>navigate('/products')} style={{ padding:8, borderRadius:10, border:`1px solid ${C.border}`, background:C.surfaceDim, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:C.textMuted, transition:"all 0.2s", flexShrink:0 }} onMouseEnter={e=>{e.currentTarget.style.background=C.primaryBg;e.currentTarget.style.color=C.primary;e.currentTarget.style.transform="translateX(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.background=C.surfaceDim;e.currentTarget.style.color=C.textMuted;e.currentTarget.style.transform="none";}}>
-                <MS name="arrow_back" size={20}/>
-              </button>
-              <div className="header-search" style={{ position:"relative", flex:1, maxWidth:480 }}>
-                <MS name="search" size={18} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:C.textMuted }}/>
-                <input type="text" placeholder="Search orders, inquiries, or products…" style={{ width:"100%", paddingLeft:38, paddingRight:14, paddingTop:9, paddingBottom:9, background:C.surfaceDim, border:"1.5px solid transparent", borderRadius:10, fontSize:13, color:C.text, outline:"none", fontFamily:"inherit", transition:"all 0.2s" }} onFocus={e=>{e.target.style.borderColor=C.primaryBorder;e.target.style.background="white";e.target.style.boxShadow=`0 0 0 3px ${C.primaryBg}`;}} onBlur={e=>{e.target.style.borderColor="transparent";e.target.style.background=C.surfaceDim;e.target.style.boxShadow="none";}}/>
-              </div>
+              <span className="hamburger-btn" style={{ fontSize:17, fontWeight:800, alignItems:"center" }}>Bag<span style={{ color:T.accent }}>Search</span></span>
+              <span className="sidebar-desktop" style={{ fontSize:13, color:T.muted, fontWeight:600 }}>{today}</span>
             </div>
-            <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
               <NotificationsDropdown/>
-              <div style={{ width:1, height:28, background:C.border }}/>
-              <button onClick={()=>navigate('/upload-product')} style={{ display:"flex", alignItems:"center", gap:7, padding:"8px 16px", borderRadius:10, border:"none", background:C.primary, color:"white", fontSize:13, fontWeight:700, cursor:"pointer", transition:"all 0.2s", fontFamily:"inherit", boxShadow:`0 2px 8px rgba(200,75,17,0.3)`, whiteSpace:"nowrap" }} onMouseEnter={e=>{e.currentTarget.style.background=C.accent;e.currentTarget.style.transform="translateY(-1px)";}} onMouseLeave={e=>{e.currentTarget.style.background=C.primary;e.currentTarget.style.transform="none";}}>
-                <MS name="add" size={17}/> Upload Product
-              </button>
+              <motion.button type="button" className="hide-sm" onClick={()=>setShareModalOpen(true)} whileHover={{ y:-1 }} whileTap={{ scale:0.96 }}
+                style={{ height:44, padding:"0 16px", borderRadius:12, border:`1px solid ${T.lineStrong}`, background:T.surface, color:T.ink, fontSize:14, fontWeight:700, cursor:"pointer", alignItems:"center", gap:8, fontFamily:"inherit" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+                Share shop
+              </motion.button>
+              <motion.button type="button" onClick={()=>navigate('/upload-product')} whileHover={{ y:-2, boxShadow:'0 10px 24px rgba(180,65,14,0.3)' }} whileTap={{ scale:0.96 }}
+                style={{ height:44, padding:"0 18px", borderRadius:12, border:"none", background:T.accent, color:"#fff", fontSize:14, fontWeight:800, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontFamily:"inherit", boxShadow:'0 4px 14px rgba(180,65,14,0.22)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                New listing
+              </motion.button>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Content */}
-        <div className="page-padding" style={{ padding:"36px 32px 64px", flex:1 }}>
+        <div className="page-padding" style={{ padding:"32px 40px 64px", flex:1, maxWidth:1400, width:"100%" }}>
 
-          {/* Page heading + tabs */}
-          <div style={{ marginBottom:28, opacity:headingIn?1:0, transform:headingIn?"none":"translateY(16px)", transition:"opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)" }}>
-            <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:16, marginBottom:20 }}>
-              <div>
-                <h2 style={{ fontSize:"clamp(1.8rem,3vw,2.4rem)", fontWeight:900, color:C.text, letterSpacing:"-0.04em", lineHeight:1.1, fontFamily:"'DM Serif Display',serif" }}>
-                  {activeTab==='edit' ? 'Edit Profile' : 'Seller Dashboard'}
-                </h2>
-                <p style={{ color:C.textMuted, fontSize:13, marginTop:6, fontWeight:500 }}>
-                  {activeTab==='edit' ? 'Shape how buyers discover and trust your brand.' : 'Monitor your performance and handle customer inquiries.'}
-                </p>
-              </div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-
-                {/* ── SHARE PROFILE BUTTON (main page) ── */}
-                <button onClick={()=>setShareModalOpen(true)}
-                  style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:12, border:`2px solid ${C.primaryBorder}`, background:`linear-gradient(135deg,${C.primaryPale},${C.primaryBg})`, color:C.primary, fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", transition:"all 0.28s cubic-bezier(0.22,1,0.36,1)", boxShadow:`0 2px 12px rgba(200,75,17,0.1)`, position:"relative", overflow:"hidden" }}
-                  onMouseEnter={e=>{e.currentTarget.style.background=`linear-gradient(135deg,${C.primary},${C.accent})`;e.currentTarget.style.color="white";e.currentTarget.style.borderColor=C.primary;e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 8px 28px rgba(200,75,17,0.35)`;}}
-                  onMouseLeave={e=>{e.currentTarget.style.background=`linear-gradient(135deg,${C.primaryPale},${C.primaryBg})`;e.currentTarget.style.color=C.primary;e.currentTarget.style.borderColor=C.primaryBorder;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 2px 12px rgba(200,75,17,0.1)`;}}>
-                  <MS name="share" size={16} style={{ color:"inherit" }}/>
-                  Share My Profile
-                  <span style={{ display:"inline-flex", alignItems:"center", gap:4, padding:"2px 8px", borderRadius:20, background:"rgba(200,75,17,0.12)", fontSize:10, fontWeight:900, letterSpacing:"0.06em", color:"inherit" }}>
-                    NEW
-                  </span>
-                </button>
-
-                {/* Tab pills */}
-                <div style={{ display:"flex", gap:8, padding:"5px", borderRadius:14, background:C.surfaceDim, border:`1px solid ${C.borderLight}`, opacity:tabIn?1:0, transition:"opacity 0.4s ease" }}>
-                  {[
-                    { key:'dashboard', icon:'dashboard', label:'Dashboard' },
-                    { key:'edit',      icon:'edit',      label:'Edit Profile' },
-                  ].map(t=>(
-                    <button key={t.key} onClick={()=>switchTab(t.key)}
-                      style={{ display:"flex", alignItems:"center", gap:7, padding:"8px 16px", borderRadius:10, border:"none", cursor:"pointer", fontFamily:"inherit", fontSize:12, fontWeight:activeTab===t.key?800:600, transition:"all 0.25s cubic-bezier(0.22,1,0.36,1)", background:activeTab===t.key?C.primary:"transparent", color:activeTab===t.key?"#fff":C.textMuted, boxShadow:activeTab===t.key?`0 4px 16px rgba(200,75,17,0.3)`:"none", transform:activeTab===t.key?"scale(1.02)":"scale(1)" }}>
-                      <MS name={t.icon} size={15} style={{ color:activeTab===t.key?"#fff":C.textMuted }}/>
-                      {t.label}
-                      {t.key==='edit'&&activeTab!=='edit'&&<span style={{ width:6, height:6, borderRadius:"50%", background:C.accent, flexShrink:0, animation:"pulse 2s ease-in-out infinite" }}/>}
-                    </button>
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", flexWrap:"wrap", gap:16, marginBottom:28 }}>
+            <div>
+              <AnimatePresence mode="wait">
+                <motion.h1 key={heading} aria-label={heading}
+                  style={{ fontFamily:FONT_SERIF, fontSize:"clamp(32px,3.4vw,44px)", fontWeight:600, lineHeight:1.1, color:T.ink }}>
+                  {heading.split(' ').map((w,i)=>(
+                    <span key={i} aria-hidden="true">
+                      {i>0 && ' '}
+                      <span style={{ display:'inline-block', overflow:'hidden', verticalAlign:'top', paddingBottom:'0.08em' }}>
+                        <motion.span style={{ display:'inline-block' }} initial={{ y:'110%' }} animate={{ y:0 }} exit={{ y:'-110%' }} transition={{ delay:i*0.06, duration:0.6, ease:EASE_OUT }}>{w}</motion.span>
+                      </span>
+                    </span>
                   ))}
-                </div>
-              </div>
+                </motion.h1>
+              </AnimatePresence>
+              <p style={{ color:T.ink2, fontSize:14, marginTop:6 }}>
+                {activeTab==='edit' ? 'Shape how buyers discover and trust your brand.' : "Here's how your shop is doing."}
+              </p>
+            </div>
+            <div role="tablist" aria-label="Dashboard sections" style={{ display:"flex", padding:4, borderRadius:12, background:T.sand }}>
+              {[{ key:'dashboard', label:'Overview' },{ key:'edit', label:'Shop profile' }].map(t=>(
+                <button key={t.key} type="button" role="tab" aria-selected={activeTab===t.key} onClick={()=>switchTab(t.key)}
+                  style={{ position:"relative", height:40, padding:"0 16px", borderRadius:9, border:"none", background:"transparent", cursor:"pointer", fontFamily:"inherit", fontSize:13, fontWeight:activeTab===t.key?800:700, color:activeTab===t.key?T.ink:T.ink2 }}>
+                  {activeTab===t.key && <motion.span layoutId="sp-tab-pill" transition={{ type:'spring', stiffness:450, damping:34 }} style={{ position:"absolute", inset:0, borderRadius:9, background:T.surface, boxShadow:'0 1px 3px rgba(28,20,16,0.12)' }}/>}
+                  <span style={{ position:"relative" }}>{t.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* ── DASHBOARD TAB ── */}
-          {activeTab==='dashboard' && (
-            <div style={{ animation:"tabSlideIn 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+          <AnimatePresence mode="wait">
+            {activeTab==='dashboard' ? (
+              <motion.div key="dash" initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-12 }} transition={{ duration:0.35, ease:EASE_OUT }}
+                style={{ display:"flex", flexDirection:"column", gap:40 }}>
 
-              {/* ── BANK DETAILS PROMPT ── */}
-              {!hasBankDetails && (
-                <div style={{ marginBottom:20, background:'linear-gradient(135deg,#eff6ff,#dbeafe)', borderRadius:16, border:'1.5px solid #93c5fd', padding:'18px 22px', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', opacity:statsIn?1:0, transform:statsIn?'none':'translateY(12px)', transition:'all 0.5s ease 50ms' }}>
-                  <div style={{ width:44, height:44, borderRadius:12, background:'linear-gradient(135deg,#2563eb,#3b82f6)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 6px 20px rgba(37,99,235,0.3)' }}>
-                    <MS name="account_balance" size={22} style={{ color:'white' }}/>
-                  </div>
-                  <div style={{ flex:1, minWidth:180 }}>
-                    <p style={{ margin:0, fontWeight:800, fontSize:14, color:'#1e3a5f' }}>Set Up Payments</p>
-                    <p style={{ margin:'4px 0 0', fontSize:12.5, color:'#3b82f6', lineHeight:1.5 }}>Add your bank account so buyers can pay you directly when they purchase your bags.</p>
-                  </div>
-                  <button onClick={()=>navigate('/bank-details')} style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#2563eb,#3b82f6)', color:'white', fontWeight:800, fontSize:13, cursor:'pointer', boxShadow:'0 4px 14px rgba(37,99,235,0.3)', whiteSpace:'nowrap' }}>
-                    Add Bank Account →
-                  </button>
-                </div>
-              )}
+                <SellerOverview userId={user?.id} seller={seller} hasBankDetails={hasBankDetails} navigate={navigate} onEditProfile={()=>switchTab('edit')}/>
 
-              {/* ── DISCOUNT PROMO CARD (small, non-obstructive) ── */}
-              <DiscountPromoCard navigate={navigate} visible={statsIn} />
-
-              {/* ── SHARE PROFILE CARD (prominent, visible on dashboard) ── */}
-              <div style={{ marginBottom:28, background:"white", borderRadius:20, border:`1.5px solid ${C.primaryBorder}`, padding:"22px 28px", display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", opacity:statsIn?1:0, transform:statsIn?"none":"translateY(16px)", transition:"opacity 0.5s ease 100ms,transform 0.5s cubic-bezier(0.22,1,0.36,1) 100ms", boxShadow:`0 4px 24px rgba(200,75,17,0.08)`, position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${C.primary},${C.primaryLight},${C.accent})`, borderRadius:"20px 20px 0 0" }}/>
-                <div style={{ width:52, height:52, borderRadius:16, background:`linear-gradient(135deg,${C.primary},${C.accent})`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:`0 8px 24px rgba(200,75,17,0.35)` }}>
-                  <MS name="share" size={24} style={{ color:"white" }}/>
-                </div>
-                <div style={{ flex:1, minWidth:200 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                    <p style={{ fontSize:15, fontWeight:900, color:C.text }}>Share Your Seller Profile</p>
-                    <span style={{ fontSize:9, fontWeight:800, padding:"2px 8px", borderRadius:20, background:C.primaryBg, color:C.primary, border:`1px solid ${C.primaryBorder}`, letterSpacing:"0.08em" }}>BOOST SALES</span>
+                <motion.section aria-labelledby="sp-viewers-h" initial={{ opacity:0, y:24 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, margin:'-60px' }} transition={{ duration:0.55, ease:EASE_OUT }}>
+                  <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:16, gap:10, flexWrap:"wrap" }}>
+                    <div>
+                      <h2 id="sp-viewers-h" style={{ fontFamily:FONT_SERIF, fontSize:28, fontWeight:600, color:T.ink }}>Recent viewers</h2>
+                      <p style={{ fontSize:13, color:T.ink2, marginTop:2 }}>Buyers who looked at your bags — follow up while they're interested.</p>
+                    </div>
+                    <span style={{ fontSize:13, color:T.muted, fontWeight:600 }}>{buyerViews.length} most recent</span>
                   </div>
-                  <p style={{ fontSize:12, color:C.textMuted, lineHeight:1.6, fontWeight:500 }}>
-                    Share your profile link on WhatsApp, Instagram, Twitter, and more — let buyers find and follow your collection everywhere.
-                  </p>
-                </div>
-                <div style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0, flexWrap:"wrap" }}>
-                  {/* Real social mini icons preview */}
-                  <div style={{ display:"flex", gap:6 }}>
-                    {[
-                      { bg:'#25D366', Icon: SocialIcons.WhatsApp },
-                      { bg:'#E1306C', Icon: SocialIcons.Instagram },
-                      { bg:'#000000', Icon: SocialIcons.Twitter },
-                      { bg:'#1877F2', Icon: SocialIcons.Facebook },
-                    ].map((s,i)=>(
-                      <div key={i} style={{ width:30, height:30, borderRadius:8, background:s.bg, display:"flex", alignItems:"center", justifyContent:"center", color:"white", opacity:0.88 }}>
-                        <s.Icon size={15}/>
+
+                  <div className="inquiry-table" style={{ background:T.surface, borderRadius:16, border:`1px solid ${T.line}`, overflow:"hidden" }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding:"14px 24px", background:T.bg, borderBottom:`1px solid ${T.line}` }}>
+                      {['Bag','Buyer','Found via','When','Follow up'].map((h,i)=>(
+                        <div key={h} style={{ fontSize:12, fontWeight:700, color:T.muted, textAlign:i===4?"right":"left" }}>{h}</div>
+                      ))}
+                    </div>
+                    {buyerViews.map((row,i)=><InquiryRow key={row.id} row={row} index={i} ready/>)}
+                    {buyerViews.length===0 && (
+                      <div style={{ padding:"48px 24px", textAlign:"center" }}>
+                        <p style={{ color:T.ink, fontSize:14, fontWeight:700 }}>No viewers yet</p>
+                        <p style={{ color:T.ink2, fontSize:13, marginTop:4 }}>Buyers will appear here once they browse your listings.</p>
                       </div>
-                    ))}
-                    <div style={{ width:30, height:30, borderRadius:8, background:C.primaryBg, border:`1px solid ${C.primaryBorder}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <MS name="more_horiz" size={14} style={{ color:C.primary }}/>
-                    </div>
+                    )}
                   </div>
-                  <button onClick={()=>setShareModalOpen(true)}
-                    style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 22px", borderRadius:12, border:"none", background:`linear-gradient(135deg,${C.primary} 0%,${C.accent} 100%)`, color:"white", fontSize:13, fontWeight:800, cursor:"pointer", fontFamily:"'Manrope',sans-serif", transition:"all 0.28s cubic-bezier(0.22,1,0.36,1)", boxShadow:`0 6px 20px rgba(200,75,17,0.4)`, whiteSpace:"nowrap", position:"relative", overflow:"hidden" }}
-                    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px) scale(1.03)";e.currentTarget.style.boxShadow=`0 10px 32px rgba(200,75,17,0.5)`;}}
-                    onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 6px 20px rgba(200,75,17,0.4)`;}}>
-                    <div style={{ position:"absolute", top:0, bottom:0, width:40, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)", animation:"scanLine 2s ease-in-out infinite", pointerEvents:"none" }}/>
-                    <MS name="ios_share" size={16}/>
-                    Share Profile
-                  </button>
-                </div>
-              </div>
-
-              {/* ── GET VERIFIED CARD ── */}
-              <VerifiedBadgeCard
-                seller={seller}
-                visible={statsIn}
-                reviewCount={reviewCount}
-                reviewsLoading={reviewsLoading}
-                onShare={()=>setShareModalOpen(true)}
-              />
-
-              {/* ── ID SUBMITTED CARD ── */}
-              <NinVerificationCard sellerId={user?.id} visible={statsIn}/>
-
-              <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:18, marginBottom:32, opacity:statsIn?1:0, transform:statsIn?"none":"translateY(20px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
-                {stats.map((stat,i)=><StatCard key={stat.label} stat={stat} delay={i*70} ready={statsIn}/>)}
-              </div>
-
-              <div style={{ opacity:tableIn?1:0, transform:tableIn?"none":"translateY(24px)", transition:"opacity 0.55s ease,transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                    <div style={{ position:"relative", width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <div style={{ position:"absolute", width:36, height:36, borderRadius:"50%", background:C.primaryBg, animation:tableIn?"eyePing 2s ease-out 0.8s infinite":"none" }}/>
-                      <div style={{ width:32, height:32, borderRadius:"50%", background:C.primaryBg, display:"flex", alignItems:"center", justifyContent:"center", animation:tableIn?"eyeBounce 2.4s ease-in-out infinite":"none", position:"relative", zIndex:1 }}>
-                        <MS name="visibility" size={17} style={{ color:C.primary }}/>
-                      </div>
-                    </div>
-                    <AnimatedHeading text="Buyers that Viewed Product" sub={`${buyerViews.length} recent views`} ready={tableIn} delay={200}/>
+                  <div className="inquiry-cards">
+                    {buyerViews.map((row,i)=><InquiryCard key={row.id} row={row} index={i} ready/>)}
+                    {buyerViews.length===0 && <p style={{ color:T.ink2, fontSize:14, padding:"24px 0" }}>No viewers yet — buyers will appear here once they browse your listings.</p>}
                   </div>
-                  <div style={{ display:"flex", gap:8 }}>
-                    {['Filter','View All'].map(label=>(
-                      <button key={label} style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"7px 13px", border:`1px solid ${C.border}`, borderRadius:8, background:"white", cursor:"pointer", fontSize:12, fontWeight:700, color:C.textMuted, fontFamily:"'Manrope',sans-serif", transition:"all 0.2s" }} onMouseEnter={e=>{e.currentTarget.style.background=C.surfaceDim;}} onMouseLeave={e=>{e.currentTarget.style.background="white";}}>
-                        {label==='Filter'&&<MS name="filter_list" size={15}/>} {label}
-                      </button>
-                    ))}
+                </motion.section>
+
+                <motion.section aria-labelledby="sp-grow-h" initial={{ opacity:0, y:24 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true, margin:'-60px' }} transition={{ duration:0.55, ease:EASE_OUT }}>
+                  <h2 id="sp-grow-h" style={{ fontFamily:FONT_SERIF, fontSize:28, fontWeight:600, color:T.ink, marginBottom:16 }}>Grow your shop</h2>
+                  <div id="seller-verify" style={{ scrollMarginTop:96 }}>
+                    <NinVerificationCard sellerId={user?.id} visible={ready}/>
                   </div>
-                </div>
-
-                <div className="inquiry-table" style={{ background:"white", borderRadius:16, border:`1px solid ${C.borderLight}`, overflow:"hidden", boxShadow:`0 2px 16px rgba(200,75,17,0.04)` }}>
-                  <div style={{ display:"grid", gridTemplateColumns:"2.2fr 1.2fr 1.3fr 1fr 1.4fr", padding:"14px 24px", background:C.surfaceDim, borderBottom:`1px solid ${C.borderLight}` }}>
-                    {['Bag Detail','Buyer Name','Source','Received','Action'].map((h,i)=>(
-                      <div key={h} style={{ fontSize:10, fontWeight:800, color:C.textMuted, textTransform:"uppercase", letterSpacing:"0.1em", textAlign:i===4?"right":"left" }}>{h}</div>
-                    ))}
-                  </div>
-                  {buyerViews.map((row,i)=><InquiryRow key={row.id} row={row} index={i} ready={tableIn}/>)}
-                  {buyerViews.length===0 && (
-                    <div style={{ padding:"48px 24px", textAlign:"center" }}>
-                      <MS name="visibility_off" size={36} style={{ color:C.textFaint, display:"block", margin:"0 auto 10px" }}/>
-                      <p style={{ color:C.textMuted, fontSize:13, fontWeight:600 }}>No buyer views yet</p>
-                      <p style={{ color:C.textFaint, fontSize:11, marginTop:4 }}>Views will appear here once buyers browse your listings.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="inquiry-cards">
-                  {buyerViews.map((row,i)=><InquiryCard key={row.id} row={row} index={i} ready={tableIn}/>)}
-                </div>
-              </div>
-
-              {/* WhatsApp banner */}
-              <div style={{ marginTop:24, display:"flex", alignItems:"center", gap:16, padding:"18px 24px", background:"white", border:`1px solid ${C.borderLight}`, borderRadius:16, boxShadow:`0 2px 12px rgba(200,75,17,0.04)`, opacity:bannerIn?1:0, transform:bannerIn?"none":"translateY(16px)", transition:"opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)", flexWrap:"wrap" }}>
-                <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#22c55e,#16a34a)", display:"flex", alignItems:"center", justifyContent:"center", color:"white", flexShrink:0 }}>
-                  <WhatsAppIcon size={22}/>
-                </div>
-                <div style={{ flex:1, minWidth:200 }}>
-                  <div style={{ fontSize:14, fontWeight:800, color:"#16a34a", marginBottom:3 }}>WhatsApp Business API Active</div>
-                  <div style={{ fontSize:12, color:C.textMuted, lineHeight:1.5 }}>
-                    You are currently receiving direct inquiries from your product pages. Response time averaged at <strong style={{ color:C.text }}>14 minutes</strong>.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── EDIT PROFILE TAB ── */}
-          {activeTab==='edit' && (
-            <div style={{ maxWidth:720, animation:"tabSlideIn 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-              <EditProfilePanel seller={seller} userId={user?.id} panelIn={editPanelIn}
-                onSaved={(updates)=>setSeller(prev=>({ ...prev, name:updates.full_name, email:updates.email, phone:updates.phone, brand_name:updates.brand_name, brand_story:updates.brand_story, bag_categories:updates.bag_categories }))}/>
-            </div>
-          )}
+                  <VerifiedBadgeCard seller={seller} visible={ready} reviewCount={reviewCount} reviewsLoading={reviewsLoading} onShare={()=>setShareModalOpen(true)}/>
+                  <DiscountPromoCard navigate={navigate} visible={ready}/>
+                </motion.section>
+              </motion.div>
+            ) : (
+              <motion.div key="edit" initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-12 }} transition={{ duration:0.35, ease:EASE_OUT }} style={{ maxWidth:720 }}>
+                <EditProfilePanel seller={seller} userId={user?.id} panelIn={editPanelIn}
+                  onSaved={(updates)=>setSeller(prev=>({ ...prev, name:updates.full_name, email:updates.email, phone:updates.phone, brand_name:updates.brand_name, brand_story:updates.brand_story, bag_categories:updates.bag_categories }))}/>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
@@ -1924,78 +1772,90 @@ export default function SellerProfile() {
 
       <DeleteAccountModal visible={deleteModalOpen} onClose={()=>{ if(!deleting&&!deleted){setDeleteModalOpen(false);setDeleted(false);} }} onConfirm={handleDeleteAccount} deleting={deleting} deleted={deleted}/>
     </div>
+    </MotionConfig>
   );
 }
 
 // ─── Sidebar contents ─────────────────────────────────────────────────────────
-function SidebarContents({ initials, seller, sidebarIn, navigate, activeTab, switchTab, onNav, onDeleteClick }) {
-  const extNavItems = [
-    { icon:'home',        label:'Home',         key:'home'              },
-    { icon:'dashboard',   label:'Dashboard',    key:'dashboard'         },
-    { icon:'inventory_2', label:'My Listings',  key:'listings'          },
-    { icon:'account_balance', label:'Bank Details', key:'bank'          },
-    { icon:'workspace_premium', label:'Plans & Pricing', key:'pricing'  },
-    { icon:'edit',        label:'Edit Profile', key:'edit', badge:true  },
+const NavIcon = ({ d }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+);
+const NAV_ICONS = {
+  dashboard: <NavIcon d={<><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></>}/>,
+  listings:  <NavIcon d={<><path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></>}/>,
+  upload:    <NavIcon d={<><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></>}/>,
+  bank:      <NavIcon d={<path d="M3 10l9-6 9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 21h18"/>}/>,
+  pricing:   <NavIcon d={<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>}/>,
+  edit:      <NavIcon d={<><circle cx="12" cy="8" r="4"/><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5"/></>}/>,
+  shop:      <NavIcon d={<><path d="M4 10v10h16V10"/><path d="M3 10l2-6h14l2 6"/><path d="M10 20v-5h4v5"/></>}/>,
+  home:      <NavIcon d={<path d="M15 5l-7 7 7 7"/>}/>,
+};
+
+function SidebarContents({ layoutGroup, initials, seller, navigate, activeTab, switchTab, onNav, onDeleteClick }) {
+  const navItems = [
+    { key:'dashboard', label:'Overview' },
+    { key:'listings',  label:'Listings' },
+    { key:'upload',    label:'Upload a bag' },
+    { key:'bank',      label:'Payouts' },
+    { key:'pricing',   label:'Plans & pricing' },
+    { key:'edit',      label:'Shop profile' },
+    { key:'shop',      label:'View my shop' },
   ];
 
-  const handleClick = useCallback((item) => {
-    if (item.key==='home')                         navigate('/products');
-    if (item.key==='dashboard'||item.key==='edit') switchTab?.(item.key);
-    if (item.key==='listings')                     navigate('/seller-listing');
-    if (item.key==='bank')                         navigate('/bank-details');
-    if (item.key==='pricing')                      navigate('/pricing');
+  const handleClick = useCallback((key) => {
+    if (key==='dashboard'||key==='edit') switchTab?.(key);
+    if (key==='listings') navigate('/seller-listing');
+    if (key==='upload')   navigate('/upload-product');
+    if (key==='bank')     navigate('/bank-details');
+    if (key==='pricing')  navigate('/pricing');
+    if (key==='shop')     navigate(`/vendor/${seller?.id || ''}`);
+    if (key==='home')     navigate('/products');
     onNav?.();
-  }, [navigate, switchTab, onNav]);
+  }, [navigate, switchTab, onNav, seller?.id]);
 
   return (
     <>
-      <div style={{ padding:"24px 20px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <MS name="shopping_bag" size={18} style={{ color:"white" }}/>
-          </div>
-          <div>
-            <div style={{ fontSize:14, fontWeight:900, color:"#f8fafc", letterSpacing:"-0.02em" }}>BagSearch</div>
-            <div style={{ fontSize:10, color:C.textMuted, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase" }}>Seller</div>
-          </div>
+      <div style={{ padding:"24px 20px 16px", display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ width:34, height:34, borderRadius:10, background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", color:T.ink }}>{NAV_ICONS.listings}</div>
+        <div>
+          <div style={{ fontSize:17, fontWeight:800, color:T.bg, letterSpacing:"-0.02em" }}>Bag<span style={{ color:T.accentOnDark }}>Search</span></div>
+          <div style={{ fontSize:11, color:T.onDarkMuted, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase" }}>Seller</div>
         </div>
       </div>
 
-      <nav style={{ flex:1, padding:"16px 12px", display:"flex", flexDirection:"column", gap:4 }}>
-        {extNavItems.map((item,i)=>{
+      <div style={{ margin:"0 16px 16px", display:"flex", alignItems:"center", gap:12, padding:12, borderRadius:12, background:T.dark2 }}>
+        <div style={{ width:40, height:40, borderRadius:999, background:T.accentOnDark, color:T.ink, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:14, flexShrink:0 }}>{initials}</div>
+        <div style={{ minWidth:0 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:T.bg, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{seller?.brand_name || seller?.name}</div>
+          <div style={{ fontSize:12, color:T.onDarkMuted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{seller?.email}</div>
+        </div>
+      </div>
+
+      <nav aria-label="Seller" style={{ flex:1, padding:"0 12px", display:"flex", flexDirection:"column", gap:2, overflowY:"auto" }}>
+        {navItems.map((item,i)=>{
           const isActive=item.key===activeTab;
           return (
-            <a key={item.key} href="#" onClick={e=>{e.preventDefault();handleClick(item);}}
-              style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, textDecoration:"none", background:isActive?C.primaryBg:"transparent", color:isActive?C.primary:C.textMuted, transition:"all 0.2s", opacity:sidebarIn?1:0, animation:sidebarIn?`slideRight 0.4s cubic-bezier(0.22,1,0.36,1) ${i*60}ms both`:"none" }}
-              onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background="rgba(255,255,255,0.05)";}}
-              onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background="transparent";}}>
-              <MS name={item.icon} size={20}/>
-              <span style={{ fontSize:13, fontWeight:isActive?700:600, flex:1 }}>{item.label}</span>
-              {item.badge&&!isActive&&<span style={{ width:6, height:6, borderRadius:"50%", background:C.accent, animation:"pulse 2s ease-in-out infinite" }}/>}
-            </a>
+            <motion.button key={item.key} type="button" onClick={()=>handleClick(item.key)} aria-current={isActive?'page':undefined}
+              initial={{ opacity:0, x:-14 }} animate={{ opacity:1, x:0 }} transition={{ delay:0.1+i*0.05, duration:0.4, ease:EASE_OUT }}
+              whileHover={isActive ? undefined : { x:3 }}
+              style={{ position:"relative", display:"flex", alignItems:"center", gap:12, height:44, padding:"0 12px", borderRadius:10, border:"none", background:"transparent", color:isActive?T.ink:T.onDark, cursor:"pointer", fontFamily:"inherit", fontSize:14, fontWeight:isActive?800:600, textAlign:"left" }}>
+              {isActive && <motion.span layoutId={`sp-nav-active-${layoutGroup}`} transition={{ type:'spring', stiffness:420, damping:34 }} style={{ position:"absolute", inset:0, borderRadius:10, background:T.bg }}/>}
+              <span style={{ position:"relative", display:"flex" }}>{NAV_ICONS[item.key]}</span>
+              <span style={{ position:"relative" }}>{item.label}</span>
+            </motion.button>
           );
         })}
       </nav>
 
-      <div style={{ padding:"14px 20px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-          <div style={{ width:36, height:36, borderRadius:"50%", background:`linear-gradient(135deg,${C.primary},${C.primaryLight})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"white", flexShrink:0 }}>{initials}</div>
-          <div style={{ minWidth:0 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"white", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{seller?.name}</div>
-            <div style={{ fontSize:10, color:C.textMuted, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase" }}>Pro Seller</div>
-          </div>
-        </div>
-        <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:10, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="mail" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{seller?.email}</span></div>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}><MS name="phone" size={13} style={{ color:C.textMuted }}/><span style={{ fontSize:11, color:C.textMuted }}>{seller?.phone}</span></div>
-        </div>
-        <button onClick={onDeleteClick}
-          style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:10, border:'1.5px solid rgba(220,38,38,0.22)', background:'rgba(220,38,38,0.06)', color:'#ef4444', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Manrope',sans-serif", transition:'all 0.25s cubic-bezier(0.22,1,0.36,1)' }}
-          onMouseEnter={e=>{e.currentTarget.style.background='rgba(220,38,38,0.14)';e.currentTarget.style.borderColor='rgba(220,38,38,0.4)';e.currentTarget.style.transform='translateY(-1px)';}}
-          onMouseLeave={e=>{e.currentTarget.style.background='rgba(220,38,38,0.06)';e.currentTarget.style.borderColor='rgba(220,38,38,0.22)';e.currentTarget.style.transform='none';}}>
-          <MS name="delete_forever" size={16} style={{ color:'#ef4444' }}/>
-          <span style={{ flex:1, textAlign:'left' }}>Delete Account</span>
-          <MS name="chevron_right" size={14} style={{ color:'rgba(239,68,68,0.5)' }}/>
+      <div style={{ padding:"16px 16px 20px", borderTop:`1px solid ${T.dark3}`, display:"flex", flexDirection:"column", gap:6 }}>
+        <button type="button" onClick={()=>handleClick('home')}
+          style={{ display:"flex", alignItems:"center", gap:10, height:44, padding:"0 12px", borderRadius:10, border:"none", background:"transparent", color:T.onDark, cursor:"pointer", fontFamily:"inherit", fontSize:14, fontWeight:600 }}>
+          {NAV_ICONS.home} Back to shopping
+        </button>
+        <button type="button" onClick={onDeleteClick}
+          style={{ display:"flex", alignItems:"center", gap:10, height:44, padding:"0 12px", borderRadius:10, border:"1px solid rgba(240,160,112,0.25)", background:"transparent", color:"#F4B7A6", cursor:"pointer", fontFamily:"inherit", fontSize:13, fontWeight:700 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+          Delete account
         </button>
       </div>
     </>
