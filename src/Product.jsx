@@ -2213,7 +2213,7 @@ export default function Product(){
   const mobileVendors=isMobile&&activeTab==='vendors';
 
    return(
-     <div style={{minHeight:'100vh',background:isMobile?`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`:'#ffffff',fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column'}}>
+     <div style={{minHeight:'100vh',background:isMobile?`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`:'#ffffff',fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column',overflowX:'clip'}}>
        <ShopStyles/>
        <PhotoSearchSheet open={photoSheetOpen} onClose={()=>setPhotoSheetOpen(false)} onSearch={runVisualSearch} isMobile={isMobile}/>
        <PhotoScanOverlay open={visualSearching} image={uploadedImage} onCancel={cancelVisualSearch}/>
@@ -2366,7 +2366,7 @@ export default function Product(){
             animate={{opacity:heroVisible?1:0,y:0}}
             exit={{opacity:0,y:-16,transition:{duration:0.18}}}
             transition={{type:'spring',stiffness:120,damping:22}}
-            style={{position:'relative',width:'100%',maxWidth:1440,margin:'0 auto',paddingTop:isMobile?6:0}}
+            style={{position:'relative',width:'100%',maxWidth:1440,margin:'0 auto',paddingTop:isMobile?6:0,overflowX:'clip'}}
           >
             {isMobile?<MobileHero onAction={handleHeroAction}/>:<DesktopHero onAction={handleHeroAction}/>}
             <PhotoSearchFab compact={isMobile} onClick={()=>openPhotoSearch()}/>

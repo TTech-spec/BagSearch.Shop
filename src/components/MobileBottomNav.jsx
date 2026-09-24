@@ -158,7 +158,7 @@ export default function MobileBottomNav() {
             style={{
               position: 'relative',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 48, height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
+              width: 'clamp(40px, 12.5vw, 48px)', height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
               background: 'transparent',
             }}
           >
