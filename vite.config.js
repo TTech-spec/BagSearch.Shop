@@ -91,24 +91,12 @@ export default defineConfig({
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
           }
-          if (id.includes('/src/login.jsx') || id.includes('/src/Reg.jsx') || id.includes('/src/forgotPassword.jsx') || id.includes('/src/resetPassword.jsx')) {
-            return 'page-auth';
-          }
-          if (id.includes('/src/Product.jsx') || id.includes('/src/productDetail.jsx') || id.includes('/src/SellerProduct.jsx')) {
-            return 'page-products';
-          }
-          if (id.includes('/src/sellerProfile.jsx') || id.includes('/src/Sellerlisting.jsx') || id.includes('/src/createProduct.jsx')) {
-            return 'page-seller';
-          }
-          if (id.includes('/src/userProfile.jsx')) {
-            return 'page-user';
-          }
-          if (id.includes('/src/home.jsx')) {
-            return 'page-home';
-          }
-          if (id.includes('/src/vendorDetails.jsx')) {
-            return 'page-vendor';
-          }
+          // Pages are NOT grouped by hand: every page is already lazy()-loaded in
+          // App.jsx, so Rollup splits them itself. Forcing pages into named chunks
+          // made those chunks absorb shared components and import each other in a
+          // cycle (page-products <-> page-auth), which crashed the production build
+          // with "Cannot access 'x' before initialization" and left the site stuck
+          // on the loading screen.
         }
       }
     },
