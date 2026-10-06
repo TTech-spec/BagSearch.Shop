@@ -27,7 +27,19 @@ try {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const SITE_URL = (process.env.VITE_APP_URL || 'https://www.bagsearch.shop').replace(/\/$/, '');
+// Sitemap URLs must always use the production domain. A preview/vercel.app
+// VITE_APP_URL in the build environment would otherwise leak into every <loc>.
+const PRODUCTION_URL = 'https://www.bagsearch.shop';
+const envAppUrl = (process.env.VITE_APP_URL || '').replace(/\/$/, '');
+const SITE_URL = PRODUCTION_URL;
+if (envAppUrl && envAppUrl !== PRODUCTION_URL) {
+  console.warn(`Ignoring VITE_APP_URL=${envAppUrl} for sitemap; using ${PRODUCTION_URL}`);
+}
+
+// Seller slugs that must never be published: test/QA accounts and slugs
+// auto-derived from an email address (they expose the seller's email).
+const TEST_SLUG_RE = /(^|-)(test|qa|demo|dummy)(-|$)/i;
+const EMAIL_SLUG_RE = /(gmail|yahoo|hotmail|outlook|icloud|live|aol|proton)(com|net|co)?/i;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
@@ -41,7 +53,6 @@ const staticRoutes = [
   { path: '/about', priority: '0.7', changefreq: 'monthly' },
   { path: '/contact', priority: '0.5', changefreq: 'monthly' },
   { path: '/policy', priority: '0.6', changefreq: 'monthly' },
-  { path: '/privacy', priority: '0.5', changefreq: 'monthly' },
   { path: '/terms-of-service', priority: '0.5', changefreq: 'monthly' },
 ];
 
@@ -76,10 +87,10 @@ async function fetchVendors() {
 
 async function fetchProducts() {
   const queryVariants = [
-    'select=id,name,updated_at,created_at&status=eq.active',
-    'select=id,name,created_at&status=eq.active',
-    'select=id,name,updated_at,created_at',
-    'select=id,name,created_at',
+    'select=id,name,user_id,updated_at,created_at&status=eq.active',
+    'select=id,name,user_id,created_at&status=eq.active',
+    'select=id,name,user_id,updated_at,created_at',
+    'select=id,name,user_id,created_at',
   ];
 
   let lastError = null;
@@ -111,8 +122,21 @@ async function fetchProducts() {
 async function generate() {
   console.log('Fetching products and vendors from Supabase...');
 
-  const [products, vendors] = await Promise.all([fetchProducts(), fetchVendors()]);
+  const [products, allVendors] = await Promise.all([fetchProducts(), fetchVendors()]);
   const today = new Date().toISOString().split('T')[0];
+
+  // Only publish sellers who have at least one listed product, and never
+  // test/QA accounts. Email-derived slugs fall back to the user_id URL,
+  // which the app also resolves, so the page stays discoverable without
+  // exposing the email address.
+  const activeSellerIds = new Set(products.map((p) => p.user_id).filter(Boolean));
+  const vendors = allVendors
+    .filter((v) => v.user_id && activeSellerIds.has(v.user_id))
+    .filter((v) => !TEST_SLUG_RE.test(v.profile_slug || ''))
+    .map((v) => ({
+      ...v,
+      profile_slug: v.profile_slug && !EMAIL_SLUG_RE.test(v.profile_slug) ? v.profile_slug : null,
+    }));
 
   const urls = [
     ...staticRoutes.map((route) => ({
@@ -131,7 +155,6 @@ async function generate() {
       };
     }),
     ...vendors
-      .filter((v) => v.profile_slug || v.user_id)
       .map((vendor) => {
         const slug = vendor.profile_slug || vendor.user_id;
         const lastModified = vendor.updated_at || vendor.created_at || today;
@@ -161,7 +184,7 @@ ${urls
   const outPath = resolve(__dirname, '../../public/sitemap.xml');
   writeFileSync(outPath, xml, 'utf-8');
 
-  console.log(`Created sitemap.xml with ${urls.length} URLs (${staticRoutes.length} static + ${products.length} products + ${vendors.length} vendors)`);
+  console.log(`Created sitemap.xml with ${urls.length} URLs (${staticRoutes.length} static + ${products.length} products + ${vendors.length} of ${allVendors.length} vendors)`);
   console.log(outPath);
 }
 

@@ -44,48 +44,70 @@ function extractIdFromParam(param) {
   return param;
 }
 
+// Sentinel for "the lookup succeeded and the record does not exist", as
+// opposed to null, which means "lookup failed or wasn't possible". Only
+// NOT_FOUND may turn into a 404 — a Supabase outage must never 404 real pages.
+const NOT_FOUND = Symbol('not-found');
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SHORT_ID_RE = /^[0-9a-f]{8}$/i;
+
 async function supabaseFetch(path) {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
 
-  const res = await fetch(`${url}/rest/v1/${path}`, {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      Accept: 'application/json',
-    },
-  });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${url}/rest/v1/${path}`, {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Accept: 'application/json',
+      },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function firstRowOrNotFound(rows) {
+  if (!Array.isArray(rows)) return null;
+  return rows.length > 0 ? rows[0] : NOT_FOUND;
 }
 
 async function fetchProductByParam(rawParam) {
   const resolvedId = extractIdFromParam(rawParam);
   if (!resolvedId) return null;
 
-  const isShortSlugId = resolvedId.length === 8 && resolvedId !== rawParam;
-
-  if (isShortSlugId) {
+  if (SHORT_ID_RE.test(resolvedId) && resolvedId !== rawParam) {
+    // Short id = first 8 hex chars of the uuid. Query the uuid range sharing
+    // that prefix instead of scanning only the latest 500 products.
+    const p = resolvedId.toLowerCase();
     const rows = await supabaseFetch(
-      'products?select=*&order=created_at.desc&limit=500'
+      `products?select=*&id=gte.${p}-0000-0000-0000-000000000000&id=lte.${p}-ffff-ffff-ffff-ffffffffffff&limit=1`
     );
-    if (!Array.isArray(rows)) return null;
-    return rows.find((item) => String(item.id || '').startsWith(resolvedId)) || null;
+    return firstRowOrNotFound(rows);
   }
 
-  const rows = await supabaseFetch(`products?select=*&id=eq.${resolvedId}`);
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  return rows[0];
+  if (UUID_RE.test(resolvedId)) {
+    return firstRowOrNotFound(await supabaseFetch(`products?select=*&id=eq.${resolvedId}`));
+  }
+
+  return null;
 }
+
+const VENDOR_FIELDS = 'user_id,full_name,brand_name,brand_story,avatar_url,profile_slug';
 
 async function fetchVendorByParam(rawParam) {
   if (!rawParam) return null;
-  const rows = await supabaseFetch(
-    `users?select=user_id,full_name,brand_name,brand_story,avatar_url&user_id=eq.${rawParam}`
-  );
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  return rows[0];
+  // Same resolution as the app: user_id for uuids, otherwise profile_slug.
+  const filter = UUID_RE.test(rawParam)
+    ? `user_id=eq.${rawParam}`
+    : `profile_slug=eq.${encodeURIComponent(rawParam)}`;
+  const vendor = firstRowOrNotFound(await supabaseFetch(`users?select=${VENDOR_FIELDS}&${filter}`));
+  return vendor === NOT_FOUND ? null : vendor;
 }
 
 function escapeHtml(str) {
@@ -209,11 +231,13 @@ export default async function middleware(request) {
   const { pathname } = url;
 
   let meta = null;
+  let productMissing = false;
 
   if (pathname.startsWith('/products/')) {
     const param = pathname.slice('/products/'.length).split('/')[0];
     const product = await fetchProductByParam(decodeURIComponent(param));
-    if (product) meta = buildProductMeta(product);
+    if (product === NOT_FOUND) productMissing = true;
+    else if (product) meta = buildProductMeta(product);
   } else if (pathname.startsWith('/seller/') || pathname.startsWith('/vendor/')) {
     const prefix = pathname.startsWith('/seller/') ? '/seller/' : '/vendor/';
     const param = pathname.slice(prefix.length).split('/')[0];
@@ -221,7 +245,7 @@ export default async function middleware(request) {
     if (vendor) meta = buildVendorMeta(vendor, decodeURIComponent(param));
   }
 
-  if (!meta) return;
+  if (!meta && !productMissing) return;
 
   const shellRes = await fetch(new URL('/index.html', request.url), {
     headers: { 'user-agent': ua },
@@ -229,6 +253,23 @@ export default async function middleware(request) {
   if (!shellRes.ok) return;
 
   const shellHtml = await shellRes.text();
+
+  if (productMissing) {
+    // Deleted/sold or mistyped listing: tell crawlers it's gone instead of
+    // serving a 200 that duplicates the homepage (soft 404).
+    const html = shellHtml
+      .replace(/<title>.*?<\/title>/s, `<title>Product not found | ${SITE_NAME}</title>`)
+      .replace(/(<meta\s+name="robots"\s+content=")[^"]*(")/, '$1noindex, follow$2');
+    return new Response(html, {
+      status: 404,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'public, max-age=600',
+        'x-robots-tag': 'noindex, follow',
+      },
+    });
+  }
+
   const html = injectMeta(shellHtml, meta);
 
   return new Response(html, {
