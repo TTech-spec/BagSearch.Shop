@@ -536,11 +536,8 @@ export function FilterChips({ chips, onClearAll }) {
 }
 
 // ─── Product card ────────────────────────────────────────────────────────────
-const PASTELS = ['#A6DFAE', '#E6D3F5', '#F8C9A5', '#9ADFE1'];
-
 export function PastelProductCard({ product, index, categoryLabel, tags, priceLabel, wasLabel, onOpen, onAddToCart, onBuyNow, onChat, href, compact }) {
   const [added, setAdded] = useState(false);
-  const pastel = PASTELS[index % PASTELS.length];
 
   const addToCart = e => {
     e.preventDefault(); e.stopPropagation();
@@ -564,8 +561,8 @@ export function PastelProductCard({ product, index, categoryLabel, tags, priceLa
       transition={{ ...spring, delay: (index % 4) * 0.07 }}
       style={{ display: 'flex', flexDirection: 'column', height: '100%', textDecoration: 'none', color: D.ink, fontFamily: D.font }}
     >
-      <div className="ds-card-frame" style={{ position: 'relative', height: compact ? 190 : 'clamp(230px, 19vw, 262px)', borderRadius: r, background: pastel, padding: compact ? 10 : 16, boxSizing: 'border-box', flexShrink: 0 }}>
-        <div className="ds-card-img" style={{ position: 'relative', width: '100%', height: '100%', borderRadius: compact ? 15 : 18, overflow: 'hidden', background: '#fff', boxShadow: '0 14px 28px -16px rgba(30,26,23,0.45)' }}>
+      <div className="ds-card-frame" style={{ position: 'relative', height: compact ? 190 : 'clamp(230px, 19vw, 262px)', borderRadius: r, overflow: 'hidden', background: '#fff', flexShrink: 0 }}>
+        <div className="ds-card-img" style={{ position: 'relative', width: '100%', height: '100%' }}>
           <img src={product.src} alt={product.brand ? `${product.brand} ${product.name}` : product.name} loading="lazy" decoding="async" width="400" height="300"
             onError={e => { if (product.srcRaw && e.currentTarget.src !== product.srcRaw) e.currentTarget.src = product.srcRaw; }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -585,7 +582,7 @@ export function PastelProductCard({ product, index, categoryLabel, tags, priceLa
 
         {onChat && (
           <button type="button" onClick={e => { e.preventDefault(); e.stopPropagation(); onChat(product); }} aria-label={`Chat with ${product.seller} on WhatsApp`} title="Chat seller on WhatsApp" className="ds-card-chat"
-            style={{ position: 'absolute', right: compact ? 18 : 26, top: compact ? 18 : 26, width: compact ? 30 : 34, height: compact ? 30 : 34, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#128C7E' }}>
+            style={{ position: 'absolute', right: compact ? 10 : 14, top: compact ? 10 : 14, width: compact ? 30 : 34, height: compact ? 30 : 34, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#128C7E' }}>
             <WhatsAppIcon size={compact ? 14 : 16} />
           </button>
         )}
@@ -829,7 +826,7 @@ export const ShopStyles = () => (
     .ds-card .ds-card-img{transition:transform .6s cubic-bezier(.16,1,.3,1)}
     .ds-card-frame{transition:box-shadow .5s ease}
     @media (hover:hover){
-      .ds-card:hover .ds-card-img{transform:translateY(-6px) rotate(-1.5deg) scale(1.02)}
+      .ds-card:hover .ds-card-img{transform:scale(1.05)}
       .ds-card:hover .ds-card-frame{box-shadow:0 22px 40px -22px rgba(30,26,23,.35)}
     }
     .ds-card:active .ds-card-img{transform:scale(.98)}
