@@ -13,6 +13,7 @@
  */
 
 import { TEST_SLUG_RE, sellerPath } from '../src/utils/sellerPath.js';
+import { SEO_CATEGORIES, categoryPath } from '../src/utils/categories.js';
 
 const SITE_URL = 'https://www.bagsearch.shop';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -84,6 +85,7 @@ function urlEntry(loc, lastmod, changefreq, priority) {
 const STATIC_PAGES = [
   { path: '/',               changefreq: 'daily',   priority: '1.0' },
   { path: '/products',       changefreq: 'hourly',  priority: '0.9' },
+  ...Object.keys(SEO_CATEGORIES).map(id => ({ path: categoryPath(id), changefreq: 'daily', priority: '0.8' })),
   { path: '/hot-deals',      changefreq: 'daily',   priority: '0.8' },
   { path: '/vendors',        changefreq: 'daily',   priority: '0.7' },
   { path: '/reels',          changefreq: 'daily',   priority: '0.6' },

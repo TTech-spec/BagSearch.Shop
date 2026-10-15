@@ -246,7 +246,7 @@ export default function ProductDetail() {
   const [networkError, setNetworkError] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
   const [similarProducts, setSimilarProducts] = useState([]);
-  const [sellerInfo, setSellerInfo] = useState({ verified: false, rating: null, reviewCount: 0, listingCount: null });
+  const [sellerInfo, setSellerInfo] = useState({ verified: false, rating: null, reviewCount: 0, listingCount: null, profileSlug: null });
   const [openSection, setOpenSection] = useState('description');
   const [toast, setToast] = useState('');
   const viewLoggedRef = useRef(null);
@@ -276,10 +276,11 @@ export default function ProductDetail() {
 
   const fetchSellerInfo = async (sellerId) => {
     if (!sellerId) return;
-    const [rev, ver, cnt] = await Promise.allSettled([
+    const [rev, ver, cnt, usr] = await Promise.allSettled([
       supabase.from('seller_reviews').select('rating').eq('seller_id', sellerId),
       supabase.from('seller_verifications').select('status').eq('seller_id', sellerId).maybeSingle(),
       supabase.from('products').select('id', { count: 'exact', head: true }).or(`user_id.eq.${sellerId},seller_id.eq.${sellerId}`),
+      supabase.from('users').select('profile_slug').eq('user_id', sellerId).maybeSingle(),
     ]);
     const ratings = rev.status === 'fulfilled' && !rev.value.error ? (rev.value.data || []).map(r => Number(r.rating)).filter(Boolean) : [];
     setSellerInfo({
@@ -287,6 +288,7 @@ export default function ProductDetail() {
       rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null,
       reviewCount: ratings.length,
       listingCount: cnt.status === 'fulfilled' && !cnt.value.error ? cnt.value.count : null,
+      profileSlug: usr.status === 'fulfilled' ? usr.value.data?.profile_slug || null : null,
     });
   };
 
@@ -470,7 +472,7 @@ export default function ProductDetail() {
                 ? 'https://schema.org/RefurbishedCondition'
                 : 'https://schema.org/UsedCondition',
               url: `${SITE_URL}${productPath(product.name, product.rawId)}`,
-              seller: { '@type': 'Organization', name: product.seller, url: `${SITE_URL}/seller/${product.sellerId}` },
+              seller: { '@type': 'Organization', name: product.seller, url: `${SITE_URL}${sellerPath(sellerInfo.profileSlug, product.sellerId)}` },
             },
           },
           {
@@ -612,7 +614,7 @@ export default function ProductDetail() {
   const sellerInitials = product.seller.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const words = product.name.split(/\s+/);
   const eyebrow = [product.brand, product.category].filter(Boolean).join(' · ');
-  const shopPath = product.sellerId ? sellerPath(null, product.sellerId) : '/vendors';
+  const shopPath = product.sellerId ? sellerPath(sellerInfo.profileSlug, product.sellerId) : '/vendors';
 
   // ── Pieces ────────────────────────────────────────────────────────────────
   const stockLine = soldOut ? (

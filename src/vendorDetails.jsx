@@ -473,7 +473,7 @@ export default function VendorDetails() {
     type: 'website',
     schema: profile ? {
       '@context': 'https://schema.org',
-      '@type': 'Person',
+      '@type': 'Organization',
       name: sellerName,
       description: profile.brand_story || `Verified seller on BagSearch with ${products.length} products`,
       image: profile.avatar_url || `${SITE_URL}/logo.png`,

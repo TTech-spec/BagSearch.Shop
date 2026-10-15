@@ -7,6 +7,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { slugify } from './slugify.js';
 import { TEST_SLUG_RE, sellerPath } from './sellerPath.js';
+import { SEO_CATEGORIES, categoryPath } from './categories.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -45,6 +46,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const staticRoutes = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/products', priority: '0.9', changefreq: 'hourly' },
+  ...Object.keys(SEO_CATEGORIES).map((id) => ({ path: categoryPath(id), priority: '0.8', changefreq: 'daily' })),
   { path: '/hot-deals', priority: '0.8', changefreq: 'daily' },
   { path: '/vendors', priority: '0.7', changefreq: 'daily' },
   { path: '/reels', priority: '0.6', changefreq: 'daily' },

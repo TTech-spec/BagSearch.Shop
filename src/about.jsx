@@ -123,7 +123,7 @@ const BagSearchAbout = () => {
 
   // SEO for About page
   useSEO({
-    title: 'About Us | BagSearch Nigeria',
+    title: "About BagSearch | Nigeria's AI Luxury Bag Marketplace",
     description: 'Learn about BagSearch, Africa\'s first AI-powered luxury bag marketplace. Our story, mission, and commitment to authentic bags across Nigeria.',
     keywords: 'about BagSearch, our story, mission vision, luxury marketplace Nigeria, AI shopping, verified sellers',
     url: '/about',

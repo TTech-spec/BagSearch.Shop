@@ -32,54 +32,63 @@ const ROUTES = [
   },
   {
     path: '/products',
+    h1: 'Shop Luxury Designer Bags in Nigeria',
     title: 'Shop Luxury Designer Bags in Nigeria | BagSearch',
     description: 'Browse authentic luxury designer handbags, shoulder bags, clutches and totes. Shop Chanel, Hermès, Louis Vuitton, Gucci from verified sellers across Nigeria.',
     ogType: 'website',
   },
   {
     path: '/hot-deals',
+    h1: 'Hot Deals on Designer Bags',
     title: 'Hot Deals & Discounted Bags | BagSearch Nigeria',
     description: 'Limited-time deals on authentic luxury bags. Up to 70% off designer handbags, totes & clutches from verified sellers across Nigeria. Shop before they sell out!',
     ogType: 'website',
   },
   {
     path: '/about',
-    title: 'About Us | BagSearch Nigeria',
+    h1: 'About BagSearch',
+    title: "About BagSearch | Nigeria's AI Luxury Bag Marketplace",
     description: "Learn about BagSearch, Nigeria's AI-powered luxury bag marketplace. Our story, mission, and commitment to authentic bags and verified sellers across Nigeria.",
     ogType: 'website',
   },
   {
     path: '/contact',
+    h1: 'Contact BagSearch',
     title: 'Contact Us | BagSearch Support Nigeria',
     description: 'Contact BagSearch support via WhatsApp or email. Get help with orders, listings, and accounts. Available Mon–Sat 8AM–8PM WAT.',
     ogType: 'website',
   },
   {
     path: '/policy',
+    h1: 'Privacy Policy',
     title: 'Privacy Policy | BagSearch Nigeria',
     description: "Read the BagSearch privacy policy. Learn how we collect, use, and protect your personal data on Nigeria's luxury bag marketplace.",
     ogType: 'website',
   },
   {
     path: '/terms-of-service',
+    h1: 'Terms of Service',
     title: 'Terms of Service | BagSearch Nigeria',
     description: "Read BagSearch's terms of service. Rules and guidelines for buyers and sellers on Nigeria's luxury bag marketplace.",
     ogType: 'website',
   },
   {
     path: '/vendors',
+    h1: 'Verified Bag Sellers in Nigeria',
     title: 'Verified Bag Sellers & Vendors in Nigeria | BagSearch',
     description: 'Browse verified bag sellers across Lagos, Abuja and all of Nigeria. Compare ratings, see each vendor’s collection and chat with sellers directly on BagSearch.',
     ogType: 'website',
   },
   {
     path: '/reels',
+    h1: 'Bag Videos from Nigerian Sellers',
     title: 'Reels — Bag Videos | BagSearch',
-    description: 'Watch short bag videos from sellers across Nigeria. See unboxings, styling tips, and bag showcases.',
+    description: 'Watch short bag videos from verified sellers across Nigeria: unboxings, styling tips and close-up showcases of designer handbags, totes and clutches.',
     ogType: 'website',
   },
   {
     path: '/pricing',
+    h1: 'Seller Plans & Pricing',
     title: 'Seller Plans & Pricing | BagSearch Nigeria',
     description: 'Choose a plan to sell bags on BagSearch. Free, Pro (₦1,000/mo), or Premium (₦5,000/mo). Unlimited uploads, search boost, and more.',
     ogType: 'website',
@@ -117,6 +126,16 @@ function injectMeta(html, route) {
   // Twitter tags
   html = setTag(html, 'meta[^>]*name="twitter:title"', 'content', title);
   html = setTag(html, 'meta[^>]*name="twitter:description"', 'content', description);
+
+  // Crawler-only body (#static-prerender): swap the homepage hero heading and
+  // intro for this page's own, so every route doesn't read as the homepage.
+  if (route.h1) {
+    const text = (v) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    html = html.replace(
+      /(<h1 id="hero-h1"[^>]*>)[\s\S]*?(<\/h1>\s*<p[^>]*>)[\s\S]*?(<\/p>)/,
+      `$1${text(route.h1)}$2${text(description)}$3`
+    );
+  }
 
   return html;
 }

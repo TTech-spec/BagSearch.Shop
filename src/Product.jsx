@@ -24,6 +24,7 @@ import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
 import { productPath } from './utils/slugify';
 import { sellerPath } from './utils/sellerPath';
+import { categoryPath, categorySEO } from './utils/categories';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
@@ -488,7 +489,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Shop</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'All Bags',href:'/products'},{label:'Tote Bags',href:'/products'},{label:'Clutches',href:'/products'},{label:'Crossbody Bags',href:'/products'},{label:'Backpacks',href:'/products'},{label:'Evening Bags',href:'/products'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'All Bags',href:'/products'},{label:'Tote Bags',href:categoryPath('tote')},{label:'Clutches',href:categoryPath('clutch')},{label:'Crossbody Bags',href:categoryPath('crossbody')},{label:'Backpacks',href:categoryPath('backpack')},{label:'Evening Bags',href:categoryPath('evening')}])}</ul>
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Sellers</p>
@@ -503,7 +504,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Help</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/'},{label:'Contact Us',href:'/contact'},{label:'Help Centre',href:'/contact'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/terms-of-service'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'FAQ',href:'/contact#faq'},{label:'Contact Us',href:'/contact'},{label:'Help Centre',href:'/contact'},{label:'Privacy Policy',href:'/policy'},{label:'Terms of Service',href:'/terms-of-service'}])}</ul>
           <div style={{ marginTop:18,background:'rgba(37,211,102,0.1)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(37,211,102,0.2)' }}>
             <p style={{ fontSize:11,fontWeight:800,color:'#4ade80',marginBottom:3,display:'flex',alignItems:'center',gap:6 }}>
               <Icons.MessageCircle size={14} color="#4ade80" /> WhatsApp Support
@@ -1754,7 +1755,10 @@ export default function Product(){
   const[pageLoading,setPageLoading]=useState(true);
   const isHomepage = location.pathname === '/';
   const isVendorsPage = location.pathname === '/vendors';
-  const pageSEO = isHomepage ? {
+  // /products?category=tote etc. are indexable category pages with their own canonical.
+  const urlCategoryId = location.pathname === '/products' ? new URLSearchParams(location.search).get('category') : null;
+  const urlCategorySEO = urlCategoryId ? categorySEO(urlCategoryId) : null;
+  const pageSEO = urlCategorySEO ? urlCategorySEO : isHomepage ? {
     h1: 'Buy & Sell Luxury Designer Bags in Nigeria',
     title: 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria',
     description: "Nigeria's AI-powered luxury bag marketplace. Upload any photo to find matching bags instantly. Buy authentic Chanel, Hermès, LV & more. Free for sellers to list.",
@@ -1774,7 +1778,7 @@ export default function Product(){
     title: pageSEO.title,
     description: pageSEO.description,
     keywords: pageSEO.keywords,
-    url: location.pathname,
+    url: urlCategorySEO ? categoryPath(urlCategoryId) : location.pathname,
     type: 'website',
   });
   const fileInputRef=useRef(null);
@@ -1790,7 +1794,7 @@ export default function Product(){
   const[visualSearchCount,setVisualSearchCount]=useState(0);
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);
   const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[,setSearchVisible]=useState(false);const[,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
-  const[activeCategory,setActiveCategory]=useState('all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
+  const[activeCategory,setActiveCategory]=useState(()=>urlCategorySEO?urlCategoryId:'all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState(location.pathname==='/vendors'?'vendors':'products');const[vendorSearch,setVendorSearch]=useState('');const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
   const[sortBy,setSortBy]=useState('relevance');
@@ -2009,7 +2013,8 @@ export default function Product(){
     }catch(err){console.error('Failed to load products:',err);return[];}
   },[mapProductRow]);
 
-  useEffect(()=>{let isMounted=true;fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setDisplayedProducts(combined);setProductsReady(true);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);setProductsReady(true);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors]);
+  // ?category= deep links (category pages, footer links) open with that filter applied.
+  useEffect(()=>{let isMounted=true;const cat=categorySEO(urlCategoryId)?urlCategoryId:'all';fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setActiveCategory(cat);setDisplayedProducts(cat==='all'?combined:combined.filter(p=>p.category===cat));setProductsReady(true);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);setProductsReady(true);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors,urlCategoryId]);
 
   // Nudge logged-in sellers who haven't earned a trust badge yet to upload their
   // NIN or collect reviews. Checked once per seller and remembered in localStorage
@@ -2097,9 +2102,9 @@ export default function Product(){
   // which reads as "results only show once I stop typing / finish the whole name". Each
   // call stamps a shared request id and bails if a newer call has since started, so only
   // the latest keystroke's response is ever applied — partial names resolve live.
-  const handleSearch=async q=>{setSearchQuery(q);try{sessionStorage.removeItem('bs_search_source');}catch{/* storage blocked */}const reqId=++searchReqId.current;let results;if(q.trim()){results=mapProductRows(await searchProducts(q,selectedLocation.id,activeCategory));}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
-  const handleCategoryChange=async id=>{setActiveCategory(id);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,selectedLocation.id,id));}else{results=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
-  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,loc.id,activeCategory));}else{results=await fetchProducts(loc.id);if(reqId===searchReqId.current)setAllProducts(results);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);};
+  const handleSearch=async q=>{setSearchQuery(q);try{sessionStorage.removeItem('bs_search_source');}catch{/* storage blocked */}const reqId=++searchReqId.current;let results;if(q.trim()){results=mapProductRows(await searchProducts(q,selectedLocation.id,activeCategory));}else{const all=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(all);results=activeCategory==='all'?all:all.filter(p=>p.category===activeCategory);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!q.trim()||activeCategory!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);saveSearch(q);};
+  const handleCategoryChange=async id=>{setActiveCategory(id);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,selectedLocation.id,id));}else{const all=await fetchProducts(selectedLocation.id);if(reqId===searchReqId.current)setAllProducts(all);results=id==='all'?all:all.filter(p=>p.category===id);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);setIsFiltered(!!searchQuery.trim()||id!=='all'||selectedLocation.id!=='all');setResultsKey(k=>k+1);};
+  const handleLocationChange=async loc=>{setSelectedLocation(loc);setIsFiltered(!!searchQuery.trim()||activeCategory!=='all'||loc.id!=='all');setResultsKey(k=>k+1);const reqId=++searchReqId.current;let results;if(searchQuery.trim()){results=mapProductRows(await searchProducts(searchQuery,loc.id,activeCategory));}else{const all=await fetchProducts(loc.id);if(reqId===searchReqId.current)setAllProducts(all);results=activeCategory==='all'?all:all.filter(p=>p.category===activeCategory);}if(reqId!==searchReqId.current)return;setDisplayedProducts(results);};
   const handleClearSearch=async()=>{setIsFiltered(false);setSearchQuery('');setUploadedImage(null);setActiveCategory('all');const defaultLocation=NIGERIAN_LOCATIONS[0];setSelectedLocation(defaultLocation);setSelectedVendor(null);setResultsKey(k=>k+1);const combined=await fetchProducts();setAllProducts(combined);setDisplayedProducts(combined);setVisualSearchSuccess(false);setVisualSearchCount(0);};
   // Visual search from a photo (File/Blob). A token lets Cancel ignore a search that is still running.
   const visualToken=useRef(0);

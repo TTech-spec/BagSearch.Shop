@@ -810,7 +810,7 @@ export default function Reels() {
 
   useSEO({
     title: 'Reels — Bag Videos | BagSearch',
-    description: 'Watch short bag videos from sellers across Nigeria. See unboxings, styling tips, and bag showcases.',
+    description: 'Watch short bag videos from verified sellers across Nigeria: unboxings, styling tips and close-up showcases of designer handbags, totes and clutches.',
     url: '/reels',
   });
 
@@ -942,6 +942,8 @@ function MobileReels({ tab, setTab, reels, loading, navigate, user, isSeller, up
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: 'white', fontFamily: "'Manrope',sans-serif", position: 'relative', overflow: 'hidden' }}>
       <ReelsStyles />
+      {/* Page heading for search engines and screen readers; the video feed carries the design. */}
+      <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>Bag Videos from Nigerian Sellers</h1>
 
       {/* Top header */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'linear-gradient(180deg,rgba(0,0,0,0.6) 0%,transparent 100%)' }}>

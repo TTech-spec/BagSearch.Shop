@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
 import { useSEO, SITE_URL } from './hooks/useSEO';
@@ -352,6 +352,12 @@ export default function Contact() {
     }
   });
 
+  // Footer "FAQ" links here as /contact#faq; this page is lazy-loaded, so the
+  // browser's own jump to the anchor happens before the section exists.
+  useEffect(() => {
+    if (window.location.hash === '#faq') document.getElementById('faq')?.scrollIntoView();
+  }, []);
+
   const doSearch = (q) => {
     const text = (q || query).trim();
     if (!text) return;
@@ -503,7 +509,7 @@ export default function Contact() {
         <div style={{ borderTop:`1.5px solid ${C.border}`, margin:'40px 0' }}/>
 
         {/* FAQ */}
-        <p style={{ fontSize:11, fontWeight:800, color:C.textFaint, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:16 }}>Frequently asked questions</p>
+        <p id="faq" style={{ scrollMarginTop:80, fontSize:11, fontWeight:800, color:C.textFaint, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:16 }}>Frequently asked questions</p>
         <div className="faq-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:14 }}>
           {[
             { q:'How do I list my bag for sale?', a:'Register as a Seller → tap 👤 profile icon → Seller Dashboard → "Upload Product" → add photos, price, details → tap "Upload". Your bag goes live instantly!' },

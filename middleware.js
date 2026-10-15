@@ -12,9 +12,10 @@
  */
 
 import { sellerPath } from './src/utils/sellerPath.js';
+import { SEO_CATEGORIES, categoryPath, categorySEO } from './src/utils/categories.js';
 
 export const config = {
-  matcher: ['/products/:path*', '/seller/:path*', '/vendor/:path*'],
+  matcher: ['/products', '/products/:path*', '/seller/:path*', '/vendor/:path*'],
 };
 
 const SITE_URL = 'https://www.bagsearch.shop';
@@ -116,7 +117,52 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildProductMeta(product) {
+const PRODUCT_LIST_FIELDS = 'id,name,brand,price,discounted_price,images';
+const LIST_LIMIT = 48;
+
+function naira(value) {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? `₦${Math.round(n).toLocaleString('en-NG')}` : '';
+}
+
+async function fetchSellerSummary(userId) {
+  if (!UUID_RE.test(String(userId || ''))) return null;
+  const rows = await supabaseFetch(`users?select=user_id,brand_name,full_name,profile_slug&user_id=eq.${userId}`);
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+async function fetchProductsBySeller(userId) {
+  const rows = await supabaseFetch(
+    `products?select=${PRODUCT_LIST_FIELDS}&user_id=eq.${userId}&order=created_at.desc&limit=${LIST_LIMIT}`
+  );
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function fetchProductsByCategory(id) {
+  const cat = SEO_CATEGORIES[id];
+  if (!cat) return [];
+  const or = cat.match.map((m) => `category.ilike.*${m}*`).join(',');
+  const rows = await supabaseFetch(
+    `products?select=${PRODUCT_LIST_FIELDS}&or=(${encodeURIComponent(or)})&order=created_at.desc&limit=${LIST_LIMIT}`
+  );
+  return Array.isArray(rows) ? rows : [];
+}
+
+// Crawler-visible list of product links — mirrors what the app renders.
+function productListHtml(products) {
+  if (!products.length) return '<p>No bags listed right now — check back soon.</p>';
+  const items = products
+    .filter((p) => p.id && p.name)
+    .map((p) => {
+      const price = p.discounted_price ? naira(p.discounted_price) : naira(p.price);
+      const label = [p.brand, price].filter(Boolean).join(' · ');
+      return `<li><a href="${productPath(p.name, p.id)}">${escapeHtml(p.name)}</a>${label ? ` — ${escapeHtml(label)}` : ''}</li>`;
+    })
+    .join('');
+  return `<ul>${items}</ul>`;
+}
+
+function buildProductMeta(product, seller) {
   const name = product.name || 'Product';
   const brand = product.brand || '';
   const path = productPath(name, product.id);
@@ -129,6 +175,8 @@ function buildProductMeta(product) {
     .filter(Boolean)
     .join(', ');
 
+  const sellerName = seller?.brand_name || seller?.full_name || product.seller_name || 'BagSearch seller';
+  const sellerUrlPath = sellerPath(seller?.profile_slug, product.user_id || product.seller_id);
   const price = parseFloat(product.price) || 0;
   const quantity = product.quantity != null ? parseInt(product.quantity) : null;
   const availability =
@@ -163,7 +211,7 @@ function buildProductMeta(product) {
           availability,
           itemCondition,
           url: canonicalUrl,
-          seller: { '@type': 'Organization', name: product.seller_name || 'Anonymous Seller', url: `${SITE_URL}/seller/${product.user_id || product.seller_id || ''}` },
+          seller: { '@type': 'Organization', name: sellerName, url: `${SITE_URL}${sellerUrlPath}` },
         },
       },
       {
@@ -177,10 +225,29 @@ function buildProductMeta(product) {
     ],
   };
 
-  return { title, description, keywords, image, canonicalUrl, type: 'website', schema };
+  const offerPrice = product.discounted_price ? naira(product.discounted_price) : naira(product.price);
+  const facts = [
+    brand && `Brand: ${escapeHtml(brand)}`,
+    product.category && `Category: ${escapeHtml(product.category)}`,
+    product.condition && `Condition: ${escapeHtml(product.condition)}`,
+  ].filter(Boolean).join(' · ');
+  const body = `
+    <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/products">Bags</a> › ${escapeHtml(name)}</nav>
+    <article>
+      <h1>${escapeHtml(name)}</h1>
+      <img src="${escapeHtml(image)}" alt="${escapeHtml(brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${brand} ${name}` : name)}" width="600" height="750" style="max-width:100%;height:auto;">
+      ${facts ? `<p>${facts}</p>` : ''}
+      ${offerPrice ? `<p>Price: <strong>${offerPrice}</strong>${product.discounted_price ? ` <s>${naira(product.price)}</s>` : ''}</p>` : ''}
+      <p>${availability.endsWith('OutOfStock') ? 'Sold out' : 'In stock'}</p>
+      ${product.description ? `<p>${escapeHtml(product.description)}</p>` : ''}
+      <p>Sold by <a href="${sellerUrlPath}">${escapeHtml(sellerName)}</a>, delivering across Nigeria.</p>
+    </article>
+    <p><a href="/products">Browse more designer bags</a></p>`;
+
+  return { title, description, keywords, image, canonicalUrl, type: 'website', schema, body };
 }
 
-function buildVendorMeta(vendor) {
+function buildVendorMeta(vendor, products) {
   const sellerName = vendor.brand_name || vendor.full_name || 'Verified Seller';
   // Same canonical the app uses, whichever of /seller/{slug}, /seller/{uuid}
   // or /vendor/{...} the bot requested.
@@ -193,14 +260,55 @@ function buildVendorMeta(vendor) {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Person',
+    '@type': 'Organization',
     name: sellerName,
     description: vendor.brand_story || `Verified seller on BagSearch`,
-    image,
+    logo: image,
     url: canonicalUrl,
   };
 
-  return { title, description, keywords, image, canonicalUrl, type: 'ProfilePage', schema };
+  const body = `
+    <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/vendors">Sellers</a> › ${escapeHtml(sellerName)}</nav>
+    <h1>${escapeHtml(sellerName)}</h1>
+    <p>${escapeHtml(vendor.brand_story || `${sellerName} is a verified bag seller on BagSearch, delivering across Nigeria.`)}</p>
+    <h2>Bags from ${escapeHtml(sellerName)}</h2>
+    ${productListHtml(products)}
+    <p><a href="/vendors">See all verified sellers</a></p>`;
+
+  return { title, description, keywords, image, canonicalUrl, type: 'ProfilePage', schema, body };
+}
+
+function buildCategoryMeta(id, products) {
+  const seo = categorySEO(id);
+  const canonicalUrl = `${SITE_URL}${categoryPath(id)}`;
+  const image = products.find((p) => Array.isArray(p.images) && p.images[0])?.images[0] || `${SITE_URL}/og-default.jpg`;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: seo.h1,
+    description: seo.description,
+    url: canonicalUrl,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: products.slice(0, 20).map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}${productPath(p.name, p.id)}`,
+        name: p.name,
+      })),
+    },
+  };
+  const body = `
+    <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/products">Bags</a> › ${escapeHtml(SEO_CATEGORIES[id].label)}</nav>
+    <h1>${escapeHtml(seo.h1)}</h1>
+    <p>${escapeHtml(seo.description)}</p>
+    ${productListHtml(products)}
+    <p>More categories: ${Object.entries(SEO_CATEGORIES)
+      .filter(([cid]) => cid !== id)
+      .map(([cid, c]) => `<a href="${categoryPath(cid)}">${escapeHtml(c.label)}</a>`)
+      .join(' · ')}</p>`;
+
+  return { title: seo.title, description: seo.description, keywords: seo.keywords, image, canonicalUrl, type: 'website', schema, body };
 }
 
 function injectMeta(html, meta) {
@@ -221,8 +329,16 @@ function injectMeta(html, meta) {
   out = out.replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*(")/, `$1${escapeHtml(meta.description)}$2`);
   out = out.replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*(")/, `$1${meta.image}$2`);
 
-  const schemaScript = `<script type="application/ld+json" id="seo-jsonld-bot">${JSON.stringify(meta.schema)}</script>`;
+  // Escape "<" so seller-written text can't close the <script> tag.
+  const schemaJson = JSON.stringify(meta.schema).replace(/</g, '\\u003c');
+  const schemaScript = `<script type="application/ld+json" id="seo-jsonld-bot">${schemaJson}</script>`;
   out = out.replace('</head>', `${schemaScript}\n  </head>`);
+
+  // Replace the homepage body inside #static-prerender with this page's own
+  // content, so crawlers that don't run JS see the product/seller/category.
+  if (meta.body) {
+    out = out.replace(/(<div id="static-prerender"[\s\S]*?<main[^>]*>)[\s\S]*?(<\/main>)/, (_, open, close) => `${open}${meta.body}\n        ${close}`);
+  }
 
   return out;
 }
@@ -237,16 +353,21 @@ export default async function middleware(request) {
   let meta = null;
   let productMissing = false;
 
-  if (pathname.startsWith('/products/')) {
+  if (pathname === '/products' || pathname === '/products/') {
+    // Only category pages get custom content; plain /products is prerendered.
+    const categoryId = url.searchParams.get('category');
+    if (!SEO_CATEGORIES[categoryId]) return;
+    meta = buildCategoryMeta(categoryId, await fetchProductsByCategory(categoryId));
+  } else if (pathname.startsWith('/products/')) {
     const param = pathname.slice('/products/'.length).split('/')[0];
     const product = await fetchProductByParam(decodeURIComponent(param));
     if (product === NOT_FOUND) productMissing = true;
-    else if (product) meta = buildProductMeta(product);
+    else if (product) meta = buildProductMeta(product, await fetchSellerSummary(product.user_id || product.seller_id));
   } else if (pathname.startsWith('/seller/') || pathname.startsWith('/vendor/')) {
     const prefix = pathname.startsWith('/seller/') ? '/seller/' : '/vendor/';
     const param = pathname.slice(prefix.length).split('/')[0];
     const vendor = await fetchVendorByParam(decodeURIComponent(param));
-    if (vendor) meta = buildVendorMeta(vendor);
+    if (vendor) meta = buildVendorMeta(vendor, await fetchProductsBySeller(vendor.user_id));
   }
 
   if (!meta && !productMissing) return;
