@@ -766,7 +766,7 @@ export default function VendorDetails() {
 
   return (
     <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#fdf4ee 0%,white 40%)',fontFamily:"'Manrope',sans-serif",color:C.text}}>
-      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes badgePop{from{opacity:0;transform:scale(0.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes vendorNameGlow{0%,100%{text-shadow:0 0 20px rgba(249,115,22,0.3),0 0 40px rgba(200,75,17,0.1)}50%{text-shadow:0 0 30px rgba(249,115,22,0.5),0 0 60px rgba(200,75,17,0.2)}}@keyframes vendorUnderline{from{width:0}to{width:100%}}@keyframes vendorSparkle{0%,100%{opacity:0.6;transform:scale(0.8) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(180deg)}}@keyframes vendorLetterIn{from{opacity:0;transform:translateY(14px) scale(0.7)}to{opacity:1;transform:translateY(0) scale(1)}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
+      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes spin{to{transform:rotate(360deg)}}@keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes badgePop{from{opacity:0;transform:scale(0.85) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes vendorNameGlow{0%,100%{text-shadow:0 0 20px rgba(249,115,22,0.3),0 0 40px rgba(200,75,17,0.1)}50%{text-shadow:0 0 30px rgba(249,115,22,0.5),0 0 60px rgba(200,75,17,0.2)}}@keyframes vendorUnderline{from{width:0}to{width:100%}}@keyframes vendorSparkle{0%,100%{opacity:0.6;transform:scale(0.8) rotate(0deg)}50%{opacity:1;transform:scale(1.2) rotate(180deg)}}@keyframes vendorLetterIn{from{opacity:0;transform:translateY(14px) scale(0.7)}to{opacity:1;transform:translateY(0) scale(1)}}.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}@media(max-width:640px){.pgrid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}.srow{grid-template-columns:repeat(2,1fr)!important}}'}</style>
 
       {/* ── Header ── */}
       <header style={{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(12px)',borderBottom:'1px solid #f7ece4',position:'sticky',top:0,zIndex:50,padding:'0 20px',height:60,display:'flex',alignItems:'center',gap:12}}>
@@ -812,7 +812,7 @@ export default function VendorDetails() {
               </div>
               <div style={{flex:1,minWidth:200}}>
                 <div style={{position:'relative',display:'inline-block',marginBottom:6}}>
-                  <h2 style={{
+                  <h1 style={{
                     fontFamily:"'Playfair Display','Manrope',serif",
                     fontSize:'clamp(24px,3.2vw,34px)',fontWeight:900,color:'white',
                     letterSpacing:'-0.03em',lineHeight:1.15,
@@ -829,7 +829,7 @@ export default function VendorDetails() {
                       animation:'vendorSparkle 2.5s ease-in-out infinite',
                       fontSize:14,lineHeight:1,
                     }}>✨</span>
-                  </h2>
+                  </h1>
                   <div style={{
                     height:3,borderRadius:3,
                     background:'linear-gradient(90deg,#f97316,#ea580c,#f9a825)',
@@ -1291,7 +1291,7 @@ function MobileVendorProfile({
   return (
     <div style={{ minHeight: '100vh', background: '#ffffff', fontFamily: "'Manrope',sans-serif", color: C.text, paddingBottom: 48 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         @keyframes ldSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes mobileNameGlow{0%,100%{text-shadow:0 2px 12px rgba(200,75,17,0.15)}50%{text-shadow:0 2px 20px rgba(200,75,17,0.3)}}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './services/api';
@@ -808,10 +808,35 @@ export default function Reels() {
 
   const isSeller = user?.user_metadata?.role === 'seller';
 
+  // VideoObject structured data for the loaded reels (makes them eligible for video results).
+  const reelsSchema = useMemo(() => {
+    const videos = reels
+      .map((r) => {
+        // Cloudinary serves a poster frame when the video URL's extension is swapped for .jpg.
+        const thumb = r.thumbnail_url || (/res\.cloudinary\.com/.test(r.video_url || '') ? r.video_url.replace(/\.[a-z0-9]+(\?.*)?$/i, '.jpg') : null);
+        if (!r.video_url || !thumb || !r.created_at) return null;
+        const name = r.product_name || r.caption || `Bag video by ${r.seller_name || 'a BagSearch seller'}`;
+        return {
+          '@type': 'VideoObject',
+          name: name.slice(0, 100),
+          description: r.caption || `${name} — a short bag video from ${r.seller_name || 'a seller'} on BagSearch.`,
+          thumbnailUrl: thumb,
+          uploadDate: r.created_at,
+          contentUrl: r.video_url,
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 20);
+    return videos.length
+      ? { '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: videos.map((v, i) => ({ '@type': 'ListItem', position: i + 1, item: v })) }
+      : null;
+  }, [reels]);
+
   useSEO({
     title: 'Reels — Bag Videos | BagSearch',
     description: 'Watch short bag videos from verified sellers across Nigeria: unboxings, styling tips and close-up showcases of designer handbags, totes and clutches.',
     url: '/reels',
+    schema: reelsSchema,
   });
 
   // Fetch reels

@@ -488,7 +488,6 @@ export default function BoostPlans() {
       fontFamily: "'Manrope', sans-serif",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         @keyframes shimBar{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes boostGlow{0%,100%{box-shadow:0 8px 32px rgba(200,75,17,0.12)}50%{box-shadow:0 12px 44px rgba(200,75,17,0.22)}}

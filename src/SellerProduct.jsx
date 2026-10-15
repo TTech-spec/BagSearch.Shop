@@ -674,7 +674,6 @@ export default function VendorStorefront({ vendor: propVendor, onBack, onAddToCa
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 20%,white 100%)`, fontFamily: "'Manrope',sans-serif", width: "100%", overflowX: "hidden" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@600;700;800&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         
         /* Responsive keyframes */

@@ -25,6 +25,7 @@ import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 11
 import { productPath } from './utils/slugify';
 import { sellerPath } from './utils/sellerPath';
 import { categoryPath, categorySEO } from './utils/categories';
+import { locationPath, locationSEO } from './utils/locations';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
@@ -1756,9 +1757,13 @@ export default function Product(){
   const isHomepage = location.pathname === '/';
   const isVendorsPage = location.pathname === '/vendors';
   // /products?category=tote etc. are indexable category pages with their own canonical.
-  const urlCategoryId = location.pathname === '/products' ? new URLSearchParams(location.search).get('category') : null;
+  // Same for /products?location=lagos etc. (city pages); a category in the URL takes precedence for SEO.
+  const urlParams = new URLSearchParams(location.pathname === '/products' ? location.search : '');
+  const urlCategoryId = urlParams.get('category');
   const urlCategorySEO = urlCategoryId ? categorySEO(urlCategoryId) : null;
-  const pageSEO = urlCategorySEO ? urlCategorySEO : isHomepage ? {
+  const urlLocationId = urlParams.get('location');
+  const urlLocationSEO = !urlCategorySEO && urlLocationId ? locationSEO(urlLocationId) : null;
+  const pageSEO = urlCategorySEO ? urlCategorySEO : urlLocationSEO ? urlLocationSEO : isHomepage ? {
     h1: 'Buy & Sell Luxury Designer Bags in Nigeria',
     title: 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria',
     description: "Nigeria's AI-powered luxury bag marketplace. Upload any photo to find matching bags instantly. Buy authentic Chanel, Hermès, LV & more. Free for sellers to list.",
@@ -1778,7 +1783,7 @@ export default function Product(){
     title: pageSEO.title,
     description: pageSEO.description,
     keywords: pageSEO.keywords,
-    url: urlCategorySEO ? categoryPath(urlCategoryId) : location.pathname,
+    url: urlCategorySEO ? categoryPath(urlCategoryId) : urlLocationSEO ? locationPath(urlLocationId) : location.pathname,
     type: 'website',
   });
   const fileInputRef=useRef(null);
@@ -1794,7 +1799,7 @@ export default function Product(){
   const[visualSearchCount,setVisualSearchCount]=useState(0);
   const[isSidebarOpen,setIsSidebarOpen]=useState(false);
   const[headerVisible,setHeaderVisible]=useState(false);const[heroVisible,setHeroVisible]=useState(true);const[,setSearchVisible]=useState(false);const[,setCatVisible]=useState(false);const[resultsKey,setResultsKey]=useState(0);
-  const[activeCategory,setActiveCategory]=useState(()=>urlCategorySEO?urlCategoryId:'all');const[selectedLocation,setSelectedLocation]=useState(NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
+  const[activeCategory,setActiveCategory]=useState(()=>urlCategorySEO?urlCategoryId:'all');const[selectedLocation,setSelectedLocation]=useState(()=>NIGERIAN_LOCATIONS.find(l=>l.id!=='all'&&l.id===urlLocationId)||NIGERIAN_LOCATIONS[0]);const[locationModalOpen,setLocationModalOpen]=useState(false);
   const[activeTab,setActiveTab]=useState(location.pathname==='/vendors'?'vendors':'products');const[vendorSearch,setVendorSearch]=useState('');const[vendors,setVendors]=useState([]);const[filteredVendors,setFilteredVendors]=useState([]);const[selectedVendor,setSelectedVendor]=useState(null);
   const[selectedVendorDetail,setSelectedVendorDetail]=useState(null);
   const[sortBy,setSortBy]=useState('relevance');
@@ -2013,8 +2018,8 @@ export default function Product(){
     }catch(err){console.error('Failed to load products:',err);return[];}
   },[mapProductRow]);
 
-  // ?category= deep links (category pages, footer links) open with that filter applied.
-  useEffect(()=>{let isMounted=true;const cat=categorySEO(urlCategoryId)?urlCategoryId:'all';fetchProducts().then(async combined=>{if(!isMounted)return;setAllProducts(combined);setActiveCategory(cat);setDisplayedProducts(cat==='all'?combined:combined.filter(p=>p.category===cat));setProductsReady(true);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);setProductsReady(true);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors,urlCategoryId]);
+  // ?category= / ?location= deep links (category and city pages, footer links) open with those filters applied.
+  useEffect(()=>{let isMounted=true;const cat=categorySEO(urlCategoryId)?urlCategoryId:'all';const loc=NIGERIAN_LOCATIONS.find(l=>l.id!=='all'&&l.id===urlLocationId)||NIGERIAN_LOCATIONS[0];fetchProducts(loc.id).then(async combined=>{if(!isMounted)return;setAllProducts(combined);setActiveCategory(cat);setSelectedLocation(loc);setDisplayedProducts(cat==='all'?combined:combined.filter(p=>p.category===cat));setProductsReady(true);await fetchVendors(combined);}).catch(()=>{if(!isMounted)return;setAllProducts([]);setDisplayedProducts([]);setProductsReady(true);});return()=>{isMounted=false;};},[fetchProducts,fetchVendors,urlCategoryId,urlLocationId]);
 
   // Nudge logged-in sellers who haven't earned a trust badge yet to upload their
   // NIN or collect reviews. Checked once per seller and remembered in localStorage
@@ -2239,7 +2244,6 @@ export default function Product(){
        <WelcomeTour ready={productsReady&&activeTab==='products'&&!searchMode&&!photoSheetOpen} isMobile={isMobile} onFinish={()=>setTourDone(true)}/>
 
        <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         @keyframes wordFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}

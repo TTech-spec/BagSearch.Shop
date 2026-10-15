@@ -13,10 +13,28 @@
 
 import { sellerPath } from './src/utils/sellerPath.js';
 import { SEO_CATEGORIES, categoryPath, categorySEO } from './src/utils/categories.js';
+import { SEO_LOCATIONS, locationPath, locationSEO } from './src/utils/locations.js';
 
 export const config = {
-  matcher: ['/products', '/products/:path*', '/seller/:path*', '/vendor/:path*'],
+  // Every page URL (no file extension, not /api or /assets): product, seller
+  // and category pages get real content; unknown routes get a 404 (below).
+  matcher: ['/((?!api/|assets/)[^.]*)'],
 };
+
+// Routes the React app serves (src/App.jsx) — keep in sync when adding one.
+// Anything else renders the app's NotFound page, so bots get a real 404.
+const APP_ROUTE_RE = new RegExp(
+  '^/(' +
+    [
+      '', 'auth/callback', 'register', 'login', 'onboarding', 'forgot-password', 'reset-password',
+      'products', 'products/[^/]+', 'vendors', 'seller-products', 'seller-product',
+      'profile', 'seller-profile', 'contact', 'about', 'policy', 'privacy', 'terms-of-service',
+      'hot-deals', 'cart', 'orders', 'pricing', 'bank-details', 'vendor/[^/]+', 'seller/[^/]+',
+      'reels', 'upload-product', 'seller-listing',
+    ].join('|') +
+    ')/?$',
+  'i' // React Router matches paths case-insensitively
+);
 
 const SITE_URL = 'https://www.bagsearch.shop';
 const SITE_NAME = 'BagSearch';
@@ -109,8 +127,7 @@ async function fetchVendorByParam(rawParam) {
   const filter = UUID_RE.test(rawParam)
     ? `user_id=eq.${rawParam}`
     : `profile_slug=eq.${encodeURIComponent(rawParam)}`;
-  const vendor = firstRowOrNotFound(await supabaseFetch(`users?select=${VENDOR_FIELDS}&${filter}`));
-  return vendor === NOT_FOUND ? null : vendor;
+  return firstRowOrNotFound(await supabaseFetch(`users?select=${VENDOR_FIELDS}&${filter}`));
 }
 
 function escapeHtml(str) {
@@ -146,6 +163,22 @@ async function fetchProductsByCategory(id) {
     `products?select=${PRODUCT_LIST_FIELDS}&or=(${encodeURIComponent(or)})&order=created_at.desc&limit=${LIST_LIMIT}`
   );
   return Array.isArray(rows) ? rows : [];
+}
+
+async function fetchProductsByLocation(id) {
+  const loc = SEO_LOCATIONS[id];
+  if (!loc) return [];
+  const rows = await supabaseFetch(
+    `products?select=${PRODUCT_LIST_FIELDS}&location=in.(${loc.ids.join(',')})&order=created_at.desc&limit=${LIST_LIMIT}`
+  );
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function fetchSellerRating(userId) {
+  const rows = await supabaseFetch(`seller_reviews?select=rating&seller_id=eq.${userId}`);
+  const ratings = (Array.isArray(rows) ? rows : []).map((r) => Number(r.rating)).filter((n) => n >= 1 && n <= 5);
+  if (!ratings.length) return null;
+  return { value: (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1), count: ratings.length };
 }
 
 // Crawler-visible list of product links — mirrors what the app renders.
@@ -247,7 +280,7 @@ function buildProductMeta(product, seller) {
   return { title, description, keywords, image, canonicalUrl, type: 'website', schema, body };
 }
 
-function buildVendorMeta(vendor, products) {
+function buildVendorMeta(vendor, products, rating) {
   const sellerName = vendor.brand_name || vendor.full_name || 'Verified Seller';
   // Same canonical the app uses, whichever of /seller/{slug}, /seller/{uuid}
   // or /vendor/{...} the bot requested.
@@ -265,11 +298,15 @@ function buildVendorMeta(vendor, products) {
     description: vendor.brand_story || `Verified seller on BagSearch`,
     logo: image,
     url: canonicalUrl,
+    ...(rating && {
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: rating.value, reviewCount: rating.count, bestRating: 5, worstRating: 1 },
+    }),
   };
 
   const body = `
     <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/vendors">Sellers</a> › ${escapeHtml(sellerName)}</nav>
     <h1>${escapeHtml(sellerName)}</h1>
+    ${rating ? `<p>Rated ${rating.value} out of 5 from ${rating.count} buyer review${rating.count === 1 ? '' : 's'}.</p>` : ''}
     <p>${escapeHtml(vendor.brand_story || `${sellerName} is a verified bag seller on BagSearch, delivering across Nigeria.`)}</p>
     <h2>Bags from ${escapeHtml(sellerName)}</h2>
     ${productListHtml(products)}
@@ -278,9 +315,9 @@ function buildVendorMeta(vendor, products) {
   return { title, description, keywords, image, canonicalUrl, type: 'ProfilePage', schema, body };
 }
 
-function buildCategoryMeta(id, products) {
-  const seo = categorySEO(id);
-  const canonicalUrl = `${SITE_URL}${categoryPath(id)}`;
+// Category and city pages: a titled, linked list of bags.
+function buildCollectionMeta({ seo, path, crumb, products, moreLinks }) {
+  const canonicalUrl = `${SITE_URL}${path}`;
   const image = products.find((p) => Array.isArray(p.images) && p.images[0])?.images[0] || `${SITE_URL}/og-default.jpg`;
   const schema = {
     '@context': 'https://schema.org',
@@ -299,16 +336,35 @@ function buildCategoryMeta(id, products) {
     },
   };
   const body = `
-    <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/products">Bags</a> › ${escapeHtml(SEO_CATEGORIES[id].label)}</nav>
+    <nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/products">Bags</a> › ${escapeHtml(crumb)}</nav>
     <h1>${escapeHtml(seo.h1)}</h1>
     <p>${escapeHtml(seo.description)}</p>
     ${productListHtml(products)}
-    <p>More categories: ${Object.entries(SEO_CATEGORIES)
-      .filter(([cid]) => cid !== id)
-      .map(([cid, c]) => `<a href="${categoryPath(cid)}">${escapeHtml(c.label)}</a>`)
-      .join(' · ')}</p>`;
+    <p>${moreLinks.map(([href, label]) => `<a href="${href}">${escapeHtml(label)}</a>`).join(' · ')}</p>`;
 
   return { title: seo.title, description: seo.description, keywords: seo.keywords, image, canonicalUrl, type: 'website', schema, body };
+}
+
+function buildCategoryMeta(id, products) {
+  return buildCollectionMeta({
+    seo: categorySEO(id),
+    path: categoryPath(id),
+    crumb: SEO_CATEGORIES[id].label,
+    products,
+    moreLinks: Object.entries(SEO_CATEGORIES).filter(([cid]) => cid !== id).map(([cid, c]) => [categoryPath(cid), c.label]),
+  });
+}
+
+function buildLocationMeta(id, products) {
+  return buildCollectionMeta({
+    seo: locationSEO(id),
+    path: locationPath(id),
+    crumb: SEO_LOCATIONS[id].name,
+    products,
+    moreLinks: Object.entries(SEO_LOCATIONS)
+      .filter(([lid, l]) => lid !== id && l.sitemap)
+      .map(([lid, l]) => [locationPath(lid), `Bags in ${l.name}`]),
+  });
 }
 
 function injectMeta(html, meta) {
@@ -351,26 +407,37 @@ export default async function middleware(request) {
   const { pathname } = url;
 
   let meta = null;
-  let productMissing = false;
+  // Set when the URL can't exist: 'Product' / 'Seller' (record gone) or 'Page'.
+  let missingLabel = null;
 
-  if (pathname === '/products' || pathname === '/products/') {
-    // Only category pages get custom content; plain /products is prerendered.
+  if (!APP_ROUTE_RE.test(pathname)) missingLabel = 'Page';
+
+
+  if (missingLabel) {
+    // fall through to the 404 response
+  } else if (pathname === '/products' || pathname === '/products/') {
+    // Only category and city pages get custom content; plain /products is prerendered.
     const categoryId = url.searchParams.get('category');
-    if (!SEO_CATEGORIES[categoryId]) return;
-    meta = buildCategoryMeta(categoryId, await fetchProductsByCategory(categoryId));
+    const locationId = url.searchParams.get('location');
+    if (SEO_CATEGORIES[categoryId]) meta = buildCategoryMeta(categoryId, await fetchProductsByCategory(categoryId));
+    else if (SEO_LOCATIONS[locationId]) meta = buildLocationMeta(locationId, await fetchProductsByLocation(locationId));
   } else if (pathname.startsWith('/products/')) {
     const param = pathname.slice('/products/'.length).split('/')[0];
     const product = await fetchProductByParam(decodeURIComponent(param));
-    if (product === NOT_FOUND) productMissing = true;
+    if (product === NOT_FOUND) missingLabel = 'Product';
     else if (product) meta = buildProductMeta(product, await fetchSellerSummary(product.user_id || product.seller_id));
   } else if (pathname.startsWith('/seller/') || pathname.startsWith('/vendor/')) {
     const prefix = pathname.startsWith('/seller/') ? '/seller/' : '/vendor/';
     const param = pathname.slice(prefix.length).split('/')[0];
     const vendor = await fetchVendorByParam(decodeURIComponent(param));
-    if (vendor) meta = buildVendorMeta(vendor, await fetchProductsBySeller(vendor.user_id));
+    if (vendor === NOT_FOUND) missingLabel = 'Seller';
+    else if (vendor) {
+      const [products, rating] = await Promise.all([fetchProductsBySeller(vendor.user_id), fetchSellerRating(vendor.user_id)]);
+      meta = buildVendorMeta(vendor, products, rating);
+    }
   }
 
-  if (!meta && !productMissing) return;
+  if (!meta && !missingLabel) return;
 
   const shellRes = await fetch(new URL('/index.html', request.url), {
     headers: { 'user-agent': ua },
@@ -379,12 +446,13 @@ export default async function middleware(request) {
 
   const shellHtml = await shellRes.text();
 
-  if (productMissing) {
-    // Deleted/sold or mistyped listing: tell crawlers it's gone instead of
-    // serving a 200 that duplicates the homepage (soft 404).
+  if (missingLabel) {
+    // Deleted/sold listing, unknown seller or mistyped URL: tell crawlers it's
+    // gone instead of serving a 200 that duplicates the homepage (soft 404).
     const html = shellHtml
-      .replace(/<title>.*?<\/title>/s, `<title>Product not found | ${SITE_NAME}</title>`)
-      .replace(/(<meta\s+name="robots"\s+content=")[^"]*(")/, '$1noindex, follow$2');
+      .replace(/<title>.*?<\/title>/s, `<title>${missingLabel} not found | ${SITE_NAME}</title>`)
+      .replace(/(<meta\s+name="robots"\s+content=")[^"]*(")/, '$1noindex, follow$2')
+      .replace(/\s*<link\s+rel="canonical"[^>]*>/, '');
     return new Response(html, {
       status: 404,
       headers: {

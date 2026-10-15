@@ -184,7 +184,7 @@ export default function Policy() {
   return (
     <div className="policy-page">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,800;0,900;1,800&family=Manrope:wght@500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,800;0,900;1,800&display=swap');
 
         * { box-sizing: border-box; }
 

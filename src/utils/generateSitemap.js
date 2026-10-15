@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { slugify } from './slugify.js';
 import { TEST_SLUG_RE, sellerPath } from './sellerPath.js';
 import { SEO_CATEGORIES, categoryPath } from './categories.js';
+import { SEO_LOCATIONS, locationPath } from './locations.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -47,6 +48,7 @@ const staticRoutes = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/products', priority: '0.9', changefreq: 'hourly' },
   ...Object.keys(SEO_CATEGORIES).map((id) => ({ path: categoryPath(id), priority: '0.8', changefreq: 'daily' })),
+  ...Object.keys(SEO_LOCATIONS).filter((id) => SEO_LOCATIONS[id].sitemap).map((id) => ({ path: locationPath(id), priority: '0.7', changefreq: 'daily' })),
   { path: '/hot-deals', priority: '0.8', changefreq: 'daily' },
   { path: '/vendors', priority: '0.7', changefreq: 'daily' },
   { path: '/reels', priority: '0.6', changefreq: 'daily' },

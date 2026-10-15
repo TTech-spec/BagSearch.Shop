@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from './components/Logo.jsx';
 import { useSEO, SITE_URL } from './hooks/useSEO';
+import { CONTACT_FAQ, faqSchema } from './utils/contactFaq.js';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -320,6 +321,9 @@ export default function Contact() {
     type: 'website',
     schema: {
       '@context': 'https://schema.org',
+      '@graph': [
+        faqSchema(),
+        {
       '@type': 'ContactPage',
       name: 'Contact BagSearch',
       description: 'Reach BagSearch support via WhatsApp, email, or contact form.',
@@ -349,6 +353,8 @@ export default function Contact() {
           }
         ]
       }
+        },
+      ],
     }
   });
 
@@ -384,7 +390,7 @@ export default function Contact() {
 
   return (
     <div style={{ minHeight:'100vh', background:`linear-gradient(180deg,${C.primaryPale} 0%,white 40%)`, fontFamily:"'Manrope',sans-serif", color:C.text }}>
-      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:768px){.contact-cards{grid-template-columns:1fr!important}.faq-grid{grid-template-columns:1fr!important}}.kb-answer ol,.kb-answer ul{margin:8px 0 8px 20px;padding:0}.kb-answer li{margin-bottom:4px}.kb-answer strong{color:#1a0a00}.kb-answer em{display:block;margin-top:10px;font-style:normal;padding:8px 12px;background:#fff8f4;border-left:3px solid #f97316;border-radius:0 8px 8px 0;font-size:12.5px;color:#5c3317}.kb-answer p{margin:6px 0}'}</style>
+      <style>{'@import url(\'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap\');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:768px){.contact-cards{grid-template-columns:1fr!important}.faq-grid{grid-template-columns:1fr!important}}.kb-answer ol,.kb-answer ul{margin:8px 0 8px 20px;padding:0}.kb-answer li{margin-bottom:4px}.kb-answer strong{color:#1a0a00}.kb-answer em{display:block;margin-top:10px;font-style:normal;padding:8px 12px;background:#fff8f4;border-left:3px solid #f97316;border-radius:0 8px 8px 0;font-size:12.5px;color:#5c3317}.kb-answer p{margin:6px 0}'}</style>
 
       {/* Header */}
       <header style={{ background:'rgba(255,255,255,0.95)', backdropFilter:'blur(12px)', borderBottom:`1px solid ${C.borderLight}`, position:'sticky', top:0, zIndex:50, padding:'0 20px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -511,14 +517,7 @@ export default function Contact() {
         {/* FAQ */}
         <p id="faq" style={{ scrollMarginTop:80, fontSize:11, fontWeight:800, color:C.textFaint, textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:16 }}>Frequently asked questions</p>
         <div className="faq-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:14 }}>
-          {[
-            { q:'How do I list my bag for sale?', a:'Register as a Seller → tap 👤 profile icon → Seller Dashboard → "Upload Product" → add photos, price, details → tap "Upload". Your bag goes live instantly!' },
-            { q:'How do buyers contact me?', a:'Buyers tap the green 💬 WhatsApp button on your product card. It opens a pre-filled message with the product name and price. Make sure your WhatsApp number is correct in your seller profile.' },
-            { q:'Is BagSearch free to use?', a:'Yes! 100% free — no listing fees, no commissions, no hidden charges for buyers or sellers.' },
-            { q:'How does visual search work?', a:'Tap the 📷 camera icon in the search bar → upload a photo of any bag → our AI analyzes color, shape & pattern → shows you visually similar bags from sellers across Nigeria.' },
-            { q:'How do I reset my password?', a:'Go to Login page → tap "Forgot Password" → enter your email → check inbox for reset link → click link → set new password. Check spam if you don\'t see the email.' },
-            { q:'How do I delete a listing?', a:'Go to Seller Dashboard → "My Listings" → tap the ⋮ three-dot menu on the listing → select "Delete" → confirm. The listing is removed permanently.' },
-          ].map((item,i)=>(
+          {CONTACT_FAQ.map((item,i)=>(
             <div key={i} style={{ background:'white', borderRadius:14, padding:'18px 20px', border:`1.5px solid ${C.borderLight}` }}>
               <p style={{ fontSize:13.5, fontWeight:800, marginBottom:8 }}>{item.q}</p>
               <p style={{ fontSize:12.5, color:C.textMuted, lineHeight:1.65 }}>{item.a}</p>

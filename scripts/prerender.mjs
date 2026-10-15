@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { faqSchema } from '../src/utils/contactFaq.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.resolve(__dirname, '../dist');
@@ -54,6 +55,7 @@ const ROUTES = [
   {
     path: '/contact',
     h1: 'Contact BagSearch',
+    schema: { '@context': 'https://schema.org', ...faqSchema() },
     title: 'Contact Us | BagSearch Support Nigeria',
     description: 'Contact BagSearch support via WhatsApp or email. Get help with orders, listings, and accounts. Available Mon–Sat 8AM–8PM WAT.',
     ogType: 'website',
@@ -126,6 +128,12 @@ function injectMeta(html, route) {
   // Twitter tags
   html = setTag(html, 'meta[^>]*name="twitter:title"', 'content', title);
   html = setTag(html, 'meta[^>]*name="twitter:description"', 'content', description);
+
+  // Page-specific JSON-LD (e.g. the FAQ on /contact)
+  if (route.schema) {
+    const json = JSON.stringify(route.schema).replace(/</g, '\\u003c');
+    html = html.replace('</head>', `<script type="application/ld+json">${json}</script>\n  </head>`);
+  }
 
   // Crawler-only body (#static-prerender): swap the homepage hero heading and
   // intro for this page's own, so every route doesn't read as the homepage.
