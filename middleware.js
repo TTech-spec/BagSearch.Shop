@@ -11,6 +11,8 @@
  * cloaking). Everything else (human traffic) passes through untouched.
  */
 
+import { sellerPath } from './src/utils/sellerPath.js';
+
 export const config = {
   matcher: ['/products/:path*', '/seller/:path*', '/vendor/:path*'],
 };
@@ -121,8 +123,8 @@ function buildProductMeta(product) {
   const canonicalUrl = `${SITE_URL}${path}`;
   const image = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : `${SITE_URL}/og-default.jpg`;
 
-  const title = `${name} | ${brand} Bag | BagSearch Nigeria`;
-  const description = `Buy authentic ${brand} ${name}. ${(product.description || '').slice(0, 120)} Available on BagSearch Nigeria.`;
+  const title = `${name}${brand ? ` | ${brand} Bag` : ''} | BagSearch Nigeria`;
+  const description = `Buy authentic ${brand ? `${brand} ` : ''}${name}. ${(product.description || '').slice(0, 120)} Available on BagSearch Nigeria.`;
   const keywords = [brand, product.category, name, 'luxury bag Nigeria', 'authentic designer bag', `buy ${brand} bag`, `${product.category} Nigeria`]
     .filter(Boolean)
     .join(', ');
@@ -178,9 +180,11 @@ function buildProductMeta(product) {
   return { title, description, keywords, image, canonicalUrl, type: 'website', schema };
 }
 
-function buildVendorMeta(vendor, rawParam) {
+function buildVendorMeta(vendor) {
   const sellerName = vendor.brand_name || vendor.full_name || 'Verified Seller';
-  const canonicalUrl = `${SITE_URL}/seller/${rawParam}`;
+  // Same canonical the app uses, whichever of /seller/{slug}, /seller/{uuid}
+  // or /vendor/{...} the bot requested.
+  const canonicalUrl = `${SITE_URL}${sellerPath(vendor.profile_slug, vendor.user_id)}`;
 
   const title = `${sellerName} | Verified Seller | BagSearch`;
   const description = `Browse ${sellerName}'s authentic bag collection on BagSearch. Verified seller delivering across Nigeria.`;
@@ -242,7 +246,7 @@ export default async function middleware(request) {
     const prefix = pathname.startsWith('/seller/') ? '/seller/' : '/vendor/';
     const param = pathname.slice(prefix.length).split('/')[0];
     const vendor = await fetchVendorByParam(decodeURIComponent(param));
-    if (vendor) meta = buildVendorMeta(vendor, decodeURIComponent(param));
+    if (vendor) meta = buildVendorMeta(vendor);
   }
 
   if (!meta && !productMissing) return;

@@ -15,6 +15,7 @@ import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 import ProductGallery from './components/products/ProductGallery.jsx';
 import CountUp from './components/ui/CountUp.jsx';
 import { T, FONT_SANS, FONT_SERIF, EASE_OUT, naira } from './theme/luxe';
+import { sellerPath } from './utils/sellerPath';
 
 // ─── Bag Color Map ─────────────────────────────────────────────────────────────
 const BAG_COLOR_MAP = {
@@ -611,7 +612,7 @@ export default function ProductDetail() {
   const sellerInitials = product.seller.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const words = product.name.split(/\s+/);
   const eyebrow = [product.brand, product.category].filter(Boolean).join(' · ');
-  const shopPath = product.sellerId ? `/vendor/${product.sellerId}` : '/vendors';
+  const shopPath = product.sellerId ? sellerPath(null, product.sellerId) : '/vendors';
 
   // ── Pieces ────────────────────────────────────────────────────────────────
   const stockLine = soldOut ? (

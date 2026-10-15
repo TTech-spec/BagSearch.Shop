@@ -3,6 +3,7 @@
 // left edge of each row, rank badge, name + stats, and a Visit button.
 import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sellerPath } from '../../utils/sellerPath';
 
 const V = {
   bg:      '#F7F5F3',
@@ -103,7 +104,10 @@ function VendorRow({ vendor, rank, onOpen }) {
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontSize: 14.5, fontWeight: 600, color: V.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {vendor.name}
+            {/* Real link for crawlers; the row's onClick handles in-app navigation. */}
+            <a href={sellerPath(vendor.profile_slug, vendor.id)} onClick={e => e.preventDefault()} style={{ color: 'inherit', textDecoration: 'none' }}>
+              {vendor.name}
+            </a>
           </p>
           <p style={{ margin: '5px 0 0', fontSize: 11, color: V.muted, display: 'flex', gap: 12, whiteSpace: 'nowrap' }}>
             <span style={{ textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vendor.specialty || 'Bags'}</span>

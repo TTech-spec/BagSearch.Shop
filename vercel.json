@@ -16,6 +16,11 @@
       "source": "/privacy",
       "destination": "/policy",
       "permanent": true
+    },
+    {
+      "source": "/vendor/:id",
+      "destination": "/seller/:id",
+      "permanent": true
     }
   ],
   "rewrites": [

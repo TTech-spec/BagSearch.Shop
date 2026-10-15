@@ -9,6 +9,7 @@ import { normalizeWhatsAppNumber } from './utils/whatsapp';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import SellerOverview from './components/seller/SellerOverview.jsx';
 import { T, FONT_SANS, FONT_SERIF, EASE_OUT } from './theme/luxe';
+import { sellerPath } from './utils/sellerPath';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
@@ -1808,10 +1809,10 @@ function SidebarContents({ layoutGroup, initials, seller, navigate, activeTab, s
     if (key==='upload')   navigate('/upload-product');
     if (key==='bank')     navigate('/bank-details');
     if (key==='pricing')  navigate('/pricing');
-    if (key==='shop')     navigate(`/vendor/${seller?.id || ''}`);
+    if (key==='shop')     navigate(seller?.id ? sellerPath(seller?.profile_slug, seller?.id) : '/vendors');
     if (key==='home')     navigate('/products');
     onNav?.();
-  }, [navigate, switchTab, onNav, seller?.id]);
+  }, [navigate, switchTab, onNav, seller?.id, seller?.profile_slug]);
 
   return (
     <>

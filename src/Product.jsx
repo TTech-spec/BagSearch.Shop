@@ -23,6 +23,7 @@ import NotificationsDropdown from './components/NotificationsDropdown';
 import shoppingBagImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
 import { productPath } from './utils/slugify';
+import { sellerPath } from './utils/sellerPath';
 import { useSEO } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 
@@ -491,7 +492,7 @@ function SiteFooter({ navigate, user, handleLogout }) {
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Sellers</p>
-          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'Start Selling',href:'/register'},{label:'Seller Dashboard',href:'/seller-profile'},{label:'Vendor Directory',href:'/vendors'},{label:'Pricing & Fees',href:'/'},{label:'Seller Guidelines',href:'/'}])}</ul>
+          <ul style={{ listStyle:'none',display:'flex',flexDirection:'column',gap:4 }}>{col([{label:'Start Selling',href:'/register'},{label:'Seller Dashboard',href:'/seller-profile'},{label:'Vendor Directory',href:'/vendors'},{label:'Pricing & Fees',href:'/pricing'},{label:'Seller Guidelines',href:'/terms-of-service'}])}</ul>
         </div>
         <div>
           <p style={{ fontSize:10,fontWeight:800,letterSpacing:'0.16em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:14 }}>Account</p>
@@ -1752,16 +1753,27 @@ export default function Product(){
   const location=useLocation();const navigate=useNavigate();const{user,logout}=useContext(AuthContext);const params=useParams();
   const[pageLoading,setPageLoading]=useState(true);
   const isHomepage = location.pathname === '/';
+  const isVendorsPage = location.pathname === '/vendors';
+  const pageSEO = isHomepage ? {
+    h1: 'Buy & Sell Luxury Designer Bags in Nigeria',
+    title: 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria',
+    description: "Nigeria's AI-powered luxury bag marketplace. Upload any photo to find matching bags instantly. Buy authentic Chanel, Hermès, LV & more. Free for sellers to list.",
+    keywords: 'luxury bags Nigeria, buy designer bags Nigeria, sell bags online Nigeria, AI bag search, authentic luxury handbags, BagSearch',
+  } : isVendorsPage ? {
+    h1: 'Verified Bag Sellers in Nigeria',
+    title: 'Verified Bag Sellers & Vendors in Nigeria | BagSearch',
+    description: 'Browse verified bag sellers across Lagos, Abuja and all of Nigeria. Compare ratings, see each vendor’s collection and chat with sellers directly on BagSearch.',
+    keywords: 'bag sellers Nigeria, bag vendors Lagos, verified bag sellers, designer bag vendors Nigeria, BagSearch vendors',
+  } : {
+    h1: 'Shop Luxury Designer Bags in Nigeria',
+    title: 'Shop Luxury Designer Bags in Nigeria | BagSearch',
+    description: 'Browse authentic luxury designer handbags, shoulder bags, clutches and totes. Shop Chanel, Hermès, Louis Vuitton, Gucci from verified sellers across Nigeria.',
+    keywords: 'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada, sell bags free Nigeria',
+  };
   useSEO({
-    title: isHomepage
-      ? 'BagSearch | Buy & Sell Luxury Designer Bags in Nigeria'
-      : 'Shop Luxury Designer Bags in Nigeria | BagSearch',
-    description: isHomepage
-      ? "Nigeria's AI-powered luxury bag marketplace. Upload any photo to find matching bags instantly. Buy authentic Chanel, Hermès, LV & more. Free for sellers to list."
-      : 'Browse authentic luxury designer handbags, shoulder bags, clutches and totes. Shop Chanel, Hermès, Louis Vuitton, Gucci from verified sellers across Nigeria.',
-    keywords: isHomepage
-      ? 'luxury bags Nigeria, buy designer bags Nigeria, sell bags online Nigeria, AI bag search, authentic luxury handbags, BagSearch'
-      : 'luxury bags Nigeria, designer handbags, authentic bags, buy bags online Nigeria, Chanel, Louis Vuitton, Hermès, Gucci, Prada, sell bags free Nigeria',
+    title: pageSEO.title,
+    description: pageSEO.description,
+    keywords: pageSEO.keywords,
     url: location.pathname,
     type: 'website',
   });
@@ -2103,7 +2115,7 @@ export default function Product(){
   const handleImageUpload=e=>{const f=e.target.files[0];e.target.value='';runVisualSearch(f);};
   const openPhotoSearch=()=>setPhotoSheetOpen(true);
   const handleVendorSearch=q=>{setVendorSearch(q);const normalized=q.trim().toLowerCase();if(!normalized){setFilteredVendors(vendors);return;}setFilteredVendors(vendors.filter(v=>v.name.toLowerCase().includes(normalized)||(v.specialty||'').toLowerCase().includes(normalized)||(v.tags||[]).some(t=>t.toLowerCase().includes(normalized))));};
-  const handleViewVendorProducts=useCallback((vendor)=>{navigate(`/vendor/${vendor.id}`);},[navigate]);
+  const handleViewVendorProducts=useCallback((vendor)=>{navigate(sellerPath(vendor.profile_slug,vendor.id));},[navigate]);
   const handleRequireAuth=useCallback(()=>setAuthGateOpen(true),[]);
   const handleAddToCart=product=>{addToCart(product);setFloatMsg({text:`${product.name} added!`,type:'success'});setTimeout(()=>setFloatMsg(null),2200);};
   const handleProfileClick=()=>{if(!user){setAuthGateOpen(true);return;}navigate(user?.user_metadata?.role==='seller'?'/seller-profile':'/profile');};
@@ -2215,6 +2227,8 @@ export default function Product(){
    return(
      <div style={{minHeight:'100vh',background:isMobile?`linear-gradient(180deg,${C.primaryPale} 0%,${C.surfaceDim} 25%,white 100%)`:'#ffffff',fontFamily:"'Manrope',sans-serif",display:'flex',flexDirection:'column',overflowX:'clip'}}>
        <ShopStyles/>
+       {/* Page heading for search engines and screen readers; the visual hero carries the design. */}
+       <h1 style={{position:'absolute',width:1,height:1,padding:0,margin:-1,overflow:'hidden',clip:'rect(0,0,0,0)',whiteSpace:'nowrap',border:0}}>{pageSEO.h1}</h1>
        <PhotoSearchSheet open={photoSheetOpen} onClose={()=>setPhotoSheetOpen(false)} onSearch={runVisualSearch} isMobile={isMobile}/>
        <PhotoScanOverlay open={visualSearching} image={uploadedImage} onCancel={cancelVisualSearch}/>
        <WelcomeTour ready={productsReady&&activeTab==='products'&&!searchMode&&!photoSheetOpen} isMobile={isMobile} onFinish={()=>setTourDone(true)}/>
@@ -2571,7 +2585,7 @@ function VendorCard({vendor,index,onViewProducts}){
             </div>
           ))}
         </div>
-        <button onClick={()=>onViewProducts(vendor)} style={{width:'100%',padding:'11px 0',borderRadius:12,border:'none',background:hov?`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.3s',boxShadow:hov?`0 8px 22px ${vendor.colors[0]}55`:'0 4px 12px rgba(200,75,17,0.3)',transform:hov?'translateY(-1px)':'none'}}>View Products →</button>
+        <a href={sellerPath(vendor.profile_slug,vendor.id)} onClick={e=>{e.preventDefault();onViewProducts(vendor);}} style={{display:'block',textAlign:'center',textDecoration:'none',boxSizing:'border-box',width:'100%',padding:'11px 0',borderRadius:12,border:'none',background:hov?`linear-gradient(135deg,${vendor.colors[0]},${vendor.colors[1]})`:'linear-gradient(135deg,#c84b11,#f97316)',color:'white',fontWeight:800,fontSize:13,cursor:'pointer',transition:'all 0.3s',boxShadow:hov?`0 8px 22px ${vendor.colors[0]}55`:'0 4px 12px rgba(200,75,17,0.3)',transform:hov?'translateY(-1px)':'none'}}>View Products →</a>
       </div>
     </div>
   );
@@ -2674,14 +2688,14 @@ function VendorDetailView({ vendor, onClose, allProducts, navigate, onAddToCart,
         <Icons.ArrowLeft size={18} color="currentColor"/> Back to Vendors
       </button>
       <div style={{background:'white',borderRadius:24,padding:'32px 40px',border:'1.5px solid #f9c4a0',marginBottom:32,display:'flex',gap:24,alignItems:'flex-start',boxShadow:'0 8px 32px rgba(200,75,17,0.06)',flexWrap:'wrap'}}>
-        <div onClick={()=>navigate(`/vendor/${vendor.id}`)} style={{width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0,cursor:'pointer',transition:'transform 0.2s ease'}}
+        <div onClick={()=>navigate(sellerPath(vendor.profile_slug,vendor.id))} style={{width:100,height:100,borderRadius:'50%',background:'#fdf4ee',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',flexShrink:0,cursor:'pointer',transition:'transform 0.2s ease'}}
           onMouseEnter={e=>e.currentTarget.style.transform='scale(1.05)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
           {displayAvatar}
         </div>
         <div style={{flex:1,minWidth:200}}>
-          <h2 onClick={()=>navigate(`/vendor/${vendor.id}`)} style={{fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em',cursor:'pointer',transition:'color 0.2s ease'}}
+          <h2 style={{fontSize:28,fontWeight:900,color:'#1a0a00',marginBottom:4,letterSpacing:'-0.02em',transition:'color 0.2s ease'}}
             onMouseEnter={e=>e.currentTarget.style.color='#c84b11'} onMouseLeave={e=>e.currentTarget.style.color='#1a0a00'}>
-            {displayName}
+            <a href={sellerPath(vendor.profile_slug,vendor.id)} onClick={e=>{e.preventDefault();navigate(sellerPath(vendor.profile_slug,vendor.id));}} style={{color:'inherit',textDecoration:'none'}}>{displayName}</a>
           </h2>
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12,flexWrap:'wrap'}}>
             {avgRating&&<span style={{display:'flex',alignItems:'center',gap:4,fontSize:13,fontWeight:800,color:'#f97316',background:'#fff5f2',padding:'4px 10px',borderRadius:20}}><Icons.Star size={16} color="#f97316" filled/> {avgRating} ({reviews.length} review{reviews.length!==1?'s':''})</span>}

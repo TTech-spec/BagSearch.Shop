@@ -98,7 +98,7 @@ export default function Pricing() {
   useSEO({
     title: 'Seller Plans & Pricing | BagSearch Nigeria',
     description: 'Choose a plan to sell bags on BagSearch. Free, Pro (₦1,000/mo), or Premium (₦5,000/mo). Unlimited uploads, search boost, and more.',
-    url: 'https://www.bagsearch.shop/pricing',
+    url: '/pricing',
     type: 'website',
   });
 

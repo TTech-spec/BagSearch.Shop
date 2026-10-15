@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { slugify } from './slugify.js';
+import { TEST_SLUG_RE, sellerPath } from './sellerPath.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -36,11 +37,6 @@ if (envAppUrl && envAppUrl !== PRODUCTION_URL) {
   console.warn(`Ignoring VITE_APP_URL=${envAppUrl} for sitemap; using ${PRODUCTION_URL}`);
 }
 
-// Seller slugs that must never be published: test/QA accounts and slugs
-// auto-derived from an email address (they expose the seller's email).
-const TEST_SLUG_RE = /(^|-)(test|qa|demo|dummy)(-|$)/i;
-const EMAIL_SLUG_RE = /(gmail|yahoo|hotmail|outlook|icloud|live|aol|proton)(com|net|co)?/i;
-
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
   process.exit(1);
@@ -50,6 +46,9 @@ const staticRoutes = [
   { path: '/', priority: '1.0', changefreq: 'daily' },
   { path: '/products', priority: '0.9', changefreq: 'hourly' },
   { path: '/hot-deals', priority: '0.8', changefreq: 'daily' },
+  { path: '/vendors', priority: '0.7', changefreq: 'daily' },
+  { path: '/reels', priority: '0.6', changefreq: 'daily' },
+  { path: '/pricing', priority: '0.6', changefreq: 'monthly' },
   { path: '/about', priority: '0.7', changefreq: 'monthly' },
   { path: '/contact', priority: '0.5', changefreq: 'monthly' },
   { path: '/policy', priority: '0.6', changefreq: 'monthly' },
@@ -126,17 +125,12 @@ async function generate() {
   const today = new Date().toISOString().split('T')[0];
 
   // Only publish sellers who have at least one listed product, and never
-  // test/QA accounts. Email-derived slugs fall back to the user_id URL,
-  // which the app also resolves, so the page stays discoverable without
-  // exposing the email address.
+  // test/QA accounts. sellerPath() falls back to the user_id URL for
+  // email-derived slugs so the email address is never exposed.
   const activeSellerIds = new Set(products.map((p) => p.user_id).filter(Boolean));
   const vendors = allVendors
     .filter((v) => v.user_id && activeSellerIds.has(v.user_id))
-    .filter((v) => !TEST_SLUG_RE.test(v.profile_slug || ''))
-    .map((v) => ({
-      ...v,
-      profile_slug: v.profile_slug && !EMAIL_SLUG_RE.test(v.profile_slug) ? v.profile_slug : null,
-    }));
+    .filter((v) => !TEST_SLUG_RE.test(v.profile_slug || ''));
 
   const urls = [
     ...staticRoutes.map((route) => ({
@@ -156,10 +150,9 @@ async function generate() {
     }),
     ...vendors
       .map((vendor) => {
-        const slug = vendor.profile_slug || vendor.user_id;
         const lastModified = vendor.updated_at || vendor.created_at || today;
         return {
-          loc: `${SITE_URL}/seller/${encodeURIComponent(slug)}`,
+          loc: `${SITE_URL}${sellerPath(vendor.profile_slug, vendor.user_id)}`,
           lastmod: lastModified.split('T')[0],
           changefreq: 'weekly',
           priority: '0.7',

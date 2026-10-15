@@ -67,6 +67,18 @@ const ROUTES = [
     ogType: 'website',
   },
   {
+    path: '/vendors',
+    title: 'Verified Bag Sellers & Vendors in Nigeria | BagSearch',
+    description: 'Browse verified bag sellers across Lagos, Abuja and all of Nigeria. Compare ratings, see each vendor’s collection and chat with sellers directly on BagSearch.',
+    ogType: 'website',
+  },
+  {
+    path: '/reels',
+    title: 'Reels — Bag Videos | BagSearch',
+    description: 'Watch short bag videos from sellers across Nigeria. See unboxings, styling tips, and bag showcases.',
+    ogType: 'website',
+  },
+  {
     path: '/pricing',
     title: 'Seller Plans & Pricing | BagSearch Nigeria',
     description: 'Choose a plan to sell bags on BagSearch. Free, Pro (₦1,000/mo), or Premium (₦5,000/mo). Unlimited uploads, search boost, and more.',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
@@ -7,6 +7,7 @@ import { useSEO, SITE_URL } from './hooks/useSEO';
 import { getOptimizedImageUrl, IMG_SIZES } from './utils/imageUtils';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
 import { normalizeWhatsAppNumber, buildWhatsAppUrl } from './utils/whatsapp';
+import { sellerPath, UUID_RE } from './utils/sellerPath';
 
 const C = {
   primary:'#c84b11', primaryLight:'#f97316', primaryBg:'#fde8d8',
@@ -422,8 +423,10 @@ function ReportSellerModal({ open, onClose, onSubmit, sending, sent, error }) {
 export default function VendorDetails() {
   const { id, slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(AuthContext);
   const sellerParam = id || slug || '';
+  const paramIsUuid = UUID_RE.test(sellerParam);
   const isMobile = useIsMobileViewport(768);
 
   const [profile,   setProfile]   = useState(null);
@@ -455,6 +458,7 @@ export default function VendorDetails() {
 
   // SEO: Build meta dynamically based on loaded profile
   const sellerName = profile?.brand_name || profile?.full_name || 'Seller';
+  const canonicalPath = profile ? sellerPath(profile.profile_slug, profile.user_id) : null;
   const avgRating = reviews.length > 0
     ? (reviews.reduce((s,r) => s+(r.rating||0), 0) / reviews.length).toFixed(1)
     : null;
@@ -465,7 +469,7 @@ export default function VendorDetails() {
       ? `Browse ${sellerName}'s authentic bag collection on BagSearch. ${products.length} products, ${avgRating || '4.9'} avg rating. Verified seller delivering across Nigeria.`
       : 'View this verified seller\'s bag collection on BagSearch Nigeria. Authentic products, WhatsApp contact, trusted marketplace.',
     keywords: sellerName ? `${sellerName} seller, verified seller, ${sellerName} bags, authentic bags Nigeria` : 'seller profile, verified seller, BagSearch vendors',
-    url: `/seller/${sellerParam}`,
+    url: canonicalPath,
     type: 'website',
     schema: profile ? {
       '@context': 'https://schema.org',
@@ -473,7 +477,7 @@ export default function VendorDetails() {
       name: sellerName,
       description: profile.brand_story || `Verified seller on BagSearch with ${products.length} products`,
       image: profile.avatar_url || `${SITE_URL}/logo.png`,
-      url: `${SITE_URL}/seller/${sellerParam}`,
+      url: `${SITE_URL}${canonicalPath}`,
       sameAs: [],
       aggregateRating: avgRating ? {
         '@type': 'AggregateRating',
@@ -503,6 +507,16 @@ export default function VendorDetails() {
       }
     } : undefined
   });
+
+  // /vendor/{id} and /seller/{uuid} are aliases — move to the one canonical URL.
+  useEffect(() => {
+    // Only once the loaded profile belongs to the current URL — not a stale one
+    // left over from the previous seller page.
+    const profileMatchesUrl = profile && (profile.user_id === sellerParam || profile.profile_slug === sellerParam);
+    if (profileMatchesUrl && canonicalPath && location.pathname !== canonicalPath) {
+      navigate(canonicalPath + location.search, { replace: true });
+    }
+  }, [profile, sellerParam, canonicalPath, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -552,11 +566,11 @@ export default function VendorDetails() {
       try {
         const { data: p, error: pErr } = await supabase
           .from('users')
-          .select('user_id,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,community_trusted')
-          .eq('user_id', id || slug)
+          .select('user_id,profile_slug,full_name,brand_name,brand_story,bag_categories,avatar_url,phone,email,community_trusted')
+          .eq(paramIsUuid ? 'user_id' : 'profile_slug', sellerParam)
           .maybeSingle();
         setProfile(p || null);
-        const resolvedSellerId = p?.user_id || id;
+        const resolvedSellerId = p?.user_id || (paramIsUuid ? sellerParam : null);
         if (!resolvedSellerId) {
           setProducts([]); setReviews([]); setViews([]); setTotalViews(0); return;
         }
@@ -591,7 +605,7 @@ export default function VendorDetails() {
       } catch(e) { console.error('Load error:', e); }
       finally { setLoading(false); }
     })();
-  }, [id, slug, sellerParam, loadViews]);
+  }, [sellerParam, paramIsUuid, loadViews]);
 
   const submitReview = async (e) => {
     e.preventDefault();

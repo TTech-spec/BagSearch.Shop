@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import PushNotificationToggle from '../PushNotificationToggle';
+import { sellerPath } from '../../utils/sellerPath';
 
 const P = {
   ink: '#1E1A17',
@@ -323,7 +324,7 @@ export default function BuyerProfile({
                 key={s.user_id} type="button"
                 initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.1 + i * 0.06 }}
                 whileHover={{ y: -3 }} whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(s.profile_slug ? `/vendor/${s.profile_slug}` : `/vendor/${s.user_id}`)}
+                onClick={() => navigate(sellerPath(s.profile_slug, s.user_id))}
                 style={{ width: 72, flexShrink: 0, border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: P.font, color: P.ink, textAlign: 'center' }}
               >
                 {s.avatar_url

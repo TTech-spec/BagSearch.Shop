@@ -9,8 +9,10 @@
  *
  * Uses the same slug format as the React app:
  *   Products → /products/{slug}--{shortId}
- *   Sellers  → /seller/{seller_id}
+ *   Sellers  → /seller/{profile_slug}, or /seller/{user_id} (see sellerPath)
  */
+
+import { TEST_SLUG_RE, sellerPath } from '../src/utils/sellerPath.js';
 
 const SITE_URL = 'https://www.bagsearch.shop';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -83,6 +85,9 @@ const STATIC_PAGES = [
   { path: '/',               changefreq: 'daily',   priority: '1.0' },
   { path: '/products',       changefreq: 'hourly',  priority: '0.9' },
   { path: '/hot-deals',      changefreq: 'daily',   priority: '0.8' },
+  { path: '/vendors',        changefreq: 'daily',   priority: '0.7' },
+  { path: '/reels',          changefreq: 'daily',   priority: '0.6' },
+  { path: '/pricing',        changefreq: 'monthly', priority: '0.6' },
   { path: '/about',          changefreq: 'monthly', priority: '0.7' },
   { path: '/contact',        changefreq: 'monthly', priority: '0.5' },
   { path: '/policy',         changefreq: 'monthly', priority: '0.6' },
@@ -100,22 +105,17 @@ export default async function handler(req, res) {
       ).catch(() => []),
       supabaseGet(
         'users',
-        'user_id,updated_at,brand_name,full_name',
-        '&order=updated_at.desc'
+        'user_id,updated_at,profile_slug',
+        '&role=eq.seller&order=updated_at.desc'
       ).catch(() => []),
     ]);
 
-    // Only include sellers who have at least one listed product
+    // Only include sellers who have at least one listed product, never
+    // test/QA accounts.
     const activeSellerIds = new Set(products.filter(p => p.user_id).map(p => p.user_id));
-    const sellers = sellerRows.filter(s => activeSellerIds.has(s.user_id));
-
-    // Build seller slug the same way the app does:
-    // vendorDetails uses useParams({ slug }) and matches /seller/:slug
-    // The slug is either brand_name or full_name, slugified
-    function sellerSlug(s) {
-      const name = s.brand_name || s.full_name || '';
-      return slugify(name) || s.user_id;
-    }
+    const sellers = sellerRows
+      .filter(s => activeSellerIds.has(s.user_id))
+      .filter(s => !TEST_SLUG_RE.test(s.profile_slug || ''));
 
     const today = new Date().toISOString().slice(0, 10);
 
@@ -137,12 +137,12 @@ export default async function handler(req, res) {
           )
         ),
 
-      // 3. Seller profile pages — use slugified brand/name matching app routing
+      // 3. Seller profile pages — same canonical URL the app and middleware use
       ...sellers
         .filter(s => s.user_id)
         .map(s =>
           urlEntry(
-            `${SITE_URL}/seller/${escapeXml(sellerSlug(s))}`,
+            `${SITE_URL}${sellerPath(s.profile_slug, s.user_id)}`,
             s.updated_at || today,
             'weekly',
             '0.6'
