@@ -3,7 +3,7 @@
 > BagSearch (bagsearch.shop) is an innovative AI-powered marketplace that helps users find bags simply by uploading a photo. Whether you see a stylish handbag, backpack, travel bag, laptop bag, or fashion accessory online or in real life, BagSearch uses image recognition technology to match and display similar products from trusted vendors. Founded in 2026, it serves buyers and sellers across all 36 Nigerian states.
 
 License: https://robotstxt.org/rsl/1.0
-Updated: 2026-06-18
+Updated: 2026-10-16
 
 ## What is BagSearch?
 
@@ -21,16 +21,19 @@ Unlike general marketplaces (Jiji, Jumia), BagSearch specialises in one category
 - **Active buyers**: 10,000+
 - **Trusted sellers**: 500+
 - **Listing fee**: Free for all sellers
-- **Contact method**: WhatsApp (direct seller contact, no platform middleman)
+- **How buyers buy**: Message the seller directly on WhatsApp, or pay by card at checkout (Flutterwave)
+- **Commission**: None — BagSearch takes no commission on sales
 
 ## Key Features
 
 - **Visual/Image Search**: Upload any bag photo to find similar products using AI embedding technology
 - **Buy Luxury Bags**: Browse authentic Chanel, Hermès, Louis Vuitton, Gucci, Dior, Valentino, Balenciaga, Zara, Coach, JW Pei, Polene, Jacquemus, Bottega Veneta, Ferragamo, and more
-- **Sell Your Bags**: Free listings; premium boost plans available to increase product visibility in search results
+- **Sell Your Bags**: Free listings; optional paid seller plans — Pro (₦1,000/month) and Premium (₦5,000/month) — boost visibility in search results
 - **Hot Deals**: Discounted luxury bags curated and updated daily
 - **Verified Sellers**: All sellers are Nigerian-based and manually verified before listing
-- **WhatsApp Integration**: Buyers contact sellers directly via WhatsApp — no escrow, no platform fees
+- **WhatsApp Integration**: Buyers can message sellers directly on WhatsApp
+- **Card Checkout**: Add bags to the cart and pay securely by card through Flutterwave; buyers track orders and confirm delivery on their Orders page
+- **Reels**: Short bag videos from sellers — unboxings, styling and close-ups
 - **Push Notifications**: Opt-in alerts for new listings, hot deals, and activity
 
 ## Who Uses BagSearch?
@@ -56,8 +59,8 @@ Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (
 1. Browse listings at bagsearch.shop/products or search by image using the AI visual search tool
 2. Filter by brand, category, location, or price
 3. Click any listing to view photos, price, seller details, and location
-4. Tap "Contact Seller on WhatsApp" to message the seller directly
-5. Negotiate price and delivery arrangement with the seller via WhatsApp
+4. Either tap "Contact Seller on WhatsApp" to agree price and delivery with the seller directly,
+5. or add the bag to your cart and pay by card at checkout, then confirm delivery on your Orders page
 
 ## How to Sell on BagSearch
 
@@ -65,7 +68,7 @@ Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (
 2. Complete your seller profile with brand story, location, and WhatsApp number
 3. List your bags with photos, price, brand, and description
 4. Buyers find your listings via search, visual search, and browsing
-5. Upgrade to a boost plan to appear higher in search results
+5. Optionally upgrade to a Pro or Premium plan to appear higher in search results (see bagsearch.shop/pricing)
 
 ## Mission and Vision
 
@@ -78,6 +81,30 @@ Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (
 - [Home / Products](https://www.bagsearch.shop/): Browse and search all bag listings with AI visual search
 - [Products](https://www.bagsearch.shop/products): Full product catalogue with brand, category, and location filters
 - [Hot Deals](https://www.bagsearch.shop/hot-deals): Discounted luxury bags updated daily
+- [Verified Sellers](https://www.bagsearch.shop/vendors): Directory of bag sellers and their collections
+- [Reels](https://www.bagsearch.shop/reels): Short bag videos from sellers
+- [Seller Plans & Pricing](https://www.bagsearch.shop/pricing): Free, Pro and Premium seller plans
+
+### Shop by category
+
+- [Tote Bags](https://www.bagsearch.shop/products?category=tote)
+- [Clutch Bags](https://www.bagsearch.shop/products?category=clutch)
+- [Crossbody Bags](https://www.bagsearch.shop/products?category=crossbody)
+- [Shoulder Bags & Satchels](https://www.bagsearch.shop/products?category=satchel)
+- [Backpacks](https://www.bagsearch.shop/products?category=backpack)
+- [Evening Bags](https://www.bagsearch.shop/products?category=evening)
+- [Mini Bags](https://www.bagsearch.shop/products?category=mini)
+
+### Shop by city
+
+- [Bags in Lagos](https://www.bagsearch.shop/products?location=lagos) (including [Lekki](https://www.bagsearch.shop/products?location=lekki) and [Victoria Island](https://www.bagsearch.shop/products?location=victoria-island))
+- [Bags in Abuja](https://www.bagsearch.shop/products?location=abuja)
+- [Bags in Port Harcourt](https://www.bagsearch.shop/products?location=port-harcourt)
+- [Bags in Ibadan](https://www.bagsearch.shop/products?location=ibadan)
+- [Bags in Kano](https://www.bagsearch.shop/products?location=kano)
+- [Bags in Enugu](https://www.bagsearch.shop/products?location=enugu)
+- [Bags in Benin City](https://www.bagsearch.shop/products?location=benin-city)
+
 - [About BagSearch](https://www.bagsearch.shop/about): Full company story and platform overview
 - [Contact](https://www.bagsearch.shop/contact): Support contact via WhatsApp and online form
 - [Sell on BagSearch](https://www.bagsearch.shop/register): Create a free seller account
@@ -94,4 +121,4 @@ Bags on BagSearch range from ₦5,000 (affordable non-designer) to ₦500,000+ (
 
 ## Licensing
 
-Content on BagSearch is copyright © 2024–2026 BagSearch Nigeria. Product listings belong to individual sellers. AI crawlers may index and summarise site content for search and AI assistant purposes.
+Content on BagSearch is copyright © 2026 BagSearch Nigeria. Product listings belong to individual sellers. AI crawlers may index and summarise site content for search and AI assistant purposes.
