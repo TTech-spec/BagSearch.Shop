@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './services/api';
 import { AuthContext } from './context/AuthContext';
@@ -8,7 +8,6 @@ import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { upsertUserProfile } from './services/userProfileService';
 import { useSEO } from './hooks/useSEO';
-import VideoLoader from './components/VideoLoader.jsx';
 import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face Mask Ideas for Entertaining-pin-id-1092052609666393734.jpg';
 import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
 import { announceLoginSuccess } from './components/auth/loginSuccessEvent';
@@ -37,8 +36,6 @@ const C = {
   textFaint:    '#E8C4B5',
 };
 
-// ─── PAGE LOADER ─────────────────────────────────────────────────────────────
-const PageLoader = ({ onDone }) => <VideoLoader duration={1200} onDone={onDone} />;
 // ─── EYE ICON ────────────────────────────────────────────────────────────────
 const EyeIcon = ({ open }) => open ? (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
@@ -66,9 +63,7 @@ const LoginPage = () => {
   const [role]                          = useState('buyer');
   const [loading, setLoading]           = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
-  const [pageLoading, setPageLoading]   = useState(true);
 
-  const handleLoaderDone = useCallback(() => setPageLoading(false), []);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('auth_error');
@@ -173,11 +168,7 @@ const LoginPage = () => {
       fontFamily: 'sans-serif',
       color: C.text,
     }}>
-      <PageLoader onDone={handleLoaderDone} />
-
       <div style={{
-        opacity: pageLoading ? 0 : 1,
-        transition: 'opacity 0.5s ease',
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',

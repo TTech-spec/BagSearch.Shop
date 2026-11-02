@@ -1,5 +1,5 @@
 // src/Reg.jsx
-import React, { useState, useContext, useEffect, useCallback } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from './context/AuthContext.jsx';
@@ -11,7 +11,6 @@ import { sanitizeInput, validateRequired, validateEmail } from './utils/security
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { useSEO } from './hooks/useSEO';
-import VideoLoader from './components/VideoLoader.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -36,8 +35,6 @@ const C = {
   textFaint:    '#E8C4B5',
 };
 
-// ─── SIMPLE MINIMAL PAGE LOADER ───────────────────────────────────────────────
-const PageLoader = ({ onDone }) => <VideoLoader duration={1200} onDone={onDone} />;
 // ─── SUCCESS CARD ─────────────────────────────────────────────────────────────
 const SuccessCard = ({ show, onClose }) => {
   const [mounted, setMounted] = useState(false);
@@ -136,8 +133,6 @@ const Reg = () => {
   useSEO({ title: 'Create Account | BagSearch', noindex: true });
   const navigate = useNavigate();
   const { login, setLoading, loading } = useContext(AuthContext);
-  const [pageLoading, setPageLoading] = useState(true);
-  const handleLoaderDone = useCallback(() => setPageLoading(false), []);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -395,11 +390,7 @@ const Reg = () => {
       fontFamily: 'sans-serif',
       color: C.text,
     }}>
-      <PageLoader onDone={handleLoaderDone} />
-
       <div style={{
-        opacity: pageLoading ? 0 : 1,
-        transition: 'opacity 0.5s ease',
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',

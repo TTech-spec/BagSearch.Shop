@@ -346,9 +346,9 @@
       </div>
 
       <!-- JS loading spinner — shown to real browsers while React initialises -->
-      <div id="js-loader" role="status" aria-label="Loading BagSearch" style="position:fixed;inset:0;z-index:99999;justify-content:center;align-items:center;overflow:hidden;background:#140C08;">
-        <video src="/videos/loading-screen.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(28px) brightness(0.7);transform:scale(1.15);"></video>
-        <video src="/videos/loading-screen.mp4" autoplay muted loop playsinline preload="auto" style="position:relative;width:100%;height:100%;object-fit:contain;"></video>
+      <div id="js-loader" role="status" aria-label="Loading BagSearch" style="position:fixed;inset:0;z-index:99999;flex-direction:column;gap:18px;justify-content:center;align-items:center;background:#ffffff;">
+        <span aria-hidden="true" style="width:44px;height:44px;border-radius:50%;border:3.5px solid #F4E6DC;border-top-color:#C84B11;animation:bagsearchSpin 0.8s linear infinite;"></span>
+        <span style="font-family:'Poppins',system-ui,sans-serif;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:#1E1A17;">Bag<span style="color:#C84B11;">Search</span></span>
       </div>
     </div>
     <style>
