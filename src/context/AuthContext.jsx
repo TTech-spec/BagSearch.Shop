@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
                 if (isOAuth && oauthMode === 'login') {
                   // Google user logging in but has no BagSearch account — block them
                   sessionStorage.removeItem('oauth_mode');
-                  await supabase.auth.signOut();
+                  await supabase.auth.signOut({ scope: 'local' });
                   sessionStorage.setItem(
                     'auth_error',
                     'This Google account is not registered on BagSearch. Please sign up first.'
@@ -117,8 +117,12 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
+  // scope 'local' ends only this browser's session. The default ('global')
+  // revokes the account's sessions on every device, so logging out on a
+  // phone silently logged the user out on desktop once its access token
+  // expired and could no longer be refreshed.
   const logout = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     setUser(null);
   };
 

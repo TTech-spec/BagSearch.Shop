@@ -608,7 +608,8 @@ export default function UserProfile() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // Only this device — see AuthContext.logout
+    await supabase.auth.signOut({ scope: 'local' });
     navigate('/login', { replace:true });
   };
 
