@@ -330,6 +330,14 @@ const Reg = () => {
         console.warn('Profile upsert failed (non-fatal):', insertError.message);
       }
 
+      // With email confirmation off, signUp() also signs the new user in. Left
+      // signed in, the redirect to /login below gets bounced by LoginRoute
+      // straight into the main app. Sign out here so a new account lands on
+      // the Login screen and signs in for the first time from there.
+      if (data.session) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+
       setShowSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
