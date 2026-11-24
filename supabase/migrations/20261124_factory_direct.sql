@@ -33,10 +33,12 @@ CREATE INDEX IF NOT EXISTS idx_factory_products_factory ON factory_products(fact
 ALTER TABLE factory_products ENABLE ROW LEVEL SECURITY;
 
 -- Everyone sees approved posts; factories also see their own.
+DROP POLICY IF EXISTS factory_products_select ON factory_products;
 CREATE POLICY factory_products_select ON factory_products
   FOR SELECT USING (status = 'approved' OR auth.uid() = factory_id);
 
 -- Only factory accounts insert, only as themselves, only as pending.
+DROP POLICY IF EXISTS factory_products_insert ON factory_products;
 CREATE POLICY factory_products_insert ON factory_products
   FOR INSERT WITH CHECK (
     auth.uid() = factory_id
@@ -44,6 +46,7 @@ CREATE POLICY factory_products_insert ON factory_products
     AND (auth.jwt() -> 'user_metadata' ->> 'role') = 'factory'
   );
 
+DROP POLICY IF EXISTS factory_products_delete ON factory_products;
 CREATE POLICY factory_products_delete ON factory_products
   FOR DELETE USING (auth.uid() = factory_id);
 
@@ -51,6 +54,7 @@ CREATE POLICY factory_products_delete ON factory_products
 INSERT INTO storage.buckets (id, name, public) VALUES ('factory-images', 'factory-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS factory_images_insert ON storage.objects;
 CREATE POLICY factory_images_insert ON storage.objects
   FOR INSERT WITH CHECK (
     bucket_id = 'factory-images'
