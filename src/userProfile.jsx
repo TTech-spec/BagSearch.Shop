@@ -8,6 +8,7 @@ import {
   ArrowLeft, Upload, Check, X, Pencil, Loader
 } from 'lucide-react';
 import { useSEO } from './hooks/useSEO';
+import AddEmailPrompt from './components/AddEmailPrompt.jsx';
 import BuyerProfile from './components/profile/BuyerProfile.jsx';
 
 // ─── Design Tokens — Warm Light Mode ─────────────────────────────────────────
@@ -659,6 +660,7 @@ export default function UserProfile() {
         <style>{GLOBAL_CSS.replace(/body \{[^}]*\}/, '')}</style>
         <DeleteModal visible={delModal} onClose={()=>setDelModal(false)} onConfirm={handleDelete} deleting={deleting} deleted={deleted}/>
         <Toast msg={toast.msg} type={toast.type} visible={toast.visible}/>
+        <AddEmailPrompt />
       </>
     );
   }
@@ -666,6 +668,7 @@ export default function UserProfile() {
   return (
     <div style={{ minHeight:'100vh', background:T.bg, fontFamily:"'DM Sans',sans-serif", color:T.textPrimary, position:'relative', overflowX:'hidden' }}>
       <style>{GLOBAL_CSS}</style>
+      <AddEmailPrompt />
 
       {/* ── Ambient Background ── */}
       <div aria-hidden style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
