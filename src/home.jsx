@@ -4,6 +4,7 @@ import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
 import VideoLoader from './components/VideoLoader.jsx';
+import HomeSidebar from "./components/HomeSidebar.jsx";
 import AuthPromptModal from './components/auth/AuthPromptModal.jsx';
 import specialOfferImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
@@ -948,33 +949,18 @@ export default function LuxeBag() {
           </div>
         </footer>
 
-        {/* SIDEBAR OVERLAY */}
-        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(26,10,0,0.4)", zIndex: 60, opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "all" : "none", transition: "opacity 0.3s ease" }} />
-
-        {/* SIDEBAR */}
-        <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 290, background: "white", zIndex: 70, display: "flex", flexDirection: "column", boxShadow: "8px 0 40px rgba(26,10,0,0.12)", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)", transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)", overflowY: "auto", borderRight: "1px solid rgba(201,75,44,0.1)" }}>
-          <div style={{ height: 4, background: "linear-gradient(90deg, #C94B2C, #E8856A)" }} />
-          <div style={{ padding: "20px 20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}><LogoIcon /><span style={{ fontWeight: 900, fontSize: 18, color: "#1A0A00", letterSpacing: "-0.04em" }}>Bag<span style={{ color: "#C94B2C" }}>Search</span></span></div>
-            <button onClick={() => setSidebarOpen(false)} style={{ padding: 7, borderRadius: "50%", border: "1px solid rgba(201,75,44,0.15)", background: "#FFF5F2", cursor: "pointer", display: "flex", color: "#C94B2C" }}><Icon name="close" size={18} /></button>
-          </div>
-          <div style={{ padding: "0 14px", flex: 1 }}>
-            {NAV_LINKS.map((link) => (
-              <a key={link} onClick={() => { setSidebarOpen(false); if (link === "New Arrivals") setTimeout(() => newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" }), 350); else if (link === "Collections") setTimeout(() => navigate("/products"), 150); else if (link === "Hot Deals") setTimeout(() => navigate("/hot-deals"), 150); else if (link === "About Us") setTimeout(() => navigate("/about"), 150); else setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 700, fontSize: 14, textDecoration: "none", color: link === "Visual Search" || link === "Hot Deals" ? "#C94B2C" : "#1A0A00", background: link === "Visual Search" || link === "Hot Deals" ? "#FFF5F2" : "transparent", cursor: "pointer", transition: "background 0.2s" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 10 }}><Icon name={link === "Visual Search" ? "camera_enhance" : link === "Collections" ? "grid_view" : link === "About Us" ? "info" : "new_releases"} size={17} />{link}</span>
-                {link === "Visual Search" ? <span style={{ fontSize: 9, background: "#C94B2C", color: "white", padding: "2px 8px", borderRadius: 9999, fontWeight: 800 }}>AI</span> : <Icon name="chevron_right" size={16} />}
-              </a>
-            ))}
-            <div style={{ height: 1, background: "rgba(201,75,44,0.1)", margin: "16px 0" }} />
-            {[{ icon: "shopping_bag", label: "Cart (0)" }, { icon: "favorite", label: "Wishlist" }].map(({ icon, label }) => (
-              <a key={label} onClick={() => { setSidebarOpen(false); setTimeout(() => setAuthGateOpen(true), 150); }} className="sidebar-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 10, marginBottom: 2, fontWeight: 600, fontSize: 14, textDecoration: "none", color: "#555", cursor: "pointer" }}><Icon name={icon} size={18} /> {label}</a>
-            ))}
-          </div>
-          <div style={{ padding: "20px 20px 24px" }}>
-            <button onClick={() => { setSidebarOpen(false); navigate("/login?force=true"); }} style={{ width: "100%", padding: "13px 0", background: "#C94B2C", color: "white", fontWeight: 900, borderRadius: 50, border: "none", cursor: "pointer", fontSize: 14, marginBottom: 10, boxShadow: "0 6px 20px rgba(201,75,44,0.35)" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>Sign In</button>
-            <p style={{ textAlign: "center", fontSize: 9, color: "rgba(26,10,0,0.2)", fontStyle: "italic", letterSpacing: "0.15em", textTransform: "uppercase" }}>Luxury Redefined</p>
-          </div>
-        </aside>
+        {/* SIDEBAR — design system Sheet (src/components/ui/Sheet.jsx) */}
+        <HomeSidebar
+          open={sidebarOpen}
+          onOpenChange={setSidebarOpen}
+          user={user}
+          go={(action) => {
+            const routes = { collections: "/products", search: "/products", deals: "/hot-deals", about: "/about", contact: "/contact", cart: "/cart", profile: "/profile", login: "/login?force=true" };
+            if (action === "new") return newArrivalsRef.current?.scrollIntoView({ behavior: "smooth" });
+            if (routes[action] && (user || !["cart"].includes(action))) return navigate(routes[action]);
+            setAuthGateOpen(true);
+          }}
+        />
 
         <AuthPromptModal variant="gate" open={authGateOpen} onClose={() => setAuthGateOpen(false)} navigate={navigate} />
       </div>
