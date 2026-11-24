@@ -8,17 +8,8 @@
   --bs-font:'Manrope',system-ui,-apple-system,sans-serif;
 }
 .bs-sheet-overlay{position:fixed;inset:0;z-index:60;background:rgba(28,20,16,.42);backdrop-filter:blur(3px);}
-.bs-sheet-overlay[data-state=open]{animation:bs-fade-in .25s ease}
-.bs-sheet-overlay[data-state=closed]{animation:bs-fade-out .2s ease}
 .bs-sheet{position:fixed;top:0;left:0;z-index:70;height:100%;width:min(320px,86vw);display:flex;flex-direction:column;
   background:var(--bs-bg);font-family:var(--bs-font);color:var(--bs-ink);box-shadow:12px 0 48px rgba(28,20,16,.16);outline:none;overflow-y:auto;}
-.bs-sheet[data-state=open]{animation:bs-slide-in .38s var(--bs-ease)}
-.bs-sheet[data-state=closed]{animation:bs-slide-out .25s ease-in}
-@keyframes bs-fade-in{from{opacity:0}to{opacity:1}}
-@keyframes bs-fade-out{from{opacity:1}to{opacity:0}}
-@keyframes bs-slide-in{from{transform:translateX(-100%)}to{transform:none}}
-@keyframes bs-slide-out{from{transform:none}to{transform:translateX(-100%)}}
-@media (prefers-reduced-motion:reduce){.bs-sheet,.bs-sheet-overlay{animation:none!important}}
 
 /* Home sidebar */
 .hs-head{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 14px}

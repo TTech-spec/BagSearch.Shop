@@ -1,4 +1,6 @@
+import { motion as Motion } from "framer-motion";
 import { Sheet, SheetContent, SheetClose } from "./ui/Sheet.jsx";
+import { sheetItem } from "./ui/sheetMotion.js";
 import LogoIcon from "./Logo.jsx";
 
 const Icon = ({ name, size = 18 }) => (
@@ -7,11 +9,11 @@ const Icon = ({ name, size = 18 }) => (
 
 function Item({ icon, label, onSelect, tone, end }) {
   return (
-    <button type="button" className="hs-item" data-tone={tone} onClick={onSelect}>
+    <Motion.button type="button" className="hs-item" data-tone={tone} onClick={onSelect} variants={sheetItem} whileTap={{ scale: 0.97 }}>
       <span className="ic"><Icon name={icon} /></span>
       {label}
       <span className="end">{end ?? <Icon name="chevron_right" size={16} />}</span>
-    </button>
+    </Motion.button>
   );
 }
 
@@ -27,19 +29,19 @@ export default function HomeSidebar({ open, onOpenChange, user, go }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title="Main menu" description="Browse BagSearch">
-        <div className="hs-head">
+        <Motion.div className="hs-head" variants={sheetItem}>
           <div className="hs-brand"><LogoIcon /><span>Bag<b>Search</b></span></div>
           <SheetClose className="hs-icon-btn" aria-label="Close menu"><Icon name="close" /></SheetClose>
-        </div>
+        </Motion.div>
 
-        <button type="button" className="hs-search" onClick={pick("search")}>
+        <Motion.button variants={sheetItem} type="button" className="hs-search" onClick={pick("search")}>
           <Icon name="search" /> Search bags, brands…<span className="k">/</span>
-        </button>
+        </Motion.button>
 
-        <button type="button" className="hs-feature" onClick={pick("visual")}>
+        <Motion.button variants={sheetItem} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} type="button" className="hs-feature" onClick={pick("visual")}>
           <strong><Icon name="camera_enhance" size={20} /> Visual Search <span className="hs-badge">AI</span></strong>
           <p>Snap or upload a photo and find the bag in seconds.</p>
-        </button>
+        </Motion.button>
 
         <nav aria-label="Shop">
           <div className="hs-group">
@@ -60,7 +62,7 @@ export default function HomeSidebar({ open, onOpenChange, user, go }) {
           </div>
         </nav>
 
-        <div className="hs-foot">
+        <Motion.div className="hs-foot" variants={sheetItem}>
           {user ? (
             <button type="button" className="hs-item" onClick={pick("profile")}>
               <span className="hs-avatar">{initial}</span>
@@ -71,7 +73,7 @@ export default function HomeSidebar({ open, onOpenChange, user, go }) {
             <button type="button" className="hs-cta" onClick={pick("login")}>Sign In</button>
           )}
           <p className="hs-tag">Luxury Redefined</p>
-        </div>
+        </Motion.div>
       </SheetContent>
     </Sheet>
   );
