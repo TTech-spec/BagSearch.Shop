@@ -1,6 +1,5 @@
 import { motion as Motion } from "framer-motion";
 import { Sheet, SheetContent, SheetClose } from "./ui/Sheet.jsx";
-import { sheetItem } from "./ui/sheetMotion.js";
 import LogoIcon from "./Logo.jsx";
 
 const Icon = ({ name, size = 18 }) => (
@@ -9,7 +8,7 @@ const Icon = ({ name, size = 18 }) => (
 
 function Item({ icon, label, onSelect, tone, end }) {
   return (
-    <Motion.button type="button" className="hs-item" data-tone={tone} onClick={onSelect} variants={sheetItem} whileTap={{ scale: 0.97 }}>
+    <Motion.button type="button" className="hs-item" data-tone={tone} onClick={onSelect} data-sheet-item whileTap={{ scale: 0.97 }}>
       <span className="ic"><Icon name={icon} /></span>
       {label}
       <span className="end">{end ?? <Icon name="chevron_right" size={16} />}</span>
@@ -29,16 +28,16 @@ export default function HomeSidebar({ open, onOpenChange, user, go }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title="Main menu" description="Browse BagSearch">
-        <Motion.div className="hs-head" variants={sheetItem}>
+        <Motion.div className="hs-head" data-sheet-item>
           <div className="hs-brand"><LogoIcon /><span>Bag<b>Search</b></span></div>
           <SheetClose className="hs-icon-btn" aria-label="Close menu"><Icon name="close" /></SheetClose>
         </Motion.div>
 
-        <Motion.button variants={sheetItem} type="button" className="hs-search" onClick={pick("search")}>
+        <Motion.button data-sheet-item type="button" className="hs-search" onClick={pick("search")}>
           <Icon name="search" /> Search bags, brands…<span className="k">/</span>
         </Motion.button>
 
-        <Motion.button variants={sheetItem} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} type="button" className="hs-feature" onClick={pick("visual")}>
+        <Motion.button data-sheet-pop whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} type="button" className="hs-feature" onClick={pick("visual")}>
           <strong><Icon name="camera_enhance" size={20} /> Visual Search <span className="hs-badge">AI</span></strong>
           <p>Snap or upload a photo and find the bag in seconds.</p>
         </Motion.button>
@@ -62,7 +61,7 @@ export default function HomeSidebar({ open, onOpenChange, user, go }) {
           </div>
         </nav>
 
-        <Motion.div className="hs-foot" variants={sheetItem}>
+        <Motion.div className="hs-foot" data-sheet-item>
           {user ? (
             <button type="button" className="hs-item" onClick={pick("profile")}>
               <span className="hs-avatar">{initial}</span>

@@ -1,6 +1,6 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useIsMobileViewport } from '../hooks/useIsMobileViewport';
 
@@ -85,114 +85,133 @@ function IconUser({ size = 22, color = 'currentColor' }) {
   );
 }
 
+function IconFlame({ size = 22, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .2 2 1.2 3 2.5 3-1-3 0-6 0-8Z" />
+    </svg>
+  );
+}
+
+const PILL = { open: 'min(340px, 72dvh)', closed: 64 };
+const spring = { type: 'spring', stiffness: 360, damping: 34 };
+
 /**
- * Floating pill bottom nav, mobile only — Home / Vendors / Reels / [List Bag
- * or New Arrivals] / Cart / Profile. Rendered once in App.jsx (outside <Routes>) so
- * it persists across pages.
- * The third slot is "List Bag" for sellers, or "New Arrivals" for everyone
- * else, since buyers don't have anything to list. Cart and New Arrivals have
- * no page of their own — both reuse Product.jsx's existing location-state
- * pattern (openCart / scrollTo) to trigger behavior on the products page.
+ * Mobile bottom nav — "Nav C": a dark floating pill with four tabs (the active
+ * one shows its name) and a "More" button that grows the pill upward into a
+ * menu of the other destinations. Rendered once in App.jsx outside <Routes>.
+ * The role-specific action (List Bag / Post Bag / New Arrivals) leads the menu.
  */
 export default function MobileBottomNav() {
   const isMobile = useIsMobileViewport(768);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  // Remember which page the menu was opened on, so it closes on navigation.
+  const [openOn, setOpenOn] = useState(null);
+  const open = openOn === location.pathname;
+  const setOpen = (v) => setOpenOn(v ? location.pathname : null);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') setOpenOn(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   if (!isMobile) return null;
   if (HIDDEN_ON.some(path => location.pathname.startsWith(path))) return null;
 
+  const path = location.pathname;
   const role = user?.user_metadata?.role;
-  const isSeller = role === 'seller';
-  const isFactory = role === 'factory';
-  const profilePath = isSeller ? '/seller-profile' : '/profile';
+  const profilePath = role === 'seller' ? '/seller-profile' : '/profile';
+  const go = (to, state) => { setOpen(false); navigate(to, state ? { state } : undefined); };
 
-  // Buyers don't list products, so swap that slot for a shortcut to New
-  // Arrivals instead of showing them a "List Bag" action meant for sellers.
-  const secondItem = isFactory
-    ? { key: 'post', label: 'Post Bag', Icon: IconListBag, active: location.pathname === '/factory/post', onClick: () => navigate('/factory/post') }
-    : isSeller
-    ? { key: 'list', label: 'List Bag', Icon: IconListBag, active: location.pathname === '/upload-product', onClick: () => navigate('/upload-product') }
-    : { key: 'new', label: 'New Arrivals', Icon: IconSparkle, active: false, onClick: () => navigate('/products', { state: { scrollTo: 'new-arrivals' } }) };
+  const roleItem = role === 'factory'
+    ? { key: 'post', label: 'Post a bag', Icon: IconListBag, to: '/factory/post' }
+    : role === 'seller'
+    ? { key: 'list', label: 'List a bag', Icon: IconListBag, to: '/upload-product' }
+    : { key: 'new', label: 'New arrivals', Icon: IconSparkle, to: '/products', state: { scrollTo: 'new-arrivals' } };
 
-  const items = [
-    {
-      key: 'home', label: 'Home', Icon: IconHome,
-      active: location.pathname === '/' || location.pathname === '/products',
-      onClick: () => navigate('/products'),
-    },
-    {
-      key: 'vendors', label: 'Vendors', Icon: IconStore,
-      active: location.pathname === '/vendors' || location.pathname.startsWith('/vendor/') || location.pathname.startsWith('/seller/'),
-      onClick: () => navigate('/vendors'),
-    },
-    {
-      key: 'factory', label: 'Factory Direct', Icon: IconFactory,
-      active: location.pathname.startsWith('/factory'),
-      onClick: () => navigate('/factory'),
-    },
-    secondItem,
-    {
-      key: 'cart', label: 'Cart', Icon: IconCart,
-      active: location.pathname === '/cart',
-      onClick: () => navigate('/cart'),
-    },
-    {
-      key: 'profile', label: 'Profile', Icon: IconUser,
-      active: location.pathname === '/profile' || location.pathname === '/seller-profile',
-      onClick: () => navigate(profilePath),
-    },
+  const tabs = [
+    { key: 'home', label: 'Home', Icon: IconHome, active: path === '/' || path === '/products', to: '/products' },
+    { key: 'vendors', label: 'Vendors', Icon: IconStore, active: path === '/vendors' || path.startsWith('/vendor/') || path.startsWith('/seller/'), to: '/vendors' },
+    { key: 'cart', label: 'Cart', Icon: IconCart, active: path === '/cart', to: '/cart' },
+    { key: 'profile', label: 'Profile', Icon: IconUser, active: path === '/profile' || path === '/seller-profile', to: profilePath },
+  ];
+  const more = [
+    roleItem,
+    { key: 'factory', label: 'Factory Direct', Icon: IconFactory, to: '/factory' },
+    { key: 'deals', label: 'Hot deals', Icon: IconFlame, to: '/hot-deals' },
+    { key: 'reels', label: 'Reels', Icon: IconReels, to: '/reels', badge: 'Soon' },
   ];
 
   return (
-    <nav
-      aria-label="Primary"
-      style={{
-        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
-        display: 'flex', justifyContent: 'center',
-        paddingBottom: 'max(14px, env(safe-area-inset-bottom))',
-        pointerEvents: 'none',
-      }}
-    >
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 4,
-        background: '#ffffff', borderRadius: 999, padding: '7px 9px',
-        boxShadow: '0 12px 32px rgba(200,75,17,0.14), 0 2px 10px rgba(0,0,0,0.06)',
-        border: '1.5px solid #f7ece4',
-        pointerEvents: 'auto',
-      }}>
-        {items.map(item => (
-          <button
-            key={item.key}
-            onClick={item.onClick}
-            aria-label={item.label}
-            aria-current={item.active ? 'page' : undefined}
-            style={{
-              position: 'relative',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 'clamp(40px, 12.5vw, 48px)', height: 48, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              background: 'transparent',
-            }}
-          >
-            {item.active && (
-              // Shared layoutId — framer-motion animates this circle sliding
-              // from its old button to this one instead of just popping in.
-              <motion.div
-                layoutId="bottomNavActiveBg"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'linear-gradient(135deg,#c84b11,#f97316)', boxShadow: '0 6px 16px rgba(200,75,17,0.4)' }}
-              />
+    <>
+      <AnimatePresence>
+        {open && (
+          <Motion.div key="scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
+            onClick={() => setOpen(false)} aria-hidden="true"
+            style={{ position: 'fixed', inset: 0, zIndex: 49, background: 'rgba(28,20,16,.35)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }} />
+        )}
+      </AnimatePresence>
+
+      <nav aria-label="Primary" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', justifyContent: 'center', padding: '0 16px max(16px, env(safe-area-inset-bottom))', pointerEvents: 'none' }}>
+        <Motion.div
+          initial={{ y: 90, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, height: open ? PILL.open : PILL.closed, borderRadius: open ? 28 : 999 }}
+          transition={spring}
+          style={{ pointerEvents: 'auto', width: '100%', maxWidth: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: '#1C1410', boxShadow: '0 16px 36px rgba(28,20,16,.28)', fontFamily: "'Manrope',system-ui,sans-serif" }}
+        >
+          <AnimatePresence>
+            {open && (
+              <Motion.ul id="bottom-nav-more" key="menu"
+                initial="hidden" animate="show" exit="hidden"
+                variants={{ hidden: { transition: { staggerChildren: 0.02, staggerDirection: -1 } }, show: { transition: { staggerChildren: 0.045, delayChildren: 0.1 } } }}
+                style={{ listStyle: 'none', margin: 0, padding: '18px 12px 4px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1, overflowY: 'auto' }}>
+                <Motion.li variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: '#BFAE9F', padding: '0 8px 6px' }}>More</Motion.li>
+                {more.map(m => (
+                  <Motion.li key={m.key} variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: spring } }}>
+                    <Motion.button whileTap={{ scale: 0.97 }} onClick={() => go(m.to, m.state)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 50, padding: '0 8px', border: 0, borderRadius: 14, background: path === m.to && !m.state ? 'rgba(255,255,255,.08)' : 'transparent', color: '#EDE3D8', font: "700 15px 'Manrope',sans-serif", cursor: 'pointer', textAlign: 'left' }}>
+                      <span style={{ width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,.08)' }}><m.Icon size={18} color="#F0A070" /></span>
+                      {m.label}
+                      {m.badge && <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999, background: 'rgba(240,160,112,.16)', color: '#F0A070' }}>{m.badge}</span>}
+                    </Motion.button>
+                  </Motion.li>
+                ))}
+              </Motion.ul>
             )}
-            <span style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
-              <item.Icon size={21} color={item.active ? '#ffffff' : '#5c3317'} />
-            </span>
-            {item.isNew && !item.active && (
-              <span style={{ position: 'absolute', top: 6, right: 8, width: 8, height: 8, borderRadius: '50%', background: '#16a34a', border: '2px solid white', zIndex: 1 }} />
-            )}
-          </button>
-        ))}
-      </div>
-    </nav>
+          </AnimatePresence>
+
+          <div style={{ flex: 'none', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, padding: '0 8px' }}>
+            {tabs.map(t => {
+              const on = t.active && !open;
+              return (
+                <Motion.button key={t.key} layout transition={spring} whileTap={{ scale: 0.92 }}
+                  onClick={() => go(t.to)} aria-label={t.label} aria-current={t.active ? 'page' : undefined}
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, height: 46, padding: on ? '0 16px' : '0 12px', border: 0, borderRadius: 999, background: 'transparent', cursor: 'pointer', color: on ? '#fff' : '#BFAE9F' }}>
+                  {on && <Motion.span layoutId="navActive" transition={spring} style={{ position: 'absolute', inset: 0, borderRadius: 999, background: '#B4410E', boxShadow: '0 6px 16px rgba(180,65,14,.45)' }} />}
+                  <span style={{ position: 'relative', display: 'flex' }}><t.Icon size={20} color="currentColor" /></span>
+                  <AnimatePresence initial={false}>
+                    {on && (
+                      <Motion.span key="label" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.22 }}
+                        style={{ position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap', font: "800 13px 'Manrope',sans-serif" }}>{t.label}</Motion.span>
+                    )}
+                  </AnimatePresence>
+                </Motion.button>
+              );
+            })}
+            <Motion.button whileTap={{ scale: 0.9 }} onClick={() => setOpen(!open)}
+              aria-label={open ? 'Close menu' : 'More'} aria-expanded={open} aria-controls="bottom-nav-more"
+              animate={{ backgroundColor: open ? '#3A2E26' : 'rgba(0,0,0,0)', rotate: open ? 90 : 0 }} transition={spring}
+              style={{ width: 46, height: 46, flex: 'none', display: 'grid', placeItems: 'center', borderRadius: 999, border: '1px solid rgba(255,255,255,.14)', color: '#fff', cursor: 'pointer' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                {open ? <path d="M6 6l12 12M18 6 6 18" /> : <><circle cx="5" cy="12" r="1.2" fill="currentColor" /><circle cx="12" cy="12" r="1.2" fill="currentColor" /><circle cx="19" cy="12" r="1.2" fill="currentColor" /></>}
+              </svg>
+            </Motion.button>
+          </div>
+        </Motion.div>
+      </nav>
+    </>
   );
 }
