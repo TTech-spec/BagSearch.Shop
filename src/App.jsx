@@ -4,6 +4,7 @@ import { AuthContext } from './context/AuthContext.jsx';
 import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
+import HomeReminder from './components/HomeReminder.jsx';
 import VideoLoader from './components/VideoLoader.jsx';
 import WelcomeCard from './components/WelcomeCard.jsx';
 import LoginSuccess from './components/auth/LoginSuccess.jsx';
@@ -292,6 +293,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      <HomeReminder />
       <MobileBottomNav />
       <WelcomeCard />
       <LoginSuccess />
