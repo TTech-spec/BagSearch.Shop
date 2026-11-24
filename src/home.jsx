@@ -7,7 +7,6 @@ import VideoLoader from './components/VideoLoader.jsx';
 import AuthPromptModal from './components/auth/AuthPromptModal.jsx';
 import specialOfferImg from './images/shopping-bag.png';
 import specialOfferSlide2 from './assets/images/onboarding/From Klickpin.com- 1112459545479163582-pin-id-1112459545479163582.webp';
-import ManufacturerPromo from "./components/vendors/ManufacturerPromo.jsx";
 
 // ── CRIIBB PALETTE ──
 const NAV_LINKS = ["New Arrivals", "Collections", "About Us", "Visual Search", "Contact Us"];
@@ -831,7 +830,6 @@ export default function LuxeBag() {
           <SpecialOffersBanner navigate={navigate} />
           <HeroCarousel navigate={navigate} newArrivalsRef={newArrivalsRef} onAuthGate={() => setAuthGateOpen(true)} />
           <NewArrivalsSection navigate={navigate} sectionRef={newArrivalsRef} />
-          <ManufacturerPromo />
 
           {/* SHOP BY CATEGORY */}
           <section style={{ padding: "72px 24px", background: "#F9DDD0" }}>
