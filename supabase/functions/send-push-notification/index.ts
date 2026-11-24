@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 type NotificationPayload = {
+  /** "all" sends to every active subscription (needs PUSH_TRIGGER_SECRET). */
+  audience?: "all";
   sellerId?: string;
   notificationId?: string;
   title?: string;
@@ -58,22 +60,33 @@ Deno.serve(async (req) => {
     }
 
     const payload = (await req.json()) as NotificationPayload;
-    if (!payload.sellerId || !payload.title || !payload.body) {
-      return json({ error: "Missing sellerId, title, or body" }, 400);
+    const broadcast = payload.audience === "all";
+    if (broadcast && (!internalTriggerSecret || authHeader !== `Bearer ${internalTriggerSecret}`)) {
+      // Sending to everyone must never be possible without the secret.
+      return json({ error: "Broadcast needs PUSH_TRIGGER_SECRET" }, 401);
+    }
+    if ((!broadcast && !payload.sellerId) || !payload.title || !payload.body) {
+      return json({ error: "Missing sellerId (or audience: \"all\"), title, or body" }, 400);
     }
 
-    const { data: subscriptions, error: subscriptionError } = await supabaseAdmin
-      .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth")
-      .eq("user_id", payload.sellerId)
-      .eq("is_active", true);
-
-    if (subscriptionError) {
-      throw subscriptionError;
+    // Load subscriptions: one user's, or everyone's in pages of 1000.
+    const subscriptions: { id: string; endpoint: string; p256dh: string; auth: string }[] = [];
+    for (let from = 0; ; from += 1000) {
+      let q = supabaseAdmin
+        .from("push_subscriptions")
+        .select("id, endpoint, p256dh, auth")
+        .eq("is_active", true)
+        .order("id")
+        .range(from, from + 999);
+      if (!broadcast) q = q.eq("user_id", payload.sellerId!);
+      const { data, error: subscriptionError } = await q;
+      if (subscriptionError) throw subscriptionError;
+      subscriptions.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
     }
 
     if (!subscriptions?.length) {
-      return json({ success: true, sent: 0, message: "No active subscriptions for user." });
+      return json({ success: true, sent: 0, message: "No active subscriptions." });
     }
 
     let sent = 0;
@@ -81,36 +94,33 @@ Deno.serve(async (req) => {
     const pushPayload = JSON.stringify({
       title: payload.title,
       body: payload.body,
-      url: payload.url || "/seller-profile",
+      url: payload.url || (broadcast ? "/" : "/seller-profile"),
       tag: payload.tag || payload.notificationId || "bagsearch-notification",
       notificationId: payload.notificationId || null,
       icon: "/pwa-192x192.png",
       badge: "/pwa-192x192.png",
     });
 
-    for (const subscription of subscriptions) {
+    const sendOne = async (subscription: { id: string; endpoint: string; p256dh: string; auth: string }) => {
       try {
         await webpush.sendNotification({
           endpoint: subscription.endpoint,
-          keys: {
-            p256dh: subscription.p256dh,
-            auth: subscription.auth,
-          },
-        }, pushPayload);
-
+          keys: { p256dh: subscription.p256dh, auth: subscription.auth },
+        }, pushPayload, { TTL: 60 * 60 * 24 });
         sent += 1;
       } catch (error) {
         const statusCode = typeof error === "object" && error && "statusCode" in error
           ? Number(error.statusCode)
           : 0;
-
         if (statusCode === 404 || statusCode === 410) {
           staleIds.push(subscription.id);
-          continue;
+          return;
         }
-
         console.error("Push delivery failed", subscription.id, error);
       }
+    };
+    for (let i = 0; i < subscriptions.length; i += 25) {
+      await Promise.all(subscriptions.slice(i, i + 25).map(sendOne));
     }
 
     if (staleIds.length) {
@@ -120,7 +130,7 @@ Deno.serve(async (req) => {
         .in("id", staleIds);
     }
 
-    return json({ success: true, sent, cleanedUp: staleIds.length });
+    return json({ success: true, sent, total: subscriptions.length, cleanedUp: staleIds.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     return json({ error: message }, 500);
