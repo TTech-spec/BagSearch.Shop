@@ -4,6 +4,11 @@
 -- New posts start as 'pending' and only show once an admin sets 'approved'.
 -- ============================================================================
 
+-- Allow the 'factory' role on profiles (was buyer/seller only).
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE public.users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('buyer', 'seller', 'factory'));
+
 CREATE TABLE IF NOT EXISTS factory_products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   factory_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
