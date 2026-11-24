@@ -5,7 +5,6 @@ import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
 import HomeReminder from './components/HomeReminder.jsx';
-import VideoLoader from './components/VideoLoader.jsx';
 import WelcomeCard from './components/WelcomeCard.jsx';
 import LoginSuccess from './components/auth/LoginSuccess.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
@@ -45,10 +44,15 @@ const SellerBankDetails = lazy(() => import('./sellerBankDetails.jsx'));
 const Cart = lazy(() => import('./cartPage.jsx'));
 const Orders = lazy(() => import('./ordersPage.jsx'));
 
-// Loading screen (auth check + lazy route chunks) — plays the brand video
+// While auth is checked or a page chunk loads: a thin bar at the top instead of
+// a full-screen loading screen, so the app never blanks out.
 function LoadingSpinner() {
-  // Fixed to the viewport so #root's max-width/padding (App.css) can't box it in on wide screens
-  return <VideoLoader />;
+  return (
+    <div role="progressbar" aria-label="Loading" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 99999, overflow: 'hidden', background: 'rgba(180,65,14,.12)' }}>
+      <style>{`@keyframes bsTopBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
+      <div style={{ width: '40%', height: '100%', background: '#B4410E', borderRadius: 3, animation: 'bsTopBar 1s ease-in-out infinite' }} />
+    </div>
+  );
 }
 
 function AuthListener() {

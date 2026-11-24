@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import LogoIcon from "./components/Logo.jsx";
 import { useSEO, SITE_URL } from './hooks/useSEO';
-import VideoLoader from './components/VideoLoader.jsx';
 import HomeSidebar from "./components/HomeSidebar.jsx";
 import AuthPromptModal from './components/auth/AuthPromptModal.jsx';
 import specialOfferImg from './images/shopping-bag.png';
@@ -54,10 +53,6 @@ const Icon = ({ name, size = 22 }) => (
   <span style={{ fontFamily: "'Material Symbols Outlined'", fontWeight: "normal", fontStyle: "normal", fontSize: size, lineHeight: 1, display: "inline-block", textTransform: "none", letterSpacing: "normal", wordWrap: "normal", whiteSpace: "nowrap", direction: "ltr" }}>{name}</span>
 );
 
-/* ─── LUXURY LOADER ─── */
-function LuxuryLoader({ onDone }) {
-  return <VideoLoader duration={2600} onDone={onDone} />;
-}
 
 /* ─── TYPEWRITER H1 ─── */
 function TypewriterH1({ title, subtitle, accentColor = "#C94B2C", id }) {
@@ -713,12 +708,10 @@ function BlogSection() {
 /* ─── MAIN ─── */
 export default function LuxeBag() {
   const { user } = useContext(AuthContext);
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authGateOpen, setAuthGateOpen] = useState(false);
   const navigate = useNavigate();
   const newArrivalsRef = useRef(null);
-  const handleLoadDone = useCallback(() => setLoading(false), []);
 
   // SEO for home/landing page
   useSEO({
@@ -757,11 +750,10 @@ export default function LuxeBag() {
   };
 
   useEffect(() => {
-    if (loading) return;
     const obs = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }); }, { threshold: 0.12 });
     document.querySelectorAll(".scroll-reveal,.scroll-reveal-scale,.scroll-reveal-left").forEach(el => obs.observe(el));
     return () => obs.disconnect();
-  }, [loading]);
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0EE", fontFamily: "'Manrope', sans-serif", color: "#1A0A00" }}>
@@ -802,9 +794,8 @@ export default function LuxeBag() {
         .footer-link:hover{color:#F9DDD0!important;}
       `}</style>
 
-      <LuxuryLoader onDone={handleLoadDone} />
 
-      <div style={{ opacity: loading ? 0 : 1, transition: "opacity 0.6s ease", pointerEvents: loading ? "none" : "all" }}>
+      <div>
 
         {/* HEADER */}
         <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(201,75,44,0.12)" }}>
