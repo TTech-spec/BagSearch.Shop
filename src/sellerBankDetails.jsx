@@ -1,8 +1,9 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useLayoutEffect, useRef } from 'react';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
+import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import { supabase } from './services/api';
-import LogoIcon from './components/Logo.jsx';
 import { useSEO } from './hooks/useSEO';
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
@@ -142,7 +143,7 @@ export default function SellerBankDetails() {
         await supabase.from('seller_bank_details').upsert(upserted, { onConflict: 'user_id' });
         setExisting(upserted);
         setAccountName(data.account_name);
-        setSuccess('✅ Account verified and saved! Buyers can now pay you directly.');
+        setSuccess('Account verified and saved! Buyers can now pay you directly.');
         return;
       }
 
@@ -166,7 +167,7 @@ export default function SellerBankDetails() {
         await supabase.from('seller_bank_details').upsert(upserted, { onConflict: 'user_id' });
         setExisting(upserted);
         setAccountName(data.account_name);
-        setSuccess('✅ Account verified and saved.');
+        setSuccess('Account verified and saved.');
         return;
       }
 
@@ -190,7 +191,7 @@ export default function SellerBankDetails() {
         bank_name: bankName, bank_code: bankCode,
         account_number: accountNumber, account_name: accountNumber, is_verified: true,
       });
-      setSuccess('✅ Bank details saved. Account verification will complete in the background.');
+      setSuccess('Bank details saved. Account verification will complete in the background.');
 
     } catch (err) {
       console.error('[BankDetails] verify failed:', err);
@@ -202,200 +203,123 @@ export default function SellerBankDetails() {
 
   if (!user) { navigate('/login'); return null; }
 
-  const canVerify = accountNumber.length === 10 && !!bankCode && !verifying && !saving;
+  return <BankDetailsView {...{ navigate, loading, existing, bankCode, setBankCode, accountNumber, setAccountNumber, accountName, setAccountName, verifying, saving, error, setError, success, handleVerify }} />;
+}
+
+// ─── View ────────────────────────────────────────────────────────────────────
+// Minimal, animated payout setup. GSAP staggers the first paint; Framer Motion
+// handles state changes (status messages, saved card, button feedback).
+const V = { bg:'#FAF6F1', ink:'#1C1410', ink2:'#54443A', muted:'#75625A', line:'#E7DCD1', accent:'#B4410E', accentSoft:'#F6E6DA', green:'#1D7044', greenSoft:'#E3F1E8', red:'#9B2C1A', redSoft:'#FBE4DE' };
+const font = "'Manrope',system-ui,-apple-system,sans-serif";
+const fieldBase = { width:'100%', boxSizing:'border-box', minHeight:52, padding:'0 16px', borderRadius:14, border:`1.5px solid ${V.line}`, background:'#fff', font:`600 15px ${font}`, color:V.ink, outline:'none', transition:'border-color .2s, box-shadow .2s' };
+const focusOn = e => { e.currentTarget.style.borderColor = V.accent; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(180,65,14,.12)'; };
+const focusOff = e => { e.currentTarget.style.borderColor = V.line; e.currentTarget.style.boxShadow = 'none'; };
+
+function BankDetailsView({ navigate, loading, existing, bankCode, setBankCode, accountNumber, setAccountNumber, accountName, setAccountName, verifying, error, setError, success, handleVerify }) {
+  const root = useRef(null);
+  const canVerify = accountNumber.length === 10 && !!bankCode && !verifying;
+  const bankName = BANKS.find(b => b.code === bankCode)?.name;
+  const masked = existing?.account_number ? '•••• ' + String(existing.account_number).slice(-4) : '';
+
+  useLayoutEffect(() => {
+    if (loading || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ctx = gsap.context(() => {
+      gsap.from('.bd-in', { y: 18, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.07 });
+    }, root);
+    return () => ctx.revert();
+  }, [loading]);
 
   return (
-    <div style={{
-      minHeight:'100vh',
-      background:'linear-gradient(180deg,#fdf8f5 0%,#fff 40%)',
-      fontFamily:"'Plus Jakarta Sans','Outfit',system-ui,sans-serif",
-    }}>
-      {/* ── Header ── */}
-      <header style={{
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:'16px 20px', maxWidth:800, margin:'0 auto',
-      }}>
-        <div onClick={()=>navigate('/')} style={{cursor:'pointer',display:'flex',alignItems:'center',gap:8}}>
-          <LogoIcon size={28}/>
-          <span style={{fontWeight:900,fontSize:18,color:C.text}}>BagSearch</span>
-        </div>
-        <button onClick={()=>navigate('/seller-profile')} style={{
-          padding:'8px 16px', borderRadius:10, border:`1.5px solid ${C.border}`,
-          background:'white', color:C.textMid, fontWeight:700, fontSize:13, cursor:'pointer',
-        }}>← Dashboard</button>
+    <div ref={root} style={{ minHeight:'100dvh', background:V.bg, fontFamily:font, color:V.ink }}>
+      <header style={{ display:'flex', alignItems:'center', gap:12, maxWidth:520, margin:'0 auto', padding:'18px 20px' }}>
+        <button onClick={() => navigate('/seller-profile')} aria-label="Back to dashboard" style={{ width:44, height:44, borderRadius:999, border:`1px solid ${V.line}`, background:'#fff', display:'grid', placeItems:'center', cursor:'pointer', color:V.ink2 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span style={{ fontSize:13, fontWeight:700, color:V.muted }}>Seller dashboard</span>
       </header>
 
-      <div style={{maxWidth:560,margin:'0 auto',padding:'20px 20px 80px'}}>
-        {/* ── Title ── */}
-        <div style={{textAlign:'center',marginBottom:30}}>
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:8, padding:'8px 18px',
-            borderRadius:20, background:C.primaryBg, color:C.primary,
-            fontWeight:800, fontSize:12, marginBottom:14,
-          }}>
-            🏦 PAYMENT SETUP
-          </div>
-          <h1 style={{fontSize:'clamp(24px,4vw,32px)',fontWeight:900,color:C.text,margin:'0 0 10px'}}>
-            Receive Payments Directly
-          </h1>
-          <p style={{fontSize:14,color:C.textMuted,lineHeight:1.6,margin:0}}>
-            Add your bank account so buyers can pay you directly when they purchase your bags.
-          </p>
-        </div>
-
-        {/* ── How payments work ── */}
-        <div style={{
-          background:'#f0f9ff', border:'1.5px solid #bae6fd', borderRadius:14,
-          padding:16, marginBottom:24, display:'flex', gap:12, alignItems:'flex-start',
-        }}>
-          <span style={{fontSize:20,flexShrink:0}}>💡</span>
-          <div>
-            <p style={{margin:0,fontWeight:700,fontSize:13,color:'#0c4a6e'}}>How payments work</p>
-            <p style={{margin:'6px 0 0',fontSize:12.5,color:'#0369a1',lineHeight:1.6}}>
-              When a buyer pays for your bag, the money goes directly to this bank account.
-              Your details are stored securely and only used to process payouts.
-            </p>
-          </div>
-        </div>
+      <main style={{ maxWidth:520, margin:'0 auto', padding:'8px 20px 120px' }}>
+        <div className="bd-in" style={{ fontSize:11, fontWeight:800, letterSpacing:'.14em', textTransform:'uppercase', color:V.accent }}>Payouts</div>
+        <h1 className="bd-in" style={{ margin:'8px 0 8px', fontSize:'clamp(28px,6vw,34px)', fontWeight:800, letterSpacing:'-.03em', lineHeight:1.1 }}>Where should we send your money?</h1>
+        <p className="bd-in" style={{ margin:'0 0 28px', fontSize:15, lineHeight:1.6, color:V.muted }}>When a buyer pays for your bag, it goes straight to this account.</p>
 
         {loading ? (
-          <div style={{textAlign:'center',padding:40,color:C.textMuted}}>Loading...</div>
-        ) : (
-          <div style={{
-            background:'white', borderRadius:20,
-            border:`1.5px solid ${C.borderLight}`,
-            padding:'28px 24px',
-            boxShadow:'0 4px 20px rgba(200,75,17,0.06)',
-          }}>
-            {/* Existing account banner */}
-            {existing?.account_name && (
-              <div style={{
-                background:C.successBg, border:'1.5px solid #86efac', borderRadius:12,
-                padding:14, marginBottom:20, display:'flex', alignItems:'center', gap:10,
-              }}>
-                <span style={{fontSize:20}}>✅</span>
-                <div>
-                  <p style={{margin:0,fontWeight:700,fontSize:13,color:'#166534'}}>Account saved</p>
-                  <p style={{margin:'2px 0 0',fontSize:12,color:'#15803d'}}>
-                    {existing.account_name} — {existing.bank_name} ({existing.account_number})
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Bank select */}
-            <label style={{display:'block',marginBottom:16}}>
-              <span style={{fontSize:13,fontWeight:700,color:C.text,display:'block',marginBottom:6}}>
-                Select your bank
-              </span>
-              <select value={bankCode} onChange={e => { setBankCode(e.target.value); setAccountName(''); setError(null); }}
-                style={{
-                  width:'100%', padding:'12px 14px', borderRadius:12,
-                  border:`1.5px solid ${bankCode ? C.primary : C.border}`,
-                  fontSize:14, color:C.text, background:'white', cursor:'pointer',
-                  outline:'none', appearance:'none',
-                  backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a6348' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat:'no-repeat', backgroundPosition:'right 14px center',
-                  boxSizing:'border-box',
-                }}>
-                <option value="">Choose a bank…</option>
-                {BANKS.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
-              </select>
-            </label>
-
-            {/* Account number */}
-            <label style={{display:'block',marginBottom:16}}>
-              <span style={{fontSize:13,fontWeight:700,color:C.text,display:'block',marginBottom:6}}>
-                Account number
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                value={accountNumber}
-                onChange={e => { setAccountNumber(e.target.value.replace(/\D/g,'')); setAccountName(''); setError(null); }}
-                placeholder="Enter 10-digit account number"
-                style={{
-                  width:'100%', padding:'12px 14px', borderRadius:12,
-                  border:`1.5px solid ${accountNumber.length===10 ? C.primary : C.border}`,
-                  fontSize:14, color:C.text, outline:'none', boxSizing:'border-box',
-                  transition:'border-color 0.2s',
-                }}
-              />
-            </label>
-
-            {/* Account name — auto-resolved by Flutterwave via Edge Function */}
-            <label style={{display:'block',marginBottom:20}}>
-              <span style={{fontSize:13,fontWeight:700,color:C.text,display:'block',marginBottom:6}}>
-                Account name
-              </span>
-              <div style={{
-                padding:'12px 14px', borderRadius:12, minHeight:46,
-                border:`1.5px solid ${accountName ? '#86efac' : C.border}`,
-                background: accountName ? C.successBg : '#fafafa',
-                fontSize:14,
-                color: accountName ? '#166534' : C.textMuted,
-                fontWeight: accountName ? 700 : 400,
-                display:'flex', alignItems:'center', gap:8,
-              }}>
-                {verifying ? (
-                  <><span style={{fontSize:13}}>⏳</span> Verifying account with Flutterwave…</>
-                ) : accountName ? (
-                  <><span style={{fontSize:16}}>✅</span> {accountName}</>
-                ) : (
-                  'Enter your bank and 10-digit account number, then click Verify'
-                )}
-              </div>
-            </label>
-
-            {/* Error */}
-            {error && (
-              <div style={{
-                background:C.dangerBg, border:'1.5px solid #fca5a5', borderRadius:12,
-                padding:'12px 16px', marginBottom:16, fontSize:13, color:C.danger, fontWeight:600,
-              }}>
-                {error}
-              </div>
-            )}
-
-            {/* Success */}
-            {success && (
-              <div style={{
-                background:C.successBg, border:'1.5px solid #86efac', borderRadius:12,
-                padding:'12px 16px', marginBottom:16, fontSize:13, color:'#166534', fontWeight:600,
-              }}>
-                {success}
-              </div>
-            )}
-
-            {/* Verify & Save button */}
-            <button
-              onClick={handleVerify}
-              disabled={!canVerify}
-              style={{
-                width:'100%', padding:'14px 0', borderRadius:12, border:'none',
-                background: canVerify
-                  ? `linear-gradient(135deg,${C.primary},${C.primaryLight})`
-                  : '#e5e5e5',
-                color: canVerify ? 'white' : '#999',
-                fontWeight:800, fontSize:15,
-                cursor: canVerify ? 'pointer' : 'default',
-                boxShadow: canVerify ? `0 6px 20px ${C.primary}33` : 'none',
-                transition:'all 0.25s',
-              }}>
-              {verifying
-                ? '⏳ Verifying with Flutterwave…'
-                : existing?.account_name
-                  ? '🔄 Update Bank Account'
-                  : '✅ Verify & Save Bank Account'}
-            </button>
-
-            <p style={{textAlign:'center',fontSize:11.5,color:C.textMuted,marginTop:14,lineHeight:1.5}}>
-              Your bank details are stored securely. We never share your information with third parties.
-            </p>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {[0,1,2].map(i => <Motion.div key={i} animate={{ opacity:[.5,1,.5] }} transition={{ duration:1.4, repeat:Infinity, delay:i*.15 }} style={{ height:52, borderRadius:14, background:'#EFE6DC' }} />)}
           </div>
+        ) : (
+          <>
+            <AnimatePresence>
+              {existing?.account_name && (
+                <Motion.div key="saved" className="bd-in" initial={{ opacity:0, y:10, scale:.98 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0 }} transition={{ type:'spring', stiffness:300, damping:28 }}
+                  style={{ position:'relative', overflow:'hidden', borderRadius:20, padding:'20px 20px 18px', marginBottom:24, background:V.ink, color:'#EDE3D8' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:12, fontWeight:700, color:'#BFAE9F' }}>{existing.bank_name}</span>
+                    <span style={{ fontSize:11, fontWeight:800, padding:'4px 10px', borderRadius:999, background:'rgba(255,255,255,.1)', color:'#B9E4C9' }}>Active</span>
+                  </div>
+                  <div style={{ marginTop:22, fontSize:20, fontWeight:800, letterSpacing:'.06em', color:'#fff' }}>{masked}</div>
+                  <div style={{ marginTop:4, fontSize:13, color:'#BFAE9F' }}>{existing.account_name}</div>
+                </Motion.div>
+              )}
+            </AnimatePresence>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <label className="bd-in" style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <span style={{ fontSize:13, fontWeight:700, color:V.ink2 }}>Bank</span>
+                <select value={bankCode} onFocus={focusOn} onBlur={focusOff} onChange={e => { setBankCode(e.target.value); setAccountName(''); setError(null); }}
+                  style={{ ...fieldBase, appearance:'none', cursor:'pointer', color: bankCode ? V.ink : V.muted,
+                    backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2375625A' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat:'no-repeat', backgroundPosition:'right 16px center' }}>
+                  <option value="">Choose your bank</option>
+                  {BANKS.map(b => <option key={b.code} value={b.code}>{b.name}</option>)}
+                </select>
+              </label>
+
+              <label className="bd-in" style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <span style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:700, color:V.ink2 }}>
+                  Account number <span style={{ fontWeight:600, color: accountNumber.length === 10 ? V.green : V.muted }}>{accountNumber.length}/10</span>
+                </span>
+                <input type="text" inputMode="numeric" autoComplete="off" maxLength={10} value={accountNumber} placeholder="0123456789"
+                  onFocus={focusOn} onBlur={focusOff}
+                  onChange={e => { setAccountNumber(e.target.value.replace(/\D/g, '')); setAccountName(''); setError(null); }}
+                  style={{ ...fieldBase, letterSpacing:'.12em', fontVariantNumeric:'tabular-nums' }} />
+              </label>
+
+              <AnimatePresence mode="wait">
+                {(verifying || accountName) && (
+                  <Motion.div key={verifying ? 'v' : 'n'} initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} transition={{ duration:.3, ease:[.22,1,.36,1] }} style={{ overflow:'hidden' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderRadius:14, background: verifying ? '#fff' : V.greenSoft, border:`1px solid ${verifying ? V.line : 'transparent'}`, fontSize:14, fontWeight:700, color: verifying ? V.muted : V.green }}>
+                      {verifying
+                        ? <><Motion.span animate={{ rotate:360 }} transition={{ duration:.9, repeat:Infinity, ease:'linear' }} style={{ width:16, height:16, borderRadius:999, border:`2px solid ${V.line}`, borderTopColor:V.accent }} />Checking with {bankName || 'your bank'}…</>
+                        : <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="m5 12 5 5L20 7"/></svg>{accountName}</>}
+                    </div>
+                  </Motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {(error || success) && (
+                  <Motion.p key={error || success} role={error ? 'alert' : 'status'} initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+                    style={{ margin:0, padding:'12px 16px', borderRadius:14, fontSize:13.5, fontWeight:600, lineHeight:1.5, background: error ? V.redSoft : V.greenSoft, color: error ? V.red : V.green }}>
+                    {error || success}
+                  </Motion.p>
+                )}
+              </AnimatePresence>
+
+              <Motion.button className="bd-in" onClick={handleVerify} disabled={!canVerify} whileTap={canVerify ? { scale:.98 } : undefined}
+                style={{ marginTop:8, minHeight:54, borderRadius:999, border:0, font:`800 15px ${font}`, cursor: canVerify ? 'pointer' : 'not-allowed',
+                  background: canVerify ? V.accent : '#E7DCD1', color: canVerify ? '#fff' : V.muted,
+                  boxShadow: canVerify ? '0 10px 24px rgba(180,65,14,.28)' : 'none', transition:'background .25s, box-shadow .25s' }}>
+                {verifying ? 'Verifying…' : existing?.account_name ? 'Update account' : 'Verify & save'}
+              </Motion.button>
+
+              <p className="bd-in" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'4px 0 0', fontSize:12, color:V.muted }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                Secured by Flutterwave · never shared
+              </p>
+            </div>
+          </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

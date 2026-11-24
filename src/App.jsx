@@ -27,7 +27,10 @@ const CreateProduct = lazy(() => import('./createProduct.jsx'));
 const ForgotPassword = lazy(() => import('./forgotPassword.jsx'));
 const ResetPassword = lazy(() => import('./resetPassword.jsx'));
 const VendorDetails = lazy(() => import('./vendorDetails.jsx'));
-const Reels = lazy(() => import('./reels.jsx'));
+// Full reels feed (./reels.jsx) is parked; /reels shows a coming-soon page.
+const ReelsComingSoon = lazy(() => import('./ReelsComingSoon.jsx'));
+const FactoryDirect = lazy(() => import('./factoryDirect.jsx'));
+const FactoryPost = lazy(() => import('./factoryPost.jsx'));
 const Contact = lazy(() => import('./contact.jsx'));
 const About = lazy(() => import('./about.jsx'));
 const HotDeals = lazy(() => import('./hotDeals.jsx'));
@@ -261,7 +264,9 @@ function App() {
           <Route path="/seller/:slug" element={<VendorDetails />} />
 
           {/* Reels — short bag videos from sellers */}
-          <Route path="/reels" element={<Reels />} />
+          <Route path="/reels" element={<ReelsComingSoon />} />
+          <Route path="/factory" element={<FactoryDirect />} />
+          <Route path="/factory/post" element={<FactoryPost />} />
 
           {/* Create Product - protected behind login */}
           <Route

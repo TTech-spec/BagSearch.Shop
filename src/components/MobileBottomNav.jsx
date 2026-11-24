@@ -36,6 +36,15 @@ function IconSparkle({ size = 22, color = 'currentColor' }) {
   );
 }
 
+function IconFactory({ size = 22, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21V10l5 3V10l5 3V10l5 3V4h3v17z" />
+      <path d="M7 17h2M12 17h2M17 17h1" />
+    </svg>
+  );
+}
+
 function IconReels({ size = 22, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -94,12 +103,16 @@ export default function MobileBottomNav() {
   if (!isMobile) return null;
   if (HIDDEN_ON.some(path => location.pathname.startsWith(path))) return null;
 
-  const isSeller = user?.user_metadata?.role === 'seller';
+  const role = user?.user_metadata?.role;
+  const isSeller = role === 'seller';
+  const isFactory = role === 'factory';
   const profilePath = isSeller ? '/seller-profile' : '/profile';
 
   // Buyers don't list products, so swap that slot for a shortcut to New
   // Arrivals instead of showing them a "List Bag" action meant for sellers.
-  const secondItem = isSeller
+  const secondItem = isFactory
+    ? { key: 'post', label: 'Post Bag', Icon: IconListBag, active: location.pathname === '/factory/post', onClick: () => navigate('/factory/post') }
+    : isSeller
     ? { key: 'list', label: 'List Bag', Icon: IconListBag, active: location.pathname === '/upload-product', onClick: () => navigate('/upload-product') }
     : { key: 'new', label: 'New Arrivals', Icon: IconSparkle, active: false, onClick: () => navigate('/products', { state: { scrollTo: 'new-arrivals' } }) };
 
@@ -115,9 +128,9 @@ export default function MobileBottomNav() {
       onClick: () => navigate('/vendors'),
     },
     {
-      key: 'reels', label: 'Reels', Icon: IconReels,
-      active: location.pathname === '/reels',
-      onClick: () => navigate('/reels'),
+      key: 'factory', label: 'Factory Direct', Icon: IconFactory,
+      active: location.pathname.startsWith('/factory'),
+      onClick: () => navigate('/factory'),
     },
     secondItem,
     {
