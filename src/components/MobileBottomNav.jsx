@@ -5,7 +5,7 @@ import { AuthContext } from '../context/AuthContext.jsx';
 import { useIsMobileViewport } from '../hooks/useIsMobileViewport';
 
 // Routes where a bottom nav doesn't make sense (auth flows, onboarding).
-const HIDDEN_ON = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding', '/auth/callback'];
+const HIDDEN_ON = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding', '/auth/callback', '/admin'];
 
 function IconHome({ size = 22, color = 'currentColor' }) {
   return (

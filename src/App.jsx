@@ -31,6 +31,7 @@ const VendorDetails = lazy(() => import('./vendorDetails.jsx'));
 const ReelsComingSoon = lazy(() => import('./ReelsComingSoon.jsx'));
 const FactoryDirect = lazy(() => import('./factoryDirect.jsx'));
 const FactoryPost = lazy(() => import('./factoryPost.jsx'));
+const AdminNotify = lazy(() => import('./adminNotify.jsx'));
 const Contact = lazy(() => import('./contact.jsx'));
 const About = lazy(() => import('./about.jsx'));
 const HotDeals = lazy(() => import('./hotDeals.jsx'));
@@ -272,6 +273,7 @@ function App() {
           <Route path="/reels" element={<ReelsComingSoon />} />
           <Route path="/factory" element={<FactoryDirect />} />
           <Route path="/factory/post" element={<FactoryPost />} />
+          <Route path="/admin/notify" element={<AdminNotify />} />
 
           {/* Create Product - protected behind login */}
           <Route
