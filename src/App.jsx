@@ -9,7 +9,7 @@ import WelcomeCard from './components/WelcomeCard.jsx';
 import LoginSuccess from './components/auth/LoginSuccess.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
 import { useIsMobileViewport } from './hooks/useIsMobileViewport';
-import { hasSeenOnboarding } from './utils/onboardingState';
+import { hasSeenOnboarding, markOnboardingSeen } from './utils/onboardingState';
 import { CartProvider } from './context/CartContext';
 
 // Lazy load route components for better code splitting
@@ -150,6 +150,9 @@ function RootRoute() {
   const [showOnboarding, setShowOnboarding] = useState(
     () => isMobile && !hasSeenOnboarding()
   );
+
+  // Someone who has an account never needs the welcome tour, even after logging out.
+  useEffect(() => { if (user) markOnboardingSeen(); }, [user]);
 
   if (loading) return <LoadingSpinner />;
 
