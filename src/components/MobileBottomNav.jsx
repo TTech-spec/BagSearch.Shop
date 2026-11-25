@@ -97,7 +97,7 @@ const PILL = { open: 'min(340px, 72dvh)', closed: 64 };
 const spring = { type: 'spring', stiffness: 360, damping: 34 };
 
 /**
- * Mobile bottom nav — "Nav C": a dark floating pill with four tabs (the active
+ * Mobile bottom nav — "Nav C": a warm cream floating pill with four tabs (the active
  * one shows its name) and a "More" button that grows the pill upward into a
  * menu of the other destinations. Rendered once in App.jsx outside <Routes>.
  * The role-specific action (List Bag / Post Bag / New Arrivals) leads the menu.
@@ -160,7 +160,7 @@ export default function MobileBottomNav() {
           initial={{ y: 90, opacity: 0 }}
           animate={{ y: 0, opacity: 1, height: open ? PILL.open : PILL.closed, borderRadius: open ? 28 : 999 }}
           transition={spring}
-          style={{ pointerEvents: 'auto', width: '100%', maxWidth: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: '#1C1410', boxShadow: '0 16px 36px rgba(28,20,16,.28)', fontFamily: "'Manrope',system-ui,sans-serif" }}
+          style={{ pointerEvents: 'auto', width: '100%', maxWidth: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: '#F2EAE1', border: '1px solid #E7DCD1', boxSizing: 'border-box', boxShadow: '0 10px 26px rgba(28,20,16,.12)', fontFamily: "'Manrope',system-ui,sans-serif" }}
         >
           <AnimatePresence>
             {open && (
@@ -168,14 +168,14 @@ export default function MobileBottomNav() {
                 initial="hidden" animate="show" exit="hidden"
                 variants={{ hidden: { transition: { staggerChildren: 0.02, staggerDirection: -1 } }, show: { transition: { staggerChildren: 0.045, delayChildren: 0.1 } } }}
                 style={{ listStyle: 'none', margin: 0, padding: '18px 12px 4px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1, overflowY: 'auto' }}>
-                <Motion.li variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: '#BFAE9F', padding: '0 8px 6px' }}>More</Motion.li>
+                <Motion.li variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }} style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: '#75625A', padding: '0 8px 6px' }}>More</Motion.li>
                 {more.map(m => (
                   <Motion.li key={m.key} variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: spring } }}>
-                    <Motion.button whileTap={{ scale: 0.97 }} onClick={() => go(m.to, m.state)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 50, padding: '0 8px', border: 0, borderRadius: 14, background: path === m.to && !m.state ? 'rgba(255,255,255,.08)' : 'transparent', color: '#EDE3D8', font: "700 15px 'Manrope',sans-serif", cursor: 'pointer', textAlign: 'left' }}>
-                      <span style={{ width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,.08)' }}><m.Icon size={18} color="#F0A070" /></span>
+                    <Motion.button whileTap={{ scale: 0.97 }} whileHover={{ x: 3 }} onClick={() => go(m.to, m.state)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 50, padding: '0 8px', border: 0, borderRadius: 14, background: path === m.to && !m.state ? 'rgba(255,255,255,.7)' : 'transparent', color: '#1C1410', font: "700 15px 'Manrope',sans-serif", cursor: 'pointer', textAlign: 'left' }}>
+                      <Motion.span variants={{ hidden: { scale: 0.5, rotate: -12 }, show: { scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 420, damping: 16 } } }} style={{ width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: '#fff' }}><m.Icon size={18} color="#B4410E" /></Motion.span>
                       {m.label}
-                      {m.badge && <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999, background: 'rgba(240,160,112,.16)', color: '#F0A070' }}>{m.badge}</span>}
+                      {m.badge && <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999, background: '#fff', color: '#B4410E' }}>{m.badge}</span>}
                     </Motion.button>
                   </Motion.li>
                 ))}
@@ -187,11 +187,11 @@ export default function MobileBottomNav() {
             {tabs.map(t => {
               const on = t.active && !open;
               return (
-                <Motion.button key={t.key} layout transition={spring} whileTap={{ scale: 0.92 }}
+                <Motion.button key={t.key} layout transition={spring} whileTap={{ scale: 0.92 }} whileHover={{ y: -2 }}
                   onClick={() => go(t.to)} aria-label={t.label} aria-current={t.active ? 'page' : undefined}
-                  style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, height: 46, padding: on ? '0 16px' : '0 12px', border: 0, borderRadius: 999, background: 'transparent', cursor: 'pointer', color: on ? '#fff' : '#BFAE9F' }}>
-                  {on && <Motion.span layoutId="navActive" transition={spring} style={{ position: 'absolute', inset: 0, borderRadius: 999, background: '#B4410E', boxShadow: '0 6px 16px rgba(180,65,14,.45)' }} />}
-                  <span style={{ position: 'relative', display: 'flex' }}><t.Icon size={20} color="currentColor" /></span>
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, height: 46, padding: on ? '0 16px' : '0 12px', border: 0, borderRadius: 999, background: 'transparent', cursor: 'pointer', color: on ? '#B4410E' : '#54443A' }}>
+                  {on && <Motion.span layoutId="navActive" transition={spring} style={{ position: 'absolute', inset: 0, borderRadius: 999, background: '#fff', boxShadow: '0 4px 12px rgba(28,20,16,.10)' }} />}
+                  <Motion.span key={on ? 'on' : 'off'} initial={on ? { scale: 0.6, rotate: -14 } : false} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 480, damping: 14 }} style={{ position: 'relative', display: 'flex' }}><t.Icon size={20} color="currentColor" /></Motion.span>
                   <AnimatePresence initial={false}>
                     {on && (
                       <Motion.span key="label" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.22 }}
@@ -203,8 +203,8 @@ export default function MobileBottomNav() {
             })}
             <Motion.button whileTap={{ scale: 0.9 }} onClick={() => setOpen(!open)}
               aria-label={open ? 'Close menu' : 'More'} aria-expanded={open} aria-controls="bottom-nav-more"
-              animate={{ backgroundColor: open ? '#3A2E26' : 'rgba(0,0,0,0)', rotate: open ? 90 : 0 }} transition={spring}
-              style={{ width: 46, height: 46, flex: 'none', display: 'grid', placeItems: 'center', borderRadius: 999, border: '1px solid rgba(255,255,255,.14)', color: '#fff', cursor: 'pointer' }}>
+              animate={{ backgroundColor: open ? '#FFFFFF' : 'rgba(255,255,255,0)', rotate: open ? 90 : 0 }} transition={spring}
+              style={{ width: 46, height: 46, flex: 'none', display: 'grid', placeItems: 'center', borderRadius: 999, border: '1px solid #D9CBBB', color: '#1C1410', cursor: 'pointer' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 {open ? <path d="M6 6l12 12M18 6 6 18" /> : <><circle cx="5" cy="12" r="1.2" fill="currentColor" /><circle cx="12" cy="12" r="1.2" fill="currentColor" /><circle cx="19" cy="12" r="1.2" fill="currentColor" /></>}
               </svg>
