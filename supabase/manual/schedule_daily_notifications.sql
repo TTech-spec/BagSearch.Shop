@@ -29,7 +29,9 @@ begin
       'Content-Type',  'application/json',
       'Authorization', 'Bearer YOUR-PUSH-TRIGGER-SECRET'
     ),
-    body    := jsonb_build_object('campaign', p_campaign)
+    body    := jsonb_build_object('campaign', p_campaign),
+    -- The function can take a while (cold start + sending to every phone).
+    timeout_milliseconds := 30000
   );
 end;
 $$;
@@ -42,6 +44,7 @@ select cron.schedule('bagsearch-push-morning',   '0 7 * * *',  $$select public.s
 select cron.schedule('bagsearch-push-afternoon', '0 12 * * *', $$select public.send_daily_push('afternoon')$$);
 select cron.schedule('bagsearch-push-evening',   '0 19 * * *', $$select public.send_daily_push('evening')$$);
 
+-- See the last replies: select status_code, content, error_msg, timed_out from net._http_response order by id desc limit 3;
 -- See the jobs:        select jobname, schedule, active from cron.job;
 -- Send one right now:  select public.send_daily_push('morning');
 -- Stop them all:       select cron.unschedule(jobname) from cron.job where jobname like 'bagsearch-push-%';
