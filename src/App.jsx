@@ -5,6 +5,7 @@ import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
 import HomeReminder from './components/HomeReminder.jsx';
+import { uploadPendingSelfie } from './services/sellerFaceCheck';
 import WelcomeCard from './components/WelcomeCard.jsx';
 import LoginSuccess from './components/auth/LoginSuccess.jsx';
 import { GoogleReviewsBadge } from './components/GoogleCustomerReviews';
@@ -173,6 +174,10 @@ function RootRoute() {
 
 function App() {
   const { user } = useContext(AuthContext);
+
+  // A seller's sign-up selfie may still be waiting on this device (e.g. they
+  // signed up with Google); send it up once they are signed in.
+  useEffect(() => { if (user?.id) uploadPendingSelfie(user); }, [user]);
 
   return (
     <CartProvider>

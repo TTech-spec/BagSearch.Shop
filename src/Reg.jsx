@@ -1,5 +1,5 @@
 // src/Reg.jsx
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from './context/AuthContext.jsx';
@@ -11,6 +11,8 @@ import { sanitizeInput, validateRequired, validateEmail } from './utils/security
 import { authLimiter } from './utils/rateLimiter';
 import { SecureErrorHandler } from './utils/errorHandler';
 import { useSEO } from './hooks/useSEO';
+import FaceCapture from './components/FaceCapture.jsx';
+import { savePendingSelfie, uploadPendingSelfie } from './services/sellerFaceCheck';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ───────────────────────────────────────
 const C = {
@@ -272,9 +274,15 @@ const Reg = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Sellers must take a live selfie before the account is created.
+  // faceStep is null, or which sign-up path to continue after the photo.
+  const selfieRef = useRef(null);
+  const [faceStep, setFaceStep] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading || !validateForm()) return;
+    if (formData.role === 'seller' && !selfieRef.current) { setFaceStep('email'); return; }
 
     try {
       setLoading(true);
@@ -325,6 +333,13 @@ const Reg = () => {
         console.warn('Profile upsert failed (non-fatal):', insertError.message);
       }
 
+      // Upload the seller's selfie while we still have their session. If there
+      // is no session yet (email confirmation on) or it fails, it stays saved
+      // on this device and uploads on their first login.
+      if (normalizedRole === 'seller' && data.session) {
+        await uploadPendingSelfie(data.user);
+      }
+
       // With email confirmation off, signUp() also signs the new user in. Left
       // signed in, the redirect to /login below gets bounced by LoginRoute
       // straight into the main app. Sign out here so a new account lands on
@@ -361,6 +376,7 @@ const Reg = () => {
   };
 
   const handleGoogleAuth = async () => {
+    if ((formData.role || 'buyer').toLowerCase() === 'seller' && !selfieRef.current) { setFaceStep('google'); return; }
     try {
       setLoading(true);
       setErrorMessage('');
@@ -379,6 +395,16 @@ const Reg = () => {
       setErrorMessage(error.message);
       setLoading(false);
     }
+  };
+
+  const handleSelfie = (_blob, dataUrl) => {
+    const step = faceStep;
+    selfieRef.current = dataUrl;
+    // Google sign-up doesn't know the email yet, so it isn't tied to one.
+    savePendingSelfie(dataUrl, step === 'email' ? sanitizeInput(formData.email) : null);
+    setFaceStep(null);
+    if (step === 'google') handleGoogleAuth();
+    else handleSubmit({ preventDefault() {} });
   };
 
   return (
@@ -1134,6 +1160,7 @@ const Reg = () => {
         </div>
 
       </div>
+      <FaceCapture open={!!faceStep} onCancel={() => setFaceStep(null)} onCapture={handleSelfie} />
     </div>
   );
 };

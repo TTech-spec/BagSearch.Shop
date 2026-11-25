@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node src/utils/generateSitemap.js && vite build && node scripts/prerender.mjs",
+    "build": "node src/utils/generateSitemap.js && vite build && node scripts/copy-face-wasm.mjs && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:sitemap": "node src/utils/generateSitemap.js"
@@ -13,6 +13,7 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google-cloud/vision": "^5.3.5",
+    "@mediapipe/tasks-vision": "^0.10.14",
     "@radix-ui/react-dialog": "^1.1.15",
     "@supabase/supabase-js": "^2.100.1",
     "@tailwindcss/vite": "^4.1.18",
