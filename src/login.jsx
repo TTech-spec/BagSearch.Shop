@@ -13,6 +13,7 @@ import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Mod
 import { announceLoginSuccess } from './components/auth/loginSuccessEvent';
 import { LOGIN_PAUSED, LOGIN_PAUSED_MESSAGE } from './config/loginPause';
 import PausedNotice from './components/PausedNotice.jsx';
+import { AnimatePresence } from 'framer-motion';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -395,9 +396,7 @@ const LoginPage = () => {
 
             {errorMsg && (
               <RevealItem>
-                {errorMsg === LOGIN_PAUSED_MESSAGE
-                  ? <PausedNotice variant="login" />
-                  : <div role="alert" className="ads-alert">{errorMsg}</div>}
+                {errorMsg !== LOGIN_PAUSED_MESSAGE && <div role="alert" className="ads-alert">{errorMsg}</div>}
               </RevealItem>
             )}
 
@@ -483,7 +482,6 @@ const LoginPage = () => {
             </h2>
 
             {/* Error */}
-            {errorMsg === LOGIN_PAUSED_MESSAGE && <PausedNotice variant="login" />}
             {errorMsg && errorMsg !== LOGIN_PAUSED_MESSAGE && (
               <div role="alert" style={{
                 padding: '10px 14px',
@@ -616,6 +614,10 @@ const LoginPage = () => {
         </div>{/* /mobile-view */}
 
       </div>
+      {/* Pop-up shown when someone tries to log in while logins are paused */}
+      <AnimatePresence>
+        {errorMsg === LOGIN_PAUSED_MESSAGE && <PausedNotice key="paused" variant="popup" onClose={() => setErrorMsg('')} />}
+      </AnimatePresence>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { LOGIN_PAUSED_TITLE, LOGIN_PAUSED_HOME_TEXT, LOGIN_PAUSED_LOGIN_TEXT } f
 // The "Database error" notice, in two sizes:
 //   variant="home"  — white card with a pulsing icon and a Try again button
 //   variant="login" — compact red panel that shakes once when it appears
+//   variant="popup" — pop-up dialog over the login page (used when someone tries to log in)
 // Words and the on/off switch live in src/config/loginPause.js.
 const font = "'Manrope',system-ui,-apple-system,sans-serif";
 const RED = '#9B2C1A';
@@ -17,7 +18,37 @@ const DbIcon = ({ size }) => (
   </svg>
 );
 
-export default function PausedNotice({ variant = 'home' }) {
+export default function PausedNotice({ variant = 'home', onClose }) {
+  // Pop-up shown over the login page when someone tries to log in.
+  if (variant === 'popup') {
+    return (
+      <Motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'grid', placeItems: 'center', padding: 24, background: 'rgba(28,20,16,.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', fontFamily: font }}>
+        <Motion.div role="alertdialog" aria-modal="true" aria-labelledby="paused-title" aria-describedby="paused-text"
+          onClick={e => e.stopPropagation()}
+          initial={{ scale: 0.7, y: 24, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+          style={{ width: '100%', maxWidth: 340, boxSizing: 'border-box', padding: '28px 24px 22px', borderRadius: 26, background: '#FAF6F1', color: '#1C1410', textAlign: 'center', boxShadow: '0 24px 60px rgba(28,20,16,.3)' }}>
+          <Motion.span
+            initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 14, delay: 0.12 }}
+            style={{ display: 'inline-grid', placeItems: 'center', width: 68, height: 68, borderRadius: 22, background: '#FBE4DE', color: RED }}>
+            <Motion.span animate={{ x: [0, -4, 4, -3, 3, 0] }} transition={{ duration: 0.5, delay: 0.45 }} style={{ display: 'flex' }}>
+              <DbIcon size={32} />
+            </Motion.span>
+          </Motion.span>
+          <h2 id="paused-title" style={{ margin: '16px 0 6px', fontSize: 22, fontWeight: 800, letterSpacing: '-.02em' }}>{LOGIN_PAUSED_TITLE}</h2>
+          <p id="paused-text" style={{ margin: '0 0 22px', fontSize: 14.5, lineHeight: 1.55, color: '#54443A' }}>{LOGIN_PAUSED_LOGIN_TEXT}</p>
+          <Motion.button type="button" autoFocus whileTap={{ scale: 0.97 }} onClick={onClose}
+            style={{ width: '100%', minHeight: 52, borderRadius: 999, border: 0, background: '#B4410E', color: '#fff', font: `800 15px ${font}`, cursor: 'pointer', boxShadow: '0 10px 24px rgba(180,65,14,.28)' }}>
+            OK
+          </Motion.button>
+        </Motion.div>
+      </Motion.div>
+    );
+  }
+
   if (variant === 'login') {
     return (
       <Motion.div role="alert"
