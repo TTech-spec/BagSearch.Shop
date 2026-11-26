@@ -5,6 +5,7 @@ import { supabase } from './services/api';
 import CookieConsent from './components/CookieConsent.jsx';
 import MobileBottomNav from './components/MobileBottomNav.jsx';
 import HomeReminder from './components/HomeReminder.jsx';
+import HomeNotice from './components/HomeNotice.jsx';
 import { uploadPendingSelfie } from './services/sellerFaceCheck';
 import WelcomeCard from './components/WelcomeCard.jsx';
 import LoginSuccess from './components/auth/LoginSuccess.jsx';
@@ -184,6 +185,7 @@ function App() {
     <Router>
       <AuthListener />
       <CookieConsent />
+      <HomeNotice />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Default route -> Home (public landing page) or Products (if logged in) */}

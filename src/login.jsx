@@ -11,6 +11,7 @@ import { useSEO } from './hooks/useSEO';
 import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face Mask Ideas for Entertaining-pin-id-1092052609666393734.jpg';
 import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
 import { announceLoginSuccess } from './components/auth/loginSuccessEvent';
+import { LOGIN_PAUSED, LOGIN_PAUSED_MESSAGE } from './config/loginPause';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -78,6 +79,13 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
+    // Logins paused — see src/config/loginPause.js to switch this off.
+    if (LOGIN_PAUSED) {
+      await new Promise(r => setTimeout(r, 700));
+      setErrorMsg(LOGIN_PAUSED_MESSAGE);
+      setLoading(false);
+      return;
+    }
     try {
       const identifier = email.trim().toLowerCase();
       if (!authLimiter.isAllowed(identifier)) {
@@ -134,6 +142,13 @@ const LoginPage = () => {
     try {
       setLoading(true);
       setErrorMsg('');
+      // Logins paused — see src/config/loginPause.js to switch this off.
+      if (LOGIN_PAUSED) {
+        await new Promise(r => setTimeout(r, 700));
+        setErrorMsg(LOGIN_PAUSED_MESSAGE);
+        setLoading(false);
+        return;
+      }
       if (!authLimiter.isAllowed('google_oauth')) {
         const secureError = SecureErrorHandler.handleError(
           new Error('Too many login attempts. Please try again later.'), 'auth'
