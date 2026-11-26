@@ -12,6 +12,7 @@ import loginBgImage from './assets/images/onboarding/From Klickpin.com- 51 Face 
 import loginDesktopImage from './assets/images/onboarding/From Klickpin.com- Modern dessert table inspiration that are perfect for beginners who still want an impressive result for your next Pinterest sav.jpg';
 import { announceLoginSuccess } from './components/auth/loginSuccessEvent';
 import { LOGIN_PAUSED, LOGIN_PAUSED_MESSAGE } from './config/loginPause';
+import PausedNotice from './components/PausedNotice.jsx';
 
 // ─── WARM COLOR PALETTE (BagSearch Theme) ────────────────────────────────────
 const C = {
@@ -394,7 +395,9 @@ const LoginPage = () => {
 
             {errorMsg && (
               <RevealItem>
-                <div role="alert" className="ads-alert">{errorMsg}</div>
+                {errorMsg === LOGIN_PAUSED_MESSAGE
+                  ? <PausedNotice variant="login" />
+                  : <div role="alert" className="ads-alert">{errorMsg}</div>}
               </RevealItem>
             )}
 
@@ -480,7 +483,8 @@ const LoginPage = () => {
             </h2>
 
             {/* Error */}
-            {errorMsg && (
+            {errorMsg === LOGIN_PAUSED_MESSAGE && <PausedNotice variant="login" />}
+            {errorMsg && errorMsg !== LOGIN_PAUSED_MESSAGE && (
               <div role="alert" style={{
                 padding: '10px 14px',
                 background: C.primaryBg, border: `1px solid ${C.primary}`,
