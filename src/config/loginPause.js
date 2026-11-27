@@ -8,7 +8,7 @@
 //
 // TO REMOVE IT: change `true` to `false` on the line below and save. That's all.
 // ─────────────────────────────────────────────────────────────────────────────
-export const LOGIN_PAUSED = true;
+export const LOGIN_PAUSED = false;
 
 // The words shown. Change them here; nothing else needs editing.
 export const LOGIN_PAUSED_TITLE = 'Database error';
